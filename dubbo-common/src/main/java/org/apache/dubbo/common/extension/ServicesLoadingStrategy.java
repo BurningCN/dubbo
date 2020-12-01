@@ -21,6 +21,7 @@ package org.apache.dubbo.common.extension;
  *
  * @since 2.7.7
  */
+// OK
 public class ServicesLoadingStrategy implements LoadingStrategy {
 
     @Override
@@ -35,6 +36,7 @@ public class ServicesLoadingStrategy implements LoadingStrategy {
 
     @Override
     public int getPriority() {
+        // 最小优先级
         return MIN_PRIORITY;
     }
 

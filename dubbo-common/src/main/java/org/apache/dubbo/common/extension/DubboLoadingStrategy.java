@@ -21,6 +21,7 @@ package org.apache.dubbo.common.extension;
  *
  * @since 2.7.7
  */
+// OK
 public class DubboLoadingStrategy implements LoadingStrategy {
 
     @Override
@@ -30,11 +31,13 @@ public class DubboLoadingStrategy implements LoadingStrategy {
 
     @Override
     public boolean overridden() {
+        // 可以覆盖低优先级的LoadingStrategy实例
         return true;
     }
 
     @Override
     public int getPriority() {
+        // 正常优先级
         return NORMAL_PRIORITY;
     }
 

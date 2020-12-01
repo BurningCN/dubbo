@@ -107,7 +107,7 @@ public class ExtensionLoader<T> {
     private Set<Class<?>> cachedWrapperClasses;
 
     private Map<String, IllegalStateException> exceptions = new ConcurrentHashMap<>();
-
+    // todo
     private static volatile LoadingStrategy[] strategies = loadLoadingStrategies();
 
     public static void setLoadingStrategies(LoadingStrategy... strategies) {
@@ -123,6 +123,8 @@ public class ExtensionLoader<T> {
      * @since 2.7.7
      */
     private static LoadingStrategy[] loadLoadingStrategies() {
+        // load方法，调用的是ServiceLoader。进去断点看下
+        // 看完后大概是这样的，是获取到META-INF/services下的文件，然后文件读处类的全路径利用线程上下文加载器加载到jvm
         return stream(load(LoadingStrategy.class).spliterator(), false)
                 .sorted()
                 .toArray(LoadingStrategy[]::new);
@@ -142,10 +144,17 @@ public class ExtensionLoader<T> {
 
     private ExtensionLoader(Class<?> type) {
         this.type = type;
+        // ExtensionFactory接口看下。然后再次调用getExtensionLoader，为了防止无限递归，当type == ExtensionFactory.class赋值为null，结束递归
+
+        // getAdaptiveExtension调用时机注意：创建非ExtensionFactory的其他loader的时候（即该构造方法），这里又会调用getExtensionLoader创建ExtensionFactory loader，
+        // 这个 ExtensionFactory loader同时调用getAdaptiveExtension。注：不光是ExtensionFactory loader，还有其他的loader也会调用getAdaptiveExtension，比如ServiceConfig里面的PROTOCOL属性
+
+        // 而这个getAdaptiveExtension方法作用就是根据SPI机制获取type的各个subClass并加载到jvm（注意type是带有@SPI注解的接口，比如这里的Protocol、ExtensionFactory）。进去
         objectFactory = (type == ExtensionFactory.class ? null : ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension());
     }
 
     private static <T> boolean withExtensionAnnotation(Class<T> type) {
+        // isAnnotationPresent api
         return type.isAnnotationPresent(SPI.class);
     }
 
@@ -154,17 +163,22 @@ public class ExtensionLoader<T> {
         if (type == null) {
             throw new IllegalArgumentException("Extension type == null");
         }
+        // 必须是接口
         if (!type.isInterface()) {
             throw new IllegalArgumentException("Extension type (" + type + ") is not an interface!");
         }
+        // 必须有spi标记，进去
         if (!withExtensionAnnotation(type)) {
             throw new IllegalArgumentException("Extension type (" + type +
                     ") is not an extension, because it is NOT annotated with @" + SPI.class.getSimpleName() + "!");
         }
 
+        // 从缓存中根据接口取对应的ExtensionLoader
         ExtensionLoader<T> loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
         if (loader == null) {
+            // type就是带有@SPI注解的接口，每一个type都有一个ExtensionLoader，ExtensionLoader构造器进去
             EXTENSION_LOADERS.putIfAbsent(type, new ExtensionLoader<T>(type));
+            // 取出来返回
             loader = (ExtensionLoader<T>) EXTENSION_LOADERS.get(type);
         }
         return loader;
@@ -198,6 +212,7 @@ public class ExtensionLoader<T> {
     }
 
     private static ClassLoader findClassLoader() {
+        // 进去
         return ClassUtils.getClassLoader(ExtensionLoader.class);
     }
 
@@ -573,6 +588,7 @@ public class ExtensionLoader<T> {
 
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
+        // cachedAdaptiveInstance结构看下，内部的属性是volatile修饰的
         Object instance = cachedAdaptiveInstance.get();
         if (instance == null) {
             if (createAdaptiveInstanceError != null) {
@@ -581,10 +597,13 @@ public class ExtensionLoader<T> {
                         createAdaptiveInstanceError);
             }
 
+            // sync锁
             synchronized (cachedAdaptiveInstance) {
+                // 惯用法，防止别的线程创建好了，所以进来先检查是否为null
                 instance = cachedAdaptiveInstance.get();
                 if (instance == null) {
                     try {
+                        // 创建subClass的实例，进去
                         instance = createAdaptiveExtension();
                         cachedAdaptiveInstance.set(instance);
                     } catch (Throwable t) {
@@ -687,15 +706,21 @@ public class ExtensionLoader<T> {
                 if (method.getAnnotation(DisableInject.class) != null) {
                     continue;
                 }
+                // 获取setXXX方法第一个参数类型
                 Class<?> pt = method.getParameterTypes()[0];
+                // 判断是不是八大基本数据类型、str类型，进去
                 if (ReflectUtils.isPrimitives(pt)) {
                     continue;
                 }
 
                 try {
+                    // 获取属性名称
                     String property = getSetterProperty(method);
+                    // eg，pt = ZookeeperTransporter.class,property = ZookeeperTransporter ，getExtension获取扩展类，进去
+                    // objectFactory的两个子类
                     Object object = objectFactory.getExtension(pt, property);
                     if (object != null) {
+                        // 执行set方法方法
                         method.invoke(instance, object);
                     }
                 } catch (Exception e) {
@@ -752,12 +777,15 @@ public class ExtensionLoader<T> {
     }
 
     private Map<String, Class<?>> getExtensionClasses() {
+        // cachedClasses缓存所有的subClass，eg:{key:spi,value:org.apache.dubbo.common.extension.factory.SpiExtensionFactory}
         Map<String, Class<?>> classes = cachedClasses.get();
         if (classes == null) {
             synchronized (cachedClasses) {
                 classes = cachedClasses.get();
                 if (classes == null) {
+                    // 返回的是一个map，进去
                     classes = loadExtensionClasses();
+                    // 缓存起来
                     cachedClasses.set(classes);
                 }
             }
@@ -769,36 +797,56 @@ public class ExtensionLoader<T> {
      * synchronized in getExtensionClasses
      */
     private Map<String, Class<?>> loadExtensionClasses() {
+        // 缓存默认扩展类名称，进去
         cacheDefaultExtensionName();
 
+        // 待返回的结果，在下面的loadDirectory内部会得到填充
         Map<String, Class<?>> extensionClasses = new HashMap<>();
 
+        // strategies属性的赋值处去看下，主要调用了loadLoadingStrategies
+        // 主要加载了common模块的META-INF/services/org.apache.dubbo.common.extension.LoadingStrategy文件里面的三个类
+        // LoadingStrategy默认三个实现类（去看下），每个类代表一个加载策略，策略的最大区别点是定义了不同的加载路径（META-INF下面的不同子目录）
         for (LoadingStrategy strategy : strategies) {
+            // 核心！！！注意几个参数
             loadDirectory(extensionClasses, strategy.directory(), type.getName(), strategy.preferExtensionClassLoader(), strategy.overridden(), strategy.excludedPackages());
+            // 再次加载，其他参数不变，只是将org.apache变成com.alibaba
             loadDirectory(extensionClasses, strategy.directory(), type.getName().replace("org.apache", "com.alibaba"), strategy.preferExtensionClassLoader(), strategy.overridden(), strategy.excludedPackages());
         }
-
+        // 断点下，Protocol接口的子类有8个。可以搜下org.apache.dubbo.rpc.Protocol(有多个文件)。Compile接口有两个:jdk+javassit
+        // 具体看下面大块注释
         return extensionClasses;
     }
+    //"registry" -> {Class@1219} "class org.apache.dubbo.registry.integration.InterfaceCompatibleRegistryProtocol"
+    //"rest" -> {Class@1223} "class org.apache.dubbo.rpc.protocol.rest.RestProtocol"
+    //"hessian" -> {Class@1225} "class org.apache.dubbo.rpc.protocol.hessian.HessianProtocol"
+    //"injvm" -> {Class@1221} "class org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol"
+    //"service-discovery-registry" -> {Class@1218} "class org.apache.dubbo.registry.client.RegistryProtocol"
+    //"dubbo" -> {Class@1226} "class org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol"
+    //"mock" -> {Class@1232} "class org.apache.dubbo.rpc.support.MockProtocol"
+    //"rmi" -> {Class@1224} "class org.apache.dubbo.rpc.protocol.rmi.RmiProtocol"
+    //
+    //"jdk" -> {Class@1465} "class org.apache.dubbo.common.compiler.support.JdkCompiler"
+    //"javassist" -> {Class@1466} "class org.apache.dubbo.common.compiler.support.JavassistCompiler"
 
     /**
      * extract and cache default extension name if exists
      */
     private void cacheDefaultExtensionName() {
+        // 这里的type比如ExtensionFactory接口、Protocol接口
         final SPI defaultAnnotation = type.getAnnotation(SPI.class);
         if (defaultAnnotation == null) {
             return;
         }
 
-        String value = defaultAnnotation.value();
+        String value = defaultAnnotation.value();// protocol的注解值为dubbo
         if ((value = value.trim()).length() > 0) {
             String[] names = NAME_SEPARATOR.split(value);
-            if (names.length > 1) {
+            if (names.length > 1) {// 只能有一个值
                 throw new IllegalStateException("More than 1 default extension name on extension " + type.getName()
                         + ": " + Arrays.toString(names));
             }
             if (names.length == 1) {
-                cachedDefaultName = names[0];
+                cachedDefaultName = names[0];// dubbo
             }
         }
     }
@@ -809,12 +857,15 @@ public class ExtensionLoader<T> {
 
     private void loadDirectory(Map<String, Class<?>> extensionClasses, String dir, String type,
                                boolean extensionLoaderClassLoaderFirst, boolean overridden, String... excludedPackages) {
+        // eg： META-INF/dubbo/internal/org.apache.dubbo.common.extension.ExtensionFactory
         String fileName = dir + type;
         try {
             Enumeration<java.net.URL> urls = null;
+
+            // 获取加载器，肯定是线程上下文（默认是AppClassLoader）。spi就靠这个线程上下文，进去
             ClassLoader classLoader = findClassLoader();
 
-            // try to load from ExtensionLoader's ClassLoader first
+            // try to load from ExtensionLoader's ClassLoader first  默认false
             if (extensionLoaderClassLoaderFirst) {
                 ClassLoader extensionLoaderClassLoader = ExtensionLoader.class.getClassLoader();
                 if (ClassLoader.getSystemClassLoader() != extensionLoaderClassLoader) {
@@ -824,15 +875,22 @@ public class ExtensionLoader<T> {
 
             if (urls == null || !urls.hasMoreElements()) {
                 if (classLoader != null) {
+                    // classLoader对象的实例方法
                     urls = classLoader.getResources(fileName);
                 } else {
+                    // ClassLoader类的静态方法
                     urls = ClassLoader.getSystemResources(fileName);
                 }
             }
 
             if (urls != null) {
+                // 遍历每一个本地资源文件路径
                 while (urls.hasMoreElements()) {
+                    // eg:file:/Users/gy821075/IdeaProjects/dubbo/dubbo-common/target/classes/META-INF/dubbo/internal/org.apache.dubbo.common.extension.ExtensionFactory
+                    // 这个在common包下
                     java.net.URL resourceURL = urls.nextElement();
+                    // 注意几个参数。最后一个是null，第三个参数默认是false，在ServicesLoadingStrategy和DubboLoadingStrategy的实现是true。
+                    // 进去
                     loadResource(extensionClasses, classLoader, resourceURL, overridden, excludedPackages);
                 }
             }
@@ -845,8 +903,11 @@ public class ExtensionLoader<T> {
     private void loadResource(Map<String, Class<?>> extensionClasses, ClassLoader classLoader,
                               java.net.URL resourceURL, boolean overridden, String... excludedPackages) {
         try {
+            // 建立输入流，将字节流转化为了字符流
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceURL.openStream(), StandardCharsets.UTF_8))) {
                 String line;
+                // 读一行，eg adaptive=org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory
+                // 可以看common模块META-INF的ExtensionFactory文件，那么这里会循环读三行
                 while ((line = reader.readLine()) != null) {
                     final int ci = line.indexOf('#');
                     if (ci >= 0) {
@@ -856,12 +917,17 @@ public class ExtensionLoader<T> {
                     if (line.length() > 0) {
                         try {
                             String name = null;
-                            int i = line.indexOf('=');
+                            int i = line.indexOf('=');// 等号切割
                             if (i > 0) {
+                                // adaptive、spi
                                 name = line.substring(0, i).trim();
+                                // org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory  、SpiExtensionFactory
                                 line = line.substring(i + 1).trim();
                             }
+                            // isExcluded查看该类是否被排除(默认是null，不会排除该类的加载)，进去
                             if (line.length() > 0 && !isExcluded(line, excludedPackages)) {
+                                // 第三个参数，加载line这个类（line是类的全限定名字符串），true表示加载之后需要初始化（加载、连接、初始化），指定的classLoader就是线程上下文加载器
+                                // 注意extensionClasses容器现在一直还没数据，loadClass进去
                                 loadClass(extensionClasses, resourceURL, Class.forName(line, true, classLoader), name, overridden);
                             }
                         } catch (Throwable t) {
@@ -879,7 +945,7 @@ public class ExtensionLoader<T> {
 
     private boolean isExcluded(String className, String... excludedPackages) {
         if (excludedPackages != null) {
-            for (String excludePackage : excludedPackages) {
+            for (String excludePackage : excludedPackages) {// 是否被排除，排除的不需要加载
                 if (className.startsWith(excludePackage + ".")) {
                     return true;
                 }
@@ -890,35 +956,49 @@ public class ExtensionLoader<T> {
 
     private void loadClass(Map<String, Class<?>> extensionClasses, java.net.URL resourceURL, Class<?> clazz, String name,
                            boolean overridden) throws NoSuchMethodException {
+        // 判断clazz是否是type的子类/子接口 eg:type为ExtensionFactory.class.getName(),clazz为AdaptiveExtensionFactory.class
         if (!type.isAssignableFrom(clazz)) {
             throw new IllegalStateException("Error occurred when loading extension class (interface: " +
                     type + ", class line: " + clazz.getName() + "), class "
                     + clazz.getName() + " is not subtype of interface.");
         }
+        // 类是否含有Adaptive注解（比如AdaptiveExtensionFactory）
         if (clazz.isAnnotationPresent(Adaptive.class)) {
+            // 缓存该Adaptive子类，进去
             cacheAdaptiveClass(clazz, overridden);
+
+        // 是否是wrapper的，进去
         } else if (isWrapperClass(clazz)) {
+            // 进去
             cacheWrapperClass(clazz);
         } else {
+            // 大部分是这个，子类实现@Spi注解接口，类含有@Active注解或者不含有任何注解。
+            // 随便找个文件，比如org.apache.dubbo.common.threadpool.ThreadPool里面的实现类或者ActivateExt1Impl1实现类
             clazz.getConstructor();
+            // name就是文件里面的=左边，比如spi、adaptive
             if (StringUtils.isEmpty(name)) {
+                // 如果name为空，那么就截取实现类的前缀并转为小写，比如FixedThreadPool就是fixed，进去
+                // 这一点可以体现出我们在文件里面的内容不一定是xx=xxType这种方式，可以直接xxType
                 name = findAnnotationName(clazz);
                 if (name.length() == 0) {
                     throw new IllegalStateException("No such extension name for the class " + clazz.getName() + " in the config " + resourceURL);
                 }
             }
 
+            // 正则校验name是否格式正确。
             String[] names = NAME_SEPARATOR.split(name);
             if (ArrayUtils.isNotEmpty(names)) {
+                // 对比前面的，cacheAdaptiveClass、cacheWrapperClass，这里是cacheActivateClass且传入了两个参数进去
                 cacheActivateClass(clazz, names[0]);
                 for (String n : names) {
+                    // 缓存起来eg:FixedThreadPool.class:fixed
                     cacheName(clazz, n);
+                    // 填充到结果容器，进去
                     saveInExtensionClass(extensionClasses, clazz, n, overridden);
                 }
             }
         }
     }
-
     /**
      * cache name
      */
@@ -934,6 +1014,7 @@ public class ExtensionLoader<T> {
     private void saveInExtensionClass(Map<String, Class<?>> extensionClasses, Class<?> clazz, String name, boolean overridden) {
         Class<?> c = extensionClasses.get(name);
         if (c == null || overridden) {
+            // 填充
             extensionClasses.put(name, clazz);
         } else if (c != clazz) {
             String duplicateMsg = "Duplicate extension " + type.getName() + " name " + name + " on " + c.getName() + " and " + clazz.getName();
@@ -948,8 +1029,10 @@ public class ExtensionLoader<T> {
      * for compatibility, also cache class with old alibaba Activate annotation
      */
     private void cacheActivateClass(Class<?> clazz, String name) {
+        // 自己全局搜下@Active注解
         Activate activate = clazz.getAnnotation(Activate.class);
         if (activate != null) {
+            // 缓存起来，activate注解里面有不同的值
             cachedActivates.put(name, activate);
         } else {
             // support com.alibaba.dubbo.common.extension.Activate
@@ -964,9 +1047,14 @@ public class ExtensionLoader<T> {
      * cache Adaptive class which is annotated with <code>Adaptive</code>
      */
     private void cacheAdaptiveClass(Class<?> clazz, boolean overridden) {
+        // 为null(没缓存过);或者不为null且overridden=true即允许覆盖（overridden取决于LoadingStrategy）
+        // 这样确保一个带有@SPI注解的接口可能有多个子类带有@Adaptive注解，但是只有一个子类的class会赋值到这里（当然所有子类肯定被加载了）
         if (cachedAdaptiveClass == null || overridden) {
+            // 缓存起来
             cachedAdaptiveClass = clazz;
         } else if (!cachedAdaptiveClass.equals(clazz)) {
+            // 如果不允许覆盖，且cachedAdaptiveClass有多个，抛异常，看下面日志
+            // 从这也能看出带有@SPI注解的接口只有overridden为true的时候才能有多个带有@Adaptive注解的子类
             throw new IllegalStateException("More than 1 adaptive class found: "
                     + cachedAdaptiveClass.getName()
                     + ", " + clazz.getName());
@@ -1001,39 +1089,56 @@ public class ExtensionLoader<T> {
 
     @SuppressWarnings("deprecation")
     private String findAnnotationName(Class<?> clazz) {
+        // 是否含有@Extension注解，一般都不会含有
         org.apache.dubbo.common.Extension extension = clazz.getAnnotation(org.apache.dubbo.common.Extension.class);
         if (extension != null) {
             return extension.value();
         }
 
+        // 获取类名称
         String name = clazz.getSimpleName();
+        // 类的名称是否以type的名称结尾，比如Adaptive/SpiExtensionFactory和ExtensionFactory
         if (name.endsWith(type.getSimpleName())) {
+            // 获取前缀，比如Adaptive/Spi
             name = name.substring(0, name.length() - type.getSimpleName().length());
         }
+        // 转小写
         return name.toLowerCase();
     }
 
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
+            // getAdaptiveExtensionClass获取扩展类并加载到jvm，方法返回Class，进去
+            // 然后newInstance，在调用injectExtension，进去
             return injectExtension((T) getAdaptiveExtensionClass().newInstance());
         } catch (Exception e) {
             throw new IllegalStateException("Can't create adaptive extension " + type + ", cause: " + e.getMessage(), e);
         }
     }
 
+    // 获取所有适配扩展的class（就是属性type的实现类）
     private Class<?> getAdaptiveExtensionClass() {
+        // 核心！！！大概原理说下就是：根据多个LoadingStrategy加载策略，获取META-INF下的文件，读取里面的信息，获取多个类全限定名，
+        // 利用线程上下文加载器（appClassLoader）加载到jvm。方法进去
         getExtensionClasses();
         if (cachedAdaptiveClass != null) {
+            // 这里比如就是 AdaptiveExtensionFactory.class（cachedAdaptiveClass的赋值处在getExtensionClasses最里面的addExtension方法调用）
             return cachedAdaptiveClass;
         }
+        // ExtensionFactory接口会在上面的分支返回（因为该接口含有@Adaptive注解子类），Protocol接口会走下面的方法（不有@Adaptive注解子类）
+        // 此时Protocol接口也有了"Adaptive"子类(实际是通过Javassist生成的，且类头上不会有@Adaptive注解)
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
     private Class<?> createAdaptiveExtensionClass() {
+        // eg type=protocol、cachedDefaultName = dubbo(这个值来源于Protocol接口上的注解里的值)
+        // generat内部会搞一个type的实现类，以源码str的方式
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
         ClassLoader classLoader = findClassLoader();
+        // 获取compiler接口的实现类(只有两个jdk和javassist)，将上面的code str编译成类
         org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
+        // 编译，方法返回Class。进去
         return compiler.compile(code, classLoader);
     }
 

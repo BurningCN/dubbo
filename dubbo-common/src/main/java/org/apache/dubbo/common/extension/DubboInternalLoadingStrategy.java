@@ -21,6 +21,7 @@ package org.apache.dubbo.common.extension;
  *
  * @since 2.7.7
  */
+// OK
 public class DubboInternalLoadingStrategy implements LoadingStrategy {
 
     @Override
@@ -30,6 +31,7 @@ public class DubboInternalLoadingStrategy implements LoadingStrategy {
 
     @Override
     public int getPriority() {
+        // 最大优先级，这个属性是接口的父接口里的
         return MAX_PRIORITY;
     }
 }

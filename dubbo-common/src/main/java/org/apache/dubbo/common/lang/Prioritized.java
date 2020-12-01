@@ -31,6 +31,7 @@ public interface Prioritized extends Comparable<Prioritized> {
     /**
      * The {@link Comparator} of {@link Prioritized}
      */
+    // lambda
     Comparator<Object> COMPARATOR = (one, two) -> {
         boolean b1 = one instanceof Prioritized;
         boolean b2 = two instanceof Prioritized;
@@ -39,6 +40,7 @@ public interface Prioritized extends Comparable<Prioritized> {
         } else if (b2 && !b1) { // two is Prioritized, one is not
             return 1;
         } else if (b1 && b2) {  //  one and two both are Prioritized
+            // 比较优先级，去看compareTo
             return ((Prioritized) one).compareTo((Prioritized) two);
         } else {                // no different
             return 0;
@@ -71,6 +73,7 @@ public interface Prioritized extends Comparable<Prioritized> {
 
     @Override
     default int compareTo(Prioritized that) {
+        // 因为优先级是int类型，直接调用Integer的compare。String类型也有对应的compareTo方法,str1.compareTo(str2)
         return compare(this.getPriority(), that.getPriority());
     }
 }

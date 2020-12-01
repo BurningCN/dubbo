@@ -38,10 +38,18 @@ public class Application {
     }
 
     private static void startWithBootstrap() {
+        // 进去
         ServiceConfig<DemoServiceImpl> service = new ServiceConfig<>();
+        // 接口，进去
         service.setInterface(DemoService.class);
+        // 接口实现，进去
         service.setRef(new DemoServiceImpl());
+
+        // 上两个主要是给ServiceConfig的父类ServiceConfigBase的3个属性赋值
+
+        // 单例，进去
         DubboBootstrap bootstrap = DubboBootstrap.getInstance();
+        //
         bootstrap.application(new ApplicationConfig("dubbo-demo-api-provider"))
                 .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
                 .service(service)

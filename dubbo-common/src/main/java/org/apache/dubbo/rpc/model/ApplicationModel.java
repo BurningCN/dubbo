@@ -75,6 +75,7 @@ public class ApplicationModel {
         return getServiceRepository().lookupReferredService(serviceKey);
     }
 
+    // 先看下FrameworkExt接口，然后getExtensionLoader进去
     private static final ExtensionLoader<FrameworkExt> LOADER = ExtensionLoader.getExtensionLoader(FrameworkExt.class);
 
     public static void initFrameworkExts() {
@@ -89,6 +90,7 @@ public class ApplicationModel {
     }
 
     public static ConfigManager getConfigManager() {
+        // 先看看LOADER
         return (ConfigManager) LOADER.getExtension(ConfigManager.NAME);
     }
 

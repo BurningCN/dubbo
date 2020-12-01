@@ -18,10 +18,15 @@ package org.apache.dubbo.common.extension;
 
 import org.apache.dubbo.common.lang.Prioritized;
 
+// OK
+// 加载策略接口，主要是定义从哪些文件目录加载类，以及目录的优先级。共有三个实现类去看下，很简单
+// 看下父接口
 public interface LoadingStrategy extends Prioritized {
 
+    // 扫描的目录
     String directory();
 
+    // 1.8接口支持，默认方法
     default boolean preferExtensionClassLoader() {
         return false;
     }
@@ -32,10 +37,12 @@ public interface LoadingStrategy extends Prioritized {
 
     /**
      * Indicates current {@link LoadingStrategy} supports overriding other lower prioritized instances or not.
+     * 表示当前{@link LoadingStrategy}是否支持覆盖其他低优先级实例。
      *
      * @return if supports, return <code>true</code>, or <code>false</code>
      * @since 2.7.7
      */
+    // 除了DubboInternalLoadingStrategy，另两个都是return true。表示可以覆盖低优先级的LoadingStrategy实例
     default boolean overridden() {
         return false;
     }

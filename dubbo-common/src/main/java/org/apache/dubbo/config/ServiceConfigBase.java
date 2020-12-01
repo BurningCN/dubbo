@@ -297,12 +297,15 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     }
 
     public void setInterface(Class<?> interfaceClass) {
+        // isInterface api
         if (interfaceClass != null && !interfaceClass.isInterface()) {
             throw new IllegalStateException("The interface class " + interfaceClass + " is not a interface!");
         }
         this.interfaceClass = interfaceClass;
+        // getName获取全限定名，getSimpleName获取简单名称 进去
         setInterface(interfaceClass == null ? null : interfaceClass.getName());
     }
+
 
     public void setInterface(String interfaceName) {
         this.interfaceName = interfaceName;
