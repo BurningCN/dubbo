@@ -23,6 +23,7 @@ import org.apache.dubbo.common.extension.SPI;
  *
  * @since 2.7.5
  */
+// OK
 @SPI
 public interface ShutdownHookCallback extends Prioritized {
 

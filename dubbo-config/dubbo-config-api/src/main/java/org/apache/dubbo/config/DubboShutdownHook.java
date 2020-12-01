@@ -40,8 +40,10 @@ public class DubboShutdownHook extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(DubboShutdownHook.class);
 
+    // 进去
     private static final DubboShutdownHook DUBBO_SHUTDOWN_HOOK = new DubboShutdownHook("DubboShutdownHook");
 
+    // ShutdownHookCallbacks.INSTANCE，是一个单例，单例模式使用的是饿汉，进去
     private final ShutdownHookCallbacks callbacks = ShutdownHookCallbacks.INSTANCE;
 
     /**
@@ -70,7 +72,9 @@ public class DubboShutdownHook extends Thread {
             logger.info("Run shutdown hook now.");
         }
 
+        // 进去
         callback();
+        // 进去
         doDestroy();
     }
 
@@ -82,6 +86,7 @@ public class DubboShutdownHook extends Thread {
     }
 
     private void callback() {
+        // callbacks去看下
         callbacks.callback();
     }
 
@@ -89,9 +94,13 @@ public class DubboShutdownHook extends Thread {
      * Register the ShutdownHook
      */
     public void register() {
+        // 只注册一次
         if (registered.compareAndSet(false, true)) {
+            // 进去
             DubboShutdownHook dubboShutdownHook = getDubboShutdownHook();
+            // 添加dubboShutdownHook，addShutdownHook本身就需要一个线程对象，然后再jvm关闭的时候会调用其run方法。去看run
             Runtime.getRuntime().addShutdownHook(dubboShutdownHook);
+            //
             dispatch(new DubboShutdownHookRegisteredEvent(dubboShutdownHook));
         }
     }

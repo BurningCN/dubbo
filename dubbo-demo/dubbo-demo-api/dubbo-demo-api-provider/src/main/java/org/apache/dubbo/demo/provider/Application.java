@@ -26,9 +26,11 @@ import java.util.concurrent.CountDownLatch;
 
 public class Application {
     public static void main(String[] args) throws Exception {
+        // 是否经典启动
         if (isClassic(args)) {
             startWithExport();
         } else {
+            // 默认走这个
             startWithBootstrap();
         }
     }

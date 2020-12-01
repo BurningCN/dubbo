@@ -379,8 +379,9 @@ public class ExtensionLoader<T> {
     }
 
     private Holder<Object> getOrCreateHolder(String name) {
+        // cachedClasses\cachedInstances都有缓存
         Holder<Object> holder = cachedInstances.get(name);
-        if (holder == null) {
+        if (holder == null) { // 创建一个空holder而已
             cachedInstances.putIfAbsent(name, new Holder<>());
             holder = cachedInstances.get(name);
         }
@@ -425,6 +426,7 @@ public class ExtensionLoader<T> {
      */
     @SuppressWarnings("unchecked")
     public T getExtension(String name) {
+        // 进去
         return getExtension(name, true);
     }
 
@@ -433,13 +435,16 @@ public class ExtensionLoader<T> {
             throw new IllegalArgumentException("Extension name == null");
         }
         if ("true".equals(name)) {
+            // todo待分析
             return getDefaultExtension();
         }
+        // 进去
         final Holder<Object> holder = getOrCreateHolder(name);
         Object instance = holder.get();
         if (instance == null) {
             synchronized (holder) {
                 instance = holder.get();
+                // 这里才是真正创建实例，进去
                 if (instance == null) {
                     instance = createExtension(name, wrap);
                     holder.set(instance);
@@ -479,20 +484,26 @@ public class ExtensionLoader<T> {
     }
 
     public Set<String> getSupportedExtensions() {
+        // key就是spi文件里面=的左部分，如果没有=，那么就是xxxType的前缀xxx，value就是=右边的部分。进去
         Map<String, Class<?>> clazzes = getExtensionClasses();
+        // 获取所有的key填充到treeSet返回。注意是不可修改的，如果调用方写操作会抛异常
         return Collections.unmodifiableSet(new TreeSet<>(clazzes.keySet()));
     }
 
+    // 获取所有子类的实例
     public Set<T> getSupportedExtensionInstances() {
         List<T> instances = new LinkedList<>();
+        // 获取所有spi文件内容的等号左边部分，进去
         Set<String> supportedExtensions = getSupportedExtensions();
         if (CollectionUtils.isNotEmpty(supportedExtensions)) {
             for (String name : supportedExtensions) {
+                // 创建实例并填充到instances容器，getExtension 进去
                 instances.add(getExtension(name));
             }
         }
-        // sort the Prioritized instances
+        // Collections.sort根据优先级排序，第二个参数指定comparator
         sort(instances, Prioritized.COMPARATOR);
+        // 转化为set
         return new LinkedHashSet<>(instances);
     }
 
@@ -649,14 +660,19 @@ public class ExtensionLoader<T> {
             throw findException(name);
         }
         try {
+            // 实例也有缓存即这里的EXTENSION_INSTANCES，对比还有cachedClass、cacheInstances
+            // 区别于cacheInstances，其key是name(SPI文件等号左边的)
             T instance = (T) EXTENSION_INSTANCES.get(clazz);
             if (instance == null) {
+                // 创建实例，比如SpiExtensionFactory
                 EXTENSION_INSTANCES.putIfAbsent(clazz, clazz.newInstance());
                 instance = (T) EXTENSION_INSTANCES.get(clazz);
             }
+            // 注射实例
             injectExtension(instance);
 
 
+            // 是否需要包装
             if (wrap) {
 
                 List<Class<?>> wrapperClassesList = new ArrayList<>();
@@ -677,6 +693,7 @@ public class ExtensionLoader<T> {
                 }
             }
 
+            // 进去
             initExtension(instance);
             return instance;
         } catch (Throwable t) {
@@ -690,7 +707,7 @@ public class ExtensionLoader<T> {
     }
 
     private T injectExtension(T instance) {
-
+        // 什么情况为null呢？就是那些XXXExtensionFactory的子类对应的ExtensionLoader
         if (objectFactory == null) {
             return instance;
         }
@@ -777,7 +794,9 @@ public class ExtensionLoader<T> {
     }
 
     private Map<String, Class<?>> getExtensionClasses() {
-        // cachedClasses缓存所有的subClass，eg:{key:spi,value:org.apache.dubbo.common.extension.factory.SpiExtensionFactory}
+        // cachedClasses缓存所有的subClass.class，其实就是spi在META-INF文件内容的等号左右部分，只是value不是str，只是Class
+        // eg:[{key:spi,value:org.apache.dubbo.common.extension.factory.SpiExtensionFactory}
+        //     {key:adaptive,value:org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory}...]
         Map<String, Class<?>> classes = cachedClasses.get();
         if (classes == null) {
             synchronized (cachedClasses) {
@@ -797,6 +816,7 @@ public class ExtensionLoader<T> {
      * synchronized in getExtensionClasses
      */
     private Map<String, Class<?>> loadExtensionClasses() {
+
         // 缓存默认扩展类名称，进去
         cacheDefaultExtensionName();
 

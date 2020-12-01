@@ -206,13 +206,17 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private DubboBootstrap() {
+        // 进去
         configManager = ApplicationModel.getConfigManager();
         environment = ApplicationModel.getEnvironment();
 
+        // DubboShutdownHook是一个线程，register进去
         DubboShutdownHook.getDubboShutdownHook().register();
+        // 再给ShutdownHookCallbacks添加一个callback
         ShutdownHookCallbacks.INSTANCE.addCallback(new ShutdownHookCallback() {
             @Override
             public void callback() throws Throwable {
+                //
                 DubboBootstrap.this.destroy();
             }
         });
