@@ -155,12 +155,15 @@ public final class ReflectUtils {
 
     public static boolean isPrimitives(Class<?> cls) {
         if (cls.isArray()) {
+            // 数组类型，取出里面具体的元素类型，进去
             return isPrimitive(cls.getComponentType());
         }
+        // 进去
         return isPrimitive(cls);
     }
 
     public static boolean isPrimitive(Class<?> cls) {
+        //
         return cls.isPrimitive() || cls == String.class || cls == Boolean.class || cls == Character.class
                 || Number.class.isAssignableFrom(cls) || Date.class.isAssignableFrom(cls);
     }

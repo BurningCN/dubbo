@@ -83,14 +83,18 @@ public class NetUtils {
     private static final String SPLIT_IPV6_CHARACTER = ":";
 
     public static int getRandomPort() {
+        // 随机端口，RND_PORT_START和RND_PORT_RANGE去看下
+        // ThreadLocalRandom 1.7 代替了random，优势看 dubbo-all的ThreadLocalRandom文件
         return RND_PORT_START + ThreadLocalRandom.current().nextInt(RND_PORT_RANGE);
     }
 
     public static int getAvailablePort() {
         try (ServerSocket ss = new ServerSocket()) {
             ss.bind(null);
+            // 不指定端口，内核自动分配
             return ss.getLocalPort();
         } catch (IOException e) {
+            // 进去
             return getRandomPort();
         }
     }
