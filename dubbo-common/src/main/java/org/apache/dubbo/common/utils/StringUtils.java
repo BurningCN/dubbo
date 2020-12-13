@@ -897,6 +897,7 @@ public final class StringUtils {
         StringBuilder buf = null;
         for (int i = 0; i < camelName.length(); i++) {
             char ch = camelName.charAt(i);
+            // 检测当前字符是否为大写字母
             if (ch >= 'A' && ch <= 'Z') {
                 if (buf == null) {
                     buf = new StringBuilder();
@@ -905,10 +906,13 @@ public final class StringUtils {
                     }
                 }
                 if (i > 0) {
+                    // 向 sb 中添加点号
                     buf.append(split);
                 }
+                // 将字符变为小写，并添加到 sb 中
                 buf.append(Character.toLowerCase(ch));
             } else if (buf != null) {
+                // 添加字符到 sb 中
                 buf.append(ch);
             }
         }

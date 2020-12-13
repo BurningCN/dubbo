@@ -379,7 +379,7 @@ public class ExtensionLoader<T> {
     }
 
     private Holder<Object> getOrCreateHolder(String name) {
-        // cachedClasses\cachedInstances都有缓存
+        // cachedClasses、cachedInstances都有缓存
         Holder<Object> holder = cachedInstances.get(name);
         if (holder == null) { // 创建一个空holder而已
             cachedInstances.putIfAbsent(name, new Holder<>());
@@ -430,23 +430,26 @@ public class ExtensionLoader<T> {
         return getExtension(name, true);
     }
 
+    // 参数name就是spi文件的等号左边的key
     public T getExtension(String name, boolean wrap) {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("Extension name == null");
         }
         if ("true".equals(name)) {
-            // todo待分析
+            // 获取默认的拓展实现类 todo 待分析
             return getDefaultExtension();
         }
-        // 进去
+        // Holder，顾名思义，用于持有目标对象 进去
         final Holder<Object> holder = getOrCreateHolder(name);
         Object instance = holder.get();
+        // 双重检查
         if (instance == null) {
             synchronized (holder) {
                 instance = holder.get();
-                // 这里才是真正创建实例，进去
                 if (instance == null) {
+                    // 这里才是真正创建实例，进去
                     instance = createExtension(name, wrap);
+                    // 设置实例到 holder 中
                     holder.set(instance);
                 }
             }
@@ -597,10 +600,13 @@ public class ExtensionLoader<T> {
         }
     }
 
+    // getAdaptiveExtension 方法是获取自适应拓展的入口方法
+    // getAdaptiveExtension 方法首先会检查缓存，缓存未命中，则调用 createAdaptiveExtension 方法创建自适应拓展
     @SuppressWarnings("unchecked")
     public T getAdaptiveExtension() {
-        // cachedAdaptiveInstance结构看下，内部的属性是volatile修饰的
+        // 从缓存中获取自适应拓展，cachedAdaptiveInstance结构看下，内部的属性是volatile修饰的
         Object instance = cachedAdaptiveInstance.get();
+        // 缓存未命中
         if (instance == null) {
             if (createAdaptiveInstanceError != null) {
                 throw new IllegalStateException("Failed to create adaptive instance: " +
@@ -610,12 +616,13 @@ public class ExtensionLoader<T> {
 
             // sync锁
             synchronized (cachedAdaptiveInstance) {
-                // 惯用法，防止别的线程创建好了，所以进来先检查是否为null
+                // 双重检查。惯用法，防止别的线程创建好了，所以进来先检查是否为null
                 instance = cachedAdaptiveInstance.get();
                 if (instance == null) {
                     try {
-                        // 创建subClass的实例，进去
+                        // 创建自适应拓展，type的subClass实例，进去
                         instance = createAdaptiveExtension();
+                        // 设置自适应拓展到缓存中
                         cachedAdaptiveInstance.set(instance);
                     } catch (Throwable t) {
                         createAdaptiveInstanceError = t;
@@ -653,8 +660,16 @@ public class ExtensionLoader<T> {
         return new IllegalStateException(buf.toString());
     }
 
+    //createExtension 方法的逻辑稍复杂一下，包含了如下的步骤：
+    //
+    //1 通过 getExtensionClasses 获取所有的拓展类
+    //2 通过反射创建拓展对象
+    //3 向拓展对象中注入依赖
+    //4 将拓展对象包裹在相应的 Wrapper 对象中
+    //以上步骤中，第一个步骤是加载拓展类的关键，第三和第四个步骤是 Dubbo IOC 与 AOP 的具体实现。
     @SuppressWarnings("unchecked")
     private T createExtension(String name, boolean wrap) {
+        // 从配置文件中加载所有的拓展类，可得到“配置项名称”到“配置类”的映射关系表
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null) {
             throw findException(name);
@@ -664,15 +679,15 @@ public class ExtensionLoader<T> {
             // 区别于cacheInstances，其key是name(SPI文件等号左边的)
             T instance = (T) EXTENSION_INSTANCES.get(clazz);
             if (instance == null) {
-                // 创建实例，比如SpiExtensionFactory
+                // 通过反射创建拓展对象实例，比如SpiExtensionFactory
                 EXTENSION_INSTANCES.putIfAbsent(clazz, clazz.newInstance());
                 instance = (T) EXTENSION_INSTANCES.get(clazz);
             }
-            // 注射实例
+            // 向实例中注入依赖
             injectExtension(instance);
 
 
-            // 是否需要包装
+            // 拓展类对象实例是否需要包装 todo 以下if分支待分析
             if (wrap) {
 
                 List<Class<?>> wrapperClassesList = new ArrayList<>();
@@ -684,9 +699,13 @@ public class ExtensionLoader<T> {
 
                 if (CollectionUtils.isNotEmpty(wrapperClassesList)) {
                     for (Class<?> wrapperClass : wrapperClassesList) {
+
                         Wrapper wrapper = wrapperClass.getAnnotation(Wrapper.class);
                         if (wrapper == null
                                 || (ArrayUtils.contains(wrapper.matches(), name) && !ArrayUtils.contains(wrapper.mismatches(), name))) {
+                            // 循环创建 Wrapper 实例
+                            // 将当前 instance 作为参数传给 Wrapper 的构造方法，并通过反射创建 Wrapper 实例。
+                            // 然后向 Wrapper 实例中注入依赖，最后将 Wrapper 实例再次赋值给 instance 变量
                             instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
                         }
                     }
@@ -706,6 +725,9 @@ public class ExtensionLoader<T> {
         return getExtensionClasses().containsKey(name);
     }
 
+    // injectExtension方法就是dubbo实现的ioc思想。
+    // Dubbo IOC 是通过 setter 方法注入依赖。Dubbo 首先会通过反射获取到实例的所有方法，然后再遍历方法列表，检测方法名是否具有 setter 方法特征。
+    // 若有，则通过 ObjectFactory 获取依赖对象，最后通过反射调用 setter 方法将依赖设置到目标对象中
     private T injectExtension(T instance) {
         // 什么情况为null呢？就是那些XXXExtensionFactory的子类对应的ExtensionLoader
         if (objectFactory == null) {
@@ -713,7 +735,9 @@ public class ExtensionLoader<T> {
         }
 
         try {
+            // 遍历目标类的所有方法
             for (Method method : instance.getClass().getMethods()) {
+                // 检测方法是否以 set 开头，且方法仅有一个参数，且方法访问级别为 public ,进去
                 if (!isSetter(method)) {
                     continue;
                 }
@@ -725,21 +749,27 @@ public class ExtensionLoader<T> {
                 }
                 // 获取setXXX方法第一个参数类型
                 Class<?> pt = method.getParameterTypes()[0];
-                // 判断是不是八大基本数据类型、str类型，进去
+                // 判断是不是八大基本数据类型、str类型，是的话continue，因为只注入属于SPI扩展类相关的对象，进去
                 if (ReflectUtils.isPrimitives(pt)) {
                     continue;
                 }
 
                 try {
-                    // 获取属性名称
+                    // 获取属性名称，比如 setName 方法对应属性名 name，进去
                     String property = getSetterProperty(method);
                     // eg，pt = ZookeeperTransporter.class,property = ZookeeperTransporter ，getExtension获取扩展类，进去
-                    // objectFactory的两个子类
+                    // objectFactory的两个子类， 从 ObjectFactory 中获取依赖对象
                     Object object = objectFactory.getExtension(pt, property);
                     if (object != null) {
-                        // 执行set方法方法
+                        // 通过反射调用 setter 方法设置依赖
                         method.invoke(instance, object);
                     }
+                    //在上面代码中，objectFactory 变量的类型为 AdaptiveExtensionFactory，AdaptiveExtensionFactory 内部维护了一个
+                    // ExtensionFactory 列表，用于存储其他类型的 ExtensionFactory。Dubbo 目前提供了两种 ExtensionFactory，
+                    // 分别是 SpiExtensionFactory 和 SpringExtensionFactory。前者用于创建自适应的拓展，
+                    // 后者是用于从 Spring 的 IOC 容器中获取所需的拓展。这两个类的类的代码不是很复杂，这里就不一一分析了。
+                    //
+                    //Dubbo IOC 目前仅支持 setter 方式注入，总的来说，逻辑比较简单易懂。
                 } catch (Exception e) {
                     logger.error("Failed to inject via method " + method.getName()
                             + " of interface " + type.getName() + ": " + e.getMessage(), e);
@@ -795,14 +825,15 @@ public class ExtensionLoader<T> {
 
     private Map<String, Class<?>> getExtensionClasses() {
         // cachedClasses缓存所有的subClass.class，其实就是spi在META-INF文件内容的等号左右部分，只是value不是str，只是Class
-        // eg:[{key:spi,value:org.apache.dubbo.common.extension.factory.SpiExtensionFactory}
-        //     {key:adaptive,value:org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory}...]
+        // eg:[{    key:spi,        value:org.apache.dubbo.common.extension.factory.SpiExtensionFactory}
+        //     {    key:adaptive,   value:org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory}...]
         Map<String, Class<?>> classes = cachedClasses.get();
+        // 双重检查
         if (classes == null) {
             synchronized (cachedClasses) {
                 classes = cachedClasses.get();
                 if (classes == null) {
-                    // 返回的是一个map，进去
+                    // 加载拓展类，返回的是一个map，进去
                     classes = loadExtensionClasses();
                     // 缓存起来
                     cachedClasses.set(classes);
@@ -810,11 +841,15 @@ public class ExtensionLoader<T> {
             }
         }
         return classes;
+
+        // 注：这里也是先检查缓存，若缓存未命中，则通过 synchronized 加锁。加锁后再次检查缓存，并判空。此时如果 classes 仍为 null，
+        // 则通过 loadExtensionClasses 加载拓展类。
     }
 
     /**
      * synchronized in getExtensionClasses
      */
+    // loadExtensionClasses 方法总共做了两件事情，一是对 SPI 注解进行解析，二是调用 loadDirectory 方法加载指定文件夹配置文件
     private Map<String, Class<?>> loadExtensionClasses() {
 
         // 缓存默认扩展类名称，进去
@@ -836,35 +871,42 @@ public class ExtensionLoader<T> {
         // 具体看下面大块注释
         return extensionClasses;
     }
+    // ===========Protocol spi
     //"registry" -> {Class@1219} "class org.apache.dubbo.registry.integration.InterfaceCompatibleRegistryProtocol"
-    //"rest" -> {Class@1223} "class org.apache.dubbo.rpc.protocol.rest.RestProtocol"
-    //"hessian" -> {Class@1225} "class org.apache.dubbo.rpc.protocol.hessian.HessianProtocol"
-    //"injvm" -> {Class@1221} "class org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol"
+    //"rest"     -> {Class@1223} "class org.apache.dubbo.rpc.protocol.rest.RestProtocol"
+    //"hessian"  -> {Class@1225} "class org.apache.dubbo.rpc.protocol.hessian.HessianProtocol"
+    //"injvm"    -> {Class@1221} "class org.apache.dubbo.rpc.protocol.injvm.InjvmProtocol"
+    //"dubbo"    -> {Class@1226} "class org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol"
+    //"mock"     -> {Class@1232} "class org.apache.dubbo.rpc.support.MockProtocol"
+    //"rmi"      -> {Class@1224} "class org.apache.dubbo.rpc.protocol.rmi.RmiProtocol"
     //"service-discovery-registry" -> {Class@1218} "class org.apache.dubbo.registry.client.RegistryProtocol"
-    //"dubbo" -> {Class@1226} "class org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol"
-    //"mock" -> {Class@1232} "class org.apache.dubbo.rpc.support.MockProtocol"
-    //"rmi" -> {Class@1224} "class org.apache.dubbo.rpc.protocol.rmi.RmiProtocol"
-    //
-    //"jdk" -> {Class@1465} "class org.apache.dubbo.common.compiler.support.JdkCompiler"
-    //"javassist" -> {Class@1466} "class org.apache.dubbo.common.compiler.support.JavassistCompiler"
+    //===============Compiler spi
+    //"jdk"      -> {Class@1465} "class org.apache.dubbo.common.compiler.support.JdkCompiler"
+    //"javassist"-> {Class@1466} "class org.apache.dubbo.common.compiler.support.JavassistCompiler"
 
     /**
      * extract and cache default extension name if exists
      */
     private void cacheDefaultExtensionName() {
+        // 获取 SPI 注解，这里的 type 变量是在调用 getExtensionLoader 方法时传入的
         // 这里的type比如ExtensionFactory接口、Protocol接口
         final SPI defaultAnnotation = type.getAnnotation(SPI.class);
         if (defaultAnnotation == null) {
             return;
         }
 
-        String value = defaultAnnotation.value();// protocol的注解值为dubbo
+        // Protocol 接口名上的SPI注解值为dubbo（里面的值就是默认值）
+        String value = defaultAnnotation.value();
         if ((value = value.trim()).length() > 0) {
+            // 对 SPI 注解内容进行切分
             String[] names = NAME_SEPARATOR.split(value);
-            if (names.length > 1) {// 只能有一个值
+            // 检测 SPI 注解内容是否合法，不合法则抛出异常
+            if (names.length > 1) {
+                // 注意日志,默认值只能有一个值，这里的默认也即默认的扩展实现类，比如Protocol接口的默认实现使用的就是DubboProtocol
                 throw new IllegalStateException("More than 1 default extension name on extension " + type.getName()
                         + ": " + Arrays.toString(names));
             }
+            // 设置默认名称，参考 getDefaultExtension 方法
             if (names.length == 1) {
                 cachedDefaultName = names[0];// dubbo
             }
@@ -877,7 +919,7 @@ public class ExtensionLoader<T> {
 
     private void loadDirectory(Map<String, Class<?>> extensionClasses, String dir, String type,
                                boolean extensionLoaderClassLoaderFirst, boolean overridden, String... excludedPackages) {
-        // eg： META-INF/dubbo/internal/org.apache.dubbo.common.extension.ExtensionFactory
+        // fileName = 文件夹路径 + type 全限定名  eg： META-INF/dubbo/internal/org.apache.dubbo.common.extension.ExtensionFactory
         String fileName = dir + type;
         try {
             Enumeration<java.net.URL> urls = null;
@@ -894,8 +936,10 @@ public class ExtensionLoader<T> {
             }
 
             if (urls == null || !urls.hasMoreElements()) {
+                // 根据文件名加载所有的同名文件
+
                 if (classLoader != null) {
-                    // classLoader对象的实例方法
+                    // classLoader对象的实例方法，一般这个分支
                     urls = classLoader.getResources(fileName);
                 } else {
                     // ClassLoader类的静态方法
@@ -910,7 +954,7 @@ public class ExtensionLoader<T> {
                     // 这个在common包下
                     java.net.URL resourceURL = urls.nextElement();
                     // 注意几个参数。最后一个是null，第三个参数默认是false，在ServicesLoadingStrategy和DubboLoadingStrategy的实现是true。
-                    // 进去
+                    //加载资源 进去
                     loadResource(extensionClasses, classLoader, resourceURL, overridden, excludedPackages);
                 }
             }
@@ -920,6 +964,7 @@ public class ExtensionLoader<T> {
         }
     }
 
+    // loadResource 方法用于读取和解析配置文件，并通过反射加载类，最后调用 loadClass 方法进行其他操作
     private void loadResource(Map<String, Class<?>> extensionClasses, ClassLoader classLoader,
                               java.net.URL resourceURL, boolean overridden, String... excludedPackages) {
         try {
@@ -929,15 +974,18 @@ public class ExtensionLoader<T> {
                 // 读一行，eg adaptive=org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory
                 // 可以看common模块META-INF的ExtensionFactory文件，那么这里会循环读三行
                 while ((line = reader.readLine()) != null) {
+                    // 定位 # 字符
                     final int ci = line.indexOf('#');
                     if (ci >= 0) {
+                        // 截取 # 之前的字符串，# 之后的内容为注释，需要忽略
                         line = line.substring(0, ci);
                     }
                     line = line.trim();
                     if (line.length() > 0) {
                         try {
                             String name = null;
-                            int i = line.indexOf('=');// 等号切割
+                            // 以等于号 = 为界，截取键与值
+                            int i = line.indexOf('=');
                             if (i > 0) {
                                 // adaptive、spi
                                 name = line.substring(0, i).trim();
@@ -974,12 +1022,15 @@ public class ExtensionLoader<T> {
         return false;
     }
 
+    // loadClass 方法用于主要用于操作extensionClasses缓存
+    // loadClass 方法操作了不同的缓存，比如 cachedAdaptiveClass、cachedWrapperClasses 和 cachedNames 等等。除此之外，该方法没有其他什么逻辑了。
     private void loadClass(Map<String, Class<?>> extensionClasses, java.net.URL resourceURL, Class<?> clazz, String name,
                            boolean overridden) throws NoSuchMethodException {
         // 判断clazz是否是type的子类/子接口 eg:type为ExtensionFactory.class.getName(),clazz为AdaptiveExtensionFactory.class
         if (!type.isAssignableFrom(clazz)) {
             throw new IllegalStateException("Error occurred when loading extension class (interface: " +
                     type + ", class line: " + clazz.getName() + "), class "
+                    // subType日志
                     + clazz.getName() + " is not subtype of interface.");
         }
         // 类是否含有Adaptive注解（比如AdaptiveExtensionFactory）
@@ -987,13 +1038,16 @@ public class ExtensionLoader<T> {
             // 缓存该Adaptive子类，进去
             cacheAdaptiveClass(clazz, overridden);
 
-        // 是否是wrapper的，进去
+        // 检测 clazz 是否是 Wrapper 类型，进去
         } else if (isWrapperClass(clazz)) {
-            // 进去
+            //  存储 clazz 到 cachedWrapperClasses 缓存中，进去
             cacheWrapperClass(clazz);
+
+        // 程序进入此分支，表明 clazz 是一个普通的拓展类
         } else {
             // 大部分是这个，子类实现@Spi注解接口，类含有@Active注解或者不含有任何注解。
             // 随便找个文件，比如org.apache.dubbo.common.threadpool.ThreadPool里面的实现类或者ActivateExt1Impl1实现类
+            // 检测 clazz 是否有默认的构造方法，如果没有，则抛出异常
             clazz.getConstructor();
             // name就是文件里面的=左边，比如spi、adaptive
             if (StringUtils.isEmpty(name)) {
@@ -1098,6 +1152,7 @@ public class ExtensionLoader<T> {
      * <p>
      * which has Constructor with given class type as its only argument
      */
+    // 看上面注释
     private boolean isWrapperClass(Class<?> clazz) {
         try {
             clazz.getConstructor(type);
@@ -1112,6 +1167,7 @@ public class ExtensionLoader<T> {
         // 是否含有@Extension注解，一般都不会含有
         org.apache.dubbo.common.Extension extension = clazz.getAnnotation(org.apache.dubbo.common.Extension.class);
         if (extension != null) {
+            // 有的话获取里面的值，eg：@Extension("impl1")
             return extension.value();
         }
 
@@ -1126,6 +1182,16 @@ public class ExtensionLoader<T> {
         return name.toLowerCase();
     }
 
+    // createAdaptiveExtension 方法的代码比较少，但却包含了三个逻辑，分别如下：
+    //
+    //  1. 调用 getAdaptiveExtensionClass 方法获取自适应拓展 Class 对象
+    //  2. 通过反射进行实例化
+    //  3. 调用 injectExtension 方法向拓展实例中注入依赖
+    //
+    // 前两个逻辑比较好理解，第三个逻辑用于向自适应拓展对象中注入依赖。这个逻辑看似多余，但有存在的必要，这里简单说明一下。
+    // 前面说过，Dubbo 中有两种类型的自适应拓展，一种是手工编码的，一种是自动生成的。手工编码的自适应拓展中可能存在着一些依赖，
+    // 而自动生成的 Adaptive 拓展则不会依赖其他类。这里调用 injectExtension 方法的目的是为手工编码的自适应拓展注入依赖，这一点需要大家注意一下。
+    // 关于 injectExtension 方法，前文已经分析过了，这里不再赘述。接下来，分析 getAdaptiveExtensionClass 方法的逻辑。
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
@@ -1137,7 +1203,19 @@ public class ExtensionLoader<T> {
         }
     }
 
-    // 获取所有适配扩展的class（就是属性type的实现类）
+    //getAdaptiveExtensionClass 方法同样包含了三个逻辑，如下：
+    //
+    //1. 调用 getExtensionClasses 获取所有的拓展类
+    //2. 检查缓存，若缓存不为空，则返回缓存
+    //3. 若缓存为空，则调用 createAdaptiveExtensionClass 创建自适应拓展类
+    //
+    // 这三个逻辑看起来平淡无奇，似乎没有多讲的必要。但是这些平淡无奇的代码中隐藏了着一些细节，需要说明一下。首先从第一个逻辑说起，
+    // getExtensionClasses 这个方法用于获取某个接口的所有实现类。比如该方法可以获取 Protocol 接口的 DubboProtocol、HttpProtocol、
+    // InjvmProtocol 等实现类。在获取实现类的过程中，如果某个实现类被 Adaptive 注解修饰了，那么该类就会被赋值给 cachedAdaptiveClass 变量。
+    // 此时，上面步骤中的第二步条件成立（缓存不为空），直接返回 cachedAdaptiveClass 即可。如果所有的实现类均未被 Adaptive 注解修饰，
+    // 那么执行第三步逻辑，创建自适应拓展类，即分析下createAdaptiveExtensionClass
+
+    // 获取所有适配（有@Adaptive注解的）扩展的class（就是属性type的实现类）
     private Class<?> getAdaptiveExtensionClass() {
         // 核心！！！大概原理说下就是：根据多个LoadingStrategy加载策略，获取META-INF下的文件，读取里面的信息，获取多个类全限定名，
         // 利用线程上下文加载器（appClassLoader）加载到jvm。方法进去
@@ -1146,17 +1224,20 @@ public class ExtensionLoader<T> {
             // 这里比如就是 AdaptiveExtensionFactory.class（cachedAdaptiveClass的赋值处在getExtensionClasses最里面的addExtension方法调用）
             return cachedAdaptiveClass;
         }
-        // ExtensionFactory接口会在上面的分支返回（因为该接口含有@Adaptive注解子类），Protocol接口会走下面的方法（不有@Adaptive注解子类）
+        // ExtensionFactory接口会在上面的分支返回（因为该接口含有@Adaptive注解子类），Protocol接口会走下面的方法（不含有@Adaptive注解的子类）
         // 此时Protocol接口也有了"Adaptive"子类(实际是通过Javassist生成的，且类头上不会有@Adaptive注解)
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
+    //createAdaptiveExtensionClass 方法用于生成自适应拓展类，该方法首先会生成自适应拓展类的源码，然后通过 Compiler 实例
+    // （Dubbo 默认使用 javassist 作为编译器）编译源码，得到代理类 Class 实例。接下来，我们把重点放在代理类代码生成的逻辑上，其他逻辑大家自行分析。
     private Class<?> createAdaptiveExtensionClass() {
+        // 构建自适应拓展代码
         // eg type=protocol、cachedDefaultName = dubbo(这个值来源于Protocol接口上的注解里的值)
-        // generat内部会搞一个type的实现类，以源码str的方式
+        // generate内部会搞一个type的实现类，以源码str的方式
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
         ClassLoader classLoader = findClassLoader();
-        // 获取compiler接口的实现类(只有两个jdk和javassist)，将上面的code str编译成类
+        // 获取compiler接口的实现类(只有两个jdk和javassist，默认使用 javassist 作为编译器)，将上面的code str编译成类
         org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
         // 编译，方法返回Class。进去
         return compiler.compile(code, classLoader);
