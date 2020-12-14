@@ -27,9 +27,14 @@ import java.util.List;
 /**
  * AdaptiveExtensionFactory
  */
+// OK
 @Adaptive
 public class AdaptiveExtensionFactory implements ExtensionFactory {
 
+    // 根据 loadFile()方法的缓存原则，AdaptiveExtensionFactory实例中的factories的size返回应为2，里面只会保存这两个类实例：
+    // spring=com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory
+    // spi=com.alibaba.dubbo.common.extension.factory.SpiExtensionFactory
+    // 因为adaptive=com.alibaba.dubbo.common.extension.factory.AdaptiveExtensionFactory是保存在cachedAdaptiveClass上的
     private final List<ExtensionFactory> factories;
 
     public AdaptiveExtensionFactory() {
@@ -38,11 +43,14 @@ public class AdaptiveExtensionFactory implements ExtensionFactory {
         for (String name : loader.getSupportedExtensions()) {
             list.add(loader.getExtension(name));
         }
+        // unmodifiableList不可变。SpiExtensionFactory
         factories = Collections.unmodifiableList(list);
     }
 
+    //分析清楚AdaptiveExtensionFactory类的getExtension方法，就可以明白这个IOC容器是如何取出需要的SPI实例依赖了
     @Override
     public <T> T getExtension(Class<T> type, String name) {
+        // 调用SpringExtensionFactory、SpiExtensionFactory类的getExtension方法
         for (ExtensionFactory factory : factories) {
             T extension = factory.getExtension(type, name);
             if (extension != null) {

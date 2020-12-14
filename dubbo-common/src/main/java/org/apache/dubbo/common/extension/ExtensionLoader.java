@@ -85,29 +85,52 @@ public class ExtensionLoader<T> {
 
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
 
+    // 扩展加载器集合，key为扩展接口，例如Protocol等
     private static final ConcurrentMap<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>(64);
 
+    // 扩展实现集合，key为扩展实现类，value为扩展对象
+    // 例如key为Class<DubboProtocol>，value为DubboProtocol类对象实例
     private static final ConcurrentMap<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>(64);
 
+    // 扩展接口，例如Protocol等(带有@SPI注解的)
     private final Class<?> type;
 
+    // 对象工厂，获得扩展实现的实例，用于injectExtension方法中将扩展实现类的实例注入到相关的依赖属性。
+    // 比如StubProxyFactoryWrapper类中有Protocol protocol属性，就是通过set方法把Protocol的实现类实例赋值
+    // 所有的SPI类（除ExtensionFactory之外）对应的ExtensionLoader实例的objectFactory属性的类型都是AdaptiveExtensionFactory类
     private final ExtensionFactory objectFactory;
 
+    // 缓存的扩展名与扩展类映射(扩展文件k=v)，和cachedClasses的key和value对换。
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<>();
 
+    // 缓存的扩展实现类集合
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
+    // 扩展名与加有@Activate的自动激活类的映射
     private final Map<String, Object> cachedActivates = new ConcurrentHashMap<>();
+
+    // 缓存的扩展对象集合，key为扩展名，value为扩展对象
+    // 例如Protocol扩展，key为dubbo，value为DubboProcotol实现类对象（存在Holder中）
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
+
+    // 缓存的自适应( Adaptive )扩展对象，例如例如AdaptiveExtensionFactory类的对象
     private final Holder<Object> cachedAdaptiveInstance = new Holder<>();
+
+    //缓存的自适应扩展对象的类，例如AdaptiveExtensionFactory类
     private volatile Class<?> cachedAdaptiveClass = null;
+
+    // 缓存的默认扩展名，就是@SPI中设置的值
     private String cachedDefaultName;
+
+    // 创建cachedAdaptiveInstance异常
     private volatile Throwable createAdaptiveInstanceError;
 
+    //拓展Wrapper实现类集合
     private Set<Class<?>> cachedWrapperClasses;
 
+    //拓展名与加载对应拓展类发生的异常的映射
     private Map<String, IllegalStateException> exceptions = new ConcurrentHashMap<>();
-    // todo
+
     private static volatile LoadingStrategy[] strategies = loadLoadingStrategies();
 
     public static void setLoadingStrategies(LoadingStrategy... strategies) {
@@ -149,7 +172,8 @@ public class ExtensionLoader<T> {
         // getAdaptiveExtension调用时机注意：创建非ExtensionFactory的其他loader的时候（即该构造方法），这里又会调用getExtensionLoader创建ExtensionFactory loader，
         // 这个 ExtensionFactory loader同时调用getAdaptiveExtension。注：不光是ExtensionFactory loader，还有其他的loader也会调用getAdaptiveExtension，比如ServiceConfig里面的PROTOCOL属性
 
-        // 而这个getAdaptiveExtension方法作用就是根据SPI机制获取type的各个subClass并加载到jvm（注意type是带有@SPI注解的接口，比如这里的Protocol、ExtensionFactory）。进去
+        // 而这个getAdaptiveExtension方法作用就是获取type的自适应扩展子类（带有@Adaptive注解的）（注意type是带有@SPI注解的接口，比如这里的Protocol、ExtensionFactory）。进去
+        // 所有的SPI类（除ExtensionFactory之外）对应的ExtensionLoader实例的objectFactory属性的类型都是AdaptiveExtensionFactory类
         objectFactory = (type == ExtensionFactory.class ? null : ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension());
     }
 
@@ -472,7 +496,7 @@ public class ExtensionLoader<T> {
      */
     public T getDefaultExtension() {
         getExtensionClasses();
-        if (StringUtils.isBlank(cachedDefaultName) || "true".equals(cachedDefaultName)) {
+        if (StringUtils.isBlank(cachedDefaultName) || "true".equals(cachedDefaultName)) { // cachedDefaultName会在上面的方法得到赋值
             return null;
         }
         return getExtension(cachedDefaultName);
@@ -852,7 +876,7 @@ public class ExtensionLoader<T> {
     // loadExtensionClasses 方法总共做了两件事情，一是对 SPI 注解进行解析，二是调用 loadDirectory 方法加载指定文件夹配置文件
     private Map<String, Class<?>> loadExtensionClasses() {
 
-        // 缓存默认扩展类名称，进去
+        // 缓存默认扩展类名称(就是SPI注解里面的值)，进去
         cacheDefaultExtensionName();
 
         // 待返回的结果，在下面的loadDirectory内部会得到填充
@@ -954,7 +978,7 @@ public class ExtensionLoader<T> {
                     // 这个在common包下
                     java.net.URL resourceURL = urls.nextElement();
                     // 注意几个参数。最后一个是null，第三个参数默认是false，在ServicesLoadingStrategy和DubboLoadingStrategy的实现是true。
-                    //加载资源 进去
+                    // 加载资源 进去
                     loadResource(extensionClasses, classLoader, resourceURL, overridden, excludedPackages);
                 }
             }
@@ -1189,14 +1213,14 @@ public class ExtensionLoader<T> {
     //  3. 调用 injectExtension 方法向拓展实例中注入依赖
     //
     // 前两个逻辑比较好理解，第三个逻辑用于向自适应拓展对象中注入依赖。这个逻辑看似多余，但有存在的必要，这里简单说明一下。
-    // 前面说过，Dubbo 中有两种类型的自适应拓展，一种是手工编码的，一种是自动生成的。手工编码的自适应拓展中可能存在着一些依赖，
-    // 而自动生成的 Adaptive 拓展则不会依赖其他类。这里调用 injectExtension 方法的目的是为手工编码的自适应拓展注入依赖，这一点需要大家注意一下。
-    // 关于 injectExtension 方法，前文已经分析过了，这里不再赘述。接下来，分析 getAdaptiveExtensionClass 方法的逻辑。
+    // 前面说过，Dubbo 中有两种类型的自适应拓展，一种是手工编码的（自己提供@Adaptive注解的子类），一种是自动生成的（内部字符串拼接源码，结合javassist compiler）。
+    // 手工编码的自适应拓展中可能存在着一些依赖，而自动生成的 Adaptive 拓展则不会依赖其他类。这里调用 injectExtension 方法的目的是为手工编码的自适应拓展注入依赖，
+    // 这一点需要大家注意一下。关于 injectExtension 方法，前文已经分析过了，这里不再赘述。接下来，分析 getAdaptiveExtensionClass 方法的逻辑。
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
             // getAdaptiveExtensionClass获取扩展类并加载到jvm，方法返回Class，进去
-            // 然后newInstance，在调用injectExtension，进去
+            // 然后newInstance，在调用injectExtension，ioc的方式注入依赖的扩展类，进去
             return injectExtension((T) getAdaptiveExtensionClass().newInstance());
         } catch (Exception e) {
             throw new IllegalStateException("Can't create adaptive extension " + type + ", cause: " + e.getMessage(), e);
@@ -1211,15 +1235,16 @@ public class ExtensionLoader<T> {
     //
     // 这三个逻辑看起来平淡无奇，似乎没有多讲的必要。但是这些平淡无奇的代码中隐藏了着一些细节，需要说明一下。首先从第一个逻辑说起，
     // getExtensionClasses 这个方法用于获取某个接口的所有实现类。比如该方法可以获取 Protocol 接口的 DubboProtocol、HttpProtocol、
-    // InjvmProtocol 等实现类。在获取实现类的过程中，如果某个实现类被 Adaptive 注解修饰了，那么该类就会被赋值给 cachedAdaptiveClass 变量。
+    // InjvmProtocol 等实现类。在获取实现类的过程中，如果某个实现类被 Adaptive 注解修饰了（手工编码的），那么该类就会被赋值给 cachedAdaptiveClass 变量。
     // 此时，上面步骤中的第二步条件成立（缓存不为空），直接返回 cachedAdaptiveClass 即可。如果所有的实现类均未被 Adaptive 注解修饰，
-    // 那么执行第三步逻辑，创建自适应拓展类，即分析下createAdaptiveExtensionClass
+    // 那么执行第三步逻辑，创建自适应拓展类（自动生成的），即分析下createAdaptiveExtensionClass
 
     // 获取所有适配（有@Adaptive注解的）扩展的class（就是属性type的实现类）
     private Class<?> getAdaptiveExtensionClass() {
         // 核心！！！大概原理说下就是：根据多个LoadingStrategy加载策略，获取META-INF下的文件，读取里面的信息，获取多个类全限定名，
         // 利用线程上下文加载器（appClassLoader）加载到jvm。方法进去
         getExtensionClasses();
+        // cachedAdaptiveClass（有可能）会在上面的方法得到赋值
         if (cachedAdaptiveClass != null) {
             // 这里比如就是 AdaptiveExtensionFactory.class（cachedAdaptiveClass的赋值处在getExtensionClasses最里面的addExtension方法调用）
             return cachedAdaptiveClass;

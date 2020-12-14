@@ -81,17 +81,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class ExtensionLoaderTest {
+    // 1 Null
     @Test
     public void test_getExtensionLoader_Null() throws Exception {
         try {
             getExtensionLoader(null);
             fail();
         } catch (IllegalArgumentException expected) {
+            // getMessage的值就是throw new Exception(xxx)的xx
             assertThat(expected.getMessage(),
                     containsString("Extension type == null"));
         }
     }
 
+    // 2 NotInterface
     @Test
     public void test_getExtensionLoader_NotInterface() throws Exception {
         try {
@@ -103,6 +106,7 @@ public class ExtensionLoaderTest {
         }
     }
 
+    // 3 NotSpiAnnotation
     @Test
     public void test_getExtensionLoader_NotSpiAnnotation() throws Exception {
         try {
@@ -118,6 +122,7 @@ public class ExtensionLoaderTest {
 
     @Test
     public void test_getDefaultExtension() throws Exception {
+        //
         SimpleExt ext = getExtensionLoader(SimpleExt.class).getDefaultExtension();
         assertThat(ext, instanceOf(SimpleExtImpl1.class));
 

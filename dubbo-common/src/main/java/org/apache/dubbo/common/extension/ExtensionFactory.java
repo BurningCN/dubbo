@@ -19,6 +19,9 @@ package org.apache.dubbo.common.extension;
 /**
  * ExtensionFactory
  */
+// OK
+// ExtensionFactory的作用就类似spring框架中的IOC的作用，正是因为JDK的SPI机制比较简单，所以duboo框架才重写了SPI机制，并实现了IOC和AOP的功能。
+// IOC功能的代码出现在ExtensionLoader的 injectExtension方法里面
 @SPI
 public interface ExtensionFactory {
 
@@ -29,6 +32,7 @@ public interface ExtensionFactory {
      * @param name object name.
      * @return object instance.
      */
+    // 泛型方法
     <T> T getExtension(Class<T> type, String name);
 
 }

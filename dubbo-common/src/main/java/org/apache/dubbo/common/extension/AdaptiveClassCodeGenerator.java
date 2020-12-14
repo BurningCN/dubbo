@@ -301,20 +301,23 @@ public class AdaptiveClassCodeGenerator {
             // 进去
             code.append(generateInvocationArgumentNullCheck(method));
 
-            // todo 下面待分析 2020.12.13
 
-
-
+            // 进去
             code.append(generateExtNameAssignment(value, hasInvocation));
+            // 生成 extName 判空代码 进去
             // check extName == null?
             code.append(generateExtNameNullCheck(value));
 
+            //  生成拓展获取代码 进去
             code.append(generateExtensionAssignment());
 
+            // 生成返回值和目标方法调用逻辑，进去
             // return statement
             code.append(generateReturnAndInvocation(method));
         }
 
+        // 上面代码比较复杂，不是很好理解。对于这段代码，建议大家写点测试用例，对 Protocol、LoadBalance 以及 Transporter 等接口的自适应拓展
+        // 类代码生成过程进行调试。这里我以 Transporter 接口的自适应拓展类代码生成过程举例说明。首先看一下 Transporter 接口的定义，如下：
         return code.toString();
     }
 
@@ -331,42 +334,72 @@ public class AdaptiveClassCodeGenerator {
     private String generateExtNameAssignment(String[] value, boolean hasInvocation) {
         // TODO: refactor it
         String getNameCode = null;
+        // 遍历 value，这里的 value 是 Adaptive 的注解值，2.2.3.3 节分析过 value 变量的获取过程。
+        // 此处循环目的是生成从 URL 中获取拓展名的代码，生成的代码会赋值给 getNameCode 变量。注意这
+        // 个循环的遍历顺序是由后向前遍历的。
         for (int i = value.length - 1; i >= 0; --i) {
+            // 当 i 为最后一个元素的坐标时
             if (i == value.length - 1) {
+                // 默认拓展名非空
                 if (null != defaultExtName) {
+                    // protocol 是 url 的一部分，可通过 getProtocol 方法获取，其他的则是从
+                    // URL 参数中获取。因为获取方式不同，所以这里要判断 value[i] 是否为 protocol
                     if (!"protocol".equals(value[i])) {
+                        // hasInvocation 用于标识方法参数列表中是否有 Invocation 类型参数
                         if (hasInvocation) {
+                            // 生成的代码功能等价于下面的代码：
+                            //   url.getMethodParameter(methodName, value[i], defaultExtName)
+                            // 以 LoadBalance 接口的 select 方法为例，最终生成的代码如下：
+                            //   url.getMethodParameter(methodName, "loadbalance", "random")
                             getNameCode = String.format("url.getMethodParameter(methodName, \"%s\", \"%s\")", value[i], defaultExtName);
                         } else {
+                            // 生成的代码功能等价于下面的代码：
+                            //   url.getParameter(value[i], defaultExtName)
                             getNameCode = String.format("url.getParameter(\"%s\", \"%s\")", value[i], defaultExtName);
                         }
                     } else {
+                        // 生成的代码功能等价于下面的代码：
+                        //   ( url.getProtocol() == null ? defaultExtName : url.getProtocol() )
                         getNameCode = String.format("( url.getProtocol() == null ? \"%s\" : url.getProtocol() )", defaultExtName);
                     }
+                    // 默认拓展名为空
                 } else {
                     if (!"protocol".equals(value[i])) {
                         if (hasInvocation) {
+                            // 生成代码格式同上
                             getNameCode = String.format("url.getMethodParameter(methodName, \"%s\", \"%s\")", value[i], defaultExtName);
                         } else {
+                            // 生成的代码功能等价于下面的代码：
+                            //   url.getParameter(value[i])
                             getNameCode = String.format("url.getParameter(\"%s\")", value[i]);
                         }
                     } else {
+                        // 生成从 url 中获取协议的代码，比如 "dubbo"
                         getNameCode = "url.getProtocol()";
                     }
                 }
             } else {
                 if (!"protocol".equals(value[i])) {
                     if (hasInvocation) {
+                        // 生成代码格式同上
                         getNameCode = String.format("url.getMethodParameter(methodName, \"%s\", \"%s\")", value[i], defaultExtName);
                     } else {
+                        // 生成的代码功能等价于下面的代码：
+                        //   url.getParameter(value[i], getNameCode)
+                        // 以 Transporter 接口的 connect 方法为例，最终生成的代码如下：
+                        //   url.getParameter("client", url.getParameter("transporter", "netty"))
                         getNameCode = String.format("url.getParameter(\"%s\", %s)", value[i], getNameCode);
                     }
                 } else {
+                    // 生成的代码功能等价于下面的代码：
+                    //   url.getProtocol() == null ? getNameCode : url.getProtocol()
+                    // 以 Protocol 接口的 connect 方法为例，最终生成的代码如下：
+                    //   url.getProtocol() == null ? "dubbo" : url.getProtocol()
                     getNameCode = String.format("url.getProtocol() == null ? (%s) : url.getProtocol()", getNameCode);
                 }
             }
         }
-
+        // 生成 extName 赋值代码
         return String.format(CODE_EXT_NAME_ASSIGNMENT, getNameCode);
     }
 
@@ -374,6 +407,11 @@ public class AdaptiveClassCodeGenerator {
      * @return
      */
     private String generateExtensionAssignment() {
+
+        // 生成拓展获取代码，格式如下：
+        // type全限定名 extension = (type全限定名)ExtensionLoader全限定名
+        //     .getExtensionLoader(type全限定名.class).getExtension(extName);
+        // Tips: 格式化字符串中的 %<s 表示使用前一个转换符所描述的参数，即 type 全限定名
         return String.format(CODE_EXTENSION_ASSIGNMENT, type.getName(), ExtensionLoader.class.getSimpleName(), type.getName());
     }
 
@@ -381,12 +419,16 @@ public class AdaptiveClassCodeGenerator {
      * generate method invocation statement and return it if necessary
      */
     private String generateReturnAndInvocation(Method method) {
+
+        // 如果方法返回值类型非 void，则生成 return 语句。
         String returnStatement = method.getReturnType().equals(void.class) ? "" : "return ";
 
         String args = IntStream.range(0, method.getParameters().length)
                 .mapToObj(i -> String.format(CODE_EXTENSION_METHOD_INVOKE_ARGUMENT, i))
                 .collect(Collectors.joining(", "));
 
+        // 生成目标方法调用逻辑，格式为：
+        //     extension.方法名(arg0, arg2, ..., argN);
         return returnStatement + String.format("extension.%s(%s);\n", method.getName(), args);
     }
 

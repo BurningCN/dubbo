@@ -21,6 +21,7 @@ import org.apache.dubbo.common.URL;
 /**
  * Has no SPI annotation
  */
+// OK
 public interface NoSpiExt {
     @Adaptive
     String echo(URL url, String s);
