@@ -591,7 +591,7 @@ public class ExtensionLoader<T> {
      * @param name  extension name
      * @param clazz extension class
      * @throws IllegalStateException when extension to be placed doesn't exist
-     * @deprecated not recommended any longer, and use only when test
+     * @deprecated not recommended any longer, and use only when test ----注意这句话
      */
     @Deprecated
     public void replaceExtension(String name, Class<?> clazz) {
@@ -617,6 +617,7 @@ public class ExtensionLoader<T> {
 
             cachedNames.put(clazz, name);
             cachedClasses.get().put(name, clazz);
+            // 移除之前（扩展名为name对应的扩展类）的实例
             cachedInstances.remove(name);
         } else {
             if (cachedAdaptiveClass == null) {
@@ -624,6 +625,7 @@ public class ExtensionLoader<T> {
             }
 
             cachedAdaptiveClass = clazz;
+            // 和前面一样，移除旧的实例
             cachedAdaptiveInstance.set(null);
         }
     }

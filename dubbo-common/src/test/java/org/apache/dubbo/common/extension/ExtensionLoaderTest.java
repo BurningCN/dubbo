@@ -331,7 +331,7 @@ public class ExtensionLoaderTest {
         assertTrue(adaptive instanceof AddExt2_ManualAdaptive);
     }
 
-    // 在已存在Adaptive的ExtensionLoader下再次添加一个Adaptive，肯定抛异常，因为一个type对应的Extension只能有一个Adaptive
+    // √ 在已存在Adaptive的ExtensionLoader下再次添加一个Adaptive，肯定抛异常，因为一个type对应的Extension只能有一个Adaptive
     @Test
     public void test_AddExtension_Adaptive_ExceptionWhenExistedAdaptive() throws Exception {
         // AddExt1没有自适应扩展类
@@ -341,32 +341,41 @@ public class ExtensionLoaderTest {
         loader.getAdaptiveExtension();
 
         try {
+            // 前面通过自动生成了一个Adaptive类，下面手动又添加了一个，肯定不行（一个SPI接口只能有一个Adaptive扩展子类），进去
             loader.addExtension(null, AddExt1_ManualAdaptive.class);
             fail();
         } catch (IllegalStateException expected) {
+            // 日志
             assertThat(expected.getMessage(), containsString("Adaptive Extension already exists (Extension interface org.apache.dubbo.common.extension.ext8_add.AddExt1)!"));
         }
     }
 
+    // √
     @Test
     public void test_replaceExtension() throws Exception {
         try {
+            // 肯定获取不到（看AddExt1的SPI文件）
             getExtensionLoader(AddExt1.class).getExtension("Manual2");
             fail();
         } catch (IllegalStateException expected) {
+            // 日志
             assertThat(expected.getMessage(), containsString("No such extension org.apache.dubbo.common.extension.ext8_add.AddExt1 by name Manual"));
         }
 
         {
+            // getExtension
             AddExt1 ext = getExtensionLoader(AddExt1.class).getExtension("impl1");
 
             assertThat(ext, instanceOf(AddExt1Impl1.class));
+            // getExtensionName，根据Class获取name，进去
             assertEquals("impl1", getExtensionLoader(AddExt1.class).getExtensionName(AddExt1Impl1.class));
         }
         {
+            // 将扩展名为impl1的替换为新的扩展类，进去
             getExtensionLoader(AddExt1.class).replaceExtension("impl1", AddExt1_ManualAdd2.class);
             AddExt1 ext = getExtensionLoader(AddExt1.class).getExtension("impl1");
 
+            // 验证通过，即被AddExt1_ManualAdd2替换了
             assertThat(ext, instanceOf(AddExt1_ManualAdd2.class));
             assertEquals("impl1", getExtensionLoader(AddExt1.class).getExtensionName(AddExt1_ManualAdd2.class));
         }
