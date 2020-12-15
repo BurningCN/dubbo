@@ -456,7 +456,7 @@ public class ExtensionLoader<T> {
 
     // 参数name就是spi文件的等号左边的key
     public T getExtension(String name, boolean wrap) {
-        if (StringUtils.isEmpty(name)) {
+        if (StringUtils.isEmpty(name)) {// 注意isEmpty和isBlank的区别，后者考虑到了空格（自己看下源码）
             throw new IllegalArgumentException("Extension name == null");
         }
         if ("true".equals(name)) {
@@ -496,9 +496,11 @@ public class ExtensionLoader<T> {
      */
     public T getDefaultExtension() {
         getExtensionClasses();
-        if (StringUtils.isBlank(cachedDefaultName) || "true".equals(cachedDefaultName)) { // cachedDefaultName会在上面的方法得到赋值
+        // cachedDefaultName会在上面的方法得到赋值
+        if (StringUtils.isBlank(cachedDefaultName) || "true".equals(cachedDefaultName)) {
             return null;
         }
+        // 比如这里的值impl1(这个值来自SimpleExt类上面的@SPI注解里面的内容)
         return getExtension(cachedDefaultName);
     }
 
@@ -561,6 +563,7 @@ public class ExtensionLoader<T> {
                     clazz + " can't be interface!");
         }
 
+        // 根据子类头上是否带有Adaptive注解，进不同的分支，目的是为了给对应的缓存容器存值
         if (!clazz.isAnnotationPresent(Adaptive.class)) {
             if (StringUtils.isBlank(name)) {
                 throw new IllegalStateException("Extension name is blank (Extension " + type + ")!");
@@ -570,6 +573,7 @@ public class ExtensionLoader<T> {
                         name + " already exists (Extension " + type + ")!");
             }
 
+            // 这两个正好kv相反
             cachedNames.put(clazz, name);
             cachedClasses.get().put(name, clazz);
         } else {
@@ -696,6 +700,7 @@ public class ExtensionLoader<T> {
         // 从配置文件中加载所有的拓展类，可得到“配置项名称”到“配置类”的映射关系表
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null) {
+            // 如果找不到扩展名为name的则会进这个分支（比如 getExtensionLoader(SimpleExt.class).getExtension("XXX");），进去
             throw findException(name);
         }
         try {
@@ -711,32 +716,35 @@ public class ExtensionLoader<T> {
             injectExtension(instance);
 
 
-            // 拓展类对象实例是否需要包装 todo 以下if分支待分析
+            // 拓展类对象实例是否需要包装
             if (wrap) {
 
                 List<Class<?>> wrapperClassesList = new ArrayList<>();
+                // 该set会在加载文件资源发现类如果满足isWrapperClass方法的时候进行填充（可以看下Ext5Wrapper1、Ext5Wrapper2）
                 if (cachedWrapperClasses != null) {
                     wrapperClassesList.addAll(cachedWrapperClasses);
+                    // 给wrapper排个序，COMPARATOR进去
                     wrapperClassesList.sort(WrapperComparator.COMPARATOR);
+                    // 顺序翻转一下
                     Collections.reverse(wrapperClassesList);
                 }
 
                 if (CollectionUtils.isNotEmpty(wrapperClassesList)) {
+                    // 循环创建 Wrapper 实例（多层包装、其实装饰者模式）
                     for (Class<?> wrapperClass : wrapperClassesList) {
-
                         Wrapper wrapper = wrapperClass.getAnnotation(Wrapper.class);
                         if (wrapper == null
                                 || (ArrayUtils.contains(wrapper.matches(), name) && !ArrayUtils.contains(wrapper.mismatches(), name))) {
-                            // 循环创建 Wrapper 实例
                             // 将当前 instance 作为参数传给 Wrapper 的构造方法，并通过反射创建 Wrapper 实例。
                             // 然后向 Wrapper 实例中注入依赖，最后将 Wrapper 实例再次赋值给 instance 变量
                             instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
                         }
                     }
+                    // for循环结束Ext5Wrapper2里面含有Ext5Wrapper1成员，而Ext5Wrapper1里面含有实际的目标对象Ext5Impl1（详见test_getExtension_WithWrapper测试方法第一行）
                 }
             }
 
-            // 进去
+            // 前面通过newInstance构造了之后，下面进入初始化，进去
             initExtension(instance);
             return instance;
         } catch (Throwable t) {
@@ -992,7 +1000,7 @@ public class ExtensionLoader<T> {
     private void loadResource(Map<String, Class<?>> extensionClasses, ClassLoader classLoader,
                               java.net.URL resourceURL, boolean overridden, String... excludedPackages) {
         try {
-            // 建立输入流，将字节流转化为了字符流
+            // 建立输入流，将字节流转化为了字符流。注意这里的用法try with resource https://www.cnblogs.com/itZhy/p/7636615.html
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceURL.openStream(), StandardCharsets.UTF_8))) {
                 String line;
                 // 读一行，eg adaptive=org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory
@@ -1001,7 +1009,7 @@ public class ExtensionLoader<T> {
                     // 定位 # 字符
                     final int ci = line.indexOf('#');
                     if (ci >= 0) {
-                        // 截取 # 之前的字符串，# 之后的内容为注释，需要忽略
+                        // 截取 # 之前的字符串，# 之后的内容为注释，需要忽略（可以看org.apache.dubbo.common.extension.ext1.SimpleExt文件的内容，里面就有#注释，里面的第一行注释、最后一行前面的空格都是故意设计的，空格会被下面的trim截取调）
                         line = line.substring(0, ci);
                     }
                     line = line.trim();
@@ -1179,9 +1187,11 @@ public class ExtensionLoader<T> {
     // 看上面注释
     private boolean isWrapperClass(Class<?> clazz) {
         try {
+            // 查看类是否含有拷贝构造函数，如果有的话，那么这就是一个WrapperClass，比如看Ext5Wrapper1类
             clazz.getConstructor(type);
             return true;
         } catch (NoSuchMethodException e) {
+            // 没有对应方法的话，会抛异常
             return false;
         }
     }
@@ -1254,8 +1264,8 @@ public class ExtensionLoader<T> {
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
-    //createAdaptiveExtensionClass 方法用于生成自适应拓展类，该方法首先会生成自适应拓展类的源码，然后通过 Compiler 实例
-    // （Dubbo 默认使用 javassist 作为编译器）编译源码，得到代理类 Class 实例。接下来，我们把重点放在代理类代码生成的逻辑上，其他逻辑大家自行分析。
+    // createAdaptiveExtensionClass 方法用于生成自适应拓展类，该方法首先会生成自适应拓展类的源码，然后通过 Compiler 实例
+    // Dubbo 默认使用 javassist 作为编译器编译源码，得到代理类 Class 实例。接下来，我们把重点放在代理类代码生成的逻辑上，其他逻辑大家自行分析。
     private Class<?> createAdaptiveExtensionClass() {
         // 构建自适应拓展代码
         // eg type=protocol、cachedDefaultName = dubbo(这个值来源于Protocol接口上的注解里的值)
@@ -1263,8 +1273,9 @@ public class ExtensionLoader<T> {
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
         ClassLoader classLoader = findClassLoader();
         // 获取compiler接口的实现类(只有两个jdk和javassist，默认使用 javassist 作为编译器)，将上面的code str编译成类
+        // 调用的getAdaptiveExtension，这里返回的是AdaptiveCompile类实例
         org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
-        // 编译，方法返回Class。进去
+        // 编译，方法返回Class。进去（AdaptiveCompile的compile）
         return compiler.compile(code, classLoader);
     }
 

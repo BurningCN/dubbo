@@ -81,7 +81,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class ExtensionLoaderTest {
-    // 1 Null
+    // 1.Null
     @Test
     public void test_getExtensionLoader_Null() throws Exception {
         try {
@@ -94,7 +94,7 @@ public class ExtensionLoaderTest {
         }
     }
 
-    // 2 NotInterface
+    // 2.NotInterface
     @Test
     public void test_getExtensionLoader_NotInterface() throws Exception {
         try {
@@ -106,7 +106,7 @@ public class ExtensionLoaderTest {
         }
     }
 
-    // 3 NotSpiAnnotation
+    // 3.NotSpiAnnotation
     @Test
     public void test_getExtensionLoader_NotSpiAnnotation() throws Exception {
         try {
@@ -120,18 +120,23 @@ public class ExtensionLoaderTest {
         }
     }
 
+    //  √
     @Test
     public void test_getDefaultExtension() throws Exception {
-        //
+        // 两个方法都进去（注意Extension构造函数的getAdaptiveExtension方法调用，比较关键）
+        // 每个带有@SPI接口都有自己的ExtensionLoader
         SimpleExt ext = getExtensionLoader(SimpleExt.class).getDefaultExtension();
         assertThat(ext, instanceOf(SimpleExtImpl1.class));
 
+        // getDefaultExtensionName进去
         String name = getExtensionLoader(SimpleExt.class).getDefaultExtensionName();
         assertEquals("impl1", name);
     }
 
+    // √
     @Test
     public void test_getDefaultExtension_NULL() throws Exception {
+        // Ext2接口是没有默认的扩展类的（接口上的@SPI注解里面没有内容）
         Ext2 ext = getExtensionLoader(Ext2.class).getDefaultExtension();
         assertNull(ext);
 
@@ -139,15 +144,23 @@ public class ExtensionLoaderTest {
         assertNull(name);
     }
 
+    // √  前面是获取默认的扩展类实例，这里是获取指定扩展名对应的扩展类实例
     @Test
     public void test_getExtension() throws Exception {
+        // getExtension进去（内部会clz.newInstance()创建实例）
         assertTrue(getExtensionLoader(SimpleExt.class).getExtension("impl1") instanceof SimpleExtImpl1);
         assertTrue(getExtensionLoader(SimpleExt.class).getExtension("impl2") instanceof SimpleExtImpl2);
     }
 
+    // √ 带wrapper的
     @Test
     public void test_getExtension_WithWrapper() throws Exception {
+        // 看下WrappedExt接口的实现，以及对应的SPI文件
+        // 这里获取impl1扩展名的扩展类对象，肯定是WrappedExt接口子类型，所以用这个接受。
+        // 且注意返回的实际类型是Ext5Wrapper2（内不含有Ext5Wrapper1，Ext5Wrapper1里面含有实际的impl1扩展名对应的Ext5Impl1）
         WrappedExt impl1 = getExtensionLoader(WrappedExt.class).getExtension("impl1");
+
+        // 肯定满足，因为impl1的实际类型是Ext5Wrapper2
         assertThat(impl1, anyOf(instanceOf(Ext5Wrapper1.class), instanceOf(Ext5Wrapper2.class)));
 
         WrappedExt impl2 = getExtensionLoader(WrappedExt.class).getExtension("impl2");
@@ -155,14 +168,16 @@ public class ExtensionLoaderTest {
 
 
         URL url = new URL("p1", "1.2.3.4", 1010, "path1");
-        int echoCount1 = Ext5Wrapper1.echoCount.get();
-        int echoCount2 = Ext5Wrapper2.echoCount.get();
+        int echoCount1 = Ext5Wrapper1.echoCount.get();// 0
+        int echoCount2 = Ext5Wrapper2.echoCount.get();// 0
 
+        // 这是为了验证最终肯定会调最深层对象/被包装对象（Ext5Impl1）的方法
         assertEquals("Ext5Impl1-echo", impl1.echo(url, "ha"));
-        assertEquals(echoCount1 + 1, Ext5Wrapper1.echoCount.get());
-        assertEquals(echoCount2 + 1, Ext5Wrapper2.echoCount.get());
+        assertEquals(echoCount1 + 1, Ext5Wrapper1.echoCount.get());// Ext5Wrapper1.echoCount.get() = 1
+        assertEquals(echoCount2 + 1, Ext5Wrapper2.echoCount.get());// Ext5Wrapper2.echoCount.get() = 1
     }
 
+    // √
     @Test
     public void test_getExtension_ExceptionNoExtension() throws Exception {
         try {
@@ -173,6 +188,7 @@ public class ExtensionLoaderTest {
         }
     }
 
+    // √ 和前面一样
     @Test
     public void test_getExtension_ExceptionNoExtension_WrapperNotAffactName() throws Exception {
         try {
@@ -183,6 +199,7 @@ public class ExtensionLoaderTest {
         }
     }
 
+    // √
     @Test
     public void test_getExtension_ExceptionNullArg() throws Exception {
         try {
@@ -193,8 +210,10 @@ public class ExtensionLoaderTest {
         }
     }
 
+    // √
     @Test
     public void test_hasExtension() throws Exception {
+        // 注意参数都是扩展名（SPI文件k=v的k）。进去
         assertTrue(getExtensionLoader(SimpleExt.class).hasExtension("impl1"));
         assertFalse(getExtensionLoader(SimpleExt.class).hasExtension("impl1,impl2"));
         assertFalse(getExtensionLoader(SimpleExt.class).hasExtension("xxx"));
@@ -207,12 +226,15 @@ public class ExtensionLoaderTest {
         }
     }
 
+    // √ 测试是否能直接获取Wrapper包装类
     @Test
     public void test_hasExtension_wrapperIsNotExt() throws Exception {
         assertTrue(getExtensionLoader(WrappedExt.class).hasExtension("impl1"));
         assertFalse(getExtensionLoader(WrappedExt.class).hasExtension("impl1,impl2"));
         assertFalse(getExtensionLoader(WrappedExt.class).hasExtension("xxx"));
 
+        // 虽然在spi文件里面是有wrapper1=xxx的，也有xxx类，但是他不是能直接获取的扩展类（即下面的调用返回false），
+        // 因为其本身就是作为一种包装，比如我们getExtension("impl1")就会被其包装
         assertFalse(getExtensionLoader(WrappedExt.class).hasExtension("wrapper1"));
 
         try {
@@ -223,8 +245,10 @@ public class ExtensionLoaderTest {
         }
     }
 
+    // √
     @Test
     public void test_getSupportedExtensions() throws Exception {
+        // 进去
         Set<String> exts = getExtensionLoader(SimpleExt.class).getSupportedExtensions();
 
         Set<String> expected = new HashSet<String>();
@@ -235,6 +259,7 @@ public class ExtensionLoaderTest {
         assertEquals(expected, exts);
     }
 
+    // √
     @Test
     public void test_getSupportedExtensions_wrapperIsNotExt() throws Exception {
         Set<String> exts = getExtensionLoader(WrappedExt.class).getSupportedExtensions();
@@ -246,37 +271,47 @@ public class ExtensionLoaderTest {
         assertEquals(expected, exts);
     }
 
+    // √
     @Test
     public void test_AddExtension() throws Exception {
         try {
+            // 肯定是取不到的，因为AddExt1对应的SPI文件只有一行（子类AddExt1Impl1）
             getExtensionLoader(AddExt1.class).getExtension("Manual1");
             fail();
         } catch (IllegalStateException expected) {
             assertThat(expected.getMessage(), containsString("No such extension org.apache.dubbo.common.extension.ext8_add.AddExt1 by name Manual"));
         }
 
+        // 添加扩展，传入扩展名和扩展类Class，进去
         getExtensionLoader(AddExt1.class).addExtension("Manual1", AddExt1_ManualAdd1.class);
+        // 这次肯定能取出来了
         AddExt1 ext = getExtensionLoader(AddExt1.class).getExtension("Manual1");
 
         assertThat(ext, instanceOf(AddExt1_ManualAdd1.class));
+        // 根据扩展类Class获取扩展名，进去
         assertEquals("Manual1", getExtensionLoader(AddExt1.class).getExtensionName(AddExt1_ManualAdd1.class));
     }
 
+    // √
     @Test
     public void test_AddExtension_NoExtend() throws Exception {
-//        ExtensionLoader.getExtensionLoader(Ext9Empty.class).getSupportedExtensions();
+        ExtensionLoader.getExtensionLoader(Ext9Empty.class).getSupportedExtensions();
+        // 和前面一样，只是这个Ext9Empty没有对应的SPI文件，所以不会加载子类（上面方法进去后cachedClasses.size=0），这里是手动添加
         getExtensionLoader(Ext9Empty.class).addExtension("ext9", Ext9EmptyImpl.class);
         Ext9Empty ext = getExtensionLoader(Ext9Empty.class).getExtension("ext9");
 
         assertThat(ext, instanceOf(Ext9Empty.class));
+        // 扩展名肯定是ext9（之前addExtension就是这么放的）
         assertEquals("ext9", getExtensionLoader(Ext9Empty.class).getExtensionName(Ext9EmptyImpl.class));
     }
 
+    // √ 填充已存在的，重复的
     @Test
     public void test_AddExtension_ExceptionWhenExistedExtension() throws Exception {
         SimpleExt ext = getExtensionLoader(SimpleExt.class).getExtension("impl1");
 
         try {
+            // 方法的参数kv对已经加载（到type对应的ExtensionLoader）了，这里重复添加，进去看怎么判断的
             getExtensionLoader(AddExt1.class).addExtension("impl1", AddExt1_ManualAdd1.class);
             fail();
         } catch (IllegalStateException expected) {
@@ -284,19 +319,25 @@ public class ExtensionLoaderTest {
         }
     }
 
+    // √ 测试添加一个自适应的扩展类
     @Test
     public void test_AddExtension_Adaptive() throws Exception {
+        // AddExt2没有对应的SPI文件
         ExtensionLoader<AddExt2> loader = getExtensionLoader(AddExt2.class);
+        // 手动添加自适应的扩展类，可以不提供扩展名，即这里第一个参数传入了null，进去
         loader.addExtension(null, AddExt2_ManualAdaptive.class);
-
+        // 获取自适应扩展类实例，进去
         AddExt2 adaptive = loader.getAdaptiveExtension();
         assertTrue(adaptive instanceof AddExt2_ManualAdaptive);
     }
 
+    // 在已存在Adaptive的ExtensionLoader下再次添加一个Adaptive，肯定抛异常，因为一个type对应的Extension只能有一个Adaptive
     @Test
     public void test_AddExtension_Adaptive_ExceptionWhenExistedAdaptive() throws Exception {
+        // AddExt1没有自适应扩展类
         ExtensionLoader<AddExt1> loader = getExtensionLoader(AddExt1.class);
 
+        // 如下调用会字符串构建源码+javassist构建一个，进去
         loader.getAdaptiveExtension();
 
         try {

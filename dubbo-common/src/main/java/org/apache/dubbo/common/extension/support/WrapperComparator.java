@@ -24,6 +24,8 @@ import java.util.Comparator;
 /**
  * OrderComparator
  */
+// OK
+// 用的Comparator，而不是Comparable，注意下
 public class WrapperComparator implements Comparator<Object> {
 
     public static final Comparator<Object> COMPARATOR = new WrapperComparator();
@@ -46,8 +48,10 @@ public class WrapperComparator implements Comparator<Object> {
         Class clazz1 = (Class) o1;
         Class clazz2 = (Class) o2;
 
+        // 进去
         Class<?> inf = findSpi(clazz1);
 
+        // 进去
         OrderInfo a1 = parseOrder(clazz1);
         OrderInfo a2 = parseOrder(clazz2);
 
@@ -62,10 +66,12 @@ public class WrapperComparator implements Comparator<Object> {
             return null;
         }
 
+        // 遍历所有实现的接口
         for (Class<?> intf : clazz.getInterfaces()) {
             if (intf.isAnnotationPresent(SPI.class)) {
                 return intf;
             } else {
+                // 递归调用
                 Class result = findSpi(intf);
                 if (result != null) {
                     return result;
@@ -78,6 +84,7 @@ public class WrapperComparator implements Comparator<Object> {
 
     private OrderInfo parseOrder(Class<?> clazz) {
         OrderInfo info = new OrderInfo();
+        // Activate注解填充了顺序，比如@Activate(order=100)
         if (clazz.isAnnotationPresent(Activate.class)) {
             Activate activate = clazz.getAnnotation(Activate.class);
             info.order = activate.order();

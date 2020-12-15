@@ -22,15 +22,19 @@ import org.apache.dubbo.common.extension.ext6_wrap.WrappedExt;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Ext5Wrapper1 implements WrappedExt {
+    // 静态的，多个实例共享的
     public static AtomicInteger echoCount = new AtomicInteger();
     WrappedExt instance;
 
+    // dubbo官方把这个叫做拷贝构造函数
     public Ext5Wrapper1(WrappedExt instance) {
         this.instance = instance;
     }
 
     public String echo(URL url, String s) {
+        // wrapper类似代理模式
         echoCount.incrementAndGet();
+        // 调用目标方法
         return instance.echo(url, s);
     }
 }

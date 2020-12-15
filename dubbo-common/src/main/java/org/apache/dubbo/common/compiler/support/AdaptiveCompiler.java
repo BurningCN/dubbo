@@ -28,6 +28,7 @@ public class AdaptiveCompiler implements Compiler {
 
     private static volatile String DEFAULT_COMPILER;
 
+
     public static void setDefaultCompiler(String compiler) {
         DEFAULT_COMPILER = compiler;
     }
@@ -36,10 +37,12 @@ public class AdaptiveCompiler implements Compiler {
     public Class<?> compile(String code, ClassLoader classLoader) {
         Compiler compiler;
         ExtensionLoader<Compiler> loader = ExtensionLoader.getExtensionLoader(Compiler.class);
+        // 上面setDefaultCompiler在外界显示调用才会更改Compile实现
         String name = DEFAULT_COMPILER; // copy reference
         if (name != null && name.length() > 0) {
             compiler = loader.getExtension(name);
         } else {
+            // 走这个分支，获取默认的扩展类实例（Compiler接口上面@SPI("javassist")注解里面的值是默认扩展名）
             compiler = loader.getDefaultExtension();
         }
         return compiler.compile(code, classLoader);

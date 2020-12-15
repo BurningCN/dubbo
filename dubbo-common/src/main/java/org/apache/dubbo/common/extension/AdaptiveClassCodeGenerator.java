@@ -91,7 +91,7 @@ public class AdaptiveClassCodeGenerator {
     public String generate() {
         // no need to generate adaptive class since there's no adaptive method found.
         // 方法首先会通过反射检测接口方法是否包含 Adaptive 注解。对于要生成自适应拓展的接口，Dubbo 要求该接口至少有一个方法被 Adaptive 注解修饰。
-        // 若不满足此条件，就会抛出运行时异常
+        // 若不满足此条件，就会抛出运行时异常（比如AddExt1接口就没有Adaptive子类，但是接口的方法是带有 @Adaptive注解的，详见test_AddExtension_Adaptive_ExceptionWhenExistedAdaptive测试方法）
         // 类名没有@Adaptive，这里判断方法是否含有该注解， 进去
         if (!hasAdaptiveMethod()) {
             // 日志
@@ -127,7 +127,8 @@ public class AdaptiveClassCodeGenerator {
             logger.debug(code.toString());
         }
         return code.toString();
-        // eg
+
+        // eg 只会为SPI接口里面带有@Adaptive注解的方法生成相关逻辑，其他的方法都是throw new UnsupportedOperationException(balala...)
         /*
         package org.apache.dubbo.rpc;
         import org.apache.dubbo.common.extension.ExtensionLoader;
@@ -165,6 +166,20 @@ public class AdaptiveClassCodeGenerator {
                 throw new UnsupportedOperationException("The method public abstract int org.apache.dubbo.rpc.Protocol.getDefaultPort() of interface org.apache.dubbo.rpc.Protocol is not adaptive method!");
             }
         }
+
+        ============= 再比如（如下实际格式的紧凑的，这里我稍微格式化了下）
+        package org.apache.dubbo.common.extension.ext8_add;
+        import org.apache.dubbo.common.extension.ExtensionLoader;
+        public class AddExt1$Adaptive implements org.apache.dubbo.common.extension.ext8_add.AddExt1 {
+            public java.lang.String echo(org.apache.dubbo.common.URL arg0, java.lang.String arg1)  {
+                if (arg0 == null) throw new IllegalArgumentException("url == null");
+                org.apache.dubbo.common.URL url = arg0;
+                String extName = url.getParameter("add.ext1", "impl1");
+                if(extName == null) throw new IllegalStateException("Failed to get extension (org.apache.dubbo.common.extension.ext8_add.AddExt1) name from url (" + url.toString() + ") use keys([add.ext1])");
+                org.apache.dubbo.common.extension.ext8_add.AddExt1 extension = (org.apache.dubbo.common.extension.ext8_add.AddExt1)ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.extension.ext8_add.AddExt1.class).getExtension(extName);
+                return extension.echo(arg0, arg1);
+            }
+        }
         */
     }
 
@@ -185,7 +200,7 @@ public class AdaptiveClassCodeGenerator {
     /**
      * generate class declaration
      */
-    private String generateClassDeclaration() {
+    private String generateClassDeclaration() {//  type.getCanonicalName()是类的全限定名称，比如org.apache.dubbo.common.extension.ext8_add.AddExt1
         return String.format(CODE_CLASS_DECLARATION, type.getSimpleName(), type.getCanonicalName());
     }
 
@@ -223,12 +238,14 @@ public class AdaptiveClassCodeGenerator {
      * generate method declaration
      */
     private String generateMethod(Method method) {
+        // 以AddExt1类为例，里面的echo方法，这里getCanonicalName返回的字符串eg:java.lang.String
         String methodReturnType = method.getReturnType().getCanonicalName();
-        String methodName = method.getName();
-        // 进去
+        String methodName = method.getName();// 以AddExt1类为例 ，echo
+        // 关键！进去
         String methodContent = generateMethodContent(method);
-        String methodArgs = generateMethodArguments(method);
+        String methodArgs = generateMethodArguments(method);// 以AddExt1类为例 ，org.apache.dubbo.common.URL arg0, java.lang.String arg1
         String methodThrows = generateMethodThrows(method);
+        // 上面几部分填充到CODE_METHOD_DECLARATION
         return String.format(CODE_METHOD_DECLARATION, methodReturnType, methodName, methodArgs, methodThrows, methodContent);
     }
 
@@ -260,11 +277,16 @@ public class AdaptiveClassCodeGenerator {
      */
     private String generateUrlNullCheck(int index) {
         // 为 URL 类型参数生成判空代码，格式如下：
-        // if (arg + index == null)
+        // if (arg + index(0、1、2) == null)
         //     throw new IllegalArgumentException("url == null");
         // 为 URL 类型参数生成赋值代码，形如 URL url = arg1
         // 具体看CODE_URL_NULL_CHECK
         return String.format(CODE_URL_NULL_CHECK, index, URL.class.getName(), index);
+        // 比如Protocol接口的refer方法
+        // if (arg1 == null) throw new IllegalArgumentException("url == null");
+        // org.apache.dubbo.common.URL url = arg1;
+
+
     }
 
     /**
@@ -291,7 +313,7 @@ public class AdaptiveClassCodeGenerator {
                 code.append(generateUrlAssignmentIndirectly(method));
             }
 
-            // 获取 Adaptive 注解值 进去
+            // 获取 Adaptive 注解值，如果没有的话，那么就是对类名进行转化， 进去
             String[] value = getMethodAdaptiveValue(adaptiveAnnotation);
 
             // 此段逻辑是检测方法列表中是否存在 Invocation 类型的参数，若存在，则为其生成判空代码和其他一些代码
@@ -301,14 +323,14 @@ public class AdaptiveClassCodeGenerator {
             // 进去
             code.append(generateInvocationArgumentNullCheck(method));
 
-
-            // 进去
+            // 获取extName，很重要！进去
             code.append(generateExtNameAssignment(value, hasInvocation));
+
             // 生成 extName 判空代码 进去
             // check extName == null?
             code.append(generateExtNameNullCheck(value));
 
-            //  生成拓展获取代码 进去
+            //  生成拓展获取代码，很重要！ 进去
             code.append(generateExtensionAssignment());
 
             // 生成返回值和目标方法调用逻辑，进去
@@ -325,6 +347,7 @@ public class AdaptiveClassCodeGenerator {
      * generate code for variable extName null check
      */
     private String generateExtNameNullCheck(String[] value) {
+        // eg: if(extName == null) throw new IllegalStateException("Failed to get extension (org.apache.dubbo.rpc.Protocol) name from url (" + url.toString() + ") use keys([protocol])");
         return String.format(CODE_EXT_NAME_NULL_CHECK, type.getName(), Arrays.toString(value));
     }
 
@@ -400,6 +423,9 @@ public class AdaptiveClassCodeGenerator {
             }
         }
         // 生成 extName 赋值代码
+        // eg :String extName = url.getParameter("add.ext1", "impl1"); ---->AddExt1接口的生成的Adaptive扩展类的echo方法内部会获取默认的(impl1)扩展类
+        //     String extName = ( url.getProtocol() == null ? "dubbo" : url.getProtocol() );
+        //     String extName = url.getMethodParameter(methodName, "loadbalance", "random")
         return String.format(CODE_EXT_NAME_ASSIGNMENT, getNameCode);
     }
 
@@ -413,6 +439,8 @@ public class AdaptiveClassCodeGenerator {
         //     .getExtensionLoader(type全限定名.class).getExtension(extName);
         // Tips: 格式化字符串中的 %<s 表示使用前一个转换符所描述的参数，即 type 全限定名
         return String.format(CODE_EXTENSION_ASSIGNMENT, type.getName(), ExtensionLoader.class.getSimpleName(), type.getName());
+        // eg:org.apache.dubbo.rpc.Protocol extension = (org.apache.dubbo.rpc.Protocol)ExtensionLoader.
+        //                              getExtensionLoader(org.apache.dubbo.rpc.Protocol.class).getExtension(extName);
     }
 
     /**
@@ -427,8 +455,11 @@ public class AdaptiveClassCodeGenerator {
                 .mapToObj(i -> String.format(CODE_EXTENSION_METHOD_INVOKE_ARGUMENT, i))
                 .collect(Collectors.joining(", "));
 
-        // 生成目标方法调用逻辑，格式为：
+        // 生成目标方法调用逻辑（有点代理的意思），格式为：
         //     extension.方法名(arg0, arg2, ..., argN);
+
+        // eg:Protocol的refer方法，return extension.refer(arg0, arg1);
+        // eg:AddExt1接口的echo方法，return extension.echo(arg0, arg1);
         return returnStatement + String.format("extension.%s(%s);\n", method.getName(), args);
     }
 
@@ -467,7 +498,7 @@ public class AdaptiveClassCodeGenerator {
         String[] value = adaptiveAnnotation.value();
         // value is not set, use the value generated from class name as the key
         if (value.length == 0) {
-            // 获取类名，并将类名转换为字符数组，进去
+            // 获取类名，并将类名转换为字符传数组（比如AddExt1，返回的就是add.ext1），camelToSplitName，驼峰切割，进去
             String splitName = StringUtils.camelToSplitName(type.getSimpleName(), ".");
             value = new String[]{splitName};
         }
@@ -501,7 +532,7 @@ public class AdaptiveClassCodeGenerator {
                         && !Modifier.isStatic(m.getModifiers())
                         && m.getParameterTypes().length == 0
                         && m.getReturnType() == URL.class) {
-                    // 填充到容器
+                    // 填充到容器（name一般是getUrl）
                     getterReturnUrl.put(name, i);
                 }
             }
@@ -523,6 +554,7 @@ public class AdaptiveClassCodeGenerator {
             Map.Entry<String, Integer> entry = getterReturnUrl.entrySet().iterator().next();
             return generateGetUrlNullCheck(entry.getValue(), pts[entry.getValue()], entry.getKey());
         }
+
         //  generateGetUrlNullCheck内部代码有点多，需要耐心看一下。这段代码主要目的是为了获取 URL 数据，并为之生成判空和赋值代码。
         //  以 Protocol 的 refer 和 export 方法为例，上面的代码为它们生成如下内容（代码已格式化）
         /*
@@ -549,23 +581,29 @@ public class AdaptiveClassCodeGenerator {
 
     private String generateGetUrlNullCheck(int index, Class<?> type, String method) {
 
-        // 1 为可返回 URL 的参数生成判空代码，格式如下：
+        // 1. 为可返回 URL 的参数生成判空代码，格式如下：
         // if (arg + urlTypeIndex == null)
         //     throw new IllegalArgumentException("参数全限定名 + argument == null");
         // Null point check
         StringBuilder code = new StringBuilder();
         code.append(String.format("if (arg%d == null) throw new IllegalArgumentException(\"%s argument == null\");\n",
                 index, type.getName()));
-        // 2 为 getter 方法返回的 URL 生成判空代码，格式如下：
+        // 2. 为 getter 方法返回的 URL 生成判空代码，格式如下：
         // if (argN.getter方法名() == null)
         //     throw new IllegalArgumentException(参数全限定名 + argument getUrl() == null);
         code.append(String.format("if (arg%d.%s() == null) throw new IllegalArgumentException(\"%s argument %s() == null\");\n",
                 index, method, type.getName(), method));
-        // 3 生成赋值语句，格式如下：
+        // 3. 生成赋值语句，格式如下：
         // URL全限定名 url = argN.getter方法名()，比如
         // com.alibaba.dubbo.common.URL url = invoker.getUrl();
         code.append(String.format("%s url = arg%d.%s();\n", URL.class.getName(), index, method));
         return code.toString();
+        // 以Protocol的export为例，生成如下:
+        //            if (arg0 == null)
+        //                throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument == null");
+        //            if (arg0.getUrl() == null)
+        //                throw new IllegalArgumentException("com.alibaba.dubbo.rpc.Invoker argument getUrl() == null");
+        //            com.alibaba.dubbo.common.URL url = arg0.getUrl();
     }
 
 }
