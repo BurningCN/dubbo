@@ -19,6 +19,7 @@ package org.apache.dubbo.common.extension.activate;
 
 import org.apache.dubbo.common.extension.SPI;
 
+// 看下带Group和value的
 @SPI("impl1")
 public interface ActivateExt1 {
     String echo(String msg);

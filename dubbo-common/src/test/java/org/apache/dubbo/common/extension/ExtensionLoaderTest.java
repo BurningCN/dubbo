@@ -381,97 +381,133 @@ public class ExtensionLoaderTest {
         }
     }
 
+    // √ 替换自适应扩展类
     @Test
     public void test_replaceExtension_Adaptive() throws Exception {
         ExtensionLoader<AddExt3> loader = getExtensionLoader(AddExt3.class);
 
+        // 返回的是自动生成的扩展类 AddExt3$Adaptive
         AddExt3 adaptive = loader.getAdaptiveExtension();
+        // 肯定不满足
         assertFalse(adaptive instanceof AddExt3_ManualAdaptive);
 
+        // 进去
         loader.replaceExtension(null, AddExt3_ManualAdaptive.class);
 
         adaptive = loader.getAdaptiveExtension();
+        // 替换后肯定满足了
         assertTrue(adaptive instanceof AddExt3_ManualAdaptive);
     }
 
+    // √
     @Test
     public void test_replaceExtension_ExceptionWhenNotExistedExtension() throws Exception {
         AddExt1 ext = getExtensionLoader(AddExt1.class).getExtension("impl1");
 
         try {
+            // 替换一个扩展名不存在的扩展类，肯定不行，因为替换的意思就是对"已存在"的替换！进去
             getExtensionLoader(AddExt1.class).replaceExtension("NotExistedExtension", AddExt1_ManualAdd1.class);
             fail();
         } catch (IllegalStateException expected) {
+            // 日志
             assertThat(expected.getMessage(), containsString("Extension name NotExistedExtension doesn't exist (Extension interface org.apache.dubbo.common.extension.ext8_add.AddExt1)"));
         }
     }
 
+    //√  和前面一样，只是对扩展类替换
     @Test
     public void test_replaceExtension_Adaptive_ExceptionWhenNotExistedExtension() throws Exception {
         ExtensionLoader<AddExt4> loader = getExtensionLoader(AddExt4.class);
 
         try {
+            // 直接替换肯定异常（除非先调用一次 getAdaptiveExtension ）
             loader.replaceExtension(null, AddExt4_ManualAdaptive.class);
             fail();
         } catch (IllegalStateException expected) {
+            // 日志
             assertThat(expected.getMessage(), containsString("Adaptive Extension doesn't exist (Extension interface org.apache.dubbo.common.extension.ext8_add.AddExt4)"));
         }
     }
 
+    // √
     @Test
     public void test_InitError() throws Exception {
+        // InitErrorExtSPI文件两个扩展类得到加载（扩展名分别是ok和error）
         ExtensionLoader<InitErrorExt> loader = getExtensionLoader(InitErrorExt.class);
 
         loader.getExtension("ok");
 
         try {
+            // 看下error扩展名对应的扩展类Ext7InitErrorImpl，里面static块抛异常了
+            // 往里面跟下在哪个点触发的（即调用static块），首先static块属于类的，肯定是在类的"初始化"阶段进行的，
+            // 联想到loadResource方法（调用loadClass的）里面的class.forName(..true)传入了true表示加载的同时初始化，就是这处导致的
+            // 且注意前面getExtension("ok");（第一次调用getExtension）就会加载所有的类了（异常也是在里面抛的）
+
             loader.getExtension("error");
             fail();
         } catch (IllegalStateException expected) {
+            // 日志
             assertThat(expected.getMessage(), containsString("Failed to load extension class (interface: interface org.apache.dubbo.common.extension.ext7.InitErrorExt"));
             assertThat(expected.getCause(), instanceOf(ExceptionInInitializerError.class));
         }
     }
 
+    // √ 测试 Load ActivateExtension，前面测试了加载普通的、自适应的（分别对应getExtension和getAdaptiveExtension方法，下面的是getActivateExtension）
     @Test
     public void testLoadActivateExtension() throws Exception {
-        // test default
+        // test default URL可以是网络资源也可以是本地资源（file:// 、http:// ....）
         URL url = URL.valueOf("test://localhost/test");
+
+        //===========================================================================
+        // 有两个SPI文件注意下，一个文件代表了是原生jdk的spi机制（META-INF/services包，文件内容只要value），一个是dubbo的（META-INF/dubbo包，文件内容kv对。
+        // 且注意dubbo兼容了原生的，即会扫描META-INF/services包下的文件内容！！！
         List<ActivateExt1> list = getExtensionLoader(ActivateExt1.class)
+                // 获取满足[传入的参数条件]的[激活扩展类实例(带@Activate)]，表示激活，进去
                 .getActivateExtension(url, new String[]{}, "default_group");
+
+        // 看上面的传入的条件，肯定是只要@Activate注解里面的group含有default_group值即可，只有ActivateExt1Impl1类
         Assertions.assertEquals(1, list.size());
         Assertions.assertSame(list.get(0).getClass(), ActivateExt1Impl1.class);
 
+        //===========================================================================
         // test group
-        url = url.addParameter(GROUP_KEY, "group1");
+        url = url.addParameter(GROUP_KEY, "group1");// url变成test://localhost/test?group=group1
         list = getExtensionLoader(ActivateExt1.class)
                 .getActivateExtension(url, new String[]{}, "group1");
         Assertions.assertEquals(1, list.size());
+        // 符合group1的只有GroupActivateExtImpl被激活
         Assertions.assertSame(list.get(0).getClass(), GroupActivateExtImpl.class);
 
+        //===========================================================================
         // test old @Activate group
         url = url.addParameter(GROUP_KEY, "old_group");
         list = getExtensionLoader(ActivateExt1.class)
                 .getActivateExtension(url, new String[]{}, "old_group");
         Assertions.assertEquals(2, list.size());
+        // 这两个扩展类满足
         Assertions.assertTrue(list.get(0).getClass() == OldActivateExt1Impl2.class
                 || list.get(0).getClass() == OldActivateExt1Impl3.class);
 
+        //===========================================================================
         // test value
         url = url.removeParameter(GROUP_KEY);
         url = url.addParameter(GROUP_KEY, "value");
-        url = url.addParameter("value", "value");
+        url = url.addParameter("value", "value"); // test://localhost/test?group=value&value=value
         list = getExtensionLoader(ActivateExt1.class)
                 .getActivateExtension(url, new String[]{}, "value");
         Assertions.assertEquals(1, list.size());
+        // 注意ValueActivateExtImpl的注解@Activate是含有value={value}的({}里面的值只有k，没有v，一般还有这样的value={k1:v1,k2:v2})，
+        // 且前面url添加了这个参数&value=value，上面getActivateExtension方法内部注意isActive方法的调用，了解下是怎么判断的
         Assertions.assertSame(list.get(0).getClass(), ValueActivateExtImpl.class);
 
+        //===========================================================================
         // test order
         url = URL.valueOf("test://localhost/test");
         url = url.addParameter(GROUP_KEY, "order");
         list = getExtensionLoader(ActivateExt1.class)
                 .getActivateExtension(url, new String[]{}, "order");
         Assertions.assertEquals(2, list.size());
+        // 按照@Activate里面的order值排序了，且两个扩展类注解@Activate的group值有order
         Assertions.assertSame(list.get(0).getClass(), OrderActivateExtImpl1.class);
         Assertions.assertSame(list.get(1).getClass(), OrderActivateExtImpl2.class);
     }

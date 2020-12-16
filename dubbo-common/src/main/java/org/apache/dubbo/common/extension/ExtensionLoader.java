@@ -257,6 +257,7 @@ public class ExtensionLoader<T> {
      * @return extension list which are activated.
      * @see #getActivateExtension(org.apache.dubbo.common.URL, String, String)
      */
+    // 在所有的激活中，要使用key 指定的扩展
     public List<T> getActivateExtension(URL url, String key) {
         return getActivateExtension(url, key, null);
     }
@@ -269,6 +270,7 @@ public class ExtensionLoader<T> {
      * @return extension list which are activated
      * @see #getActivateExtension(org.apache.dubbo.common.URL, String[], String)
      */
+    // 在所有的激活中 values指定的扩展
     public List<T> getActivateExtension(URL url, String[] values) {
         return getActivateExtension(url, values, null);
     }
@@ -282,6 +284,7 @@ public class ExtensionLoader<T> {
      * @return extension list which are activated.
      * @see #getActivateExtension(org.apache.dubbo.common.URL, String[], String)
      */
+    // 在所有的激活中，要指定的group 外加 使用key 指定的扩展
     public List<T> getActivateExtension(URL url, String key, String group) {
         String value = url.getParameter(key);
         return getActivateExtension(url, StringUtils.isEmpty(value) ? null : COMMA_SPLIT_PATTERN.split(value), group);
@@ -291,23 +294,27 @@ public class ExtensionLoader<T> {
      * Get activate extensions.
      *
      * @param url    url
-     * @param values extension point names
+     * @param values extension point names  扩展点名称，数组，多个扩展名
      * @param group  group
      * @return extension list which are activated
      * @see org.apache.dubbo.common.extension.Activate
      */
+
+    // 其他的getActivateExtension最后其实都有下面方法实现
     public List<T> getActivateExtension(URL url, String[] values, String group) {
         List<T> activateExtensions = new ArrayList<>();
         List<String> names = values == null ? new ArrayList<>(0) : asList(values);
         if (!names.contains(REMOVE_VALUE_PREFIX + DEFAULT_KEY)) {
             getExtensionClasses();
+            // cachedActivates的赋值处注意（getExtensionClasses内部）
             for (Map.Entry<String, Object> entry : cachedActivates.entrySet()) {
-                String name = entry.getKey();
-                Object activate = entry.getValue();
+                String name = entry.getKey();// 扩展名
+                Object activate = entry.getValue();// @Activate注解对象
 
                 String[] activateGroup, activateValue;
 
                 if (activate instanceof Activate) {
+                    // eg: @Activate(group = {"group1", "group2"},value={"v1","v2"})
                     activateGroup = ((Activate) activate).group();
                     activateValue = ((Activate) activate).value();
                 } else if (activate instanceof com.alibaba.dubbo.common.extension.Activate) {
@@ -316,13 +323,17 @@ public class ExtensionLoader<T> {
                 } else {
                     continue;
                 }
+                // 满足条件的话则激活，填充到activateExtensions，看下每个条件
                 if (isMatchGroup(group, activateGroup)
                         && !names.contains(name)
                         && !names.contains(REMOVE_VALUE_PREFIX + name)
+                        // 用户传入的url是否含有activateValue数组的某个元素(含有一个即可)对应的参数，进去
                         && isActive(activateValue, url)) {
+                    // getExtension进去，内部会反射new instance()
                     activateExtensions.add(getExtension(name));
                 }
             }
+            // @Activate(order=1..)可以配置order，做排序
             activateExtensions.sort(ActivateComparator.COMPARATOR);
         }
         List<T> loadedExtensions = new ArrayList<>();
@@ -369,14 +380,19 @@ public class ExtensionLoader<T> {
             String keyValue = null;
             if (key.contains(":")) {
                 String[] arr = key.split(":");
-                key = arr[0];
-                keyValue = arr[1];
+                key = arr[0];// k
+                keyValue = arr[1];// v
             }
 
+            // 获取url的kv参数对
             for (Map.Entry<String, String> entry : url.getParameters().entrySet()) {
                 String k = entry.getKey();
                 String v = entry.getValue();
+                // 比较url的kv和@Activate注解里的kv
+
+                // k要么相等或者url的k以[@Activate注解里的kv的.+k]结尾
                 if ((k.equals(key) || k.endsWith("." + key))
+                        // value都相等，或者@Activate注解里的kv的v为null，但是url的kv的v不为空
                         && ((keyValue != null && keyValue.equals(v)) || (keyValue == null && ConfigUtils.isNotEmpty(v)))) {
                     return true;
                 }
@@ -610,6 +626,7 @@ public class ExtensionLoader<T> {
             if (StringUtils.isBlank(name)) {
                 throw new IllegalStateException("Extension name is blank (Extension " + type + ")!");
             }
+            // 只能对已存在的扩展名进行(扩展类的)替换
             if (!cachedClasses.get().containsKey(name)) {
                 throw new IllegalStateException("Extension name " +
                         name + " doesn't exist (Extension " + type + ")!");
@@ -1079,14 +1096,15 @@ public class ExtensionLoader<T> {
 
         // 程序进入此分支，表明 clazz 是一个普通的拓展类
         } else {
-            // 大部分是这个，子类实现@Spi注解接口，类含有@Active注解或者不含有任何注解。
+            // 大部分是这个，子类实现@Spi注解接口，类含有@Activate注解或者不含有任何注解。
             // 随便找个文件，比如org.apache.dubbo.common.threadpool.ThreadPool里面的实现类或者ActivateExt1Impl1实现类
             // 检测 clazz 是否有默认的构造方法，如果没有，则抛出异常
             clazz.getConstructor();
             // name就是文件里面的=左边，比如spi、adaptive
             if (StringUtils.isEmpty(name)) {
                 // 如果name为空，那么就截取实现类的前缀并转为小写，比如FixedThreadPool就是fixed，进去
-                // 这一点可以体现出我们在文件里面的内容不一定是xx=xxType这种方式，可以直接xxType
+                // 这一点可以体现出我们在文件里面的内容不一定是xx=xxType这种方式，可以直接xxType-->这主要是兼容原生jdk的spi，
+                // 因为原生spi的文件内容只有value（实现类全路径）没有key（扩展名），且在META-INF/services包下
                 name = findAnnotationName(clazz);
                 if (name.length() == 0) {
                     throw new IllegalStateException("No such extension name for the class " + clazz.getName() + " in the config " + resourceURL);
@@ -1137,12 +1155,13 @@ public class ExtensionLoader<T> {
      * for compatibility, also cache class with old alibaba Activate annotation
      */
     private void cacheActivateClass(Class<?> clazz, String name) {
-        // 自己全局搜下@Active注解
+        // 可以参考ActivateExt1以及对应的testLoadActivateExtension测试方法
         Activate activate = clazz.getAnnotation(Activate.class);
         if (activate != null) {
-            // 缓存起来，activate注解里面有不同的值
+            // 缓存起来，Activate注解里面有不同的值
             cachedActivates.put(name, activate);
         } else {
+            // 兼容旧版本的Activate注解（看方法名上面注释）
             // support com.alibaba.dubbo.common.extension.Activate
             com.alibaba.dubbo.common.extension.Activate oldActivate = clazz.getAnnotation(com.alibaba.dubbo.common.extension.Activate.class);
             if (oldActivate != null) {
