@@ -21,6 +21,8 @@ package org.apache.dubbo.common.extension;
  *
  * @since 2.7.7
  */
+// OK
+// 看上面注释，仅做测试
 public class DubboExternalLoadingStrategy implements LoadingStrategy {
 
     @Override

@@ -187,6 +187,7 @@ public class AdaptiveClassCodeGenerator {
      * generate package info
      */
     private String generatePackageInfo() {
+        // package [org.apache.dubbo.common.extension.adaptive];
         return String.format(CODE_PACKAGE, type.getPackage().getName());
     }
 
@@ -194,13 +195,16 @@ public class AdaptiveClassCodeGenerator {
      * generate imports
      */
     private String generateImports() {
+        // import [org.apache.dubbo.common.extension.ExtensionLoader];
         return String.format(CODE_IMPORTS, ExtensionLoader.class.getName());
     }
 
     /**
      * generate class declaration
      */
-    private String generateClassDeclaration() {//  type.getCanonicalName()是类的全限定名称，比如org.apache.dubbo.common.extension.ext8_add.AddExt1
+    private String generateClassDeclaration() {
+        //      type.getCanonicalName()是类的全限定名称（和getName的返回值一样），比如org.apache.dubbo.common.extension.ext8_add.AddExt1
+        //  public class [HasAdaptiveExt]$Adaptive implements [org.apache.dubbo.common.extension.adaptive.HasAdaptiveExt] {
         return String.format(CODE_CLASS_DECLARATION, type.getSimpleName(), type.getCanonicalName());
     }
 
@@ -313,7 +317,7 @@ public class AdaptiveClassCodeGenerator {
                 code.append(generateUrlAssignmentIndirectly(method));
             }
 
-            // 获取 Adaptive 注解值，如果没有的话，那么就是对类名进行转化， 进去
+            // 获取 Adaptive 注解值，如果没有的话，那么就是对类名进行转化（比如AddExt1，返回的就是add.ext1）， 进去
             String[] value = getMethodAdaptiveValue(adaptiveAnnotation);
 
             // 此段逻辑是检测方法列表中是否存在 Invocation 类型的参数，若存在，则为其生成判空代码和其他一些代码
@@ -323,7 +327,7 @@ public class AdaptiveClassCodeGenerator {
             // 进去
             code.append(generateInvocationArgumentNullCheck(method));
 
-            // 获取extName，很重要！进去
+            // 从url以前面获取到的value作为key获取extName，比如：String extName = url.getParameter("add.ext1", "adaptive");进去
             code.append(generateExtNameAssignment(value, hasInvocation));
 
             // 生成 extName 判空代码 进去

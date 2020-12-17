@@ -100,8 +100,11 @@ public class IOUtils {
      * @throws IOException If an I/O error occurs
      */
     public static String read(Reader reader) throws IOException {
+        // try-with-resource语法
         try (StringWriter writer = new StringWriter()) {
+            // 一次写入
             write(reader, writer);
+            // 获取完全的字符串内容
             return writer.getBuffer().toString();
         }
     }

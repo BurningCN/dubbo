@@ -80,6 +80,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+// OK
 public class ExtensionLoaderTest {
     // 1.Null
     @Test
@@ -646,7 +647,7 @@ public class ExtensionLoaderTest {
         assertEquals(DubboInternalLoadingStrategy.class, loadingStrategy.getClass());
         assertEquals(Prioritized.MAX_PRIORITY, loadingStrategy.getPriority());
 
-        // DubboExternalLoadingStrategy--META-INF/dubbo/external/
+        // DubboExternalLoadingStrategy--META-INF/dubbo/external/ ---》这在一个单独的文件里，正常是另三个类被加载(在另一个文件里)
         loadingStrategy = strategies.get(i++);
         assertEquals(DubboExternalLoadingStrategy.class, loadingStrategy.getClass());
         assertEquals(Prioritized.MAX_PRIORITY + 1, loadingStrategy.getPriority());

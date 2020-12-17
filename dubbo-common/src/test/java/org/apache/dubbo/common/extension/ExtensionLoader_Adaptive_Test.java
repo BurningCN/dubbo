@@ -43,23 +43,31 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+// OK
 public class ExtensionLoader_Adaptive_Test {
 
+    // √
     @Test
     public void test_useAdaptiveClass() throws Exception {
         ExtensionLoader<HasAdaptiveExt> loader = ExtensionLoader.getExtensionLoader(HasAdaptiveExt.class);
+        // 本身就有自适应扩展类，HasAdaptiveExt_ManualAdaptive
         HasAdaptiveExt ext = loader.getAdaptiveExtension();
         assertTrue(ext instanceof HasAdaptiveExt_ManualAdaptive);
     }
 
+    // √
     @Test
     public void test_getAdaptiveExtension_defaultAdaptiveKey() throws Exception {
         {
+            // 注意这个是自动生成的 SimpleExt$Adaptive
             SimpleExt ext = ExtensionLoader.getExtensionLoader(SimpleExt.class).getAdaptiveExtension();
 
             Map<String, String> map = new HashMap<String, String>();
             URL url = new URL("p1", "1.2.3.4", 1010, "path1", map);
 
+            // 自动生成的自适应扩展类的echo方法是大概这样的，String extName = url.getParameter("simple.ext",impl1)
+            // 因为url没有simple.ext参数，所以extName = impl1，然后ExtensionLoader.getExtensionLoader(SimpleExt.class).getExtension("impl1")
+            // 返回的肯定是SimpleExtImpl1扩展子类，然后调用其echo方法
             String echo = ext.echo(url, "haha");
             assertEquals("Ext1Impl1-echo", echo);
         }
@@ -68,30 +76,75 @@ public class ExtensionLoader_Adaptive_Test {
             SimpleExt ext = ExtensionLoader.getExtensionLoader(SimpleExt.class).getAdaptiveExtension();
 
             Map<String, String> map = new HashMap<String, String>();
+            // 多了这个kv
             map.put("simple.ext", "impl2");
             URL url = new URL("p1", "1.2.3.4", 1010, "path1", map);
 
+            // 前面说过了，此时url.getParameter("simple.ext")肯定能取出来了，此时extName = impl2，取出来的是Ext1Impl2实例.......
             String echo = ext.echo(url, "haha");
             assertEquals("Ext1Impl2-echo", echo);
         }
     }
 
+
+    /*
+    package org.apache.dubbo.common.extension.ext1;
+    import org.apache.dubbo.common.extension.ExtensionLoader;
+
+    public class SimpleExt$Adaptive implements org.apache.dubbo.common.extension.ext1.SimpleExt {
+        public java.lang.String bang(org.apache.dubbo.common.URL arg0, int arg1) {
+            throw new UnsupportedOperationException("The method public abstract java.lang.String org.apache.dubbo.common.extension.ext1.SimpleExt.bang(org.apache.dubbo.common.URL,int) of interface org.apache.dubbo.common.extension.ext1.SimpleExt is not adaptive method!");
+        }
+
+        public java.lang.String yell(org.apache.dubbo.common.URL arg0, java.lang.String arg1) {
+            if (arg0 == null) throw new IllegalArgumentException("url == null");
+            org.apache.dubbo.common.URL url = arg0;
+            // 根据@Activate注解里的值来的
+            String extName = url.getParameter("key1", url.getParameter("key2", "impl1"));
+            if (extName == null)
+                throw new IllegalStateException("Failed to get extension (org.apache.dubbo.common.extension.ext1.SimpleExt) name from url (" + url.toString() + ") use keys([key1, key2])");
+            org.apache.dubbo.common.extension.ext1.SimpleExt extension = (org.apache.dubbo.common.extension.ext1.SimpleExt) ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.extension.ext1.SimpleExt.class).getExtension(extName);
+            return extension.yell(arg0, arg1);
+        }
+
+        public java.lang.String echo(org.apache.dubbo.common.URL arg0, java.lang.String arg1) {
+            if (arg0 == null) throw new IllegalArgumentException("url == null");
+            org.apache.dubbo.common.URL url = arg0;
+            String extName = url.getParameter("simple.ext", "impl1");
+            if (extName == null)
+                throw new IllegalStateException("Failed to get extension (org.apache.dubbo.common.extension.ext1.SimpleExt) name from url (" + url.toString() + ") use keys([simple.ext])");
+            org.apache.dubbo.common.extension.ext1.SimpleExt extension = (org.apache.dubbo.common.extension.ext1.SimpleExt) ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.extension.ext1.SimpleExt.class).getExtension(extName);
+            return extension.echo(arg0, arg1);
+        }
+    }
+    */
+
+    // √
     @Test
     public void test_getAdaptiveExtension_customizeAdaptiveKey() throws Exception {
         SimpleExt ext = ExtensionLoader.getExtensionLoader(SimpleExt.class).getAdaptiveExtension();
 
         Map<String, String> map = new HashMap<String, String>();
+        // 注意这里的key2
         map.put("key2", "impl2");
         URL url = new URL("p1", "1.2.3.4", 1010, "path1", map);
 
+        // 去看下接口的yell方法，上面的注解是含有值的，我们说过在生成code str(自适应源代码)的时候，generateMethodContent方法内部会
+        // 获取 Adaptive 注解值，如果没有的话，那么就是对类名进行转化（比如AddExt1，返回的就是add.ext1）赋值给String[] value属性，
+        // 这个value会作为key从url获取值，赋值给extName，比如：String extName = url.getParameter("[add.ext1]/[Adaptive的注解值]", "adaptive");
+        // yell上面的注解是含有值的，所以会生成  String extName = url.getParameter("key1", url.getParameter("key2", "impl1"));
+
+        // 注意啊！这里的ext一直是SimpleExt$Adaptive类，只是里面的yell方法会获取到Ext1Impl2实例（上面一段话）并调用其yell方法
         String echo = ext.yell(url, "haha");
         assertEquals("Ext1Impl2-yell", echo);
 
+        // 和前面一样，只是此时获取了Ext1Impl3
         url = url.addParameter("key1", "impl3"); // note: URL is value's type
         echo = ext.yell(url, "haha");
         assertEquals("Ext1Impl3-yell", echo);
     }
 
+    // √
     @Test
     public void test_getAdaptiveExtension_protocolKey() throws Exception {
         UseProtocolKeyExt ext = ExtensionLoader.getExtensionLoader(UseProtocolKeyExt.class).getAdaptiveExtension();
