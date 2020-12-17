@@ -25,11 +25,12 @@ import org.apache.dubbo.common.extension.SPI;
  */
 public class SpiExtensionFactory implements ExtensionFactory {
 
-    // SpiExtensionFactory其实啥都没干，最后还是loader.getAdaptiveExtension()方法在负责IOC，SpiExtensionFactory只可以理解成是一个门面类的作用。
     @Override
     public <T> T getExtension(Class<T> type, String name) {
         if (type.isInterface() && type.isAnnotationPresent(SPI.class)) {
+            // SpiExtensionFactory其实啥都没干，只是获取对应type的loader，然后调用getAdaptiveExtension()方法，SpiExtensionFactory只可以理解成是一个门面类的作用。
             ExtensionLoader<T> loader = ExtensionLoader.getExtensionLoader(type);
+            // 如果支持的扩展不为空，那么就获取其自适应的扩展类实例（每个SPI接口都有自己的自适应扩展子类，要么是直接提供好了，加载进来的，要么是自动生成的(code str + javassist)）
             if (!loader.getSupportedExtensions().isEmpty()) {
                 return loader.getAdaptiveExtension();
             }

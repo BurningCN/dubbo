@@ -50,8 +50,10 @@ public class AdaptiveExtensionFactory implements ExtensionFactory {
     //分析清楚AdaptiveExtensionFactory类的getExtension方法，就可以明白这个IOC容器是如何取出需要的SPI实例依赖了
     @Override
     public <T> T getExtension(Class<T> type, String name) {
-        // 调用SpringExtensionFactory、SpiExtensionFactory类的getExtension方法
+        // 调用SpringExtensionFactory、、SpringExtensionFactory类的getExtension方法
+        // 前者用于创建"自适应的拓展"（注意自适应指的是Adaptive），后者是用于从 Spring 的 IOC 容器中获取所需的拓展
         for (ExtensionFactory factory : factories) {
+            // 看看SpringExtensionFactory
             T extension = factory.getExtension(type, name);
             if (extension != null) {
                 return extension;

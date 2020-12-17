@@ -510,66 +510,98 @@ public class ExtensionLoaderTest {
         // 按照@Activate里面的order值排序了，且两个扩展类注解@Activate的group值有order
         Assertions.assertSame(list.get(0).getClass(), OrderActivateExtImpl1.class);
         Assertions.assertSame(list.get(1).getClass(), OrderActivateExtImpl2.class);
+
     }
 
+    // √
     @Test
     public void testLoadDefaultActivateExtension() throws Exception {
         // test default
         URL url = URL.valueOf("test://localhost/test?ext=order1,default");
         List<ActivateExt1> list = getExtensionLoader(ActivateExt1.class)
+                // 第二个参数是ext表示：从url中提取ext的值并封装到names扩展名数组，表示这些扩展名扩展类实例我也要
                 .getActivateExtension(url, "ext", "default_group");
         Assertions.assertEquals(2, list.size());
+        // 这个是通过url中传递了扩展名参数的方式获取的（内部的"====第2次填充"）
         Assertions.assertSame(list.get(0).getClass(), OrderActivateExtImpl1.class);
+        // 这个是通过@Activate验证方式获取的，因为该类的@Activate注解的group值含有default_group，内部的isMatchGroup通过；且注解没有value，内部的isActive也通过
         Assertions.assertSame(list.get(1).getClass(), ActivateExt1Impl1.class);
 
+        //===========================================================================
+
+        // 这个和前一段test一样，只是ext=后面的顺序颠倒了，后面list的顺序也变了
         url = URL.valueOf("test://localhost/test?ext=default,order1");
         list = getExtensionLoader(ActivateExt1.class)
                 .getActivateExtension(url, "ext", "default_group");
         Assertions.assertEquals(2, list.size());
+        // 顺序变得原因很简单，因为内部的"====第2次填充逻辑"，for循环第一次获取的default扩展名，判断为空，不会addAll(0,list)，而是最后直接activateExtensions.addAll(loadedExtensions);这种是顺序追加的
         Assertions.assertSame(list.get(0).getClass(), ActivateExt1Impl1.class);
         Assertions.assertSame(list.get(1).getClass(), OrderActivateExtImpl1.class);
+
+        // @Activate的学习到此结束，条件匹配包括：
+        // 1.扩展类@Activate注解里面的group值和调用getActivateExtension的传入第三个参数匹配
+        // 2.扩展类@Activate注解里面的value值(值是k或者kv)和调用getActivateExtension的传入第一个参数匹配URL，url里面的kv
+        // 3.所有已有扩展类的扩展名和调用getActivateExtension的传入第2个参数匹配，第二个参数会作为k从url取出v，v是多个扩展名
     }
 
+    // √
     @Test
     public void testInjectExtension() {
         // test default
+        // "injection"是默认扩展名，且注意下InjectExtImpl实现类，内部有几个set方法，getExtension内部会injectExtension，
+        // 利用dubbo自己的ioc的方式(inject)注入了其他的扩展类实例。进去
         InjectExt injectExt = getExtensionLoader(InjectExt.class).getExtension("injection");
         InjectExtImpl injectExtImpl = (InjectExtImpl) injectExt;
+        // 不为空（SimpleExt$Adaptive）
         Assertions.assertNotNull(injectExtImpl.getSimpleExt());
+        // 为空（注解DisableInject）
         Assertions.assertNull(injectExtImpl.getSimpleExt1());
+        // 为空（Object类型）
         Assertions.assertNull(injectExtImpl.getGenericType());
     }
 
+    // √
     @Test
     void testMultiNames() {
+        // 看下Ext10MultiNames对应的spi文件，k=v的k部分是impl,implMultiName这样的，多个扩展名对应一个扩展类
         Ext10MultiNames ext10MultiNames = getExtensionLoader(Ext10MultiNames.class).getExtension("impl");
+        // impl1扩展名能获取到对应的扩展类
         Assertions.assertNotNull(ext10MultiNames);
         ext10MultiNames = getExtensionLoader(Ext10MultiNames.class).getExtension("implMultiName");
+        // implMultiName扩展名也能获取到对应的扩展类
         Assertions.assertNotNull(ext10MultiNames);
         Assertions.assertThrows(
                 IllegalStateException.class,
+                // 直接传入k=v的整个k（k多扩展名的），是不可以的，因为内部会把这个整体当做一个扩展名name，肯定取不到并抛异常
                 () -> getExtensionLoader(Ext10MultiNames.class).getExtension("impl,implMultiName")
         );
     }
 
+    // √
     @Test
     public void testGetOrDefaultExtension() {
         ExtensionLoader<InjectExt> loader = getExtensionLoader(InjectExt.class);
+        // 尝试获取扩展名为"non-exists"的扩展类，如果没有的话获取默认的（InjectExtImpl），进去
         InjectExt injectExt = loader.getOrDefaultExtension("non-exists");
         assertEquals(InjectExtImpl.class, injectExt.getClass());
+        // 直接获取injection扩展类(这个同时也是默认的)，进去
         assertEquals(InjectExtImpl.class, loader.getOrDefaultExtension("injection").getClass());
     }
 
+    // √
     @Test
     public void testGetSupported() {
         ExtensionLoader<InjectExt> loader = getExtensionLoader(InjectExt.class);
+        // 返回的是扩展名(string)的集合，进去
         assertEquals(1, loader.getSupportedExtensions().size());
+        // 单例模式
         assertEquals(Collections.singleton("injection"), loader.getSupportedExtensions());
     }
 
     /**
      * @since 2.7.7
      */
+    // √
     @Test
     public void testOverridden() {
         ExtensionLoader<Converter> loader = getExtensionLoader(Converter.class);
@@ -583,6 +615,9 @@ public class ExtensionLoaderTest {
         converter = loader.getExtension("string-to-integer");
         assertEquals(String2IntegerConverter.class, converter.getClass());
 
+        // 注意一点，进去后发现cachedClass的数量为10，而cacheName的数量为13，前者是name:class格式，后者是class:name格式。
+        // 因为现在出现同一个扩展名但是有两个扩展类(比如全局搜string-to-boolean=发现在两个文件，对应的扩展类分别是String2BooleanConverter和StringToBooleanConverter)
+        // 那么后加载的会把前面一个在cachedClass容器中覆盖掉（因为容器扩展名是name是唯一）；后面的容器不会，因为key是class，肯定不会重复
         assertEquals("string-to-boolean", loader.getExtensionName(String2BooleanConverter.class));
         assertEquals("string-to-boolean", loader.getExtensionName(StringToBooleanConverter.class));
 
@@ -596,8 +631,10 @@ public class ExtensionLoaderTest {
     /**
      * @since 2.7.7
      */
+    // √
     @Test
     public void testGetLoadingStrategies() {
+        // 进去
         List<LoadingStrategy> strategies = getLoadingStrategies();
 
         assertEquals(4, strategies.size());
@@ -605,18 +642,22 @@ public class ExtensionLoaderTest {
         int i = 0;
 
         LoadingStrategy loadingStrategy = strategies.get(i++);
+        // DubboInternalLoadingStrategy--META-INF/dubbo/internal/
         assertEquals(DubboInternalLoadingStrategy.class, loadingStrategy.getClass());
         assertEquals(Prioritized.MAX_PRIORITY, loadingStrategy.getPriority());
 
+        // DubboExternalLoadingStrategy--META-INF/dubbo/external/
         loadingStrategy = strategies.get(i++);
         assertEquals(DubboExternalLoadingStrategy.class, loadingStrategy.getClass());
         assertEquals(Prioritized.MAX_PRIORITY + 1, loadingStrategy.getPriority());
 
 
+        // DubboLoadingStrategy--META-INF/dubbo/
         loadingStrategy = strategies.get(i++);
         assertEquals(DubboLoadingStrategy.class, loadingStrategy.getClass());
         assertEquals(Prioritized.NORMAL_PRIORITY, loadingStrategy.getPriority());
 
+        // ServicesLoadingStrategy--META-INF/services/
         loadingStrategy = strategies.get(i++);
         assertEquals(ServicesLoadingStrategy.class, loadingStrategy.getClass());
         assertEquals(Prioritized.MIN_PRIORITY, loadingStrategy.getPriority());

@@ -131,6 +131,7 @@ public class ExtensionLoader<T> {
     //拓展名与加载对应拓展类发生的异常的映射
     private Map<String, IllegalStateException> exceptions = new ConcurrentHashMap<>();
 
+    // 进去
     private static volatile LoadingStrategy[] strategies = loadLoadingStrategies();
 
     public static void setLoadingStrategies(LoadingStrategy... strategies) {
@@ -147,7 +148,7 @@ public class ExtensionLoader<T> {
      */
     private static LoadingStrategy[] loadLoadingStrategies() {
         // load方法，调用的是ServiceLoader。进去断点看下
-        // 看完后大概是这样的，是获取到META-INF/services下的文件，然后文件读处类的全路径利用线程上下文加载器加载到jvm
+        // 看完后大概是这样的，是获取到META-INF/services/LoadingStrategy(全限定名)文件，然后文件io流读取每一行类的全路径，利用线程上下文加载器加载到jvm
         return stream(load(LoadingStrategy.class).spliterator(), false)
                 .sorted()
                 .toArray(LoadingStrategy[]::new);
@@ -306,6 +307,9 @@ public class ExtensionLoader<T> {
         List<String> names = values == null ? new ArrayList<>(0) : asList(values);
         if (!names.contains(REMOVE_VALUE_PREFIX + DEFAULT_KEY)) {
             getExtensionClasses();
+
+            // ====================activateExtensions第1次填充处===============================
+
             // cachedActivates的赋值处注意（getExtensionClasses内部）
             for (Map.Entry<String, Object> entry : cachedActivates.entrySet()) {
                 String name = entry.getKey();// 扩展名
@@ -325,7 +329,7 @@ public class ExtensionLoader<T> {
                 }
                 // 满足条件的话则激活，填充到activateExtensions，看下每个条件
                 if (isMatchGroup(group, activateGroup)
-                        && !names.contains(name)
+                        && !names.contains(name) // 这里不匹配扩展名，后面的for会匹配（只校验和@Activate注解里的值相关的）
                         && !names.contains(REMOVE_VALUE_PREFIX + name)
                         // 用户传入的url是否含有activateValue数组的某个元素(含有一个即可)对应的参数，进去
                         && isActive(activateValue, url)) {
@@ -336,21 +340,30 @@ public class ExtensionLoader<T> {
             // @Activate(order=1..)可以配置order，做排序
             activateExtensions.sort(ActivateComparator.COMPARATOR);
         }
+
+        // ====================activateExtensions第2次填充处===============================
+
         List<T> loadedExtensions = new ArrayList<>();
+        // 遍历业务方需要的扩展名(url里面的，详见testLoadDefaultActivateExtension)
         for (int i = 0; i < names.size(); i++) {
             String name = names.get(i);
+            // name不是 - 开头的，且names不包含-name（一个扩展名被删除，前面会带有-）
             if (!name.startsWith(REMOVE_VALUE_PREFIX)
                     && !names.contains(REMOVE_VALUE_PREFIX + name)) {
+                // name是否是默认值default
                 if (DEFAULT_KEY.equals(name)) {
                     if (!loadedExtensions.isEmpty()) {
+                        // 填充到开头（default扩展名不处理）
                         activateExtensions.addAll(0, loadedExtensions);
                         loadedExtensions.clear();
                     }
                 } else {
+                    // 直接获取该扩展名对应的扩展类实例
                     loadedExtensions.add(getExtension(name));
                 }
             }
         }
+        // 最后在填充一次（前面只有name是默认值的时候才会填充，万一都没有默认值）
         if (!loadedExtensions.isEmpty()) {
             activateExtensions.addAll(loadedExtensions);
         }
@@ -739,7 +752,7 @@ public class ExtensionLoader<T> {
             if (wrap) {
 
                 List<Class<?>> wrapperClassesList = new ArrayList<>();
-                // 该set会在加载文件资源发现类如果满足isWrapperClass方法的时候进行填充（可以看下Ext5Wrapper1、Ext5Wrapper2）
+                // 该set会在加载文件资源发现类如果满足(loadClass方法内调用)isWrapperClass方法的时候进行填充（可以看下Ext5Wrapper1、Ext5Wrapper2）
                 if (cachedWrapperClasses != null) {
                     wrapperClassesList.addAll(cachedWrapperClasses);
                     // 给wrapper排个序，COMPARATOR进去
@@ -788,39 +801,41 @@ public class ExtensionLoader<T> {
         try {
             // 遍历目标类的所有方法
             for (Method method : instance.getClass().getMethods()) {
+
                 // 检测方法是否以 set 开头，且方法仅有一个参数，且方法访问级别为 public ,进去
                 if (!isSetter(method)) {
                     continue;
                 }
-                /**
-                 * Check {@link DisableInject} to see if we need auto injection for this property
-                 */
+
+                // 如果方法上面带有该注解，那么不需要注入，比如InjectExtImpl的setSimpleExt1方法上面
                 if (method.getAnnotation(DisableInject.class) != null) {
                     continue;
                 }
+
                 // 获取setXXX方法第一个参数类型
                 Class<?> pt = method.getParameterTypes()[0];
-                // 判断是不是八大基本数据类型、str类型，是的话continue，因为只注入属于SPI扩展类相关的对象，进去
+                // 判断是不是八大基本数据类型、str类型、字符类型、data类型...是的话continue，因为只注入属于SPI扩展类相关的对象，
+                // 比如InjectExtImpl的setGenericType方法的参数就是Object类型的。进去
                 if (ReflectUtils.isPrimitives(pt)) {
                     continue;
                 }
 
                 try {
-                    // 获取属性名称，比如 setName 方法对应属性名 name，进去
+                    // 获取属性名称，比如InjectExtImpl类的simpleExt属性（和setSimpleExt方法），进去
                     String property = getSetterProperty(method);
-                    // eg，pt = ZookeeperTransporter.class,property = ZookeeperTransporter ，getExtension获取扩展类，进去
-                    // objectFactory的两个子类， 从 ObjectFactory 中获取依赖对象
+                    // 从 ObjectFactory 中获取依赖对象，objectFactory的两个子类，这里的是AdaptiveExtensionFactory。
+                    // 内部实际是调用getAdaptiveExtension(如果没有手工提供的@Adaptive子类，那么会自动生成，比如SimpleExt$Adaptive)，进去
                     Object object = objectFactory.getExtension(pt, property);
                     if (object != null) {
                         // 通过反射调用 setter 方法设置依赖
                         method.invoke(instance, object);
                     }
-                    //在上面代码中，objectFactory 变量的类型为 AdaptiveExtensionFactory，AdaptiveExtensionFactory 内部维护了一个
+                    // 在上面代码中，objectFactory 变量的类型为 AdaptiveExtensionFactory，AdaptiveExtensionFactory 内部维护了一个
                     // ExtensionFactory 列表，用于存储其他类型的 ExtensionFactory。Dubbo 目前提供了两种 ExtensionFactory，
-                    // 分别是 SpiExtensionFactory 和 SpringExtensionFactory。前者用于创建自适应的拓展，
+                    // 分别是 SpiExtensionFactory 和 SpringExtensionFactory。前者用于创建"自适应的拓展"（注意自适应，AdaptiveXX的），
                     // 后者是用于从 Spring 的 IOC 容器中获取所需的拓展。这两个类的类的代码不是很复杂，这里就不一一分析了。
                     //
-                    //Dubbo IOC 目前仅支持 setter 方式注入，总的来说，逻辑比较简单易懂。
+                    // Dubbo IOC 目前仅支持 setter 方式注入，总的来说，逻辑比较简单易懂。
                 } catch (Exception e) {
                     logger.error("Failed to inject via method " + method.getName()
                             + " of interface " + type.getName() + ": " + e.getMessage(), e);
@@ -1130,6 +1145,9 @@ public class ExtensionLoader<T> {
      */
     private void cacheName(Class<?> clazz, String name) {
         if (!cachedNames.containsKey(clazz)) {
+            if(clazz.getSimpleName().equals("String2BooleanConverter")){
+                System.out.println(1);
+            }
             cachedNames.put(clazz, name);
         }
     }

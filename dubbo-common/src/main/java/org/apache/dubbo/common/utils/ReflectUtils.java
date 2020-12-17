@@ -163,7 +163,7 @@ public final class ReflectUtils {
     }
 
     public static boolean isPrimitive(Class<?> cls) {
-        //
+        // isPrimitive原生类型（基本数据类型的包装类以及Void）、其他的自己看下
         return cls.isPrimitive() || cls == String.class || cls == Boolean.class || cls == Character.class
                 || Number.class.isAssignableFrom(cls) || Date.class.isAssignableFrom(cls);
     }
