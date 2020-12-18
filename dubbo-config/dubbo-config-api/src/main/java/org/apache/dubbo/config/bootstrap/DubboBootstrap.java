@@ -205,6 +205,7 @@ public class DubboBootstrap extends GenericEventListener {
         return instance;
     }
 
+    // 私有的，防止外部直接调用
     private DubboBootstrap() {
         // 进去
         configManager = ApplicationModel.getConfigManager();
@@ -531,6 +532,7 @@ public class DubboBootstrap extends GenericEventListener {
             return;
         }
 
+        // 进去
         ApplicationModel.initFrameworkExts();
 
         startConfigCenter();

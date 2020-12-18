@@ -26,6 +26,7 @@ public interface Node {
      *
      * @return url.
      */
+    // 获取节点地址
     URL getUrl();
 
     /**
@@ -33,11 +34,13 @@ public interface Node {
      *
      * @return available.
      */
+    // 节点是否可用
     boolean isAvailable();
 
     /**
      * destroy.
      */
+    // 销毁节点
     void destroy();
 
 }

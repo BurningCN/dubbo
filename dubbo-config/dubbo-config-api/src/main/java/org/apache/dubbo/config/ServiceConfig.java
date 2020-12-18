@@ -187,10 +187,13 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     public synchronized void export() {
         if (bootstrap == null) {
+            // 通过静态方法（可以理解为工厂方法）获取实例，内部用了单例模式，进去
             bootstrap = DubboBootstrap.getInstance();
+            // 初始化
             bootstrap.initialize();
         }
 
+        // 检查和更新配置，进去
         checkAndUpdateSubConfigs();
 
         //init serviceMetadata
@@ -201,13 +204,20 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         serviceMetadata.setServiceInterfaceName(getInterface());
         serviceMetadata.setTarget(getRef());
 
+
+        // 是否导出服务，进去
+        // 有时候我们只是想本地启动服务进行一些调试工作，我们并不希望把本地启动的服务暴露出去给别人调用。此时，我们可通过配置 export 禁止服务导出，比如：
+        // <dubbo:provider export="false" />
         if (!shouldExport()) {
             return;
         }
 
+        // 是否延迟到处服务，进去
         if (shouldDelay()) {
+            // 延时导出服务
             DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {
+            // 进去
             doExport();
         }
 
@@ -227,6 +237,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     private void checkAndUpdateSubConfigs() {
         // Use default configs defined explicitly with global scope
         completeCompoundConfigs();
+        // 检测 provider 是否为空，为空则新建一个，并通过系统变量为其初始化
         checkDefault();
         checkProtocol();
         // init some null configuration.
@@ -240,15 +251,20 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         }
         this.refresh();
 
+        // 检测 interfaceName 是否合法（<dubbo:service> 标签的 interface 属性合法性）
         if (StringUtils.isEmpty(interfaceName)) {
             throw new IllegalStateException("<dubbo:service interface=\"\" /> interface not allow null!");
         }
 
+        // 检测 ref 是否为泛化服务类型
         if (ref instanceof GenericService) {
+            // 设置 interfaceClass 为 GenericService.class
             interfaceClass = GenericService.class;
             if (StringUtils.isEmpty(generic)) {
+                // 设置 generic = "true"
                 generic = Boolean.TRUE.toString();
             }
+            // ref 非 GenericService 类型
         } else {
             try {
                 interfaceClass = Class.forName(interfaceName, true, Thread.currentThread()
@@ -256,25 +272,33 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
+            // 对 interfaceClass，以及 <dubbo:method> 标签中的必要字段进行检查
             checkInterfaceAndMethods(interfaceClass, getMethods());
+            // 对 ref 合法性进行检测
             checkRef();
+            // 设置 generic = "false"
             generic = Boolean.FALSE.toString();
         }
+        // local 和 stub 在功能应该是一致的，用于配置本地存根
         if (local != null) {
             if ("true".equals(local)) {
                 local = interfaceName + "Local";
             }
             Class<?> localClass;
             try {
+                // 获取本地存根类
                 localClass = ClassUtils.forNameWithThreadContextClassLoader(local);
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
+            // 检测本地存根类是否可赋值给接口类，若不可赋值则会抛出异常，提醒使用者本地存根类类型不合法
             if (!interfaceClass.isAssignableFrom(localClass)) {
                 throw new IllegalStateException("The local implementation class " + localClass.getName() + " not implement interface " + interfaceName);
             }
         }
         if (stub != null) {
+            // 此处的代码和上一个 if 分支的代码基本一致
+
             if ("true".equals(stub)) {
                 stub = interfaceName + "Stub";
             }
@@ -307,11 +331,29 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (StringUtils.isEmpty(path)) {
             path = interfaceName;
         }
+        // 导出服务
+
         doExportUrls();
+
+        //dubbo2.7版本--待修正
+        //以上就是配置检查的相关分析，代码比较多，需要大家耐心看一下。下面对配置检查的逻辑进行简单的总结，如下：
+        //
+        //1. 检测 <dubbo:service> 标签的 interface 属性合法性，不合法则抛出异常
+        //2. 检测 ProviderConfig、ApplicationConfig 等核心配置类对象是否为空，若为空，则尝试从其他配置类对象中获取相应的实例。
+        //3. 检测并处理泛化服务和普通服务类
+        //4. 检测本地存根配置，并进行相应的处理
+        //5. 对 ApplicationConfig、RegistryConfig 等配置类进行检测，为空则尝试创建，若无法创建则抛出异常
+        //
+        //配置检查并非本文重点，因此这里不打算对 doExport 方法所调用的方法进行分析（doExportUrls 方法除外）。在这些方法中，除了 appendProperties 方法稍微复杂一些，其他方法逻辑不是很复杂。因此，大家可自行分析。
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
+        // ProviderModel 表示服务提供者模型，此对象中存储了与服务提供者相关的信息。
+        // 比如服务的配置信息，服务实例等。每个被导出的服务对应一个 ProviderModel。
+        // ApplicationModel 持有所有的 ProviderModel。dubbo2.7版本代码如下：
+        // ProviderModel providerModel = new ProviderModel(getUniqueServiceName(), this, ref);
+        // ApplicationModel.initProviderModel(getUniqueServiceName(), providerModel);
         ServiceRepository repository = ApplicationModel.getServiceRepository();
         ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass());
         repository.registerProvider(
@@ -322,8 +364,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 serviceMetadata
         );
 
+        // 加载注册中心链接，进去
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
+        // Dubbo 允许我们使用不同的协议导出服务，也允许我们向多个注册中心注册服务。Dubbo 在 doExportUrls 方法中对多协议，多注册中心进行了支持
+        // 遍历 protocols，并在每个协议下导出服务，并且在导出服务的过程中，将服务注册到注册中心
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig)
                     .map(p -> p + "/" + path)

@@ -37,6 +37,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
  *
  * @export
  */
+// 注意实现的几个接口
 public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean, DisposableBean,
         ApplicationContextAware, BeanNameAware, ApplicationEventPublisherAware {
 
@@ -63,7 +64,9 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
+        // 获取IOC容器
         this.applicationContext = applicationContext;
+        // 传给SpringExtensionFactory
         SpringExtensionFactory.addApplicationContext(applicationContext);
     }
 
@@ -140,6 +143,8 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
      */
     @Override
     public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+        // 获取容器事件发布器。ApplicationEventPublisher是ApplicationContext的父接口之一
+        // 功能就是发布事件，也就是把某个事件告诉的所有与这个事件相关的监听器。
         this.applicationEventPublisher = applicationEventPublisher;
     }
 }
