@@ -24,10 +24,15 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+// OK
 public class ExtensionLoader_Compatible_Test {
+
 
     @Test
     public void test_getExtension() throws Exception {
+        // 注意下CompatibleExtImpl1的类头有一个@Extension("impl1")注解，这个是废弃的/过时的注解，当做扩展名使用的
+        // 即如果发现SPI文件只有v，没有k=的时候（没有扩展名），那么就会先看看有没有@Extension("yyy")，有的话扩展名就是yyy，
+        // 没有的话根据类名构建一个扩展名（比如实现类是xxxType，那么扩展名就是xxx）--->详见findAnnotationName方法
         assertTrue(ExtensionLoader.getExtensionLoader(CompatibleExt.class).getExtension("impl1") instanceof CompatibleExtImpl1);
         assertTrue(ExtensionLoader.getExtensionLoader(CompatibleExt.class).getExtension("impl2") instanceof CompatibleExtImpl2);
     }

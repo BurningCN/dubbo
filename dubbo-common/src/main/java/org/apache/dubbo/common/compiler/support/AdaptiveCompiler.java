@@ -26,9 +26,11 @@ import org.apache.dubbo.common.extension.ExtensionLoader;
 @Adaptive
 public class AdaptiveCompiler implements Compiler {
 
+    // volatile修饰的
     private static volatile String DEFAULT_COMPILER;
 
 
+    // 给外界调用的
     public static void setDefaultCompiler(String compiler) {
         DEFAULT_COMPILER = compiler;
     }
