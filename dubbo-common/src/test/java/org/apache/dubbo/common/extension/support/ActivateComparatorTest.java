@@ -23,10 +23,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+// OK
 public class ActivateComparatorTest {
 
+    // 测试激活比较器，激活类是有可以有顺序的，这个可以不看啊，@Activate注解的before和after已经废弃了，用的是order
     @Test
     public void testActivateComparator(){
+        // 下几个@Activate注解都没有order值
         Filter1 f1 = new Filter1();
         Filter2 f2 = new Filter2();
         Filter3 f3 = new Filter3();

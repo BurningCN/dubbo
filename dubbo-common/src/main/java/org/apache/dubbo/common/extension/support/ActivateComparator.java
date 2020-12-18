@@ -27,8 +27,11 @@ import java.util.Comparator;
 /**
  * OrderComparator
  */
+
+// OK
 public class ActivateComparator implements Comparator<Object> {
 
+    // 单例
     public static final Comparator<Object> COMPARATOR = new ActivateComparator();
 
     @Override
@@ -46,8 +49,10 @@ public class ActivateComparator implements Comparator<Object> {
             return 0;
         }
 
+        // 进去
         Class<?> inf = findSpi(o1.getClass());
 
+        // 进去
         ActivateInfo a1 = parseActivate(o1.getClass());
         ActivateInfo a2 = parseActivate(o2.getClass());
 
@@ -84,10 +89,13 @@ public class ActivateComparator implements Comparator<Object> {
             return null;
         }
 
+        // 获取@SPI父接口
         for (Class<?> intf : clazz.getInterfaces()) {
+            // 递归结束条件
             if (intf.isAnnotationPresent(SPI.class)) {
                 return intf;
             } else {
+                // 递归
                 Class result = findSpi(intf);
                 if (result != null) {
                     return result;
@@ -101,6 +109,7 @@ public class ActivateComparator implements Comparator<Object> {
     private ActivateInfo parseActivate(Class<?> clazz) {
         ActivateInfo info = new ActivateInfo();
         if (clazz.isAnnotationPresent(Activate.class)) {
+            // 获取Activate的值封装到ActivateInfo
             Activate activate = clazz.getAnnotation(Activate.class);
             info.before = activate.before();
             info.after = activate.after();
