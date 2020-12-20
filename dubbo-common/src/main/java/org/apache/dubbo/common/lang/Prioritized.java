@@ -26,17 +26,20 @@ import static java.lang.Integer.compare;
  *
  * @since 2.7.5
  */
+
+// OK
 public interface Prioritized extends Comparable<Prioritized> {
 
     /**
      * The {@link Comparator} of {@link Prioritized}
      */
-    // lambda
+    // gx,外界这样用Collections.sort(list, Prioritized.COMPARATOR);
+    // 以前看的都是Comparable的CompareTo里面使用Comparator的compare，现在还可以反过来
     Comparator<Object> COMPARATOR = (one, two) -> {
         boolean b1 = one instanceof Prioritized;
         boolean b2 = two instanceof Prioritized;
         if (b1 && !b2) {        // one is Prioritized, two is not
-            return -1;
+            return -1; // a和b比较，如果返回负数负数a小
         } else if (b2 && !b1) { // two is Prioritized, one is not
             return 1;
         } else if (b1 && b2) {  //  one and two both are Prioritized
@@ -71,9 +74,12 @@ public interface Prioritized extends Comparable<Prioritized> {
         return NORMAL_PRIORITY;
     }
 
+    // 接口可以含有默认方法（属于对象的，实例方法，不是类方法，注意下）
+    // 这里重写了父接口的compareTo方法，给出了默认实现
     @Override
     default int compareTo(Prioritized that) {
         // 因为优先级是int类型，直接调用Integer的compare。String类型也有对应的compareTo方法,str1.compareTo(str2)
+        // 按照数字从小到大排序
         return compare(this.getPriority(), that.getPriority());
     }
 }

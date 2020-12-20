@@ -83,14 +83,20 @@ public interface TypeUtils {
 
         getAllGenericTypes(type, t -> isAssignableFrom(interfaceClass, getRawClass(t)))
                 .forEach(parameterizedType -> {
+                    // 下面这段代码的逻辑其实就是为了获取泛型的具体类型的。比如StringConverter<Integer>那么为了获取Integer的
+
+                    // StringConverter
                     Class<?> rawClass = getRawClass(parameterizedType);
+                    // 获取具体的类型，即<>里的Integer。注意返回的是数组，比如Converter<String,T>那么typeArguments = {String,T}
                     Type[] typeArguments = parameterizedType.getActualTypeArguments();
                     for (int i = 0; i < typeArguments.length; i++) {
                         Type typeArgument = typeArguments[i];
                         if (typeArgument instanceof Class) {
+                            // 如果是Class的类型，填充到容器，这是因为比如在处理Converter<String,T>，T不是Class子类型，所以会被过滤掉
                             actualTypeArguments.add(i, (Class) typeArgument);
                         }
                     }
+                    // 递归处理父类(注意是类，不是父接口)
                     Class<?> superClass = rawClass.getSuperclass();
                     if (superClass != null) {
                         actualTypeArguments.addAll(findActualTypeArguments(superClass, interfaceClass));
@@ -143,6 +149,7 @@ public interface TypeUtils {
         // Add generic super interfaces
         allGenericTypes.addAll(getAllGenericInterfaces(type, typeFilters));
         // wrap unmodifiable object
+        // 比如type为String2IntegerConverter，那么就会有两个结果：StringConverter<Integer>和Converter<String,T>
         return unmodifiableList(allGenericTypes);
     }
 

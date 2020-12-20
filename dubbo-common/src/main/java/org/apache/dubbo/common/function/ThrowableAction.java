@@ -46,7 +46,7 @@ public interface ThrowableAction {
      */
     // 一般外界调用这个方法，其实就是用户利用传入一个lambda然后执行，lambda的内容可能会抛出异常（类的名字就叫ThrowableAction），
     // 但是会自动捕获并转化为RuntimeException再次抛出
-    // 1.8的接口可以有方法实现（default或者static，前者只能类内部调用，后者可以外界调用）
+    // 1.8的接口可以有方法实现（default或者static，前者只能对象调用，后者可以外界直接类.方式调用）
     static void execute(ThrowableAction action) throws RuntimeException {
         try {
             // 这是lambda的触发点、本质，实际还是函数调用！
