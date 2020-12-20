@@ -79,10 +79,10 @@ public class ApplicationModel {
     private static final ExtensionLoader<FrameworkExt> LOADER = ExtensionLoader.getExtensionLoader(FrameworkExt.class);
 
     public static void initFrameworkExts() {
-        // 获取FrameworkExt所有扩展类的实例
+        // 获取FrameworkExt所有扩展类的实例（三个子类：Environment、ConfigManager、ServiceRepository）
         Set<FrameworkExt> exts = ExtensionLoader.getExtensionLoader(FrameworkExt.class).getSupportedExtensionInstances();
         for (FrameworkExt ext : exts) {
-            // 调用初始化方法，进去
+            // 调用初始化方法(看Environment即可)，进去
             ext.initialize();
         }
     }

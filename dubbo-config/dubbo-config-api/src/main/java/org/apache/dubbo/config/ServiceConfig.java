@@ -187,9 +187,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     public synchronized void export() {
         if (bootstrap == null) {
-            // 通过静态方法（可以理解为工厂方法）获取实例，内部用了单例模式，进去
+            // 通过静态方法（可以理解为工厂方法）获取bootstrap实例，内部用了单例模式，进去
             bootstrap = DubboBootstrap.getInstance();
-            // 初始化
+            // 初始化bootstrap
             bootstrap.initialize();
         }
 

@@ -62,8 +62,9 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
     public void initialize() throws IllegalStateException {
         // 获取ConfigManager扩展类实例，进去
         ConfigManager configManager = ApplicationModel.getConfigManager();
-        // 获取默认的配置中心，进去
+        // 获取默认的配置中心对象，进去
         Optional<Collection<ConfigCenterConfig>> defaultConfigs = configManager.getDefaultConfigCenter();
+        // 如果存在，那么将ConfigCenterConfig的两个属性（都是map结构）设置到Environment的名字一致的两个属性上。
         defaultConfigs.ifPresent(configs -> {
             for (ConfigCenterConfig config : configs) {
                 this.setExternalConfigMap(config.getExternalConfiguration());
@@ -71,6 +72,7 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
             }
         });
 
+        // 下两个都是InmemoryConfiguration类型对象，把参数赋值到里面的store属性
         this.externalConfiguration.setProperties(externalConfigurationMap);
         this.appExternalConfiguration.setProperties(appExternalConfigurationMap);
     }

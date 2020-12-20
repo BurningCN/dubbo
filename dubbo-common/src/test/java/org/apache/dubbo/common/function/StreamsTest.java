@@ -18,9 +18,14 @@ package org.apache.dubbo.common.function;
 
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
@@ -35,6 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @since 2.7.5
  */
+
+// OK
 public class StreamsTest {
 
     @Test
@@ -45,6 +52,7 @@ public class StreamsTest {
 
     @Test
     public void testFilterList() {
+        // 和前面一样，只是filterList多做了一个collect
         List<Integer> list = filterList(asList(1, 2, 3, 4, 5), i -> i % 2 == 0);
         assertEquals(asList(2, 4), list);
     }
@@ -54,4 +62,20 @@ public class StreamsTest {
         Set<Integer> set = filterSet(asList(1, 2, 3, 4, 5), i -> i % 2 == 0);
         assertEquals(new LinkedHashSet<>(asList(2, 4)), set);
     }
+
+    @Test
+    public void testPredicate(){
+        Predicate<Field> predicate1 = field -> Modifier.isPrivate(field.getModifiers());
+        Predicate<Field> predicate2 = field -> Modifier.isFinal(field.getModifiers());
+        Predicate[] predicates = {predicate1,predicate2};
+        Predicate predicatess = Arrays.stream(predicates).reduce((a, b) -> a.and(b)).orElse(e -> true);
+
+        Field[] declaredFields = Streams.class.getDeclaredFields();
+
+        //Stream.of(declaredFields).filter(predicatess).findFirst().orElse(null);
+        List<Field> collect = Stream.of(declaredFields).collect(toList());
+        collect.stream().filter(predicatess).findFirst().orElse(null);
+    }
+
+
 }

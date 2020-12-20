@@ -135,8 +135,12 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
     }
 
     public Optional<Collection<ConfigCenterConfig>> getDefaultConfigCenter() {
+        // getTagName:判断类名是否以Config、Bean、ConfigBase结尾是的话，去除结尾并根据驼峰解析以-连接，比如ConfigCenterConfig最后就是config-center
+        // getConfigsMap:以config-center作为key从类属性configsCache取value(map结构)，取不到初始化一个空map(注意内部用读锁保护configsCache了)
+        // getDefaultConfigs:根据上面取出来的value，即 Map<String, AbstractConfig>，遍历value，收集默认的AbstractConfig存到list返回
         Collection<ConfigCenterConfig> defaults = getDefaultConfigs(getConfigsMap(getTagName(ConfigCenterConfig.class)));
         if (CollectionUtils.isEmpty(defaults)) {
+            // 如果为空，那么获取配置中心，不带Default，内部和前面差不多
             defaults = getConfigCenters();
         }
         return Optional.ofNullable(defaults);

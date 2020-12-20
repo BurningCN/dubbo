@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  *
  * @since 2.7.5
  */
+// OK
 public class ThrowableConsumerTest {
 
     @Test

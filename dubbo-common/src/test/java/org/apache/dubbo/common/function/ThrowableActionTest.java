@@ -26,6 +26,7 @@ import static org.apache.dubbo.common.function.ThrowableAction.execute;
  *
  * @since 2.7.5
  */
+// OK
 public class ThrowableActionTest {
 
     @Test
@@ -33,5 +34,6 @@ public class ThrowableActionTest {
         Assertions.assertThrows(RuntimeException.class, () -> execute(() -> {
             throw new Exception("Test");
         }), "Test");
+
     }
 }

@@ -528,17 +528,21 @@ public class DubboBootstrap extends GenericEventListener {
      * Initialize
      */
     public void initialize() {
+        // initialize方法只能初始化一次
         if (!initialized.compareAndSet(false, true)) {
             return;
         }
 
-        // 进去
+        // 初始化FrameworkExt实现类，进去
         ApplicationModel.initFrameworkExts();
 
+        // 启动配置中心，进去
         startConfigCenter();
 
+        // 加载远端配置 进去
         loadRemoteConfigs();
 
+        // 检查全局配置 进去
         checkGlobalConfigs();
 
         // @since 2.7.8
@@ -615,6 +619,7 @@ public class DubboBootstrap extends GenericEventListener {
 
         useRegistryAsConfigCenterIfNecessary();
 
+        // 从ConfigManager中获得的所有的ConfigCenterConfig对象
         Collection<ConfigCenterConfig> configCenters = configManager.getConfigCenters();
 
         // check Config Center

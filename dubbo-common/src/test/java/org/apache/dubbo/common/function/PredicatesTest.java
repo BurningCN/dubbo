@@ -18,10 +18,15 @@ package org.apache.dubbo.common.function;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.OptionalInt;
+import java.util.stream.Stream;
+
 import static org.apache.dubbo.common.function.Predicates.alwaysFalse;
 import static org.apache.dubbo.common.function.Predicates.alwaysTrue;
 import static org.apache.dubbo.common.function.Predicates.and;
 import static org.apache.dubbo.common.function.Predicates.or;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -30,6 +35,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.5
  */
+
+// OK
+// 小技巧：import了静态类Predicates的方法，所以直接用方法，不带类前缀
 public class PredicatesTest {
 
     @Test
@@ -56,5 +64,23 @@ public class PredicatesTest {
         assertTrue(or(alwaysTrue(), alwaysTrue(), alwaysFalse()).test(null));
         assertTrue(or(alwaysTrue(), alwaysFalse(), alwaysFalse()).test(null));
         assertFalse(or(alwaysFalse(), alwaysFalse(), alwaysFalse()).test(null));
+    }
+
+    @Test
+    public void testReduce() {
+        int[] ints = {1, 2, 3, 4, 5};
+        int sum = Arrays.stream(ints).reduce(0, (a, b) -> a + b);
+        int sum1 = Arrays.stream(ints).reduce(0, Integer::sum);
+        assertEquals(sum,sum1);
+
+        OptionalInt optionalInt = Arrays.stream(ints).reduce((a, b) -> a>b?a:b);
+        OptionalInt optionalInt1 = Arrays.stream(ints).reduce(Integer::max);
+        OptionalInt optionalInt2 = Arrays.stream(ints).reduce(Integer::min);
+        assertEquals(optionalInt.orElse(-1),optionalInt1.orElse(-1));
+
+        int count = Arrays.stream(ints).map(i -> 1).reduce(0, (a, b) -> a + b);
+        long count1 = Arrays.stream(ints).count();
+        assertTrue(count == count1);
+
     }
 }

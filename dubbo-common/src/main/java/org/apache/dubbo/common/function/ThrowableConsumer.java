@@ -27,6 +27,8 @@ import java.util.function.Function;
  * @see Throwable
  * @since 2.7.5
  */
+// OK
+// 基于原生的Consumer函数接口添加了可捕获异常的功能
 @FunctionalInterface
 public interface ThrowableConsumer<T> {
 
@@ -60,6 +62,8 @@ public interface ThrowableConsumer<T> {
      * @param <T>      the source type
      * @return the result after execution
      */
+    // 一般都是这种模式，方法两个参数，第一个是要处理的对象，第二个式传递的行为（要怎么处理）
+    // 且注意如果式泛型类（有T），但是下面是静态方法的，必须手动标识为泛型方法，如果去掉<T>会报错
     static <T> void execute(T t, ThrowableConsumer<T> consumer) {
         consumer.execute(t);
     }

@@ -16,7 +16,11 @@
  */
 package org.apache.dubbo.common.function;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.OptionalInt;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static java.util.stream.Stream.of;
 
@@ -25,6 +29,7 @@ import static java.util.stream.Stream.of;
  *
  * @since 2.7.5
  */
+// OK
 public interface Predicates {
 
     Predicate[] EMPTY_ARRAY = new Predicate[0];
@@ -57,6 +62,7 @@ public interface Predicates {
      * @return non-null
      */
     static <T> Predicate<T> and(Predicate<T>... predicates) {
+        // 三个方法都进去研究下，文档注释写的很好（特别注意reduce是对流的每两个元素进行apply）
         return of(predicates).reduce((a, b) -> a.and(b)).orElseGet(Predicates::alwaysTrue);
     }
 
@@ -68,7 +74,10 @@ public interface Predicates {
      * @return non-null
      */
     static <T> Predicate<T> or(Predicate<T>... predicates) {
+        // 最后的orElse和前面的orElseGet其实效果一样
         return of(predicates).reduce((a, b) -> a.or(b)).orElse(e -> true);
     }
+
+
 
 }

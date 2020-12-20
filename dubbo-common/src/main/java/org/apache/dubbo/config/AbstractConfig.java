@@ -99,11 +99,13 @@ public abstract class AbstractConfig implements Serializable {
     public static String getTagName(Class<?> cls) {
         String tag = cls.getSimpleName();
         for (String suffix : SUFFIXES) {
+            // ConfigCenterConfig以Config结尾，tag = ConfigCenter
             if (tag.endsWith(suffix)) {
                 tag = tag.substring(0, tag.length() - suffix.length());
                 break;
             }
         }
+        // ConfigCenter驼峰解析为config-center
         return StringUtils.camelToSplitName(tag, "-");
     }
 

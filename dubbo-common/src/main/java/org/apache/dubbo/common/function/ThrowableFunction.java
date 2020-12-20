@@ -27,6 +27,7 @@ import java.util.function.Function;
  * @see Throwable
  * @since 2.7.5
  */
+// OK
 @FunctionalInterface
 public interface ThrowableFunction<T, R> {
 
