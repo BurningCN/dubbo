@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToDoubleConverterTest {
 
     private StringToDoubleConverter converter;
@@ -46,8 +47,10 @@ public class StringToDoubleConverterTest {
 
     @Test
     public void testConvert() {
+        // 进去
         assertEquals(Double.valueOf("1.0"), converter.convert("1.0"));
         assertNull(converter.convert(null));
+        // 数字转化异常
         assertThrows(NumberFormatException.class, () -> {
             converter.convert("ttt");
         });

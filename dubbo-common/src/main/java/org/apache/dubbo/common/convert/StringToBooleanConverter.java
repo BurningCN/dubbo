@@ -28,6 +28,7 @@ public class StringToBooleanConverter implements StringConverter<Boolean> {
 
     @Override
     public Boolean convert(String source) {
+        // StringUtils.isNotEmpty + Boolean.valueOf
         return isNotEmpty(source) ? valueOf(source) : null;
     }
 

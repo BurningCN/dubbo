@@ -24,10 +24,12 @@ import static org.apache.dubbo.common.utils.StringUtils.isNotEmpty;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToIntegerConverter implements StringConverter<Integer> {
 
     @Override
     public Integer convert(String source) {
+        // Integer.valueOf
         return isNotEmpty(source) ? valueOf(source) : null;
     }
 

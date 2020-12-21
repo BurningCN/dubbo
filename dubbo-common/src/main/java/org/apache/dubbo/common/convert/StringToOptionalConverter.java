@@ -29,6 +29,7 @@ public class StringToOptionalConverter implements StringConverter<Optional> {
 
     @Override
     public Optional convert(String source) {
+        // Optional.ofNullable包装一下
         return ofNullable(source);
     }
 

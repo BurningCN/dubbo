@@ -20,16 +20,7 @@ package org.apache.dubbo.common.utils;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static java.util.Collections.emptySet;
@@ -368,7 +359,7 @@ public class ClassUtils {
     }
 
     /**
-     * Get all interfaces from the specified type
+     * Get all interfaces from the specified type(给定的、指定的、规定的、详细说明的)
      *
      * @param type             the specified type
      * @param interfaceFilters the filters for interfaces
@@ -376,20 +367,32 @@ public class ClassUtils {
      * @since 2.7.6
      */
     public static Set<Class<?>> getAllInterfaces(Class<?> type, Predicate<Class<?>>... interfaceFilters) {
+        // isPrimitive进去看那些是原生的
         if (type == null || type.isPrimitive()) {
             return emptySet();
         }
 
-        Set<Class<?>> allInterfaces = new LinkedHashSet<>();
+        Set<Class<?>> allInterfaces = new LinkedHashSet<>();// 待返回结果集
         Set<Class<?>> resolved = new LinkedHashSet<>();
         Queue<Class<?>> waitResolve = new LinkedList<>();
 
+        // 以type = String2IntegerConverter为例
         resolved.add(type);
         Class<?> clazz = type;
         while (clazz != null) {
 
+            // 第一次循环：获取接口，String2IntegerConverter的接口为空
+            // 第二次循环：获取接口，StringToIntegerConverter的接口StringConverter<Integer>
+            // 第三次循环：获取接口，Object的接口为空
+            // 第四次循环：获取接口，StringConverter的父接口Converter<String, T>
+            // 第五次循环：获取接口，Converter的父接口Prioritized（后面的过程不说了，和上面的一样）
+            // 第六次循环：获取接口，Prioritized的父接口Comparable<Prioritized>（后面的过程不说了，和上面的一样）
             Class<?>[] interfaces = clazz.getInterfaces();
 
+            // 第一次循环：不处理
+            // 第二次循环：将StringConverter填充到三个容器（此时waitResolve:{Object,StringConverter}）
+            // 第三次循环：不处理
+            // 第四次循环：将Converter填充到三个容器（此时waitResolve:{Converter}）
             if (isNotEmpty(interfaces)) {
                 // add current interfaces
                 Arrays.stream(interfaces)
@@ -400,15 +403,30 @@ public class ClassUtils {
                         });
             }
 
-            // add all super classes to waitResolve
+            // add all super classes to waitResolve --->√
+            // 第一次循环：String2IntegerConverter的父类:StringToIntegerConverter和Object，填充到两个集合
+            // 第二次循环，StringToIntegerConverter的父类为空，不处理
+            // 第三次循环：Object的父类为空，不处理
+            // 第四次循环：Converter的父类为空，不处理
             getAllSuperClasses(clazz)
                     .stream()
                     .filter(resolved::add)
                     .forEach(waitResolve::add);
 
+            // 第一次循环：clazz = StringToIntegerConverter，回到循环，对该类进行处理
+            // 第二次循环：clazz = Object...
+            // 第三次循环：clazz = StringConverter...（此时waitResolve:{}）
+            // 第四次循环：clazz = Converter...（此时waitResolve:{}）
             clazz = waitResolve.poll();
         }
 
+        // 此时allInterfaces结果为
+        // 0 = {Class@1971} "interface org.apache.dubbo.common.convert.StringConverter"
+        // 1 = {Class@1554} "interface org.apache.dubbo.common.convert.Converter"
+        // 2 = {Class@1553} "interface org.apache.dubbo.common.lang.Prioritized"
+        // 3 = {Class@326} "interface java.lang.Comparable"
+
+        // 在过滤下
         return filterAll(allInterfaces, interfaceFilters);
     }
 
@@ -430,7 +448,7 @@ public class ClassUtils {
 
 
     /**
-     * the semantics is same as {@link Class#isAssignableFrom(Class)}
+     * the semantics(语义) is same as {@link Class#isAssignableFrom(Class)}
      *
      * @param superType  the super type
      * @param targetType the target type
@@ -449,6 +467,8 @@ public class ClassUtils {
         // isAssignableFrom
         return superType.isAssignableFrom(targetType);
     }
+
+
 
     /**
      * Test the specified class name is present in the {@link ClassLoader}

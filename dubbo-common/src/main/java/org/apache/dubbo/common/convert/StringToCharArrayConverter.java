@@ -24,6 +24,7 @@ import static org.apache.dubbo.common.utils.StringUtils.isNotEmpty;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToCharArrayConverter implements StringConverter<char[]> {
 
     @Override

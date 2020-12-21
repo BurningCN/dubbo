@@ -23,10 +23,12 @@ import static org.apache.dubbo.common.utils.StringUtils.length;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToCharacterConverter implements StringConverter<Character> {
 
     @Override
     public Character convert(String source) {
+        // 仅支持单字符的字符串转化为字符
         int length = length(source);
         if (length == 0) {
             return null;

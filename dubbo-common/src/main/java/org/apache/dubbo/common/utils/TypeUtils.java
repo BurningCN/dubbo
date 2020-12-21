@@ -18,12 +18,7 @@ package org.apache.dubbo.common.utils;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -73,22 +68,36 @@ public interface TypeUtils {
         return type instanceof Class;
     }
 
+    // index目前调用处只传了0和1，以type为String2IntegerConverter为例
+    // getSourceType方法传0，返回 class java.lang.String
+    // getTargetType方法传1，返回 class java.lang.Integer
     static <T> Class<T> findActualTypeArgument(Type type, Class<?> interfaceClass, int index) {
+        // 进去
         return (Class<T>) findActualTypeArguments(type, interfaceClass).get(index);
     }
 
+    // 这个方法的作用就是:看下面☆
     static List<Class<?>> findActualTypeArguments(Type type, Class<?> interfaceClass) {
-
+        // eg: type = String2IntegerConverter、interfaceClass = Converter
         List<Class<?>> actualTypeArguments = new LinkedList<>();
 
+
+        // ☆getAllGenericTypes获取所有父类、父接口的泛型参数！第二个参数/lambda是对前一个结果做过滤的，比如父接口最多顶到interfaceClass(比如Converter)
+        // Generic:通用、泛化的、泛型 。getAllGenericTypes进去
         getAllGenericTypes(type, t -> isAssignableFrom(interfaceClass, getRawClass(t)))
                 .forEach(parameterizedType -> {
                     // 下面这段代码的逻辑其实就是为了获取泛型的具体类型的。比如StringConverter<Integer>那么为了获取Integer的
 
-                    // StringConverter
+                    // 比如type为String2IntegerConverter，那么上面forEach遍历的list就会有两个元素：
+                    // 0 = {ParameterizedTypeImpl@2023} "org.apache.dubbo.common.convert.StringConverter<java.lang.Integer>"
+                    // 1 = {ParameterizedTypeImpl@2024} "org.apache.dubbo.common.convert.Converter<java.lang.String, T>"
+
+                    // 将ParameterizedTypeImpl转化为Class类型，目的是为了后面获取其父类，进去
                     Class<?> rawClass = getRawClass(parameterizedType);
+
                     // 获取具体的类型，即<>里的Integer。注意返回的是数组，比如Converter<String,T>那么typeArguments = {String,T}
                     Type[] typeArguments = parameterizedType.getActualTypeArguments();
+
                     for (int i = 0; i < typeArguments.length; i++) {
                         Type typeArgument = typeArguments[i];
                         if (typeArgument instanceof Class) {
@@ -96,6 +105,7 @@ public interface TypeUtils {
                             actualTypeArguments.add(i, (Class) typeArgument);
                         }
                     }
+
                     // 递归处理父类(注意是类，不是父接口)
                     Class<?> superClass = rawClass.getSuperclass();
                     if (superClass != null) {
@@ -103,6 +113,8 @@ public interface TypeUtils {
                     }
                 });
 
+        // 0 = {Class@324} "class java.lang.String"
+        // 1 = {Class@255} "class java.lang.Integer"
         return unmodifiableList(actualTypeArguments);
     }
 
@@ -144,12 +156,16 @@ public interface TypeUtils {
      */
     static List<ParameterizedType> getAllGenericTypes(Type type, Predicate<ParameterizedType>... typeFilters) {
         List<ParameterizedType> allGenericTypes = new LinkedList<>();
-        // Add generic super classes
+        // Add generic super classes 进去
         allGenericTypes.addAll(getAllGenericSuperClasses(type, typeFilters));
-        // Add generic super interfaces
+        // Add generic super interfaces 进去
         allGenericTypes.addAll(getAllGenericInterfaces(type, typeFilters));
+
         // wrap unmodifiable object
-        // 比如type为String2IntegerConverter，那么就会有两个结果：StringConverter<Integer>和Converter<String,T>
+
+        // 比如type为String2IntegerConverter，那么就会有两个结果：
+        // 0 = {ParameterizedTypeImpl@2023} "org.apache.dubbo.common.convert.StringConverter<java.lang.Integer>"
+        // 1 = {ParameterizedTypeImpl@2024} "org.apache.dubbo.common.convert.Converter<java.lang.String, T>"
         return unmodifiableList(allGenericTypes);
     }
 
@@ -200,13 +216,49 @@ public interface TypeUtils {
         }
 
         List<Class<?>> allTypes = new LinkedList<>();
-        // Add current class
+        // Add current class(下面结果的0)
         allTypes.add(rawClass);
-        // Add all super classes
+        // Add all super classes(下面结果的1)
         allTypes.addAll(getAllSuperClasses(rawClass, NON_OBJECT_TYPE_FILTER));
-        // Add all super interfaces
+        // Add all super interfaces(下面结果的2~5部分)
         allTypes.addAll(getAllInterfaces(rawClass));
 
+        // eg:rawClass为String2IntegerConverter最终得到6个元素(其实就是把String2IntegerConverter的所有父类(去除Object)、父接口获取了)
+        // 0 = {Class@1984} "class org.apache.dubbo.common.extension.convert.String2IntegerConverter"
+        // 1 = {Class@1977} "class org.apache.dubbo.common.convert.StringToIntegerConverter"
+        // 2 = {Class@1971} "interface org.apache.dubbo.common.convert.StringConverter"
+        // 3 = {Class@1554} "interface org.apache.dubbo.common.convert.Converter"
+        // 4 = {Class@1553} "interface org.apache.dubbo.common.lang.Prioritized"
+        // 5 = {Class@326} "interface java.lang.Comparable"
+
+        // 下面代码片段1是我自己根据片段2"翻译"的
+
+        // 代码片段1-第一次操作，获取带泛型的父接口
+        List<Type> typeList = new ArrayList<>();
+        for(Class clz : allTypes ){
+            Type[] genericInterfaces = clz.getGenericInterfaces();
+            List<Type> types = asList(genericInterfaces);
+            typeList.addAll(types);
+        }
+        // 此时typeList 为
+        // 0 = {ParameterizedTypeImpl@2025} "org.apache.dubbo.common.convert.StringConverter<java.lang.Integer>"
+        // 1 = {ParameterizedTypeImpl@2026} "org.apache.dubbo.common.convert.Converter<java.lang.String, T>"
+        // 2 = {Class@1553} "interface org.apache.dubbo.common.lang.Prioritized"
+        // 3 = {ParameterizedTypeImpl@2027} "java.lang.Comparable<org.apache.dubbo.common.lang.Prioritized>"
+
+        // 代码片段1-第二次操作，获取泛型参数化/具体化的type
+        List<ParameterizedType> parameterizedTypeList = new ArrayList<>();
+        for(Type ty : typeList){
+            if(ty instanceof ParameterizedType){
+                parameterizedTypeList.add((ParameterizedType)ty);
+            }
+        }
+        // 此时parameterizedTypeList为
+        // 0 = {ParameterizedTypeImpl@2026} "org.apache.dubbo.common.convert.StringConverter<java.lang.Integer>"
+        // 1 = {ParameterizedTypeImpl@2027} "org.apache.dubbo.common.convert.Converter<java.lang.String, T>"
+        // 2 = {ParameterizedTypeImpl@2028} "java.lang.Comparable<org.apache.dubbo.common.lang.Prioritized>"
+
+        // 代码片段2（源代码）
         List<ParameterizedType> allGenericInterfaces = allTypes
                 .stream()
                 .map(Class::getGenericInterfaces)
@@ -216,6 +268,10 @@ public interface TypeUtils {
                 .map(ParameterizedType.class::cast)
                 .collect(toList());
 
+        // eg:typeFilters = t->Converter.class.isAssignableFrom(t); 获取所有Converter以及其sub的
+        // filterAll(allGenericInterfaces, typeFilters)过滤的结果为
+        // 0 = {ParameterizedTypeImpl@2222} "org.apache.dubbo.common.convert.StringConverter<java.lang.Integer>"
+        // 1 = {ParameterizedTypeImpl@2223} "org.apache.dubbo.common.convert.Converter<java.lang.String, T>"
         return unmodifiableList(filterAll(allGenericInterfaces, typeFilters));
     }
 

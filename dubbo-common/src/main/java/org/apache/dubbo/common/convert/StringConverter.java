@@ -22,6 +22,8 @@ package org.apache.dubbo.common.convert;
  * @see Converter
  * @since 2.7.6
  */
+// OK
+// 这个接口的目的是传递类型参数化了的泛型值String给父接口，而T由StringConverter的子类传递。从<String, T> 也能看出仅支持String->T的转化
 @FunctionalInterface
 public interface StringConverter<T> extends Converter<String, T> {
 }

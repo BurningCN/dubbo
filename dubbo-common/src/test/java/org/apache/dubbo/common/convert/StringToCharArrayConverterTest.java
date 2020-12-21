@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToCharArrayConverterTest {
 
     private StringToCharArrayConverter converter;
@@ -40,11 +41,14 @@ public class StringToCharArrayConverterTest {
 
     @Test
     public void testAccept() {
+        // char[].class的输出格式class [c ，又比如：int[].class的输出格式为class [i ， Integer[].class的输出格式为[Ljava.lang.Integer）
+        // 内部的处理是一样的
         assertTrue(converter.accept(String.class, char[].class));
     }
 
     @Test
     public void testConvert() {
+        // 进去
         assertArrayEquals(new char[]{'1', '2', '3'}, converter.convert("123"));
         assertNull(converter.convert(null));
     }

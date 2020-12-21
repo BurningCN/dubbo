@@ -29,10 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  *
  * @since 2.7.8
  */
+// OK
 public class ConverterTest {
 
+    // 先看第二个测试方法，再看下面这个
     @Test
     public void testGetConverter() {
+        // 注意多了test程序的三个扩展类（带2的）:String2BooleanConverter、String2DoubleConverter、String2IntegerConverter
         getExtensionLoader(Converter.class)
                 .getSupportedExtensionInstances()
                 .forEach(converter -> {
@@ -42,8 +45,9 @@ public class ConverterTest {
 
     @Test
     public void testConvertIfPossible() {
+        // 进去
         assertEquals(Integer.valueOf(2), convertIfPossible("2", Integer.class));
-        /*assertEquals(Boolean.FALSE, convertIfPossible("false", Boolean.class));
-        assertEquals(Double.valueOf(1), convertIfPossible("1", Double.class));*/
+        assertEquals(Boolean.FALSE, convertIfPossible("false", Boolean.class));
+        assertEquals(Double.valueOf(1), convertIfPossible("1", Double.class));
     }
 }

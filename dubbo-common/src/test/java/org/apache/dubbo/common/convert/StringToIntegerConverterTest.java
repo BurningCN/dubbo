@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToIntegerConverterTest {
 
     private StringToIntegerConverter converter;
@@ -46,6 +47,7 @@ public class StringToIntegerConverterTest {
 
     @Test
     public void testConvert() {
+        // 进去
         assertEquals(Integer.valueOf("1"), converter.convert("1"));
         assertNull(converter.convert(null));
         assertThrows(NumberFormatException.class, () -> {

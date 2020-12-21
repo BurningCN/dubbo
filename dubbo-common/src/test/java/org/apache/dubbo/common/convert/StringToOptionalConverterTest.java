@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToOptionalConverterTest {
 
     private StringToOptionalConverter converter;
@@ -46,6 +47,7 @@ public class StringToOptionalConverterTest {
 
     @Test
     public void testConvert() {
+        // 进去
         assertEquals(Optional.of("1"), converter.convert("1"));
         assertEquals(Optional.empty(), converter.convert(null));
     }

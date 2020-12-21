@@ -24,10 +24,12 @@ import static org.apache.dubbo.common.utils.StringUtils.isNotEmpty;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToDoubleConverter implements StringConverter<Double> {
 
     @Override
     public Double convert(String source) {
+        // Double.valueOf
         return isNotEmpty(source) ? valueOf(source) : null;
     }
 

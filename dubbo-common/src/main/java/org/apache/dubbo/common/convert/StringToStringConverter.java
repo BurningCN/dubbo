@@ -21,10 +21,12 @@ package org.apache.dubbo.common.convert;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToStringConverter implements StringConverter<String> {
 
     @Override
     public String convert(String source) {
+        // 直接返回
         return source;
     }
 }

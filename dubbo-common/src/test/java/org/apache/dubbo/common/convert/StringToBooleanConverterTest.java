@@ -29,22 +29,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToBooleanConverterTest {
 
     private StringToBooleanConverter converter;
 
     @BeforeEach
     public void init() {
+        // 根据扩展名获取扩展类实例
         converter = (StringToBooleanConverter) getExtensionLoader(Converter.class).getExtension("string-to-boolean");
     }
 
     @Test
     public void testAccept() {
+        // 判断StringToBooleanConverter是否接受String->Boolean的转化，肯定接受，因为内部能提取
+        // StringToBooleanConverter implements StringConverter<Boolean> 的Boolean和
+        // StringConverter<T> extends Converter<String, T>的String，正好就是String->Boolean
+        // 进去
         assertTrue(converter.accept(String.class, Boolean.class));
     }
 
     @Test
     public void testConvert() {
+        // 进去
         assertTrue(converter.convert("true"));
         assertTrue(converter.convert("true"));
         assertTrue(converter.convert("True"));

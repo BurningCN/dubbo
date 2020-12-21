@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToCharacterConverterTest {
 
     private StringToCharacterConverter converter;
@@ -46,8 +47,10 @@ public class StringToCharacterConverterTest {
 
     @Test
     public void testConvert() {
+        // 进去
         assertEquals('t', converter.convert("t"));
         assertNull(converter.convert(null));
+        // 多字符的字符串转化抛异常，进去
         assertThrows(IllegalArgumentException.class, () -> {
             converter.convert("ttt");
         });
