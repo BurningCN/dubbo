@@ -32,6 +32,10 @@ import static org.apache.dubbo.common.utils.TypeUtils.findActualTypeArgument;
  * @param <S> The source type
  * @since 2.7.6
  */
+// OK
+// 直接子接口只有一个StringToMultiValueConverter，传给S的值String
+// 和Converter<S,T>不同，其作用是S->(转化为)T，当然了S目前只有String,这里MultiValueConverter<S>的作用是把String的值拆分放到集合容器中,
+// 比如"1,2,3"放到ArrayList<>(){1,2,3}。和Converter一样都继承了Prioritized
 @SPI
 public interface MultiValueConverter<S> extends Prioritized {
 
@@ -42,6 +46,7 @@ public interface MultiValueConverter<S> extends Prioritized {
      * @param multiValueType the multi-value type
      * @return if accepted, return <code>true</code>, or <code>false</code>
      */
+    // StringToMultiValueConverter的两个直接子类给出了实现
     boolean accept(Class<S> sourceType, Class<?> multiValueType);
 
     /**
@@ -72,9 +77,12 @@ public interface MultiValueConverter<S> extends Prioritized {
      * @see ExtensionLoader#getSupportedExtensionInstances()
      * @since 2.7.8
      */
+    // sourceType目前只能是String.class，targetType是各种奇葩类型，比如String[].class、BlockingQueue.class、List.class等
     static MultiValueConverter<?> find(Class<?> sourceType, Class<?> targetType) {
         return getExtensionLoader(MultiValueConverter.class)
+                // 有11个实例，详见MultiValueConverter的SPI文件，且注意内部会对其排序，根据各个子类的getPriority方法
                 .getSupportedExtensionInstances()
+                // accept进去
                 .stream()
                 .filter(converter -> converter.accept(sourceType, targetType))
                 .findFirst()

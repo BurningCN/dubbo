@@ -24,6 +24,7 @@ import java.util.concurrent.TransferQueue;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToTransferQueueConverter extends StringToIterableConverter<TransferQueue> {
 
     @Override

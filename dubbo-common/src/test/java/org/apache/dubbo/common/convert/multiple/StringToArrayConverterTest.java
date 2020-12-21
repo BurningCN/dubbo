@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToArrayConverterTest {
 
     private StringToArrayConverter converter;
@@ -41,7 +42,9 @@ public class StringToArrayConverterTest {
 
     @Test
     public void testAccept() {
+        // 进去
         assertTrue(converter.accept(String.class, char[].class));
+        // 第一个参数传null没关系，因为StringToArrayConverter内部的accept没用到到该参数
         assertTrue(converter.accept(null, char[].class));
         assertFalse(converter.accept(null, String.class));
         assertFalse(converter.accept(null, String.class));
@@ -50,7 +53,9 @@ public class StringToArrayConverterTest {
 
     @Test
     public void testConvert() {
+        // 进去
         assertTrue(deepEquals(new Integer[]{123}, converter.convert("123", Integer[].class, Integer.class)));
+        // 进去，第三个参数为null没关系，因为因为StringToArrayConverter内部的convert没用到到该参数
         assertTrue(deepEquals(new Integer[]{1, 2, 3}, converter.convert("1,2,3", Integer[].class, null)));
         assertNull(converter.convert("", Integer[].class, null));
         assertNull(converter.convert(null, Integer[].class, null));

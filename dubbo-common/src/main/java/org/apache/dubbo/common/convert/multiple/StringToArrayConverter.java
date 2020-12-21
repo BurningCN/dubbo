@@ -27,9 +27,13 @@ import static java.lang.reflect.Array.newInstance;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToArrayConverter implements StringToMultiValueConverter {
 
     public boolean accept(Class<String> type, Class<?> multiValueType) {
+        // 没用到type参数
+
+        // eg:multiValueType 为 char[].class
         if (multiValueType != null && multiValueType.isArray()) {
             return true;
         }
@@ -38,14 +42,20 @@ public class StringToArrayConverter implements StringToMultiValueConverter {
 
     @Override
     public Object convert(String[] segments, int size, Class<?> targetType, Class<?> elementType) {
+        // 没用到elementType参数
 
+        // 获取Component类型(Component:组成部分；成分；组件，元件)，就是数组里面的元素类型，比如targetType = Integer[].class(输出为class [Ljava.lang.Integer)，
+        // 这里就是获取Integer.class(输出为class java.lang.Integer)
         Class<?> componentType = targetType.getComponentType();
 
+        // 获取支持Converter，比如StringToIntegerConverter
         Converter converter = Converter.getConverter(String.class, componentType);
 
+        // Array.newInstance
         Object array = newInstance(componentType, size);
 
         for (int i = 0; i < size; i++) {
+            // 转化后填充
             Array.set(array, i, converter.convert(segments[i]));
         }
 

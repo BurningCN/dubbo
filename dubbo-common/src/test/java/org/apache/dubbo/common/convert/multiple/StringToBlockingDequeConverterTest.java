@@ -51,6 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @see BlockingDeque
  * @since 2.7.6
  */
+// OK
 public class StringToBlockingDequeConverterTest {
 
     private MultiValueConverter converter;
@@ -63,6 +64,7 @@ public class StringToBlockingDequeConverterTest {
     @Test
     public void testAccept() {
 
+        // 进去
         assertFalse(converter.accept(String.class, Collection.class));
 
         assertFalse(converter.accept(String.class, List.class));
@@ -80,6 +82,8 @@ public class StringToBlockingDequeConverterTest {
         assertFalse(converter.accept(String.class, BlockingQueue.class));
         assertFalse(converter.accept(String.class, TransferQueue.class));
         assertFalse(converter.accept(String.class, Deque.class));
+
+        // 只有这个为true
         assertTrue(converter.accept(String.class, BlockingDeque.class));
 
         assertFalse(converter.accept(null, char[].class));

@@ -25,6 +25,7 @@ import java.util.TreeSet;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToNavigableSetConverter extends StringToIterableConverter<NavigableSet> {
 
     @Override

@@ -31,19 +31,26 @@ import static org.apache.dubbo.common.utils.TypeUtils.findActualTypeArgument;
  *
  * @since 2.7.6
  */
+// OK
+// 泛型T由子类给出
 public abstract class StringToIterableConverter<T extends Iterable> implements StringToMultiValueConverter {
 
     public boolean accept(Class<String> type, Class<?> multiValueType) {
+        // 第一个参数没用到
+
+        // getSupportedType进去
         return isAssignableFrom(getSupportedType(), multiValueType);
     }
 
     @Override
     public final Object convert(String[] segments, int size, Class<?> multiValueType, Class<?> elementType) {
 
+        // 进去
         Optional<StringConverter> stringConverter = getStringConverter(elementType);
 
         return stringConverter.map(converter -> {
 
+            // createMultiValue抽象方法，子类给出实现，创建对应size大小的容器
             T convertedObject = createMultiValue(size, multiValueType);
 
             if (convertedObject instanceof Collection) {
@@ -68,9 +75,11 @@ public abstract class StringToIterableConverter<T extends Iterable> implements S
     }
 
     protected final Class<T> getSupportedType() {
+        // 下面这个调用讲过了，比如this为StringToBlockingDequeueConverter实例，那么返回的结果就是BlockingDeque.class
         return findActualTypeArgument(getClass(), StringToIterableConverter.class, 0);
     }
 
+    // todo
     @Override
     public final int getPriority() {
         int level = getAllInterfaces(getSupportedType(), type ->

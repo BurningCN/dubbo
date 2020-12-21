@@ -24,6 +24,7 @@ import java.util.TreeSet;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToSortedSetConverter extends StringToIterableConverter<SortedSet> {
 
     @Override

@@ -24,6 +24,7 @@ import java.util.Deque;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToDequeConverter extends StringToIterableConverter<Deque> {
 
     @Override

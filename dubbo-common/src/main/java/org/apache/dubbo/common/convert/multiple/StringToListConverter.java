@@ -24,6 +24,7 @@ import java.util.List;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToListConverter extends StringToIterableConverter<List> {
 
     @Override

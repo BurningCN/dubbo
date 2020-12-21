@@ -24,6 +24,7 @@ import java.util.Set;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToSetConverter extends StringToIterableConverter<Set> {
 
     @Override

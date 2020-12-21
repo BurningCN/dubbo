@@ -25,6 +25,7 @@ import java.util.Queue;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToQueueConverter extends StringToIterableConverter<Queue> {
 
     @Override

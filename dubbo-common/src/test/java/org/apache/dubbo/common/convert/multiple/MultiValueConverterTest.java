@@ -35,10 +35,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @since 2.7.8
  */
+// OK
 public class MultiValueConverterTest {
 
     @Test
     public void testFind() {
+        // 进去
         MultiValueConverter converter = MultiValueConverter.find(String.class, String[].class);
         assertEquals(StringToArrayConverter.class, converter.getClass());
 

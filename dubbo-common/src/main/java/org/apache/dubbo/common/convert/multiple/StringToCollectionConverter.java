@@ -24,6 +24,7 @@ import java.util.Collection;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToCollectionConverter extends StringToIterableConverter<Collection> {
 
     @Override

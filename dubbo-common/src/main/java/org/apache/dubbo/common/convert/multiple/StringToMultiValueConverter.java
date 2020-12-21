@@ -27,6 +27,7 @@ import static org.apache.dubbo.common.utils.StringUtils.split;
  * @see MultiValueConverter
  * @since 2.7.6
  */
+// OK
 public interface StringToMultiValueConverter extends MultiValueConverter<String> {
 
     @Override
@@ -36,7 +37,7 @@ public interface StringToMultiValueConverter extends MultiValueConverter<String>
             return null;
         }
 
-        // split by the comma
+        // split by the comma（comma:逗号；停顿）
         String[] segments = split(source, ',');
 
         if (ArrayUtils.isEmpty(segments)) { // If empty array, create an array with only one element
@@ -44,6 +45,8 @@ public interface StringToMultiValueConverter extends MultiValueConverter<String>
         }
 
         int size = segments.length;
+
+        // 模板方法模式，上面定义了算法的整个骨架，下面调用的convert抽象方法由不同的子类给出自己的实现
 
         return convert(segments, size, multiValueType, elementType);
     }

@@ -24,6 +24,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToBlockingDequeConverter extends StringToIterableConverter<BlockingDeque> {
 
     @Override

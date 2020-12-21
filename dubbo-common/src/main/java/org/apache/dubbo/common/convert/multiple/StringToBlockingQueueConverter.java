@@ -25,6 +25,7 @@ import java.util.concurrent.BlockingQueue;
  *
  * @since 2.7.6
  */
+// OK
 public class StringToBlockingQueueConverter extends StringToIterableConverter<BlockingQueue> {
 
     @Override
