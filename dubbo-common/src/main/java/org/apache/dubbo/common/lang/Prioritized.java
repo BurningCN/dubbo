@@ -39,7 +39,8 @@ public interface Prioritized extends Comparable<Prioritized> {
         boolean b1 = one instanceof Prioritized;
         boolean b2 = two instanceof Prioritized;
         if (b1 && !b2) {        // one is Prioritized, two is not
-            return -1; // a和b比较，如果返回负数负数a小
+            // a和b比较，如果返回负数则a小
+            return -1;
         } else if (b2 && !b1) { // two is Prioritized, one is not
             return 1;
         } else if (b1 && b2) {  //  one and two both are Prioritized

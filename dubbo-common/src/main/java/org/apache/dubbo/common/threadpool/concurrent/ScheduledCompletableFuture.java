@@ -17,16 +17,16 @@
 package org.apache.dubbo.common.threadpool.concurrent;
 
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
+// OK
 public class ScheduledCompletableFuture {
+
 
     public static <T> CompletableFuture<T> schedule(
             ScheduledExecutorService executor,
-            Supplier<T> task,
+            Supplier<T> task,// 注意
             long delay,
             TimeUnit unit
     ) {
@@ -45,20 +45,29 @@ public class ScheduledCompletableFuture {
         return completableFuture;
     }
 
+    public static void main(String[] args) {
+        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        ScheduledExecutorService scheduledExecutorService1 = Executors.newScheduledThreadPool(10);
+    }
+
+
+    // gx
     public static <T> CompletableFuture<T> submit(
-            ScheduledExecutorService executor,
+            ScheduledExecutorService executor,// ScheduledExecutorService的两种常见构造见上面
             Supplier<T> task
     ) {
         CompletableFuture<T> completableFuture = new CompletableFuture<>();
         executor.submit(
                 () -> {
                     try {
-                        return completableFuture.complete(task.get());
+                        // Supplier包装到CompletableFuture。所以我们实现一个带有返回结果的任务不一定使用callable，可以直接用CompletableFuture
+                        return completableFuture.complete(task.get());// 注意下task.get()
                     } catch (Throwable t) {
                         return completableFuture.completeExceptionally(t);
                     }
                 }
         );
+        // 直接直接返回completableFuture对象，不会阻塞，具体何时完成取决于上面的线程何时complete或者completeExceptionally
         return completableFuture;
     }
 

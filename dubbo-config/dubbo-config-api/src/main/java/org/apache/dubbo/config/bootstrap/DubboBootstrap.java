@@ -1134,10 +1134,12 @@ public class DubboBootstrap extends GenericEventListener {
 
             if (rc.shouldInit()) {
                 if (referAsync) {
+                    // 提交任务，submit进去
                     CompletableFuture<Object> future = ScheduledCompletableFuture.submit(
                             executorRepository.getServiceExporterExecutor(),
                             () -> cache.get(rc)
                     );
+                    // 上面submit之后直接返回future(不会阻塞)，填充到集合里面，在跟下asyncReferringFutures.forEach处
                     asyncReferringFutures.add(future);
                 } else {
                     cache.get(rc);
@@ -1151,7 +1153,10 @@ public class DubboBootstrap extends GenericEventListener {
             cache = ReferenceConfigCache.getCache();
         }
 
+        // 这里的future就是CompletableFuture
         asyncReferringFutures.forEach(future -> {
+            // 判断如果没有完成的话直接cancel，完成时间点在future.complete(xx)的触发
+            // 详见ScheduledCompletableFuture.submit方法里面completableFuture.complete(task.get());）
             if (!future.isDone()) {
                 future.cancel(true);
             }
