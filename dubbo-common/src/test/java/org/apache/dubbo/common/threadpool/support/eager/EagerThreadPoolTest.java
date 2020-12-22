@@ -41,6 +41,8 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 
+// OK
+// getExecutor1没注释，，具体参考 LimitedThreadPoolTest。getExecutor2有注释
 public class EagerThreadPoolTest {
     @Test
     public void getExecutor1() throws Exception {
@@ -81,6 +83,7 @@ public class EagerThreadPoolTest {
         URL url = URL.valueOf("dubbo://10.20.130.230:20880/context/path?" + QUEUES_KEY + "=2");
         ThreadPool threadPool = new EagerThreadPool();
         ThreadPoolExecutor executor = (ThreadPoolExecutor) threadPool.getExecutor(url);
+        // executor.getQueue()获取线程池的任务队列，remainingCapacity获取队列剩余的容量
         assertThat(executor.getQueue().remainingCapacity(), is(2));
     }
 

@@ -23,6 +23,8 @@ import org.apache.dubbo.common.utils.NamedThreadFactory;
  * NamedInternalThreadFactory
  * This is a threadFactory which produce {@link InternalThread}
  */
+// OK
+// 看上面注释，重点在 Internal
 public class NamedInternalThreadFactory extends NamedThreadFactory {
 
     public NamedInternalThreadFactory() {
@@ -33,13 +35,18 @@ public class NamedInternalThreadFactory extends NamedThreadFactory {
         super(prefix, false);
     }
 
+    // gx prefix一般是在url中取到的
     public NamedInternalThreadFactory(String prefix, boolean daemon) {
+        // 进去
         super(prefix, daemon);
     }
 
+    // 重写了父类方法，方法内代码除了第二行不一样，其他全一样，第二行就是突出使用InternalThread（类本身extents thread）
     @Override
     public Thread newThread(Runnable runnable) {
+        // 能直接使用父类的成员，一猜就知道这些成员是protected修饰的
         String name = mPrefix + mThreadNum.getAndIncrement();
+        // 创建线程的时候不一定只能指定runnable、name还可以指定线程组、栈大小，进去
         InternalThread ret = new InternalThread(mGroup, runnable, name, 0);
         ret.setDaemon(mDaemon);
         return ret;

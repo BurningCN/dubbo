@@ -36,6 +36,8 @@ public interface ThreadPool {
      * @param url URL contains thread parameter
      * @return thread pool
      */
+    // 注意上面注释，带有@Adaptive注解，肯定会生成 ThreadPool$Adaptive，根据@Adaptive注解的值
+    // ThreadPool$Adaptive的getExecutor内部肯定有url.getParameter(threadpool)
     @Adaptive({THREADPOOL_KEY})
     Executor getExecutor(URL url);
 

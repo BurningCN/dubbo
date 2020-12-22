@@ -41,6 +41,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 
+// OK
 public class LimitedThreadPoolTest {
     @Test
     public void getExecutor1() throws Exception {
@@ -50,9 +51,12 @@ public class LimitedThreadPoolTest {
                 THREADS_KEY + "=2&" +
                 QUEUES_KEY + "=0");
         ThreadPool threadPool = new LimitedThreadPool();
+        // URL的四个参数会被内部用以构建线程池
         ThreadPoolExecutor executor = (ThreadPoolExecutor) threadPool.getExecutor(url);
+        // 构建后的线程池的一些属性和url的参数匹配，肯定匹配的上
         assertThat(executor.getCorePoolSize(), is(1));
         assertThat(executor.getMaximumPoolSize(), is(2));
+        // 如果任务队列长度为0，使用SynchronousQueue同步转移队列
         assertThat(executor.getQueue(), Matchers.<BlockingQueue<Runnable>>instanceOf(SynchronousQueue.class));
         assertThat(executor.getRejectedExecutionHandler(),
                 Matchers.<RejectedExecutionHandler>instanceOf(AbortPolicyWithReport.class));
@@ -62,6 +66,7 @@ public class LimitedThreadPoolTest {
             @Override
             public void run() {
                 Thread thread = Thread.currentThread();
+                // 线程的类型和名称 详见NamedInternalThreadFactory，这个类会作为前面ThreadPoolExecutor的线程工厂
                 assertThat(thread, instanceOf(InternalThread.class));
                 assertThat(thread.getName(), startsWith("demo"));
                 latch.countDown();
@@ -77,6 +82,7 @@ public class LimitedThreadPoolTest {
         URL url = URL.valueOf("dubbo://10.20.130.230:20880/context/path?" + QUEUES_KEY + "=1");
         ThreadPool threadPool = new LimitedThreadPool();
         ThreadPoolExecutor executor = (ThreadPoolExecutor) threadPool.getExecutor(url);
+        // LinkedBlockingQueue
         assertThat(executor.getQueue(), Matchers.<BlockingQueue<Runnable>>instanceOf(LinkedBlockingQueue.class));
     }
 }

@@ -40,9 +40,12 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
 /**
  * This thread pool is self-tuned. Thread will be recycled after idle for one minute, and new thread will be created for
  * the upcoming request.
+ * 这个线程池是自调优的。线程在空闲一分钟后将被回收，新的线程将为即将到来的请求创建。
  *
- * @see java.util.concurrent.Executors#newCachedThreadPool()
+ * @see java.util.concurrent.Executors#newCachedThreadPool()---这个注释就表明当前类其实就是模仿了原生的newCachedThreadPool
  */
+// OK
+// 少部分注释，更多解释看LimitedThreadPool（页推荐优先看Limited再回来）
 public class CachedThreadPool implements ThreadPool {
 
     @Override

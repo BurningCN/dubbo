@@ -23,35 +23,44 @@ import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 
+// OK
 public class JVMUtil {
     public static void jstack(OutputStream stream) throws Exception {
         ThreadMXBean threadMxBean = ManagementFactory.getThreadMXBean();
         for (ThreadInfo threadInfo : threadMxBean.dumpAllThreads(true, true)) {
+            // getThreadDumpString进去
             stream.write(getThreadDumpString(threadInfo).getBytes());
         }
     }
 
     private static String getThreadDumpString(ThreadInfo threadInfo) {
+        // 1.线程名称、id、状态
         StringBuilder sb = new StringBuilder("\"" + threadInfo.getThreadName() + "\"" +
                 " Id=" + threadInfo.getThreadId() + " " +
                 threadInfo.getThreadState());
+        // 2.线程在什么锁上等待
         if (threadInfo.getLockName() != null) {
             sb.append(" on " + threadInfo.getLockName());
         }
+        // 3，线程持有的锁
         if (threadInfo.getLockOwnerName() != null) {
             sb.append(" owned by \"" + threadInfo.getLockOwnerName() +
                     "\" Id=" + threadInfo.getLockOwnerId());
         }
+        // 4.是否被挂起
         if (threadInfo.isSuspended()) {
             sb.append(" (suspended)");
         }
+        // 5.是否是本地线程
         if (threadInfo.isInNative()) {
             sb.append(" (in native)");
         }
         sb.append('\n');
         int i = 0;
 
+        // 线程的栈跟踪信息
         StackTraceElement[] stackTrace = threadInfo.getStackTrace();
+        // 锁定的监视器
         MonitorInfo[] lockedMonitors = threadInfo.getLockedMonitors();
         for (; i < stackTrace.length && i < 32; i++) {
             StackTraceElement ste = stackTrace[i];

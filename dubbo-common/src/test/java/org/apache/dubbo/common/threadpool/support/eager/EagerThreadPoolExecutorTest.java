@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+// OK
 public class EagerThreadPoolExecutorTest {
 
     private static final URL URL = new URL("dubbo", "localhost", 8080);
@@ -50,8 +51,14 @@ public class EagerThreadPoolExecutorTest {
      * thread number in current pool：10,  task number in task queue：1 executor size: 10
      * thread number in current pool：10,  task number in task queue：0 executor size: 10
      * <p>
+     *
+     * ☆☆☆☆
      * We can see , when the core threads are in busy,
      * the thread pool create thread (but thread nums always less than max) instead of put task into queue.
+     * 对应上面注释，一般设置core、max、queue之后，线程数达到了核心线程数+任务队列满了，线程数才会超过核心线程数（当然不会超过max），
+     * 而TaskQueue这种设计不需要，当线程数达到了核心线程数，不会把任务放到队列，而是直接创建线程！从上面输出就看出来了
+     * 这能表明为何叫做EagerThreadPoolExecutor，eager的意思就是迫切的、急切的
+     *
      */
     @Test
     public void testEagerThreadPool() throws Exception {
@@ -62,7 +69,7 @@ public class EagerThreadPoolExecutorTest {
         // alive 1 second
         long alive = 1000;
 
-        //init queue and executor
+        // init queue and executor
         TaskQueue<Runnable> taskQueue = new TaskQueue<Runnable>(queues);
         final EagerThreadPoolExecutor executor = new EagerThreadPoolExecutor(cores,
                 threads,
@@ -73,11 +80,13 @@ public class EagerThreadPoolExecutorTest {
                 new AbortPolicyWithReport(name, URL));
         taskQueue.setExecutor(executor);
 
+        // 15个任务
         for (int i = 0; i < 15; i++) {
             Thread.sleep(50);
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
+                    // 获取线程池当前线程数 和 任务队列的任务数其实就是队列大小--->回到上面看☆☆☆☆的部分
                     System.out.println("thread number in current pool：" + executor.getPoolSize() + ",  task number in task queue：" + executor.getQueue()
                             .size() + " executor size: " + executor.getPoolSize());
                     try {
@@ -89,7 +98,8 @@ public class EagerThreadPoolExecutorTest {
             });
         }
         Thread.sleep(5000);
-        // cores theads are all alive.
+        // cores theads are all alive.这也是一个重要的点，线程池的核心线程数的线程是永远不是死亡的，只有[超过核心线程数的那些线程]在空闲时间到达在alive到达后死亡
+        // 上面睡了5s，那些[超过核心线程数的那些线程]的alive才1s（超过的个数为5，可以看上面输出），肯定全部死亡，所以这里输出当前的线程数量就是核心线程数的值
         Assertions.assertEquals(executor.getPoolSize(), cores, "more than cores threads alive!");
     }
 
@@ -97,6 +107,7 @@ public class EagerThreadPoolExecutorTest {
     public void testSPI() {
         ExecutorService executorService = (ExecutorService) ExtensionLoader.getExtensionLoader(ThreadPool.class)
                 .getExtension("eager")
+                // 进去
                 .getExecutor(URL);
         Assertions.assertEquals("EagerThreadPoolExecutor", executorService.getClass()
             .getSimpleName(), "test spi fail!");

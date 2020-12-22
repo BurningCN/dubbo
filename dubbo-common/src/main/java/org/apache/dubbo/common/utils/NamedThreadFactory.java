@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * InternalThreadFactory.
  */
+// OK
 public class NamedThreadFactory implements ThreadFactory {
 
     protected static final AtomicInteger POOL_SEQ = new AtomicInteger(1);
@@ -46,6 +47,7 @@ public class NamedThreadFactory implements ThreadFactory {
         mPrefix = prefix + "-thread-";
         mDaemon = daemon;
         SecurityManager s = System.getSecurityManager();
+        // 线程组
         mGroup = (s == null) ? Thread.currentThread().getThreadGroup() : s.getThreadGroup();
     }
 

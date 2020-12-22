@@ -40,7 +40,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
 /**
  * Creates a thread pool that creates new threads as needed until limits reaches. This thread pool will not shrink
  * automatically.
+ * 创建一个线程池，根据需要创建新的线程，直到限制到达。此线程池不会自动收缩。
  */
+// OK
 public class LimitedThreadPool implements ThreadPool {
 
     @Override
@@ -49,11 +51,17 @@ public class LimitedThreadPool implements ThreadPool {
         int cores = url.getParameter(CORE_THREADS_KEY, DEFAULT_CORE_THREADS);
         int threads = url.getParameter(THREADS_KEY, DEFAULT_THREADS);
         int queues = url.getParameter(QUEUES_KEY, DEFAULT_QUEUES);
-        return new ThreadPoolExecutor(cores, threads, Long.MAX_VALUE, TimeUnit.MILLISECONDS,
-                queues == 0 ? new SynchronousQueue<Runnable>() :
+        // 创建线程池
+        return new ThreadPoolExecutor(
+                cores,// 核心线程数
+                threads,// 最大线程数
+                Long.MAX_VALUE, // keepAlive时间-->直接最大值，一直工作，所以就是类上面注释提到的不会自动收缩
+                TimeUnit.MILLISECONDS,// keepAlive单位
+                queues == 0 ? new SynchronousQueue<Runnable>() : // 任务队列
                         (queues < 0 ? new LinkedBlockingQueue<Runnable>()
                                 : new LinkedBlockingQueue<Runnable>(queues)),
-                new NamedInternalThreadFactory(name, true), new AbortPolicyWithReport(name, url));
+                new NamedInternalThreadFactory(name, true), // 线程工厂，name作为线程名称的前缀，进去
+                new AbortPolicyWithReport(name, url));// 拒绝策略，使用基于AbortPolicy自定义的一个拒绝策略，进去
     }
 
 }

@@ -28,12 +28,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 
+// OK
 public class TaskQueueTest {
 
     @Test
     public void testOffer1() throws Exception {
         Assertions.assertThrows(RejectedExecutionException.class, () -> {
             TaskQueue<Runnable> queue = new TaskQueue<Runnable>(1);
+            // queue没有executor的时候调用offer会抛异常，进去
             queue.offer(mock(Runnable.class));
         });
     }

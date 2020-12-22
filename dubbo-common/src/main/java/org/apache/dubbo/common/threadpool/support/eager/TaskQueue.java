@@ -27,34 +27,52 @@ import java.util.concurrent.TimeUnit;
  * or the currentPoolThreadSize more than executor's maximumPoolSize.
  * That can make the executor create new worker
  * when the task num is bigger than corePoolSize but less than maximumPoolSize.
+ *
+ * 在EagerThreadPoolExecutor中的TaskQueue
+ * 如果executor的submittedTaskCount小于currentPoolThreadSize，或者currentPoolThreadSize大于executor的maximumPoolSize，那么它将提供一个任务。
+ * 当任务num大于corePoolSize但小于maximumPoolSize时，执行器可以创建新的worker。
+ *
  */
+
+// OK
 public class TaskQueue<R extends Runnable> extends LinkedBlockingQueue<Runnable> {
 
     private static final long serialVersionUID = -2635853580887179627L;
 
     private EagerThreadPoolExecutor executor;
 
+    // gx
     public TaskQueue(int capacity) {
         super(capacity);
     }
 
+    // gx 目的是为了在后面的offer方法获取线程池的一些属性(getPoolSize)
     public void setExecutor(EagerThreadPoolExecutor exec) {
         executor = exec;
     }
 
+    // 线程池内部会调用如下方法（在线程数达到coreSize的时候），外界一般不会调用
     @Override
     public boolean offer(Runnable runnable) {
         if (executor == null) {
+            // 日志
             throw new RejectedExecutionException("The task queue does not have executor!");
         }
 
+        // 获取当前线程数，肯定返回值肯定>=coreSize的（因为前面说了offer只有在线程数达到coreSize的时候才会调用）
         int currentPoolThreadSize = executor.getPoolSize();
+
         // have free worker. put task into queue to let the worker deal with task.
+        // 假设coreSize=5,maxSize=10，currentPoolThreadSize肯定>=5，executor.getSubmittedTaskCount()记作count。
+        // 且注意execute前count++，afterExecute后count--
+        // (1).假设为currentPoolThreadSize = 5，count = 5，表示此时5个线程都在执行中，一个也没有触发afterExecute（内部使得count--），跳过if分支
+        // (2).假设为currentPoolThreadSize = 5，count = 3，表示此时3个线程都在执行中，另两个触发afterExecute（内部使得count--），进if分支，直接添加到队列，让剩余的两个线程从队列取任务
+        // 假设为currentPoolThreadSize > 5，和前面两个描述一样
         if (executor.getSubmittedTaskCount() < currentPoolThreadSize) {
             return super.offer(runnable);
         }
 
-        // return false to let executor create new worker.
+        // return false to let executor create new worker. 这是关键
         if (currentPoolThreadSize < executor.getMaximumPoolSize()) {
             return false;
         }
@@ -70,6 +88,7 @@ public class TaskQueue<R extends Runnable> extends LinkedBlockingQueue<Runnable>
      * @return offer success or not
      * @throws RejectedExecutionException if executor is terminated.
      */
+    // gx
     public boolean retryOffer(Runnable o, long timeout, TimeUnit unit) throws InterruptedException {
         if (executor.isShutdown()) {
             throw new RejectedExecutionException("Executor is shutdown!");

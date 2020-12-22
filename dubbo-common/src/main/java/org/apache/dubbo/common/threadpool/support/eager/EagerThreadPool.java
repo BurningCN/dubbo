@@ -39,7 +39,11 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
  * EagerThreadPool
  * When the core threads are all in busy,
  * create new thread instead of putting task into blocking queue.
+ * 当核心线程都处于繁忙状态时，
+ * 创建新的线程，而不是把任务放入阻塞队列。
  */
+// OK
+// 少部分注释，更多解释看LimitedThreadPool
 public class EagerThreadPool implements ThreadPool {
 
     @Override
@@ -52,6 +56,8 @@ public class EagerThreadPool implements ThreadPool {
 
         // init queue and executor
         TaskQueue<Runnable> taskQueue = new TaskQueue<Runnable>(queues <= 0 ? 1 : queues);
+        // 其他的Pool类到这里直接new ThreadPoolExecutor了，这里用了自定义的ThreadPoolExecutor的子类EagerThreadPoolExecutor，进去
+        // 并且还用自定义的任务队列TaskQueue
         EagerThreadPoolExecutor executor = new EagerThreadPoolExecutor(cores,
                 threads,
                 alive,

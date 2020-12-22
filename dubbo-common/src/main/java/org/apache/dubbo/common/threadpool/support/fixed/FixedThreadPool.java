@@ -37,8 +37,10 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
 /**
  * Creates a thread pool that reuses a fixed number of threads
  *
- * @see java.util.concurrent.Executors#newFixedThreadPool(int)
+ * @see java.util.concurrent.Executors#newFixedThreadPool(int) ---这个注释就表明当前类其实就是模仿了原生的newFixedThreadPool
  */
+// OK
+// 少部分注释，更多解释看LimitedThreadPool
 public class FixedThreadPool implements ThreadPool {
 
     @Override
@@ -46,6 +48,7 @@ public class FixedThreadPool implements ThreadPool {
         String name = url.getParameter(THREAD_NAME_KEY, DEFAULT_THREAD_NAME);
         int threads = url.getParameter(THREADS_KEY, DEFAULT_THREADS);
         int queues = url.getParameter(QUEUES_KEY, DEFAULT_QUEUES);
+        // 所谓的固定就是体现在核心线程数 = 最大线程数
         return new ThreadPoolExecutor(threads, threads, 0, TimeUnit.MILLISECONDS,
                 queues == 0 ? new SynchronousQueue<Runnable>() :
                         (queues < 0 ? new LinkedBlockingQueue<Runnable>()

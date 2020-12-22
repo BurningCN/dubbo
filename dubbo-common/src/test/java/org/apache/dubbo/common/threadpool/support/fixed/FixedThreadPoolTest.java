@@ -42,6 +42,8 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 
+// OK
+// 不写注释了，具体参考 LimitedThreadPoolTest
 public class FixedThreadPoolTest {
     @Test
     public void getExecutor1() throws Exception {
