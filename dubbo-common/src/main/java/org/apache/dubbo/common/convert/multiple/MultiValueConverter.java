@@ -82,8 +82,8 @@ public interface MultiValueConverter<S> extends Prioritized {
         return getExtensionLoader(MultiValueConverter.class)
                 // 有11个实例，详见MultiValueConverter的SPI文件，且注意内部会对其排序，根据各个子类的getPriority方法
                 .getSupportedExtensionInstances()
-                // accept进去
                 .stream()
+                // accept进去
                 .filter(converter -> converter.accept(sourceType, targetType))
                 .findFirst()
                 .orElse(null);

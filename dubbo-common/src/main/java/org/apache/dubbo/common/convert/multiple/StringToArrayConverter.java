@@ -65,6 +65,7 @@ public class StringToArrayConverter implements StringToMultiValueConverter {
 
     @Override
     public int getPriority() {
+        // 最小优先级，实际是Integer.MAX_VALUE，所以值越小优先级越高
         return MIN_PRIORITY;
     }
 }
