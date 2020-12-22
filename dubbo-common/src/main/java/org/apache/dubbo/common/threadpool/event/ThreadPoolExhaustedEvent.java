@@ -23,10 +23,13 @@ import org.apache.dubbo.event.Event;
  *
  * @see Event
  */
+// OK
+// 类作用看上面注释。Exhausted  筋疲力尽的，疲惫不堪的；耗尽的，枯竭的
 public class ThreadPoolExhaustedEvent extends Event {
 
     final String msg;
 
+    // gx 主要在AbortPolicyWithReport类中使用，用以在线程池Exhausted的时候，构建这个Event（并派遣给对应的监听器处理）
     public ThreadPoolExhaustedEvent(Object source, String msg) {
         super(source);
         this.msg = msg;

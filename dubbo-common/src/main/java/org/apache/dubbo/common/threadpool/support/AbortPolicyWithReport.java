@@ -39,6 +39,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.DUMP_DIRECTORY;
  * Abort Policy.
  * Log warn info when abort.
  */
+// OK
+// dubbo自己实现了一个拒绝策略，在原来支持的AbortPolicy基础上加了WithReport功能。可以看到extends ThreadPoolExecutor.AbortPolicy
 public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
 
     protected static final Logger logger = LoggerFactory.getLogger(AbortPolicyWithReport.class);
@@ -61,14 +63,18 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
 
     private static Semaphore guard = new Semaphore(1);
 
+    // gx发现主要是在new ThreadPoolExecutor的时候传入自定义的拒绝策略
     public AbortPolicyWithReport(String threadName, URL url) {
         this.threadName = threadName;
         this.url = url;
     }
 
+    // 当线程池发生拒绝操作的时候，会调用如下方法，这里是重写了父类AbortPolicy的rejectedExecution方法
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
-        String msg = String.format("Thread pool is EXHAUSTED!" +
+        // 没有用到参数r
+
+        String msg = String.format("Thread pool is EXHAUSTED!" +  // Thread pool is EXHAUSTED! 线程池EXHAUSTED疲惫不堪，存放太多任务触发拒绝操作
                 " Thread Name: %s, Pool Size: %d (active: %d, core: %d, max: %d, largest: %d), Task: %d (completed: "
                 + "%d)," +
                 " Executor status:(isShutdown:%s, isTerminated:%s, isTerminating:%s), in %s://%s:%d!",
@@ -76,9 +82,16 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
             e.getLargestPoolSize(),
             e.getTaskCount(), e.getCompletedTaskCount(), e.isShutdown(), e.isTerminated(), e.isTerminating(),
             url.getProtocol(), url.getIp(), url.getPort());
+        // 1.打日志 以AbortPolicyWithReportTest为例:Thread pool is EXHAUSTED! Thread Name: Test, Pool Size: 0 (active: 0, core: 1, max: 1, largest: 0), Task: 0 (completed: 0), Executor status:(isShutdown:false, isTerminated:false, isTerminating:false), in dubbo://10.20.130.230:20880!
         logger.warn(msg);
+
+        // 2.dump系统当前线程的堆栈信息，进去
         dumpJStack();
-        dispatchThreadPoolExhaustedEvent(msg);
+
+        // 3.处理事件，事件监听模型的惯用法：发生事件后让对应的监听器进行处理，进去
+        dispatchThreadPoolExhaustedEvent(msg); // dispatch:派遣，发送；迅速处理，
+
+        // 4.最后还是抛异常，和AbortPolicy的rejectedExecution方法的内容一样，只是上面做了一些其他操作
         throw new RejectedExecutionException(msg);
     }
 
@@ -87,17 +100,19 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
      * @param msg
      */
     public void dispatchThreadPoolExhaustedEvent(String msg) {
+        // dispatch进去
         EventDispatcher.getDefaultExtension().dispatch(new ThreadPoolExhaustedEvent(this, msg));
     }
 
     private void dumpJStack() {
         long now = System.currentTimeMillis();
 
-        //dump every 10 minutes
+        // dump every 10 minutes
         if (now - lastPrintTime < TEN_MINUTES_MILLS) {
             return;
         }
 
+        // 信号量限制并发数为1
         if (!guard.tryAcquire()) {
             return;
         }
@@ -118,20 +133,25 @@ public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
             }
 
             String dateStr = sdf.format(new Date());
-            //try-with-resources
+            // try-with-resources
             try (FileOutputStream jStackStream = new FileOutputStream(
-                new File(dumpPath, "Dubbo_JStack.log" + "." + dateStr))) {
+                new File(dumpPath, "Dubbo_JStack.log" + "." + dateStr))) { // new File第二个参数是child及具体的文件名称
+                // 进去
                 JVMUtil.jstack(jStackStream);
             } catch (Throwable t) {
                 logger.error("dump jStack error", t);
             } finally {
+                // 释放信号量
                 guard.release();
             }
             lastPrintTime = System.currentTimeMillis();
         });
-        //must shutdown thread pool ,if not will lead to OOM
+
+        // must shutdown thread pool ,if not will lead to OOM
         pool.shutdown();
 
     }
+
+
 
 }

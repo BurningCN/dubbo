@@ -17,13 +17,13 @@
 package org.apache.dubbo.common.threadpool.support;
 
 import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.threadpool.support.AbortPolicyWithReport;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 
+// OK
 public class AbortPolicyWithReportTest {
     @Test
     public void jStackDumpTest() throws InterruptedException {
@@ -31,6 +31,7 @@ public class AbortPolicyWithReportTest {
         AbortPolicyWithReport abortPolicyWithReport = new AbortPolicyWithReport("Test", url);
 
         try {
+            // 手动调用该方法，正常是线程池内部触发的。进去
             abortPolicyWithReport.rejectedExecution(new Runnable() {
                 @Override
                 public void run() {

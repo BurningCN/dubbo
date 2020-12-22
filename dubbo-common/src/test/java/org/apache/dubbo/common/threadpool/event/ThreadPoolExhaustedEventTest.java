@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  *  {@link ThreadPoolExhaustedEvent} Test
  */
+// OK
 public class ThreadPoolExhaustedEventTest {
 
     @Test
