@@ -36,7 +36,12 @@ import java.util.concurrent.TimeoutException;
  * Tasks submitted to this executor through {@link #execute(Runnable)} will not get scheduled to a specific thread, though normal executors always do the schedule.
  * Those tasks are stored in a blocking queue and will only be executed when a thread calls {@link #waitAndDrain()}, the thread executing the task
  * is exactly the same as the one calling waitAndDrain.
+ *
+ 这个Executor和其他正常Executor之间最重要的区别是这个Executor不管理任何线程。
+ 通过execute(Runnable)方法提交给这个执行器的任务不会被调度到特定线程，而其他的Executor就把Runnable交给线程去执行了。
+ 这些任务存储在阻塞队列中，只有当thead调用waitAndDrain()方法时才会真正执行。简单来说就是，执行task的thead与调用waitAndDrain()方法的thead完全相同。
  */
+// OK
 public class ThreadlessExecutor extends AbstractExecutorService {
     private static final Logger logger = LoggerFactory.getLogger(ThreadlessExecutor.class.getName());
 
@@ -86,6 +91,7 @@ public class ThreadlessExecutor extends AbstractExecutorService {
             return;
         }
 
+        // 阻塞式获取
         Runnable runnable = queue.take();
 
         synchronized (lock) {
@@ -93,6 +99,7 @@ public class ThreadlessExecutor extends AbstractExecutorService {
             runnable.run();
         }
 
+        // 执行queue里的所有任务
         runnable = queue.poll();
         while (runnable != null) {
             try {
@@ -129,6 +136,9 @@ public class ThreadlessExecutor extends AbstractExecutorService {
      *
      * @param runnable
      */
+    // 同时我们还可以看到，里面还维护了一个名称叫做sharedExecutor的线程池。见名知意，我们就知道了，这里应该是要做线程池共享了。
+    // 1.使用ThreadlessExceutor，aka.，将回调直接委托给发起调用的线程。
+    // 2.使用shared executor执行回调。
     @Override
     public void execute(Runnable runnable) {
         synchronized (lock) {

@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 // OK
+// 可以看下博客的方案2就是下面的设计。标题:Java如何让线程池满后再放队列，地址:https://www.jianshu.com/p/62043956bfb6
 public class TaskQueue<R extends Runnable> extends LinkedBlockingQueue<Runnable> {
 
     private static final long serialVersionUID = -2635853580887179627L;
@@ -52,6 +53,7 @@ public class TaskQueue<R extends Runnable> extends LinkedBlockingQueue<Runnable>
     }
 
     // 线程池内部会调用如下方法（在线程数达到coreSize的时候），外界一般不会调用
+    // offer方法的含义是：将任务提交到队列中，返回值为true/false，分别代表提交成功/提交失败
     @Override
     public boolean offer(Runnable runnable) {
         if (executor == null) {
@@ -73,11 +75,13 @@ public class TaskQueue<R extends Runnable> extends LinkedBlockingQueue<Runnable>
         }
 
         // return false to let executor create new worker. 这是关键
+        // 重点： 当前线程数小于 最大线程数 ，返回false，暗含入队失败，让线程池去创建新的线程
         if (currentPoolThreadSize < executor.getMaximumPoolSize()) {
             return false;
         }
 
         // currentPoolThreadSize >= max
+        // 重点: 代码运行到此处，说明当前线程数 >= 最大线程数，需要真正的提交到队列中
         return super.offer(runnable);
     }
 
