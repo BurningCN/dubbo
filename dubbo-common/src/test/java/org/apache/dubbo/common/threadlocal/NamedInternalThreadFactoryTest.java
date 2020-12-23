@@ -20,11 +20,13 @@ package org.apache.dubbo.common.threadlocal;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+// OK
 public class NamedInternalThreadFactoryTest {
 
     @Test
     public void newThread() throws Exception {
         NamedInternalThreadFactory namedInternalThreadFactory = new NamedInternalThreadFactory();
+        // 直接调用了newThread了，一般是线程池内部调用的
         Thread t = namedInternalThreadFactory.newThread(new Runnable() {
             @Override
             public void run() {

@@ -20,6 +20,8 @@ package org.apache.dubbo.common.threadlocal;
 /**
  * InternalThread
  */
+// OK
+// 内部使用的线程，都在内置的四种线程池用到了（就是 FixedThreadPool、limited....）
 public class InternalThread extends Thread {
 
     private InternalThreadLocalMap threadLocalMap;
@@ -27,6 +29,7 @@ public class InternalThread extends Thread {
     public InternalThread() {
     }
 
+    // 不同参数的构造，实际都传给Thread了
     public InternalThread(Runnable target) {
         super(target);
     }
@@ -58,7 +61,11 @@ public class InternalThread extends Thread {
     /**
      * Returns the internal data structure that keeps the threadLocal variables bound to this thread.
      * Note that this method is for internal use only, and thus is subject to change at any time.
+     *
+     * 返回保持threadLocal变量绑定到该线程的内部数据结构。
+     * 请注意，此方法仅供内部使用，因此可能在任何时候进行更改。
      */
+
     public final InternalThreadLocalMap threadLocalMap() {
         return threadLocalMap;
     }
@@ -66,6 +73,9 @@ public class InternalThread extends Thread {
     /**
      * Sets the internal data structure that keeps the threadLocal variables bound to this thread.
      * Note that this method is for internal use only, and thus is subject to change at any time.
+     *
+     * 设置保持threadLocal变量绑定到此线程的内部数据结构。
+     * 请注意，此方法仅供内部使用，因此可能在任何时候进行更改。
      */
     public final void setThreadLocalMap(InternalThreadLocalMap threadLocalMap) {
         this.threadLocalMap = threadLocalMap;

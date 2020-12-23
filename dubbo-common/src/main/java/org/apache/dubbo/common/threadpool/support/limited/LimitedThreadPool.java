@@ -60,8 +60,12 @@ public class LimitedThreadPool implements ThreadPool {
                 queues == 0 ? new SynchronousQueue<Runnable>() : // 任务队列
                         (queues < 0 ? new LinkedBlockingQueue<Runnable>()
                                 : new LinkedBlockingQueue<Runnable>(queues)),
-                new NamedInternalThreadFactory(name, true), // 线程工厂，name作为线程名称的前缀，进去
+                // 线程工厂，name作为线程名称的前缀，注意使用的是Named[Internal]ThreadFactory，new 的是 InternalThread 线程，
+                // 目的是要用改造版的 ThreadLocal （即InternalThreadLocal），必须要配合 InternalThread 线程使用，否则就会退化为原生的 ThreadLocal
+                // InternalThreadLocal可以后面去了解。NamedInternalThreadFactory进去
+                new NamedInternalThreadFactory(name, true),
                 new AbortPolicyWithReport(name, url));// 拒绝策略，使用基于AbortPolicy自定义的一个拒绝策略，进去
+
     }
 
 }

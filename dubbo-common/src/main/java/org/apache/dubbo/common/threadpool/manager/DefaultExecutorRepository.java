@@ -40,6 +40,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREADS_KEY;
  * Consider implementing {@code Licycle} to enable executors shutdown when the process stops.
  */
 // OK
+// 这个类的设计主要是搞一些适用不同场景下的线程池，外界通过这个类拿去需要的线程池执行自己想要提交的任务即可
 public class DefaultExecutorRepository implements ExecutorRepository {
     private static final Logger logger = LoggerFactory.getLogger(DefaultExecutorRepository.class);
 
@@ -62,8 +63,8 @@ public class DefaultExecutorRepository implements ExecutorRepository {
             // 进去
             scheduledExecutors.addItem(scheduler);
         }
-//
-//        reconnectScheduledExecutor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Dubbo-reconnect-scheduler"));
+        // reconnectScheduledExecutor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Dubbo-reconnect-scheduler"));
+        // 这个是暴露服务的线程，看下getXXX
         serviceExporterExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("Dubbo-exporter-scheduler"));
     }
 
@@ -169,6 +170,7 @@ public class DefaultExecutorRepository implements ExecutorRepository {
         return scheduledExecutors.pollItem();
     }
 
+    // gx
     @Override
     public ScheduledExecutorService getServiceExporterExecutor() {
         return serviceExporterExecutor;
