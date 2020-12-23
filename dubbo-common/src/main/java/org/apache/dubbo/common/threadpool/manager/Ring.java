@@ -21,10 +21,12 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+// OK
 public class Ring<T> {
 
     AtomicInteger count = new AtomicInteger();
 
+    // 使用cow
     private List<T> itemList = new CopyOnWriteArrayList<T>();
 
     public void addItem(T t) {
@@ -45,6 +47,7 @@ public class Ring<T> {
             count.set(count.get() % itemList.size());
         }
 
+        // 常见的取余法
         int index = Math.abs(count.getAndIncrement()) % itemList.size();
         return itemList.get(index);
     }

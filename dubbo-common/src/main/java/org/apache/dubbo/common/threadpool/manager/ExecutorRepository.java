@@ -25,6 +25,8 @@ import java.util.concurrent.ScheduledExecutorService;
 /**
  *
  */
+// OK
+// 只有一个实现类 DefaultExecutorRepository
 @SPI("default")
 public interface ExecutorRepository {
 

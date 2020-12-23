@@ -39,6 +39,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREADS_KEY;
 /**
  * Consider implementing {@code Licycle} to enable executors shutdown when the process stops.
  */
+// OK
 public class DefaultExecutorRepository implements ExecutorRepository {
     private static final Logger logger = LoggerFactory.getLogger(DefaultExecutorRepository.class);
 
@@ -55,8 +56,10 @@ public class DefaultExecutorRepository implements ExecutorRepository {
     private ConcurrentMap<String, ConcurrentMap<Integer, ExecutorService>> data = new ConcurrentHashMap<>();
 
     public DefaultExecutorRepository() {
+        // 创建DEFAULT_SCHEDULER_SIZE个定时调度线程池ScheduledExecutorService
         for (int i = 0; i < DEFAULT_SCHEDULER_SIZE; i++) {
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Dubbo-framework-scheduler"));
+            // 进去
             scheduledExecutors.addItem(scheduler);
         }
 //
@@ -70,13 +73,27 @@ public class DefaultExecutorRepository implements ExecutorRepository {
      * @param url
      * @return
      */
+    // 备注已经说明在服务提供者或者服务消费者初始化的时候会调用，通过debug 可以得出：服务提供者初始化会创建线程名为
+    // DubboServerHandler-10.12.16.67:20880-thread 的线程池，服务消费者会创建线程名为 DubboClientHandler-10.12.16.67:20880-thread 的线程池。
+
+    // 这里需要说明下，Dubbo 创建的线程池会存储在 Map 中共享使用（就是data属性）
+    // private ConcurrentMap<String, ConcurrentMap<Integer, ExecutorService>> data = new ConcurrentHashMap<>();
+    // 外面的 key 表示服务提供方还是消费方，里面的 key 表示服务暴露的端口号，也就是说消费方对于相同端口号的服务只会创建一个线程池，
+    // 共享同一个线程池进行服务请求和消息接收后一系列处理。
     public synchronized ExecutorService createExecutorIfAbsent(URL url) {
         String componentKey = EXECUTOR_SERVICE_COMPONENT_KEY;
         if (CONSUMER_SIDE.equalsIgnoreCase(url.getParameter(SIDE_KEY))) {
             componentKey = CONSUMER_SIDE;
         }
+        //    1. put与compute：
+        //           不论key是否存在，强制用value覆盖进去。
+        //           区别：put返回旧value或null，compute返回新的value
+        //    2. putIfAbsent与computeIfAbsent：
+        //           key存在，则不操作，key不存在，则赋值一对新的（key，value）。
+        //           putIfAbsent返回旧value或null，computeIfAbsent返回新的value
         Map<Integer, ExecutorService> executors = data.computeIfAbsent(componentKey, k -> new ConcurrentHashMap<>());
         Integer portKey = url.getPort();
+        // createExecutor进去
         ExecutorService executor = executors.computeIfAbsent(portKey, k -> createExecutor(url));
         // If executor has been shut down, create a new one
         if (executor.isShutdown() || executor.isTerminated()) {
@@ -109,6 +126,7 @@ public class DefaultExecutorRepository implements ExecutorRepository {
         if (executor != null) {
             if (executor.isShutdown() || executor.isTerminated()) {
                 executors.remove(portKey);
+                // 进去
                 executor = createExecutor(url);
                 executors.put(portKey, executor);
             }
@@ -123,6 +141,8 @@ public class DefaultExecutorRepository implements ExecutorRepository {
                     && executor instanceof ThreadPoolExecutor && !executor.isShutdown()) {
                 ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) executor;
                 int threads = url.getParameter(THREADS_KEY, 0);
+
+                // 获取和设置线程池的core和max
                 int max = threadPoolExecutor.getMaximumPoolSize();
                 int core = threadPoolExecutor.getCorePoolSize();
                 if (threads > 0 && (threads != max || threads != core)) {
@@ -160,6 +180,8 @@ public class DefaultExecutorRepository implements ExecutorRepository {
     }
 
     private ExecutorService createExecutor(URL url) {
+        // 获取ThreadPool的自适应扩展类(源码字符串+Compiler自动生成的)，自适应扩展类的getExecutor方法内部会根据url获取对应的
+        // 扩展类实例（四种，具体看ThreadPool的SPI文件）并调用其getExecutor方法（同时传入url）
         return (ExecutorService) ExtensionLoader.getExtensionLoader(ThreadPool.class).getAdaptiveExtension().getExecutor(url);
     }
 
