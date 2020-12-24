@@ -29,8 +29,10 @@ import java.util.concurrent.TimeUnit;
 
 import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
 
+// OK
 public class ExecutorUtil {
     private static final Logger logger = LoggerFactory.getLogger(ExecutorUtil.class);
+    // 这个线程池很特殊，名字叫做关闭线程池，核心线程数是0
     private static final ThreadPoolExecutor SHUTDOWN_EXECUTOR = new ThreadPoolExecutor(0, 1,
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<Runnable>(100),
@@ -38,6 +40,7 @@ public class ExecutorUtil {
 
     public static boolean isTerminated(Executor executor) {
         if (executor instanceof ExecutorService) {
+            // 线程池是否关闭
             if (((ExecutorService) executor).isTerminated()) {
                 return true;
             }
@@ -73,12 +76,15 @@ public class ExecutorUtil {
         } catch (InterruptedException ex) {
             es.shutdownNow();
             Thread.currentThread().interrupt();
+            // 从上面shutdown到这里的逻辑和rmq的一样，dubbo多了下面的操作
         }
         if (!isTerminated(es)) {
+            // 如果还没关闭，创建一个线程取关闭线程池，进去
             newThreadToCloseExecutor(es);
         }
     }
 
+    // 立即关闭
     public static void shutdownNow(Executor executor, final int timeout) {
         if (!(executor instanceof ExecutorService) || isTerminated(executor)) {
             return;
@@ -92,6 +98,7 @@ public class ExecutorUtil {
             return;
         }
         try {
+            // 都shutdownNow了，还要等待一段时间
             es.awaitTermination(timeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
@@ -102,11 +109,13 @@ public class ExecutorUtil {
     }
 
     private static void newThreadToCloseExecutor(final ExecutorService es) {
+        // 再次判断，双重检查
         if (!isTerminated(es)) {
             SHUTDOWN_EXECUTOR.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        // 1000次循环关闭，确保退出（因为SHUTDOWN_EXECUTOR的核心线程数为0，所以都进队列了）
                         for (int i = 0; i < 1000; i++) {
                             es.shutdownNow();
                             if (es.awaitTermination(10, TimeUnit.MILLISECONDS)) {
@@ -128,6 +137,7 @@ public class ExecutorUtil {
      *
      * @return new url with updated thread name
      */
+    // 线程池的线程名称带ip信息
     public static URL setThreadName(URL url, String defaultName) {
         String name = url.getParameter(THREAD_NAME_KEY, defaultName);
         name = name + "-" + url.getAddress();
@@ -135,6 +145,7 @@ public class ExecutorUtil {
         return url;
     }
 
+    // Qos heart
     public static void cancelScheduledFuture(ScheduledFuture<?> scheduledFuture) {
         ScheduledFuture<?> future = scheduledFuture;
         if (future != null && !future.isCancelled()) {

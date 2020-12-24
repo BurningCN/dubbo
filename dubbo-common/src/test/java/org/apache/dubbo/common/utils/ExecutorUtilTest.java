@@ -34,13 +34,17 @@ import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+// OK
 public class ExecutorUtilTest {
     @Test
     public void testIsTerminated() throws Exception {
         ExecutorService executor = Mockito.mock(ExecutorService.class);
+        // jdk的isTerminated方法，下面是手动置为true了
         when(executor.isTerminated()).thenReturn(true);
+        // ExecutorUtil工具类的检测，因为前面设为true，所以内部检测肯定也是true
         assertThat(ExecutorUtil.isTerminated(executor), is(true));
         Executor executor2 = Mockito.mock(Executor.class);
+        // 新创建一个Executor，不是ExecutorService，内部判断后直接返回false
         assertThat(ExecutorUtil.isTerminated(executor2), is(false));
     }
 
@@ -48,7 +52,9 @@ public class ExecutorUtilTest {
     public void testGracefulShutdown1() throws Exception {
         ExecutorService executor = Mockito.mock(ExecutorService.class);
         when(executor.isTerminated()).thenReturn(false, true);
+        // 等待20ms后手动设置返回false，表示线程池未完全关闭
         when(executor.awaitTermination(20, TimeUnit.MILLISECONDS)).thenReturn(false);
+        // 优雅关闭，进去
         ExecutorUtil.gracefulShutdown(executor, 20);
         verify(executor).shutdown();
         verify(executor).shutdownNow();
