@@ -18,10 +18,14 @@ package org.apache.dubbo.common.utils;
 
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
+
+// OK
 public class AtomicPositiveInteger extends Number {
 
     private static final long serialVersionUID = -3038533876489105940L;
 
+    // 下面使用Atomic[Integer]FieldUpdater更新AtomicPositiveInteger的index字段，int类型的。（如果是更新某个类的引用类型属性的时候用 AtomicReferenceFieldUpdater）
+    // 用这个的原因，根据提交记录，说是为了使用更少内存和提高性能
     private static final AtomicIntegerFieldUpdater<AtomicPositiveInteger> INDEX_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(AtomicPositiveInteger.class, "index");
 
@@ -31,10 +35,12 @@ public class AtomicPositiveInteger extends Number {
     public AtomicPositiveInteger() {
     }
 
+    // 这个参数赋值给index属性
     public AtomicPositiveInteger(int initialValue) {
         INDEX_UPDATER.set(this, initialValue);
     }
 
+    // 下3个是++、--操作
     public final int getAndIncrement() {
         return INDEX_UPDATER.getAndIncrement(this) & Integer.MAX_VALUE;
     }
@@ -51,6 +57,7 @@ public class AtomicPositiveInteger extends Number {
         return INDEX_UPDATER.decrementAndGet(this) & Integer.MAX_VALUE;
     }
 
+    // 下3个 get+set+getAndSet
     public final int get() {
         return INDEX_UPDATER.get(this) & Integer.MAX_VALUE;
     }
@@ -69,6 +76,9 @@ public class AtomicPositiveInteger extends Number {
         return INDEX_UPDATER.getAndSet(this, newValue) & Integer.MAX_VALUE;
     }
 
+
+
+    // getAndAdd+addAndGet(前面是set为某个值，这里是add加上某个值)
     public final int getAndAdd(int delta) {
         if (delta < 0) {
             throw new IllegalArgumentException("delta " + delta + " < 0");
@@ -83,6 +93,7 @@ public class AtomicPositiveInteger extends Number {
         return INDEX_UPDATER.addAndGet(this, delta) & Integer.MAX_VALUE;
     }
 
+    // compareAndSet
     public final boolean compareAndSet(int expect, int update) {
         if (update < 0) {
             throw new IllegalArgumentException("update value " + update + " < 0");
@@ -99,6 +110,7 @@ public class AtomicPositiveInteger extends Number {
 
     @Override
     public byte byteValue() {
+        // 去一个字节
         return (byte) get();
     }
 
@@ -148,6 +160,7 @@ public class AtomicPositiveInteger extends Number {
         if (!(obj instanceof AtomicPositiveInteger)) {
             return false;
         }
+        // 取值
         AtomicPositiveInteger other = (AtomicPositiveInteger) obj;
         return intValue() == other.intValue();
     }

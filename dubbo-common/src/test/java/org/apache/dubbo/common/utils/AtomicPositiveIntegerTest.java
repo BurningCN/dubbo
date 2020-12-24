@@ -27,7 +27,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+// OK
 public class AtomicPositiveIntegerTest {
+    // 默认值0
     private AtomicPositiveInteger i1 = new AtomicPositiveInteger();
 
     private AtomicPositiveInteger i2 = new AtomicPositiveInteger(127);
@@ -189,6 +191,7 @@ public class AtomicPositiveIntegerTest {
     @Test
     public void testValues() throws Exception {
         Integer i = i1.get();
+        // 强转为字节
         assertThat(i1.byteValue(), equalTo(i.byteValue()));
         assertThat(i1.shortValue(), equalTo(i.shortValue()));
         assertThat(i1.intValue(), equalTo(i.intValue()));
