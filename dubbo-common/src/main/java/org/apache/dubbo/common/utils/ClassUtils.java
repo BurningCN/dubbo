@@ -498,6 +498,7 @@ public class ClassUtils {
     public static Class<?> resolveClass(String className, ClassLoader classLoader) {
         Class<?> targetClass = null;
         try {
+            // 加载+初始化
             targetClass = forName(className, classLoader);
         } catch (Throwable ignored) { // Ignored
         }

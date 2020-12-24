@@ -237,6 +237,7 @@ public interface MethodUtils {
      * @since 2.7.6
      */
     static Method findMethod(Class type, String methodName) {
+        // 第三个参数表示空参数，我要空参的methodName方法，findMethod进去
         return findMethod(type, methodName, EMPTY_CLASS_ARRAY);
     }
 
@@ -249,10 +250,12 @@ public interface MethodUtils {
      * @return if not found, return <code>null</code>
      * @since 2.7.6
      */
+    // 第三个参数传 String.class,Map.class...
     static Method findMethod(Class type, String methodName, Class<?>... parameterTypes) {
         Method method = null;
         try {
             if (type != null && isNotEmpty(methodName)) {
+                // 获取指定方法名和参数的方法，Declared能拿到私有的
                 method = type.getDeclaredMethod(methodName, parameterTypes);
             }
         } catch (NoSuchMethodException e) {
@@ -273,6 +276,7 @@ public interface MethodUtils {
     static <T> T invokeMethod(Object object, String methodName, Object... methodParameters) {
         Class type = object.getClass();
         Class[] parameterTypes = resolveTypes(methodParameters);
+        // 获取指定方法
         Method method = findMethod(type, methodName, parameterTypes);
         T value = null;
 
@@ -282,6 +286,7 @@ public interface MethodUtils {
             if (!isAccessible) {
                 method.setAccessible(true);
             }
+            // 调用方法获取返回值
             value = (T) method.invoke(object, methodParameters);
             method.setAccessible(isAccessible);
         } catch (Exception e) {
