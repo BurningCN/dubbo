@@ -20,5 +20,7 @@
 
 **011.AnnotatedElement是Class和Method的父接口**，getDeclaredAnnotations方法用AnnotatedElement来接受的原因是：有时候我们不仅仅想获取类上的注解（传入A.class），还想获取方法上的注解（传入的是Method m）虽然Class和Method都有getDeclaredAnnotations，但是为了通用，就都用AnnotatedElement接受，一定程度的抽取公共部分解耦。
 
+**012.ExecutorService线程池的优雅关闭。**详见ExecutorUtil。
 
+013.ClassUtil实现了自己的forName。
 

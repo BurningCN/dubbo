@@ -84,7 +84,9 @@ public class ExecutorUtilTest {
     @Test
     public void testSetThreadName() throws Exception {
         URL url = new URL("dubbo", "localhost", 1234).addParameter(THREAD_NAME_KEY, "custom-thread");
+        // 进去
         url = ExecutorUtil.setThreadName(url, "default-name");
+        // 此时url=dubbo://localhost:1234?threadname=custom-thread-localhost:1234
         assertThat(url.getParameter(THREAD_NAME_KEY), equalTo("custom-thread-localhost:1234"));
     }
 }

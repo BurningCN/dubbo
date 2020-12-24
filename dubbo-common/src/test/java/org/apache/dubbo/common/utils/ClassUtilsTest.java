@@ -28,25 +28,33 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.verify;
 
 public class ClassUtilsTest {
+    // test ForName With  "ThreadContextClassLoader"
     @Test
     public void testForNameWithThreadContextClassLoader() throws Exception {
+        // 获取当前线程上下文加载器，一会我们修改，最后恢复
         ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             ClassLoader classLoader = Mockito.mock(ClassLoader.class);
+            // 设置线程上下文加载器
             Thread.currentThread().setContextClassLoader(classLoader);
+            // 加载a.b.c.D类，不过最后loadClass的时候返回的是null，正常是返回Class<?>
             ClassUtils.forNameWithThreadContextClassLoader("a.b.c.D");
             verify(classLoader).loadClass("a.b.c.D");
         } finally {
+            // 恢复
             Thread.currentThread().setContextClassLoader(oldClassLoader);
         }
     }
 
+    // testForNameWith  "CallerClassLoader"
     @Test
     public void tetForNameWithCallerClassLoader() throws Exception {
+        // ClassUtilsTest本测试类就是调用类，使用调用类的类加载器加载目标类（ClassUtils.class.getName()）
         Class c = ClassUtils.forNameWithCallerClassLoader(ClassUtils.class.getName(), ClassUtilsTest.class);
         assertThat(c == ClassUtils.class, is(true));
     }
 
+    // easy
     @Test
     public void testGetCallerClassLoader() throws Exception {
         assertThat(ClassUtils.getCallerClassLoader(ClassUtilsTest.class), sameInstance(ClassUtilsTest.class.getClassLoader()));
@@ -56,8 +64,10 @@ public class ClassUtilsTest {
     public void testGetClassLoader1() throws Exception {
         ClassLoader oldClassLoader = Thread.currentThread().getContextClassLoader();
         try {
+            // 肯定和上下文加载器是等的，因为ClassUtilsTest的加载器肯定是app应用程序加载器或者说系统类加载器，而上下文加载器默认也是系统类加载器
             assertThat(ClassUtils.getClassLoader(ClassUtilsTest.class), sameInstance(oldClassLoader));
             Thread.currentThread().setContextClassLoader(null);
+            // 上面设置了null，此时ClassUtilsTest的加载器肯定还是app，所以和后面的相等，都是app
             assertThat(ClassUtils.getClassLoader(ClassUtilsTest.class), sameInstance(ClassUtilsTest.class.getClassLoader()));
         } finally {
             Thread.currentThread().setContextClassLoader(oldClassLoader);
@@ -66,17 +76,22 @@ public class ClassUtilsTest {
 
     @Test
     public void testGetClassLoader2() throws Exception {
+        // getClassLoader内部就是获取上下文加载器，为null就获取ClassUtils类的加载器，进去
         assertThat(ClassUtils.getClassLoader(), sameInstance(ClassUtils.class.getClassLoader()));
     }
 
     @Test
     public void testForName1() throws Exception {
+        // 加载类，内部loadClass，进去
         assertThat(ClassUtils.forName(ClassUtilsTest.class.getName()) == ClassUtilsTest.class, is(true));
     }
 
     @Test
     public void testForName2() throws Exception {
+        // 加载原生类型，内部会进resolvePrimitiveClassName方法，从类初始化就填充好的map容器取出byte.class，进去
         assertThat(ClassUtils.forName("byte") == byte.class, is(true));
+        // 内部涉及到递归，java.lang.String[]会截取出java.lang.String，然后递归调用forName，走到最后一步loadClass，加载String，
+        // 但是已经被加载完了（rt包的核心类都是null根类加载器加载的），不会重复加载（双亲委派）
         assertThat(ClassUtils.forName("java.lang.String[]") == String[].class, is(true));
         assertThat(ClassUtils.forName("[Ljava.lang.String;") == String[].class, is(true));
     }
@@ -98,6 +113,8 @@ public class ClassUtilsTest {
         assertThat(ClassUtils.resolvePrimitiveClassName("int") == int.class, is(true));
         assertThat(ClassUtils.resolvePrimitiveClassName("long") == long.class, is(true));
         assertThat(ClassUtils.resolvePrimitiveClassName("short") == short.class, is(true));
+
+        // boolean[].class的输出就是Class [Z
         assertThat(ClassUtils.resolvePrimitiveClassName("[Z") == boolean[].class, is(true));
         assertThat(ClassUtils.resolvePrimitiveClassName("[B") == byte[].class, is(true));
         assertThat(ClassUtils.resolvePrimitiveClassName("[C") == char[].class, is(true));
@@ -111,9 +128,11 @@ public class ClassUtilsTest {
     @Test
     public void testToShortString() throws Exception {
         assertThat(ClassUtils.toShortString(null), equalTo("null"));
+        // 进去
         assertThat(ClassUtils.toShortString(new ClassUtilsTest()), startsWith("ClassUtilsTest@"));
     }
 
+    // easy
     @Test
     public void testConvertPrimitive() throws Exception {
 

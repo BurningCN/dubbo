@@ -29,6 +29,7 @@ import static org.apache.dubbo.common.function.Streams.filterAll;
 import static org.apache.dubbo.common.utils.ArrayUtils.isNotEmpty;
 import static org.apache.dubbo.common.utils.CollectionUtils.ofSet;
 
+// OK
 public class ClassUtils {
     /**
      * Suffix for array class names: "[]"
@@ -54,6 +55,7 @@ public class ClassUtils {
      * @see javax.management.openmbean.SimpleType
      * @since 2.7.6
      */
+    // ofSet进去
     public static final Set<Class<?>> SIMPLE_TYPES = ofSet(
             Void.class,
             Boolean.class,
@@ -76,12 +78,12 @@ public class ClassUtils {
     private static final String INTERNAL_ARRAY_PREFIX = "[L";
     /**
      * Map with primitive type name as key and corresponding primitive type as
-     * value, for example: "int" -> "int.class".
+     * value, for example: "int" -> "int.class".<---看这个
      */
     private static final Map<String, Class<?>> PRIMITIVE_TYPE_NAME_MAP = new HashMap<String, Class<?>>(32);
     /**
      * Map with primitive wrapper type as key and corresponding primitive type
-     * as value, for example: Integer.class -> int.class.
+     * as value, for example: Integer.class -> int.class.<---看这个
      */
     private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPER_TYPE_MAP = new HashMap<Class<?>, Class<?>>(16);
     private static final char PACKAGE_SEPARATOR_CHAR = '.';
@@ -108,11 +110,13 @@ public class ClassUtils {
 
     public static Class<?> forNameWithThreadContextClassLoader(String name)
             throws ClassNotFoundException {
+        // 没用原生的Class.forName(name,loader)，看看内置的forName做了啥，进去
         return forName(name, Thread.currentThread().getContextClassLoader());
     }
 
     public static Class<?> forNameWithCallerClassLoader(String name, Class<?> caller)
             throws ClassNotFoundException {
+        // 区别于前面，这里使用的是调用者的加载器对name加载
         return forName(name, caller.getClassLoader());
     }
 
@@ -126,10 +130,11 @@ public class ClassUtils {
      * @param clazz
      * @return class loader
      */
+    // 线程上下文加载器->（如果没有，获取）用户类加载器->（如果没有，获取）系统类加载器
     public static ClassLoader getClassLoader(Class<?> clazz) {
         ClassLoader cl = null;
         try {
-            // 当前线程的加载器就是appClassLoader，因为META-INF只能app去加载
+            // 当前线程上下文加载器默认就是appClassLoader，因为META-INF只能线程上下文加载器去加载
             cl = Thread.currentThread().getContextClassLoader();
         } catch (Throwable ex) {
             // Cannot access thread context ClassLoader - falling back to system class loader...
@@ -154,23 +159,29 @@ public class ClassUtils {
      * Return the default ClassLoader to use: typically the thread context
      * ClassLoader, if available; the ClassLoader that loaded the ClassUtils
      * class will be used as fallback.
+     * 返回要使用的默认类加载器:如果可用的话，通常是线程上下文类加载器；加载classsutils的类加载器将用作回退。
+     *
      * <p>
      * Call this method if you intend to use the thread context ClassLoader in a
      * scenario where you absolutely need a non-null ClassLoader reference: for
      * example, for class path resource loading (but not necessarily for
      * <code>Class.forName</code>, which accepts a <code>null</code> ClassLoader
      * reference as well).
+     * 如果你想 在绝对需要非空类加载器引用的场景 使用线程上下文类加载器 那么就调用这个方法
+     * 例如，对于类路径资源加载(但对Class.forName不是必须的，它接受一个null类加载器参考)。
      *
-     * @return the default ClassLoader (never <code>null</code>)
+     * @return the default ClassLoader (never <code>null</code> --> 肯定不会返回null，因为会最不济也是获取ClassUtils的加载器)
      * @see java.lang.Thread#getContextClassLoader()
      */
     public static ClassLoader getClassLoader() {
+        // 进去
         return getClassLoader(ClassUtils.class);
     }
 
     /**
      * Same as <code>Class.forName()</code>, except that it works for primitive
      * types.
+     * 与Class.forName()相同，不同的是它适用于原语类型。
      */
     public static Class<?> forName(String name) throws ClassNotFoundException {
         return forName(name, getClassLoader());
@@ -180,6 +191,7 @@ public class ClassUtils {
      * Replacement for <code>Class.forName()</code> that also returns Class
      * instances for primitives (like "int") and array class names (like
      * "String[]").
+     * 替换Class.forName，它也返回Class原语(如"int")和数组类名(如"String[]”)。
      *
      * @param name        the name of the Class
      * @param classLoader the class loader to use (may be <code>null</code>,
@@ -192,6 +204,7 @@ public class ClassUtils {
     public static Class<?> forName(String name, ClassLoader classLoader)
             throws ClassNotFoundException, LinkageError {
 
+        // 原生类型处理，进去
         Class<?> clazz = resolvePrimitiveClassName(name);
         if (clazz != null) {
             return clazz;
@@ -199,8 +212,11 @@ public class ClassUtils {
 
         // "java.lang.String[]" style arrays
         if (name.endsWith(ARRAY_SUFFIX)) {
+            // 上面的例子，下面结果为java.lang.String
             String elementClassName = name.substring(0, name.length() - ARRAY_SUFFIX.length());
+            // 递归，加载java.lang.String，还是loadClass最终
             Class<?> elementClass = forName(elementClassName, classLoader);
+            // Array.newInstance(elementClass, 0)这部分输出String[0]@1723,getClass()后输出class [Ljava.lang.String;
             return Array.newInstance(elementClass, 0).getClass();
         }
 
@@ -220,8 +236,10 @@ public class ClassUtils {
 
         ClassLoader classLoaderToUse = classLoader;
         if (classLoaderToUse == null) {
+            // 进去
             classLoaderToUse = getClassLoader();
         }
+        // 直接loadClass调用进行加载类
         return classLoaderToUse.loadClass(name);
     }
 
@@ -232,6 +250,10 @@ public class ClassUtils {
      * Also supports the JVM's internal class names for primitive arrays. Does
      * <i>not</i> support the "[]" suffix notation for primitive arrays; this is
      * only supported by {@link #forName}.
+     *
+     * 将给定的类名解析为原语类，如果合适的话，根据JVM的基元类命名规则。
+     *
+     * 还支持用于基本数组的JVM内部类名。做<i>not</i>支持原语数组的后缀表示法;这是仅支持{@link #forName}。
      *
      * @param name the name of the potentially primitive class
      * @return the primitive class, or <code>null</code> if the name does not
@@ -289,13 +311,16 @@ public class ClassUtils {
      * @since 2.7.6
      */
     public static boolean isSimpleType(Class<?> type) {
+        // 是否是简单类型，SIMPLE_TYPES看下
         return SIMPLE_TYPES.contains(type);
     }
 
     public static Object convertPrimitive(Class<?> type, String value) {
+        // 将String转化为其他基本数据类型的包装类型
         if (value == null) {
             return null;
         } else if (type == char.class || type == Character.class) {
+            // 字符串的字符数肯定是一个字符
             return value.length() > 0 ? value.charAt(0) : '\0';
         } else if (type == boolean.class || type == Boolean.class) {
             return Boolean.valueOf(value);
@@ -498,7 +523,7 @@ public class ClassUtils {
     public static Class<?> resolveClass(String className, ClassLoader classLoader) {
         Class<?> targetClass = null;
         try {
-            // 加载+初始化
+            // forName是本类方法（不是原生Class.forName），进去
             targetClass = forName(className, classLoader);
         } catch (Throwable ignored) { // Ignored
         }
@@ -513,6 +538,7 @@ public class ClassUtils {
      * @since 2.7.6
      */
     public static boolean isGenericClass(Class<?> type) {
+        // 和void比较，大Void和小void
         return type != null && !void.class.equals(type) && !Void.class.equals(type);
     }
 }

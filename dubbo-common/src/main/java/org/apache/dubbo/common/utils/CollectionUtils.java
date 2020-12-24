@@ -275,18 +275,22 @@ public class CollectionUtils {
             return emptySet();
         }
 
+        // 搞了个负载因子
         float loadFactor = 1f / ((size + 1) * 1.0f);
 
         if (loadFactor > 0.75f) {
             loadFactor = 0.75f;
         }
 
+        // LinkedHashSet记录插入顺序的set
         Set<T> elements = new LinkedHashSet<>(size, loadFactor);
         for (int i = 0; i < size; i++) {
             elements.add(values[i]);
         }
         return unmodifiableSet(elements);
     }
+
+
 
     /**
      * Get the size of the specified {@link Collection}
