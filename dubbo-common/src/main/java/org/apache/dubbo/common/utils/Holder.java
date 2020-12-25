@@ -19,8 +19,11 @@ package org.apache.dubbo.common.utils;
 /**
  * Helper Class for hold a value.
  */
+// OK
+// 主要给ExtensionLoader提供服务了
 public class Holder<T> {
 
+    // volatile修饰
     private volatile T value;
 
     public void set(T value) {

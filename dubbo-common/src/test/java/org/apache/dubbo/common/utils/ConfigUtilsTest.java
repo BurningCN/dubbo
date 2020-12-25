@@ -37,6 +37,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+// OK
 public class ConfigUtilsTest {
     @BeforeEach
     public void setUp() throws Exception {
@@ -50,11 +51,13 @@ public class ConfigUtilsTest {
 
     @Test
     public void testIsNotEmpty() throws Exception {
+        // 进去
         assertThat(ConfigUtils.isNotEmpty("abc"), is(true));
     }
 
     @Test
     public void testIsEmpty() throws Exception {
+        // 下面的几种值都被当做empty
         assertThat(ConfigUtils.isEmpty(null), is(true));
         assertThat(ConfigUtils.isEmpty(""), is(true));
         assertThat(ConfigUtils.isEmpty("false"), is(true));
@@ -68,6 +71,7 @@ public class ConfigUtilsTest {
 
     @Test
     public void testIsDefault() throws Exception {
+        // 下面的几种值都被当做default，不区分大小写 进去
         assertThat(ConfigUtils.isDefault("true"), is(true));
         assertThat(ConfigUtils.isDefault("TRUE"), is(true));
         assertThat(ConfigUtils.isDefault("default"), is(true));
@@ -76,6 +80,8 @@ public class ConfigUtilsTest {
 
     @Test
     public void testMergeValues() {
+        // 合并扩展名的，将cfg根据","切割和后面list合并，注意第二个参数list中的default.limited会被过滤掉，因为其不是ThreadPool的扩展类
+        // 进去
         List<String> merged = ConfigUtils.mergeValues(ThreadPool.class, "aaa,bbb,default.custom",
                 asList("fixed", "default.limited", "cached"));
         assertEquals(asList("fixed", "cached", "aaa", "bbb", "default.custom"), merged);
@@ -83,6 +89,7 @@ public class ConfigUtilsTest {
 
     @Test
     public void testMergeValuesAddDefault() {
+        // 注意default被过滤了，进去
         List<String> merged = ConfigUtils.mergeValues(ThreadPool.class, "aaa,bbb,default,zzz",
                 asList("fixed", "default.limited", "cached"));
         assertEquals(asList("aaa", "bbb", "fixed", "cached", "zzz"), merged);
@@ -90,12 +97,14 @@ public class ConfigUtilsTest {
 
     @Test
     public void testMergeValuesDeleteDefault() {
+        // 第二个全被过滤
         List<String> merged = ConfigUtils.mergeValues(ThreadPool.class, "-default", asList("fixed", "default.limited", "cached"));
         assertEquals(asList(), merged);
     }
 
     @Test
     public void testMergeValuesDeleteDefault_2() {
+        // 第二个全被过滤 只剩aaa
         List<String> merged = ConfigUtils.mergeValues(ThreadPool.class, "-default,aaa", asList("fixed", "default.limited", "cached"));
         assertEquals(asList("aaa"), merged);
     }
@@ -105,23 +114,29 @@ public class ConfigUtilsTest {
      */
     @Test
     public void testMergeValuesDelete() {
+        // 第二个参数list中的default.limited会被过滤掉，因为其不是ThreadPool的扩展类，第一个参数含有-fixed，所以fixed和-fixed都被过滤
         List<String> merged = ConfigUtils.mergeValues(ThreadPool.class, "-fixed,aaa", asList("fixed", "default.limited", "cached"));
         assertEquals(asList("cached", "aaa"), merged);
     }
 
     @Test
     public void testReplaceProperty() throws Exception {
+        // ${a.b.c}是占位符，进去
         String s = ConfigUtils.replaceProperty("1${a.b.c}2${a.b.c}3", Collections.singletonMap("a.b.c", "ABC"));
         assertEquals(s, "1ABC2ABC3");
         s = ConfigUtils.replaceProperty("1${a.b.c}2${a.b.c}3", Collections.<String, String>emptyMap());
         assertEquals(s, "123");
     }
 
+
     @Test
     public void testGetProperties1() throws Exception {
         try {
+            // 给系统属性设置值，ConfigUtils内部会获取系统属性CommonConstants.DUBBO_PROPERTIES_KEY的值然后读取文件内容赋值到Properties
             System.setProperty(CommonConstants.DUBBO_PROPERTIES_KEY, "properties.load");
+            // 进去
             Properties p = ConfigUtils.getProperties();
+            // properties.load文件的数据都填充到Properties了
             assertThat((String) p.get("a"), equalTo("12"));
             assertThat((String) p.get("b"), equalTo("34"));
             assertThat((String) p.get("c"), equalTo("56"));
@@ -132,8 +147,10 @@ public class ConfigUtilsTest {
 
     @Test
     public void testGetProperties2() throws Exception {
+        // 清除DUBBO_PROPERTIES_KEY这个系统属性，内部会用默认的值作为属性文件名（dubbo.properties）
         System.clearProperty(CommonConstants.DUBBO_PROPERTIES_KEY);
         Properties p = ConfigUtils.getProperties();
+        // 默认属性文件dubbo.properties的内容就是dubbo=properties
         assertThat((String) p.get("dubbo"), equalTo("properties"));
     }
 
@@ -141,6 +158,7 @@ public class ConfigUtilsTest {
     public void testAddProperties() throws Exception {
         Properties p = new Properties();
         p.put("key1", "value1");
+        // 进去
         ConfigUtils.addProperties(p);
         assertThat((String) ConfigUtils.getProperties().get("key1"), equalTo("value1"));
     }
@@ -155,11 +173,13 @@ public class ConfigUtilsTest {
         assertEquals(expected, p);
     }
 
+    // easy
     @Test
     public void testGetProperty() throws Exception {
+        // 进去
         assertThat(ConfigUtils.getProperty("dubbo"), equalTo("properties"));
     }
-
+    // easy
     @Test
     public void testGetPropertyDefaultValue() throws Exception {
         assertThat(ConfigUtils.getProperty("not-exist", "default"), equalTo("default"));
@@ -168,7 +188,9 @@ public class ConfigUtilsTest {
     @Test
     public void testGetPropertyFromSystem() throws Exception {
         try {
+            // 设置系统属性
             System.setProperty("dubbo", "system");
+            // 内部会优先从系统属性获取
             assertThat(ConfigUtils.getProperty("dubbo"), equalTo("system"));
         } finally {
             System.clearProperty("dubbo");
@@ -179,18 +201,21 @@ public class ConfigUtilsTest {
     public void testGetSystemProperty() throws Exception {
         try {
             System.setProperty("dubbo", "system-only");
+            // 进去
             assertThat(ConfigUtils.getSystemProperty("dubbo"), equalTo("system-only"));
         } finally {
             System.clearProperty("dubbo");
         }
     }
 
+    // easy
     @Test
     public void testLoadProperties() throws Exception {
         Properties p = ConfigUtils.loadProperties("dubbo.properties");
         assertThat((String)p.get("dubbo"), equalTo("properties"));
     }
 
+    // easy
     @Test
     public void testLoadPropertiesOneFile() throws Exception {
         Properties p = ConfigUtils.loadProperties("properties.load", false);
@@ -203,6 +228,7 @@ public class ConfigUtilsTest {
         assertEquals(expected, p);
     }
 
+    // easy
     @Test
     public void testLoadPropertiesOneFileAllowMulti() throws Exception {
         Properties p = ConfigUtils.loadProperties("properties.load", true);
@@ -215,8 +241,11 @@ public class ConfigUtilsTest {
         assertEquals(expected, p);
     }
 
+    //
     @Test
     public void testLoadPropertiesOneFileNotRootPath() throws Exception {
+        // 唯一文件，内部也是会检查到不存在，利用线程上下文加载器加载
+        // 看到测试方法名称叫做不是根路径，也就是不是根路径的都必须用线程上下文加载器才能加载到
         Properties p = ConfigUtils.loadProperties("META-INF/dubbo/internal/org.apache.dubbo.common.threadpool.ThreadPool", false);
 
         Properties expected = new Properties();
@@ -229,10 +258,12 @@ public class ConfigUtilsTest {
     }
 
 
-    @Disabled("Not know why disabled, the original link explaining this was reachable.")
+    // 测试的时候记得把下面的@Disabled注释掉
+    //@Disabled("Not know why disabled, the original link explaining this was reachable.")
     @Test
     public void testLoadPropertiesMultiFileNotRootPathException() throws Exception {
         try {
+            // 这个是别的模块的，所以加载不到
             ConfigUtils.loadProperties("META-INF/services/org.apache.dubbo.common.status.StatusChecker", false);
             Assertions.fail();
         } catch (IllegalStateException expected) {
@@ -243,6 +274,8 @@ public class ConfigUtilsTest {
     @Test
     public void testLoadPropertiesMultiFileNotRootPath() throws Exception {
 
+        // 这个文件是在common模块下 ，（利用线程上下文加载器）肯定能加载到，且注意有两个同名文件一个在main下，一个在test下。
+        // 下面的p里面放了两个文件的内容
         Properties p = ConfigUtils.loadProperties("META-INF/dubbo/internal/org.apache.dubbo.common.status.StatusChecker", true);
 
         Properties expected = new Properties();
@@ -255,14 +288,17 @@ public class ConfigUtilsTest {
 
     @Test
     public void testGetPid() throws Exception {
+        // 获取pid，进程id
         assertThat(ConfigUtils.getPid(), greaterThan(0));
     }
 
+    // With Structed Value 结构化的数据也能获取
     @Test
     public void testPropertiesWithStructedValue() throws Exception {
         Properties p = ConfigUtils.loadProperties("parameters.properties", false);
 
         Properties expected = new Properties();
+        // 第二个参数就是Structed Value
         expected.put("dubbo.parameters", "[{a:b},{c_.d: r*}]");
 
         assertEquals(expected, p);

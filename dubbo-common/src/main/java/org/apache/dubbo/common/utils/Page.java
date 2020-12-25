@@ -23,6 +23,7 @@ import java.util.List;
  *
  * @since 2.7.5
  */
+// OK
 public interface Page<T> {
 
     /**

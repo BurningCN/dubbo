@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import static org.apache.dubbo.common.utils.Assert.notEmptyString;
 import static org.apache.dubbo.common.utils.Assert.notNull;
 
+// OK
 public class AssertTest {
     @Test
     public void testNotNull1() {

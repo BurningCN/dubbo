@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+// OK
 public class ArrayUtilsTest {
 
     @Test
@@ -36,6 +37,11 @@ public class ArrayUtilsTest {
         assertFalse(ArrayUtils.isNotEmpty(null));
         assertFalse(ArrayUtils.isNotEmpty(new Object[0]));
         assertTrue(ArrayUtils.isNotEmpty(new Object[]{"abc"}));
+
+    }
+    @Test
+    public void testOf(){
+        Double[] of = ArrayUtils.of(3.0, 2.4, 5.6);
     }
 
 }

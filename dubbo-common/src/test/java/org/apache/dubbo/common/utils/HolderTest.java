@@ -22,7 +22,9 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+// OK
 public class HolderTest {
+    // easy
     @Test
     public void testSetAndGet() throws Exception {
         Holder<String> holder = new Holder<String>();

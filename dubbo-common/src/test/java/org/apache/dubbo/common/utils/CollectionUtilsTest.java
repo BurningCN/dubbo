@@ -45,6 +45,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+// OK
+// 不看了，工具类本身就很easy
 public class CollectionUtilsTest {
     @Test
     public void testSort() throws Exception {
@@ -78,6 +80,7 @@ public class CollectionUtilsTest {
         list.add("c");
         list.add(null);
 
+        // 按照字典序排序，null会排在前面，然后是z、b、c、a
         List<String> sorted = CollectionUtils.sortSimpleName(list);
         assertNull(sorted.get(0));
         assertNull(sorted.get(1));

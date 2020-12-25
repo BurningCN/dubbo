@@ -25,6 +25,8 @@ import static org.apache.dubbo.common.utils.ClassUtils.getAllInheritedTypes;
  *
  * @since 2.7.6
  */
+// OK
+// 结合test，大部分方法很easy 写的注释很少
 public interface FieldUtils {
 
     /**
@@ -45,7 +47,7 @@ public interface FieldUtils {
     }
 
     /**
-     * Find the {@link Field} by the name in the specified class and its inherited types
+     * Find the {@link Field} by the name in the specified class and its inherited types ---> 注意its inherited types
      *
      * @param declaredClass the declared class
      * @param fieldName     the name of {@link Field}
@@ -56,6 +58,7 @@ public interface FieldUtils {
         if (field != null) {
             return field;
         }
+        // getAllInheritedTypes获取所有的父类、父接口，进去
         for (Class superType : getAllInheritedTypes(declaredClass)) {
             field = getDeclaredField(superType, fieldName);
             if (field != null) {
@@ -136,6 +139,7 @@ public interface FieldUtils {
             if (!accessible) {
                 field.setAccessible(true);
             }
+            // 获取之前的值一会返回
             previousValue = field.get(object);
             field.set(object, value);
         } catch (IllegalAccessException ignored) {

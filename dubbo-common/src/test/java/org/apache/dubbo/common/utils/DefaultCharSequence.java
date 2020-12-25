@@ -23,6 +23,7 @@ import org.apache.dubbo.common.lang.Prioritized;
  *
  * @since 2.7.5
  */
+// OK
 public class DefaultCharSequence implements CharSequence, Prioritized {
     @Override
     public int length() {

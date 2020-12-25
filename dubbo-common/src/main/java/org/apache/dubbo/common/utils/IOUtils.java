@@ -31,6 +31,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -40,6 +41,8 @@ import java.util.List;
  * @author william.liangf
  * @since 2.0.7
  */
+// miscellaneous [ˌmɪsəˈleɪniəs] adj. 混杂的，各种各样的；多方面的，多才多艺的
+// OK
 public class IOUtils {
     private static final int BUFFER_SIZE = 1024 * 8;
     public static final int EOF = -1;
@@ -56,6 +59,7 @@ public class IOUtils {
      * @throws IOException If an I/O error occurs
      */
     public static long write(InputStream is, OutputStream os) throws IOException {
+        // 进去
         return write(is, os, BUFFER_SIZE);
     }
 
@@ -70,6 +74,7 @@ public class IOUtils {
      */
     public static long write(InputStream is, OutputStream os, int bufferSize) throws IOException {
         byte[] buff = new byte[bufferSize];
+        // 进去
         return write(is, os, buff);
     }
 
@@ -85,8 +90,10 @@ public class IOUtils {
     public static long write(final InputStream input, final OutputStream output, final byte[] buffer) throws IOException {
         long count = 0;
         int n;
+        // EOF为-1
         while (EOF != (n = input.read(buffer))) {
             output.write(buffer, 0, n);
+            // 统计写入的字符
             count += n;
         }
         return count;
@@ -102,7 +109,7 @@ public class IOUtils {
     public static String read(Reader reader) throws IOException {
         // try-with-resource语法
         try (StringWriter writer = new StringWriter()) {
-            // 一次写入
+            // 一次写入（两个都是字符流），进去
             write(reader, writer);
             // 获取完全的字符串内容
             return writer.getBuffer().toString();
@@ -146,6 +153,7 @@ public class IOUtils {
     public static long write(Reader reader, Writer writer, int bufferSize) throws IOException {
         int read;
         long total = 0;
+        // 字符数组-->字节流的缓冲拷贝用的字节数组
         char[] buf = new char[bufferSize];
         while ((read = reader.read(buf)) != -1) {
             writer.write(buf, 0, read);
@@ -166,6 +174,7 @@ public class IOUtils {
             return new String[0];
         }
 
+        // 进去
         return readLines(new FileInputStream(file));
     }
 
@@ -178,13 +187,23 @@ public class IOUtils {
      */
     public static String[] readLines(InputStream is) throws IOException {
         List<String> lines = new ArrayList<String>();
+        // 转换流
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             String line;
+            // 读一行
             while ((line = reader.readLine()) != null) {
                 lines.add(line);
             }
+            // list->array之间的互转看下面main函数，如果不加new String[] 会返回 Object[]
             return lines.toArray(new String[0]);
         }
+    }
+
+    public static void main(String[] args) {
+        List<String> list = new ArrayList<>();
+        list.add("1");list.add("2");list.add("3");
+        String[] strings = list.toArray(new String[0]);
+        List<String> strings1 = Arrays.asList(strings);
     }
 
     /**
@@ -195,10 +214,13 @@ public class IOUtils {
      * @throws IOException If an I/O error occurs
      */
     public static void writeLines(OutputStream os, String[] lines) throws IOException {
+        // 转换流
         try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(os))) {
             for (String line : lines) {
+                // println写一行后换行
                 writer.println(line);
             }
+            // 打印输出流一般都需要flush
             writer.flush();
         }
     }
@@ -214,6 +236,7 @@ public class IOUtils {
         if (file == null) {
             throw new IOException("File is null.");
         }
+        // 进去
         writeLines(new FileOutputStream(file), lines);
     }
 

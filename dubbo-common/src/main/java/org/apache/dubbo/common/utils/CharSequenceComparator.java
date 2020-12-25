@@ -23,15 +23,20 @@ import java.util.Comparator;
  *
  * @since 2.7.6
  */
+// OK
+// 注意这个 CharSequence 类型。使用的Comparator而非Comparable<CharSequence>
 public class CharSequenceComparator implements Comparator<CharSequence> {
 
+    // 单例模式 gx 传入的class.getSimpleName()（Name接口是继承CharSequence接口）
     public final static CharSequenceComparator INSTANCE = new CharSequenceComparator();
 
+    // 构造方法私有化
     private CharSequenceComparator() {
     }
 
     @Override
     public int compare(CharSequence c1, CharSequence c2) {
+        // 使用的是String的compareTo方法
         return c1.toString().compareTo(c2.toString());
     }
 }

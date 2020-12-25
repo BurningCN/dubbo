@@ -20,6 +20,8 @@ import org.apache.log4j.Level;
 
 import java.io.Serializable;
 
+// OK
+// 学习下hashcode和equals
 public class Log implements Serializable {
     private static final long serialVersionUID = -534113138054377073L;
     private String logName;

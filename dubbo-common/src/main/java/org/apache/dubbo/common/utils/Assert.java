@@ -17,13 +17,18 @@
 
 package org.apache.dubbo.common.utils;
 
+// OK
 public abstract class Assert {
 
+    // 抽象类可以有构造方法，如果内部有一个抽象方法的话，外界不能实例化，如果没有抽象方法的，是可以实例化的
+    // 可以把下面的protected改成public试验下，并提供抽象方法实验
     protected Assert() {
     }
 
+    // gx
     public static void notNull(Object obj, String message) {
         if (obj == null) {
+            // 不合法参数异常
             throw new IllegalArgumentException(message);
         }
     }
@@ -38,5 +43,6 @@ public abstract class Assert {
             throw exception;
         }
     }
+
 
 }

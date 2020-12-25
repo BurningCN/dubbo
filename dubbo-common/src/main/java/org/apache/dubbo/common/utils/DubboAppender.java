@@ -22,6 +22,7 @@ import org.apache.log4j.spi.LoggingEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+// OK
 public class DubboAppender extends FileAppender {
 
     private static final String DEFAULT_FILE_NAME = "dubbo.log";
@@ -33,6 +34,7 @@ public class DubboAppender extends FileAppender {
 
     public static boolean available = false;
 
+    // publis static修饰的，外界可以直接访问，gx
     public static List<Log> logList = new ArrayList<>();
 
     public static void doStart() {
@@ -47,11 +49,14 @@ public class DubboAppender extends FileAppender {
         logList.clear();
     }
 
+    // 重写父类方法
     @Override
     public void append(LoggingEvent event) {
         super.append(event);
         if (available) {
+            // 将LoggingEvent -> Log，进去
             Log temp = parseLog(event);
+            // 填充到logList
             logList.add(temp);
         }
     }

@@ -24,6 +24,8 @@ import java.util.List;
  *
  * @since 2.7.5
  */
+// OK
+// 分页的玩意
 public class DefaultPage<T> implements Page<T>, Serializable {
 
     private static final long serialVersionUID = 1099331838954070419L;
@@ -79,4 +81,5 @@ public class DefaultPage<T> implements Page<T>, Serializable {
     public boolean hasNext() {
         return hasNext;
     }
+
 }

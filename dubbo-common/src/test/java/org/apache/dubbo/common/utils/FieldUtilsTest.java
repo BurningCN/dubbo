@@ -30,10 +30,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  *
  * @since 2.7.6
  */
+// OK
 public class FieldUtilsTest {
 
     @Test
     public void testGetDeclaredField() {
+        // 进去
         assertEquals("a", getDeclaredField(A.class, "a").getName());
         assertEquals("b", getDeclaredField(B.class, "b").getName());
         assertEquals("c", getDeclaredField(C.class, "c").getName());
@@ -43,8 +45,10 @@ public class FieldUtilsTest {
 
     @Test
     public void testFindField() {
+        // 进去
         assertEquals("a", findField(A.class, "a").getName());
         assertEquals("a", findField(new A(), "a").getName());
+        // B继承A，所以能拿到a属性
         assertEquals("a", findField(B.class, "a").getName());
         assertEquals("b", findField(B.class, "b").getName());
         assertEquals("a", findField(C.class, "a").getName());
@@ -54,6 +58,7 @@ public class FieldUtilsTest {
 
     @Test
     public void testGetFieldValue() {
+        // 进去
         assertEquals("a", getFieldValue(new A(), "a"));
         assertEquals("a", getFieldValue(new B(), "a"));
         assertEquals("b", getFieldValue(new B(), "b"));
@@ -65,6 +70,7 @@ public class FieldUtilsTest {
     @Test
     public void setSetFieldValue() {
         A a = new A();
+        // 进去
         assertEquals("a", setFieldValue(a, "a", "x"));
         assertEquals("x", getFieldValue(a, "a"));
     }

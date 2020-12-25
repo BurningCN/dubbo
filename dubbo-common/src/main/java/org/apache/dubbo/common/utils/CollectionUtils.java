@@ -37,8 +37,11 @@ import static java.util.Collections.unmodifiableSet;
  * @author william.liangf
  * @since 2.0.7
  */
+// OK
 public class CollectionUtils {
 
+    //和Prioritized接口一样，里面也有一个如下方式构造的Comparator ，用的时候都是Collections.sort(list,SIMPLE_NAME_COMPARATOR);
+    // gx
     private static final Comparator<String> SIMPLE_NAME_COMPARATOR = new Comparator<String>() {
         @Override
         public int compare(String s1, String s2) {
@@ -51,14 +54,17 @@ public class CollectionUtils {
             if (s2 == null) {
                 return 1;
             }
+            // 比较的string一般是class.getSimpleName，当然也可以对普通字符串按照字典序排序
             int i1 = s1.lastIndexOf('.');
             if (i1 >= 0) {
+                // 获取.之后的字符串
                 s1 = s1.substring(i1 + 1);
             }
             int i2 = s2.lastIndexOf('.');
             if (i2 >= 0) {
                 s2 = s2.substring(i2 + 1);
             }
+            // compareTo
             return s1.compareToIgnoreCase(s2);
         }
     };
@@ -69,11 +75,13 @@ public class CollectionUtils {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> List<T> sort(List<T> list) {
         if (isNotEmpty(list)) {
+            // 这里没有传入Comparator的话，需要T自己实现了Comparable接口  ，gx
             Collections.sort((List) list);
         }
         return list;
     }
 
+    // gx
     public static List<String> sortSimpleName(List<String> list) {
         if (list != null && list.size() > 0) {
             Collections.sort(list, SIMPLE_NAME_COMPARATOR);
@@ -81,17 +89,21 @@ public class CollectionUtils {
         return list;
     }
 
+    // gx 把String拆分变成Map<String, Map<String, String>>结构
     public static Map<String, Map<String, String>> splitAll(Map<String, List<String>> list, String separator) {
         if (list == null) {
             return null;
         }
+        // 双map结构
         Map<String, Map<String, String>> result = new HashMap<>();
         for (Map.Entry<String, List<String>> entry : list.entrySet()) {
+            // eg:某个entry为 input.put("key1", Arrays.asList("1:a", "2:b", "3:c"));传进来的分隔符肯定是:了，split进去
             result.put(entry.getKey(), split(entry.getValue(), separator));
         }
         return result;
     }
 
+    // gx 和前面的反操作，把Map<String, Map<String, String>>结构变成string
     public static Map<String, List<String>> joinAll(Map<String, Map<String, String>> map, String separator) {
         if (map == null) {
             return null;
@@ -103,6 +115,7 @@ public class CollectionUtils {
         return result;
     }
 
+    //
     public static Map<String, String> split(List<String> list, String separator) {
         if (list == null) {
             return null;
@@ -112,6 +125,7 @@ public class CollectionUtils {
             return map;
         }
         for (String item : list) {
+            // 常见法，截取:两边的字符串
             int index = item.indexOf(separator);
             if (index == -1) {
                 map.put(item, "");
@@ -136,6 +150,7 @@ public class CollectionUtils {
             if (StringUtils.isEmpty(value)) {
                 list.add(key);
             } else {
+                // 拼接
                 list.add(key + separator + value);
             }
         }
@@ -153,6 +168,7 @@ public class CollectionUtils {
         return sb.toString();
     }
 
+    // 两个map是否相等
     public static boolean mapEquals(Map<?, ?> map1, Map<?, ?> map2) {
         if (map1 == null && map2 == null) {
             return true;
@@ -201,6 +217,7 @@ public class CollectionUtils {
         return parameters;
     }
 
+    // easy
     @SuppressWarnings("unchecked")
     public static <K, V> Map<K, V> toMap(Object... pairs) {
         Map<K, V> ret = new HashMap<>();
@@ -209,6 +226,7 @@ public class CollectionUtils {
         }
 
         if (pairs.length % 2 != 0) {
+            // 信息
             throw new IllegalArgumentException("Map pairs can not be odd number.");
         }
         int len = pairs.length / 2;
@@ -314,6 +332,7 @@ public class CollectionUtils {
      */
     public static boolean equals(Collection<?> one, Collection<?> another) {
 
+        // 先比较地址
         if (one == another) {
             return true;
         }
@@ -322,11 +341,13 @@ public class CollectionUtils {
             return true;
         }
 
+        // 比较大小
         if (size(one) != size(another)) {
             return false;
         }
 
         try {
+            // containsAll
             return one.containsAll(another);
         } catch (ClassCastException unused) {
             return false;
@@ -344,6 +365,7 @@ public class CollectionUtils {
      * @return the effected count after added
      * @since 2.7.6
      */
+    // 没调用点
     public static <T> int addAll(Collection<T> collection, T... values) {
 
         int size = values == null ? 0 : values.length;
@@ -378,6 +400,7 @@ public class CollectionUtils {
             List<T> list = (List<T>) values;
             return list.get(0);
         } else {
+            // 迭代器模式，不考虑values的具体类型
             return values.iterator().next();
         }
     }

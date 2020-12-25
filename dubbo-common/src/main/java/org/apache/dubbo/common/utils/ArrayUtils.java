@@ -18,10 +18,12 @@
 package org.apache.dubbo.common.utils;
 
 /**
- * Contains some methods to check array.
+ * Contains some methods to check array.--->包含一些检查Array的方法
  */
+// OK
 public final class ArrayUtils {
 
+    // 工具类不允许new
     private ArrayUtils() {
     }
 
@@ -45,6 +47,7 @@ public final class ArrayUtils {
         return !isEmpty(array);
     }
 
+    // gx
     public static boolean contains(final String[] array, String valueToFind) {
         return indexOf(array, valueToFind, 0) != -1;
     }

@@ -34,6 +34,7 @@ import java.util.List;
  * <p>
  * From https://github.com/edazdarevic/CIDRUtils/blob/master/CIDRUtils.java
  */
+// CIDR一般指无类别域间路由。无类别域间路由（Classless Inter-Domain Routing、CIDR）是一个用于给用户分配IP地址以及在互联网上有效地路由IP数据包的对IP地址进行归类的方法
 public class CIDRUtils {
     private final String cidr;
 

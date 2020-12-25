@@ -23,15 +23,20 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+// OK
+// 下面实现接口列表的Set<E>,可以删掉。注意jdk没有ConcurrentHashSet，下面是借助ConcurrentHashMap实现了
 public class ConcurrentHashSet<E> extends AbstractSet<E> implements Set<E>, java.io.Serializable {
 
     private static final long serialVersionUID = -8672117787651310382L;
 
+    // present存在的意思，因为set.add(x)只有x，作为map的k，v统一用present填充
     private static final Object PRESENT = new Object();
 
+    // chs的本质还是chm
     private final ConcurrentMap<E, Object> map;
 
     public ConcurrentHashSet() {
+        // 泛型只需要考虑k，v统一为present，即Object泛型
         map = new ConcurrentHashMap<E, Object>();
     }
 
@@ -39,9 +44,15 @@ public class ConcurrentHashSet<E> extends AbstractSet<E> implements Set<E>, java
         map = new ConcurrentHashMap<E, Object>(initialCapacity);
     }
 
+
+
+    // 下面就是重写父类AbstractSet的常见api，因为chs的本质借用的chm，所以肯定要做下转化
+
+
+
     /**
      * Returns an iterator over the elements in this set. The elements are
-     * returned in no particular order.
+     * returned in no particular order（没有特定的顺序）.
      *
      * @return an Iterator over the elements in this set
      * @see ConcurrentModificationException
@@ -52,7 +63,7 @@ public class ConcurrentHashSet<E> extends AbstractSet<E> implements Set<E>, java
     }
 
     /**
-     * Returns the number of elements in this set (its cardinality).
+     * Returns the number of elements in this set (its cardinality). cardinality基数的意思
      *
      * @return the number of elements in this set (its cardinality)
      */
@@ -99,6 +110,7 @@ public class ConcurrentHashSet<E> extends AbstractSet<E> implements Set<E>, java
      */
     @Override
     public boolean add(E e) {
+        // v 存 present
         return map.put(e, PRESENT) == null;
     }
 

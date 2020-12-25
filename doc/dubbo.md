@@ -16,11 +16,19 @@
 
 **009.注解工具类。** 判断某个类上的注解是否是某个注解（isSameType）、获取注解里面的值（getAttribute）、获取类上的所有注解并提供带谓词过滤的（getDeclaredAnnotations）、获取类以及所有父类、父接口的注解、获取元注解、获取所有的元注解包括元注解本身的元注解、类上是否匹配多个注解、根据注解的全限定名获取类的对应注解（testGetAnnotation）、
 
-**010.unmodifiableXXX、singletonList。**很多工具类返回的集合等数据都用unmodifiableXXX包装了，防止修改。
+**010.UnmodifiableXXX、SingletonList。**很多工具类返回的集合等数据都用unmodifiableXXX包装了，防止修改。
 
 **011.AnnotatedElement是Class和Method的父接口**，getDeclaredAnnotations方法用AnnotatedElement来接受的原因是：有时候我们不仅仅想获取类上的注解（传入A.class），还想获取方法上的注解（传入的是Method m）虽然Class和Method都有getDeclaredAnnotations，但是为了通用，就都用AnnotatedElement接受，一定程度的抽取公共部分解耦。
 
-**012.ExecutorService线程池的优雅关闭。**详见ExecutorUtil。
+**012.ExecutorService线程池的优雅关闭。** shutdwon+awaitTermination+shutdownNow+线程循环shutdownNow详见ExecutorUtil。
 
-013.ClassUtil实现了自己的forName。
+**013.ClassUtil实现了自己的forName。**涉及到线程上下文加载器、loadClass api等。
+
+**014.很多工具类都是私有化自己的构造方法的。**还有一些单例模式，比如CharSequenceComparator。
+
+**015.ConcurrentHashSet的实现借助了ConcurrentHashMap**。内部的value用present填充。
+
+**016.${}占位符的解析和替换。**主要利用了Pattern、Matcher，详见replaceProperty方法。
+
+**017.线程上下文加载器加载resources下的文件。**在当前模块下对resources目录下的的文件进行file.exist()都会返回false，需要利用线程上下文加载器加载。getResourceAsStream、getResources、ClassUtils.getClassLoader().getResources(fileName)
 
