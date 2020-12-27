@@ -32,3 +32,4 @@
 
 **017.线程上下文加载器加载resources下的文件。**在当前模块下对resources目录下的的文件进行file.exist()都会返回false，需要利用线程上下文加载器加载。getResourceAsStream、getResources、ClassUtils.getClassLoader().getResources(fileName)
 
+**018.LFU的设计。**存储结构：Map+CacheDeque，队列之间用CacheDeque.nextDeque指针连接，put的元素永远放在第0个队列最后，当超过容量大小开始驱逐（驱逐的个数取决于驱逐因子evictionFactor的值），每次get元素的时候影响到元素的访问次数，get会将元素所在的队列迁移到挨着的下一个队列，访问次数越多，越靠后。

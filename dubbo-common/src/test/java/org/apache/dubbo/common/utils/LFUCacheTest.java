@@ -21,14 +21,18 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+// OK
 public class LFUCacheTest {
 
     @Test
     public void testCacheEviction() throws Exception {
+        // 进去
         LFUCache<String, Integer> cache = new LFUCache<String, Integer>(8, 0.8f);
+        // 进去
         cache.put("one", 1);
         cache.put("two", 2);
         cache.put("three", 3);
+        // 进去
         assertThat(cache.get("one"), equalTo(1));
         assertThat(cache.get("two"), equalTo(2));
         assertThat(cache.get("three"), equalTo(3));
@@ -41,6 +45,7 @@ public class LFUCacheTest {
         cache.put("seven", 7);
         cache.put("eight", 8);
         cache.put("nine", 9);
+        // 进去，内部执行了驱逐
         assertThat(cache.getSize(), equalTo(2));
     }
 
@@ -56,6 +61,7 @@ public class LFUCacheTest {
         assertThat(cache.getSize(), equalTo(3));
         cache.put("four", 4);
         assertThat(cache.getSize(), equalTo(4));
+        // 进去
         cache.remove("four");
         assertThat(cache.getSize(), equalTo(3));
         cache.put("five", 5);
@@ -66,7 +72,9 @@ public class LFUCacheTest {
 
     @Test
     public void testCapacity() throws Exception {
+        // 进去
         LFUCache<String, Integer> cache = new LFUCache<String, Integer>();
+        // 默认的1k
         assertThat(cache.getCapacity(), equalTo(1000));
     }
 }
