@@ -27,6 +27,7 @@ import java.lang.reflect.Modifier;
  *
  * @since 2.7.6
  */
+// OK
 public interface MemberUtils {
 
     /**

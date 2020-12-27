@@ -42,6 +42,7 @@ import static org.apache.dubbo.common.utils.StringUtils.isNotEmpty;
  *
  * @since 2.7.2
  */
+// OK
 public interface MethodUtils {
 
     /**
@@ -56,6 +57,7 @@ public interface MethodUtils {
                 && !"set".equals(method.getName())
                 && Modifier.isPublic(method.getModifiers())
                 && method.getParameterCount() == 1
+                // 进去
                 && ClassUtils.isPrimitive(method.getParameterTypes()[0]);
     }
 
@@ -73,6 +75,7 @@ public interface MethodUtils {
                 && !"getClass".equals(name) && !"getObject".equals(name)
                 && Modifier.isPublic(method.getModifiers())
                 && method.getParameterTypes().length == 0
+                // method.getReturnType() api
                 && ClassUtils.isPrimitive(method.getReturnType());
     }
 
@@ -127,8 +130,10 @@ public interface MethodUtils {
      * @since 2.7.6
      */
     static Predicate<Method> excludedDeclaredClass(Class<?> declaredClass) {
+        // getDeclaringClass获取方法所在的类
         return method -> !Objects.equals(declaredClass, method.getDeclaringClass());
     }
+
 
     /**
      * Get all {@link Method methods} of the declared class
@@ -140,6 +145,7 @@ public interface MethodUtils {
      * @return non-null read-only {@link List}
      * @since 2.7.6
      */
+    // 这个方法重要，代码很好懂
     static List<Method> getMethods(Class<?> declaringClass, boolean includeInheritedTypes, boolean publicOnly,
                                    Predicate<Method>... methodsToFilter) {
 
@@ -184,7 +190,7 @@ public interface MethodUtils {
     }
 
     /**
-     * Get all public {@link Method methods} of the declared class, including the inherited methods.
+     * Get all public {@link Method methods} of the declared class, including the inherited methods. todo need pr 这里应该是not including
      *
      * @param declaringClass  the declared class
      * @param methodsToFilter (optional) the methods to be filtered
@@ -309,6 +315,7 @@ public interface MethodUtils {
      * @jls 9.4.1 Inheritance and Overriding
      * @see Elements#overrides(ExecutableElement, ExecutableElement, TypeElement)
      */
+    // 判断overrider是不是overridden的重写方法
     static boolean overrides(Method overrider, Method overridden) {
 
         if (overrider == null || overridden == null) {
@@ -319,6 +326,11 @@ public interface MethodUtils {
         if (Objects.equals(overrider, overridden)) {
             return false;
         }
+
+        // 需要满足以下条件才返回true
+        // 都是非静态、非私有、overrider所在的类必须是overridden的子类、overrider不能是default修饰的、名字必须相等、参数个数和类型必须相同、
+        // 子类重写的方法的返回值是父类方法返回值的子类型
+
 
         // Modifiers comparison: Any method must be non-static method
         if (isStatic(overrider) || isStatic(overridden)) { //

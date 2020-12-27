@@ -22,7 +22,7 @@ import java.util.Comparator;
 /**
  * The Comparator class for {@link Method}, the comparison rule :
  * <ol>
- *     <li>Comparing to two {@link Method#getName() method names} {@link String#compareTo(String) lexicographically}.
+ *     <li>Comparing to two {@link Method#getName() method names} {@link String#compareTo(String) lexicographically(字典顺序)}.
  *     If equals, go to step 2</li>
  *     <li>Comparing to the count of two method parameters. If equals, go to step 3</li>
  *     <li>Comparing to the type names of methods parameter {@link String#compareTo(String) lexicographically}</li>
@@ -30,8 +30,11 @@ import java.util.Comparator;
  *
  * @since 2.7.6
  */
+// OK
+// 比较规则看上面注释
 public class MethodComparator implements Comparator<Method> {
 
+    // 单例
     public final static MethodComparator INSTANCE = new MethodComparator();
 
     private MethodComparator() {

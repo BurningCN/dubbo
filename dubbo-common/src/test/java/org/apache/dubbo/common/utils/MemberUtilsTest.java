@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.6
  */
+// OK
 public class MemberUtilsTest {
 
     @Test
