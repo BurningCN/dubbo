@@ -24,9 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+// OK
 public class LRUCacheTest {
     @Test
     public void testCache() throws Exception {
+        // 进去
         LRUCache<String, Integer> cache = new LRUCache<String, Integer>(3);
         cache.put("one", 1);
         cache.put("two", 2);
@@ -37,6 +39,7 @@ public class LRUCacheTest {
         assertThat(cache.size(), equalTo(3));
         cache.put("four", 4);
         assertThat(cache.size(), equalTo(3));
+        // one被删除了，因为他的最近时间早于tow和three
         assertFalse(cache.containsKey("one"));
         assertTrue(cache.containsKey("two"));
         assertTrue(cache.containsKey("three"));

@@ -20,6 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+// OK
+// 借助LinkedHashMap
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 
     private static final long serialVersionUID = -5167631809472116969L;
@@ -27,6 +29,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     private static final float DEFAULT_LOAD_FACTOR = 0.75f;
 
     private static final int DEFAULT_MAX_CAPACITY = 1000;
+    // 用以实现线程安全
     private final Lock lock = new ReentrantLock();
     private volatile int maxCapacity;
 
@@ -35,10 +38,13 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     }
 
     public LRUCache(int maxCapacity) {
+        // todo 待分析LinkedHashMap源码
+        // 第三个参数标识按照访问顺序存储，LRU
         super(16, DEFAULT_LOAD_FACTOR, true);
         this.maxCapacity = maxCapacity;
     }
 
+    // 源码里跟下，发现创建来的eldest的是head，头节点最旧的，最新get的元素会存到末尾
     @Override
     protected boolean removeEldestEntry(java.util.Map.Entry<K, V> eldest) {
         return size() > maxCapacity;
