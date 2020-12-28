@@ -47,20 +47,34 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ReflectUtilsTest {
     @Test
     public void testIsPrimitives() throws Exception {
+        // 原生类型数组，进去
         assertTrue(ReflectUtils.isPrimitives(boolean[].class));
+        // 非数组，进去
         assertTrue(ReflectUtils.isPrimitives(byte.class));
+        // 非原生类型，进去
         assertFalse(ReflectUtils.isPrimitive(Map[].class));
+
+
     }
 
     @Test
     public void testIsPrimitive() throws Exception {
+        // 使用原生api
+        System.out.println(boolean.class.isPrimitive());// true
+        System.out.println(Boolean.class.isPrimitive());// false
+
+
+        // 基本数据类型
         assertTrue(ReflectUtils.isPrimitive(boolean.class));
+        // 包装类型返回true，注意是ReflectUtils.isPrimitive方法后面的||分支满足，原生api isPrimitive肯定返回false
         assertTrue(ReflectUtils.isPrimitive(String.class));
         assertTrue(ReflectUtils.isPrimitive(Boolean.class));
         assertTrue(ReflectUtils.isPrimitive(Character.class));
         assertTrue(ReflectUtils.isPrimitive(Number.class));
         assertTrue(ReflectUtils.isPrimitive(Date.class));
         assertFalse(ReflectUtils.isPrimitive(Map.class));
+
+
     }
 
     @Test
