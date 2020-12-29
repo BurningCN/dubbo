@@ -1,0 +1,2 @@
+1.testNotificationWithWrongBean程序consumer-notification.xml里面的onReturn等事件等需要学下
+

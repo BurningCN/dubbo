@@ -29,8 +29,9 @@
 
     <!-- service configuration -->
     <dubbo:service interface="org.apache.dubbo.config.spring.api.DemoService"
-                   class="org.apache.dubbo.config.spring.impl.DemoServiceImpl">
-        <property name="prefix" value="welcome:"/>
+
+                   class="org.apache.dubbo.config.spring.impl.DemoServiceImpl"><!--这里一般是ref，不用class-->
+        <property name="prefix" value="welcome:"/> <!--这里的property就会给上面的impl的prefix属性赋值-->
     </dubbo:service>
 
 </beans>

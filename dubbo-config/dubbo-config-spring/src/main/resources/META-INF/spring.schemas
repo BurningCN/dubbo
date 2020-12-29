@@ -1,2 +1,3 @@
 http\://dubbo.apache.org/schema/dubbo/dubbo.xsd=META-INF/dubbo.xsd
 http\://code.alibabatech.com/schema/dubbo/dubbo.xsd=META-INF/compat/dubbo.xsd
+#spring.handler和spring.schema文件有两组是为了兼容Dubbo早期的版本

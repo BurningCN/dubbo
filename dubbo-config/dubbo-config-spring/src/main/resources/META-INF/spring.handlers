@@ -1,2 +1,3 @@
 http\://dubbo.apache.org/schema/dubbo=org.apache.dubbo.config.spring.schema.DubboNamespaceHandler
 http\://code.alibabatech.com/schema/dubbo=org.apache.dubbo.config.spring.schema.DubboNamespaceHandler
+#关联命名空间处理器和dubbo.xsd中的targetNamespace（等号左边的就是dubbo.xsd的targetNamespace的值）

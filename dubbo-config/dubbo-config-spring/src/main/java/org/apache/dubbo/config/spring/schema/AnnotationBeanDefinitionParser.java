@@ -34,6 +34,9 @@ import static org.springframework.util.StringUtils.trimArrayElements;
  * @see ReferenceAnnotationBeanPostProcessor
  * @since 2.5.9
  */
+
+// OK
+// 这个和DubboBeanDefinitionParser作用是一样的，自定义的BeanDefinition解析器，只不过这个是处理注解的
 public class AnnotationBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 
     /**
