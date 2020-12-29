@@ -22,6 +22,7 @@ import org.apache.dubbo.config.spring.impl.DemoServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+// OK
 @Configuration
 public class BeanForContext2 {
     @Bean("bean1")

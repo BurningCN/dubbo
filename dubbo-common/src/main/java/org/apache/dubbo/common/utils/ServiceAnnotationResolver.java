@@ -38,6 +38,7 @@ import static org.apache.dubbo.common.utils.StringUtils.isEmpty;
  * @see com.alibaba.dubbo.config.annotation.Service
  * @since 2.7.6
  */
+// OK
 public class ServiceAnnotationResolver {
 
     /**
@@ -45,14 +46,18 @@ public class ServiceAnnotationResolver {
      *
      * @since 2.7.9
      */
-    public static List<Class<? extends Annotation>> SERVICE_ANNOTATION_CLASSES = unmodifiableList(asList(DubboService.class, Service.class, com.alibaba.dubbo.config.annotation.Service.class));
+    // 利用unmodifiableList实现了只读
+    public static List<Class<? extends Annotation>> SERVICE_ANNOTATION_CLASSES = unmodifiableList(
+            asList(DubboService.class, Service.class, com.alibaba.dubbo.config.annotation.Service.class));
 
     private final Annotation serviceAnnotation;
 
     private final Class<?> serviceType;
 
+    // gx
     public ServiceAnnotationResolver(Class<?> serviceType) throws IllegalArgumentException {
         this.serviceType = serviceType;
+        // 进去
         this.serviceAnnotation = getServiceAnnotation(serviceType);
     }
 
@@ -60,6 +65,7 @@ public class ServiceAnnotationResolver {
 
         Annotation serviceAnnotation = null;
 
+        // 查看serviceType类(eg:SpringRestService.class)上面是否含有SERVICE_ANNOTATION_CLASSES容器其中之一注解
         for (Class<? extends Annotation> serviceAnnotationClass : SERVICE_ANNOTATION_CLASSES) {
             serviceAnnotation = serviceType.getAnnotation(serviceAnnotationClass);
             if (serviceAnnotation != null) {
@@ -68,6 +74,7 @@ public class ServiceAnnotationResolver {
         }
 
         if (serviceAnnotation == null) {
+            // 日志
             throw new IllegalArgumentException(format("Any annotation of [%s] can't be annotated in the service type[%s].",
                     SERVICE_ANNOTATION_CLASSES,
                     serviceType.getName()
@@ -119,6 +126,7 @@ public class ServiceAnnotationResolver {
     }
 
     private <T> T resolveAttribute(String attributeName) {
+        // 获取注解的属性值
         return getAttribute(serviceAnnotation, attributeName);
     }
 

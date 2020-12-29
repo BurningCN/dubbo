@@ -197,6 +197,7 @@ public final class ReflectUtils {
      * @param o instance.
      * @return compatible or not.
      */
+    // 判断o是不是c的类型实例，eg：ReflectUtils.isCompatible(short.class, (short) 1)
     public static boolean isCompatible(Class<?> c, Object o) {
         boolean pt = c.isPrimitive();
         if (o == null) {
@@ -204,9 +205,11 @@ public final class ReflectUtils {
         }
 
         if (pt) {
+            // 如果是原生类型，获取包装类型
             c = getBoxedClass(c);
         }
 
+        // isInstance语法 和以往用的 obj instance of Object 效果一样
         return c == o.getClass() || c.isInstance(o);
     }
 
@@ -226,6 +229,7 @@ public final class ReflectUtils {
             return true;
         }
         for (int i = 0; i < len; i++) {
+            // 挨个匹配
             if (!isCompatible(cs[i], os[i])) {
                 return false;
             }
@@ -233,6 +237,7 @@ public final class ReflectUtils {
         return true;
     }
 
+    // 获取Class文件所在的目录
     public static String getCodeBase(Class<?> cls) {
         if (cls == null) {
             return null;
@@ -241,15 +246,17 @@ public final class ReflectUtils {
         if (domain == null) {
             return null;
         }
-        CodeSource source = domain.getCodeSource();
+
+        // 以ReflectUtils.getCodeBase(ReflectUtils.class)为例
+        CodeSource source = domain.getCodeSource();// (file:/Users/gy821075/IdeaProjects/dubbo/dubbo-common/target/classes/ <no signer certificates>)
         if (source == null) {
             return null;
         }
-        URL location = source.getLocation();
+        URL location = source.getLocation();// file:/Users/gy821075/IdeaProjects/dubbo/dubbo-common/target/classes/
         if (location == null) {
             return null;
         }
-        return location.getFile();
+        return location.getFile(); // /Users/gy821075/IdeaProjects/dubbo/dubbo-common/target/classes/
     }
 
     /**
@@ -270,20 +277,38 @@ public final class ReflectUtils {
 
             return c.getName() + sb.toString();
         }
+        // 区别getSimpleName和getName，以Object类举例
+        // System.out.println(Object.class.getName()); --- > java.lang.Object
+        // System.out.println(Object.class.getSimpleName());--- > Object
         return c.getName();
     }
 
+    public static void main(String[] args) {
+
+    }
+
+    // 获取泛型类
     public static Class<?> getGenericClass(Class<?> cls) {
+        // 进去
         return getGenericClass(cls, 0);
     }
 
+
     public static Class<?> getGenericClass(Class<?> cls, int i) {
         try {
+            // 获取带泛型的父接口列表的第0个
+                // 以cls为Foo1.class举例， Foo1 implements Foo<String, Integer>
+                // 下面返回org.apache.dubbo.common.utils.ReflectUtilsTest.org.apache.dubbo.common.utils.ReflectUtilsTest$Foo<java.lang.String, java.lang.Integer>
             ParameterizedType parameterizedType = ((ParameterizedType) cls.getGenericInterfaces()[0]);
+
+            // 获取泛型列表的第i个泛型类
+                // 以cls为Foo1.class举例，下面返回 class java.lang.String
             Object genericClass = parameterizedType.getActualTypeArguments()[i];
 
             // handle nested generic type
+                // 比如genericClass = java.util.List<java.lang.String>，下面的就会满足
             if (genericClass instanceof ParameterizedType) {
+                // 以上面的例子返回 java.util.List
                 return (Class<?>) ((ParameterizedType) genericClass).getRawType();
             }
 
@@ -371,19 +396,23 @@ public final class ReflectUtils {
      * @return desc.
      * @throws NotFoundException
      */
+    // 看上面注释
     public static String getDesc(Class<?> c) {
         StringBuilder ret = new StringBuilder();
 
+        // 比如c为Object[][][] obj，那么下面循环走完之后ret = "[[["
         while (c.isArray()) {
             ret.append('[');
             c = c.getComponentType();
         }
 
         if (c.isPrimitive()) {
+            // 对于原生类型Class.getName()返回的都是下面几种，并获取对应的JVM_变量填充到ret
             String t = c.getName();
             if ("void".equals(t)) {
                 ret.append(JVM_VOID);
             } else if ("boolean".equals(t)) {
+                // 特殊一点，boolean 对应的JVM为 Z，其他的都是t变量值的首字母大写
                 ret.append(JVM_BOOLEAN);
             } else if ("byte".equals(t)) {
                 ret.append(JVM_BYTE);
@@ -401,6 +430,7 @@ public final class ReflectUtils {
                 ret.append(JVM_SHORT);
             }
         } else {
+            // 以Object[][][].class举例，最后就是[[[Ljava/lang/Object;
             ret.append('L');
             ret.append(c.getName().replace('.', '/'));
             ret.append(';');
@@ -595,11 +625,17 @@ public final class ReflectUtils {
      */
     public static String name2desc(String name) {
         StringBuilder sb = new StringBuilder();
+        // 以"int[][][]"举例，index获取第一个[位置为3
+        // 以"Object[][]"举例，index获取第一个[位置为x
         int c = 0, index = name.indexOf('[');
         if (index > 0) {
             c = (name.length() - index) / 2;
+            // 以"int[][][]"举例，这里就是获取int
+            // 以"Object[][]"举例，这里就是获取Object
             name = name.substring(0, index);
         }
+        // 以"int[][][]"举例，下面循环之后sb = [[[
+        // 以"Object[][]"举例，下面循环之后sb = [[
         while (c-- > 0) {
             sb.append("[");
         }
@@ -616,12 +652,14 @@ public final class ReflectUtils {
         } else if ("float".equals(name)) {
             sb.append(JVM_FLOAT);
         } else if ("int".equals(name)) {
+            // 以"int[][][]"举例，下面循环之后sb = [[[I
             sb.append(JVM_INT);
         } else if ("long".equals(name)) {
             sb.append(JVM_LONG);
         } else if ("short".equals(name)) {
             sb.append(JVM_SHORT);
         } else {
+            // 以"Object[][]"举例，此时sb = [[Ljava/lang/Object
             sb.append('L').append(name.replace('.', '/')).append(';');
         }
         return sb.toString();

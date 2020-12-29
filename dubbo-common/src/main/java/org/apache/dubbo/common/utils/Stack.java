@@ -24,6 +24,7 @@ import java.util.List;
  * Stack.
  */
 
+// OK
 public class Stack<E> {
     private int mSize = 0;
 

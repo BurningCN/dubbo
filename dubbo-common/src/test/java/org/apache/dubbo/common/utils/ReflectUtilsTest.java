@@ -66,12 +66,15 @@ public class ReflectUtilsTest {
 
         // 基本数据类型
         assertTrue(ReflectUtils.isPrimitive(boolean.class));
-        // 包装类型返回true，注意是ReflectUtils.isPrimitive方法后面的||分支满足，原生api isPrimitive肯定返回false
+
+        // 下面这几种类型的
         assertTrue(ReflectUtils.isPrimitive(String.class));
+        // 包装类型返回true，注意是ReflectUtils.isPrimitive方法后面的||分支满足，原生api isPrimitive肯定返回false
         assertTrue(ReflectUtils.isPrimitive(Boolean.class));
         assertTrue(ReflectUtils.isPrimitive(Character.class));
         assertTrue(ReflectUtils.isPrimitive(Number.class));
         assertTrue(ReflectUtils.isPrimitive(Date.class));
+
         assertFalse(ReflectUtils.isPrimitive(Map.class));
 
 
@@ -79,6 +82,7 @@ public class ReflectUtilsTest {
 
     @Test
     public void testGetBoxedClass() throws Exception {
+        // 获取包装类型，进去
         assertThat(ReflectUtils.getBoxedClass(int.class), sameInstance(Integer.class));
         assertThat(ReflectUtils.getBoxedClass(boolean.class), sameInstance(Boolean.class));
         assertThat(ReflectUtils.getBoxedClass(long.class), sameInstance(Long.class));
@@ -92,6 +96,7 @@ public class ReflectUtilsTest {
 
     @Test
     public void testIsCompatible() throws Exception {
+        // 进去
         assertTrue(ReflectUtils.isCompatible(short.class, (short) 1));
         assertTrue(ReflectUtils.isCompatible(int.class, 1));
         assertTrue(ReflectUtils.isCompatible(double.class, 1.2));
@@ -101,6 +106,7 @@ public class ReflectUtilsTest {
 
     @Test
     public void testIsCompatibleWithArray() throws Exception {
+        // 进去
         assertFalse(ReflectUtils.isCompatible(new Class[]{short.class, int.class}, new Object[]{(short) 1}));
         assertFalse(ReflectUtils.isCompatible(new Class[]{double.class}, new Object[]{"hello"}));
         assertTrue(ReflectUtils.isCompatible(new Class[]{double.class}, new Object[]{1.2}));
@@ -110,27 +116,41 @@ public class ReflectUtilsTest {
     public void testGetCodeBase() throws Exception {
         assertNull(ReflectUtils.getCodeBase(null));
         assertNull(ReflectUtils.getCodeBase(String.class));
+        // 进去
         assertNotNull(ReflectUtils.getCodeBase(ReflectUtils.class));
     }
 
     @Test
     public void testGetName() throws Exception {
-        // getName
+        System.out.println(int[][][].class);
+        System.out.println(Object[][].class);
+
+        // getName ================================================
         assertEquals("boolean", ReflectUtils.getName(boolean.class));
+        // 进去，内部做了特殊处理，会将int[][][].class -> int[][][]
+            // 直接System.out.println(int[][][].class)的值为class [[[I
         assertEquals("int[][][]", ReflectUtils.getName(int[][][].class));
+            // 直接System.out.println(Object[][].class)的值为class [[Ljava.lang.Object; ***
         assertEquals("java.lang.Object[][]", ReflectUtils.getName(Object[][].class));
 
-        // getDesc
+        // getDesc ================================================
+        // 进去
         assertEquals("Z", ReflectUtils.getDesc(boolean.class));
+        // 原生类型数组，进去
         assertEquals("[[[I", ReflectUtils.getDesc(int[][][].class));
+        // 非原生类型数组，进去
+        // 还是有点差别的，上面***处还是.连接的，下面的是/连接的
         assertEquals("[[Ljava/lang/Object;", ReflectUtils.getDesc(Object[][].class));
 
-        // name2desc
+        // name2desc ================================================
+        // getName的结果为"boolean"，内部将其转化为了"Z"，进去
         assertEquals("Z", ReflectUtils.name2desc(ReflectUtils.getName(boolean.class)));
+        // getName的结果为"int[][][]"，内部将其转化为了[[[I ，进去
         assertEquals("[[[I", ReflectUtils.name2desc(ReflectUtils.getName(int[][][].class)));
+        // 进去
         assertEquals("[[Ljava/lang/Object;", ReflectUtils.name2desc(ReflectUtils.getName(Object[][].class)));
 
-        // desc2name
+        // desc2name ================================================暂时不看
         assertEquals("short[]", ReflectUtils.desc2name(ReflectUtils.getDesc(short[].class)));
         assertEquals("boolean[]", ReflectUtils.desc2name(ReflectUtils.getDesc(boolean[].class)));
         assertEquals("byte[]", ReflectUtils.desc2name(ReflectUtils.getDesc(byte[].class)));
@@ -146,21 +166,32 @@ public class ReflectUtilsTest {
 
     @Test
     public void testGetGenericClass() throws Exception {
+        // 进去
         assertThat(ReflectUtils.getGenericClass(Foo1.class), sameInstance(String.class));
     }
 
+
+
     @Test
     public void testGetGenericClassWithIndex() throws Exception {
+        // Foo1 implements Foo<String, Integer>
+        // 获取Foo1实现接口的泛型列表的第0个泛型类
         assertThat(ReflectUtils.getGenericClass(Foo1.class, 0), sameInstance(String.class));
+        // 获取Foo1实现接口的泛型列表的第1个泛型类
         assertThat(ReflectUtils.getGenericClass(Foo1.class, 1), sameInstance(Integer.class));
+
+        // Foo2 implements Foo<List<String>, int[]>
         assertThat(ReflectUtils.getGenericClass(Foo2.class, 0), sameInstance(List.class));
         assertThat(ReflectUtils.getGenericClass(Foo2.class, 1), sameInstance(int.class));
+
+        // Foo3 implements Foo<Foo1, Foo2>
         assertThat(ReflectUtils.getGenericClass(Foo3.class, 0), sameInstance(Foo1.class));
         assertThat(ReflectUtils.getGenericClass(Foo3.class, 1), sameInstance(Foo2.class));
     }
 
     @Test
     public void testGetMethodName() throws Exception {
+        // 除了Class.getName，method也有，进去
         assertThat(ReflectUtils.getName(Foo2.class.getDeclaredMethod("hello", int[].class)),
                 equalTo("java.util.List hello(int[])"));
     }
@@ -168,9 +199,11 @@ public class ReflectUtilsTest {
     @Test
     public void testGetSignature() throws Exception {
         Method m = Foo2.class.getDeclaredMethod("hello", int[].class);
+        // 进去
         assertThat(ReflectUtils.getSignature("greeting", m.getParameterTypes()), equalTo("greeting([I)"));
     }
 
+    // todo 以下待看
     @Test
     public void testGetConstructorName() throws Exception {
         Constructor c = Foo2.class.getConstructors()[0];
