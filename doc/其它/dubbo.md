@@ -38,5 +38,7 @@
 
 **020.Dubbo基于Spring提供的NamespaceHandler和BeanDefinitionParser来扩展了自己XML Schemas。**实现spring中自定义xml标签并解析一般需要四个步骤:提供自己的BeanDefinition解析器、命名空间处理器（注册前面自己的BeanDefinition解析器）、配置spring.handlers用以关联命名空间处理器和xsd中的targetNamespace、配置spring.schemas指定dubbo.xsd的路径。
 
+**021.SpringExtensionFactory。**dubbo的其中一种容器工厂，用于获取spring相关的bean，内部有缓存所有add进来的ioc容器，获取bean的时候实际是循环遍历从ioc容器获取。不同容器的beanName是可以重复的。
+
 
 
