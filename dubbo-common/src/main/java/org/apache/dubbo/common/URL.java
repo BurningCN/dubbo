@@ -218,6 +218,7 @@ class URL implements Serializable {
         } else {
             parameters = new HashMap<>(parameters);
         }
+        // 设置下不可修改
         this.parameters = Collections.unmodifiableMap(parameters);
         this.methodParameters = Collections.unmodifiableMap(methodParameters);
     }
@@ -239,6 +240,7 @@ class URL implements Serializable {
         if (url == null || (url = url.trim()).length() == 0) {
             throw new IllegalArgumentException("url == null");
         }
+        // url解析的信息会填充到下面几个变量中
         String protocol = null;
         String username = null;
         String password = null;
@@ -246,17 +248,23 @@ class URL implements Serializable {
         int port = 0;
         String path = null;
         Map<String, String> parameters = null;
-        int i = url.indexOf('?'); // separator between body and parameters
+
+        // separator between body and parameters
+        // 先处理?后面的参数对
+        int i = url.indexOf('?');
         if (i >= 0) {
+            // 比如test://test:11/test?group=dubbo&version=1.1 parts数组就是 ["group=dubbo" ,"version=1.1"]
             String[] parts = url.substring(i + 1).split("&");
             parameters = new HashMap<>();
             for (String part : parts) {
                 part = part.trim();
                 if (part.length() > 0) {
+                    // 按照=分割键值对
                     int j = part.indexOf('=');
                     if (j >= 0) {
                         String key = part.substring(0, j);
                         String value = part.substring(j + 1);
+                        // 填充到map
                         parameters.put(key, value);
                         // compatible with lower versions registering "default." keys
                         if (key.startsWith(DEFAULT_KEY_PREFIX)) {
@@ -267,6 +275,7 @@ class URL implements Serializable {
                     }
                 }
             }
+            // 处理?之前的数据 test://test:11/test
             url = url.substring(0, i);
         }
         i = url.indexOf("://");
@@ -274,9 +283,12 @@ class URL implements Serializable {
             if (i == 0) {
                 throw new IllegalStateException("url missing protocol: \"" + url + "\"");
             }
+            // 获取://前面的字符串，就是协议
             protocol = url.substring(0, i);
+            // 处理://之后的字符串
             url = url.substring(i + 3);
         } else {
+            // 进这个分支说面url的协议格式不是://而是:/单分号
             // case: file:/path/to/file.txt
             i = url.indexOf(":/");
             if (i >= 0) {
@@ -288,10 +300,11 @@ class URL implements Serializable {
             }
         }
 
+        // 按照 / 分割
         i = url.indexOf('/');
         if (i >= 0) {
             path = url.substring(i + 1);
-            url = url.substring(0, i);
+            url = url.substring(0, i);// ip:port
         }
         i = url.lastIndexOf('@');
         if (i >= 0) {
@@ -311,12 +324,12 @@ class URL implements Serializable {
                 // see https://howdoesinternetwork.com/2013/ipv6-zone-id
                 // ignore
             } else {
-                port = Integer.parseInt(url.substring(i + 1));
+                port = Integer.parseInt(url.substring(i + 1)); // localhost:8080 的 8080
                 url = url.substring(0, i);
             }
         }
         if (url.length() > 0) {
-            host = url;
+            host = url; // // localhost:8080 的 localhost
         }
 
         return new URL(protocol, username, password, host, port, path, parameters);
@@ -635,10 +648,12 @@ class URL implements Serializable {
     }
 
     public String getParameter(String key) {
+        // url = test://test:11/test?group=dubbo&version=1.1 那么parameters = "version" -> "1.1" ，"group" -> "dubbo"
         return parameters.get(key);
     }
 
     public String getParameter(String key, String defaultValue) {
+        // 进去
         String value = getParameter(key);
         return StringUtils.isEmpty(value) ? defaultValue : value;
     }
@@ -1500,10 +1515,12 @@ class URL implements Serializable {
         if (serviceKey != null) {
             return serviceKey;
         }
+        // 获取服务接口，默认值test，进去
         String inf = getServiceInterface();
         if (inf == null) {
             return null;
         }
+        // 三者构建serviceKey，比如dubbo/test:1.1 --- > 看方法上面注释格式
         serviceKey = buildKey(inf, getParameter(GROUP_KEY), getParameter(VERSION_KEY));
         return serviceKey;
     }
@@ -1547,6 +1564,7 @@ class URL implements Serializable {
     }
 
     public String getServiceInterface() {
+        // 参数分别是interface和test，进去
         return getParameter(INTERFACE_KEY, path);
     }
 

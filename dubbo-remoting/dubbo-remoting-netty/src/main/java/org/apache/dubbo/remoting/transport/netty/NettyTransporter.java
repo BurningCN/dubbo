@@ -29,6 +29,7 @@ public class NettyTransporter implements Transporter {
 
     @Override
     public RemotingServer bind(URL url, ChannelHandler handler) throws RemotingException {
+        // 创建 NettyServer 进去
         return new NettyServer(url, handler);
     }
 

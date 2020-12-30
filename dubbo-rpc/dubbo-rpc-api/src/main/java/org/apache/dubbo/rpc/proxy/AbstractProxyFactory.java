@@ -36,6 +36,7 @@ import static org.apache.dubbo.rpc.Constants.INTERFACES;
 /**
  * AbstractProxyFactory
  */
+// 两个子类：jdkProxyFactory+JavassistProxyFactory
 public abstract class AbstractProxyFactory implements ProxyFactory {
     private static final Class<?>[] INTERNAL_INTERFACES = new Class<?>[]{
             EchoService.class, Destroyable.class
@@ -43,9 +44,11 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
 
     @Override
     public <T> T getProxy(Invoker<T> invoker) throws RpcException {
+        // 调用下面的方法
         return getProxy(invoker, false);
     }
 
+    // 第二个参数表示是否是泛化的
     @Override
     public <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException {
         Set<Class<?>> interfaces = new HashSet<>();
@@ -76,9 +79,13 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         interfaces.add(invoker.getInterface());
         interfaces.addAll(Arrays.asList(INTERNAL_INTERFACES));
 
+        // 抽象方法被两个子类重写
         return getProxy(invoker, interfaces.toArray(new Class<?>[0]));
     }
 
+    // 其中getProxy是实现抽象类AbstractProxyFactory中的抽象方法。AbstractProxyFactory抽象类实现了ProxyFactory接口中getProxy方法，
+    // JdkProxyFactory也实现了抽象类AbstractProxyFactory中的getProxy抽象方法。Javassist与Jdk动态代理的共同部分被封装在父类AbstractProxyFactory中，
+    // 具体的实现类只需负责实现代理生成过程的差异化部分。
     public abstract <T> T getProxy(Invoker<T> invoker, Class<?>[] types);
 
 }

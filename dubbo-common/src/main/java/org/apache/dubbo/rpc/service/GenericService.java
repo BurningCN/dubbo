@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @export
  */
+// OK
 public interface GenericService {
 
     /**

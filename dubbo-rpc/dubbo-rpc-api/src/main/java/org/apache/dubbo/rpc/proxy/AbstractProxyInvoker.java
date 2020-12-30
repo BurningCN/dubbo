@@ -35,6 +35,7 @@ import java.util.concurrent.CompletionException;
 /**
  * This Invoker works on provider side, delegates RPC to interface implementation.
  */
+// OK
 public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     Logger logger = LoggerFactory.getLogger(AbstractProxyInvoker.class);
 
@@ -54,7 +55,9 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
         if (!type.isInstance(proxy)) {
             throw new IllegalArgumentException(proxy.getClass().getName() + " not implement interface " + type);
         }
+        // 实现类，比如DemoServiceImpl
         this.proxy = proxy;
+        // 接口，比如DemoService
         this.type = type;
         this.url = url;
     }
@@ -81,6 +84,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         try {
+            // 这里的proxy其实是目标对象，根据invocation的信息调用目标方法
             Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
 			CompletableFuture<Object> future = wrapWithFuture(value);
             CompletableFuture<AppResponse> appResponseFuture = future.handle((obj, t) -> {
@@ -116,6 +120,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
         return CompletableFuture.completedFuture(value);
     }
 
+    // 一般在new AbstractProxyInvoker的时候重写该方法
     protected abstract Object doInvoke(T proxy, String methodName, Class<?>[] parameterTypes, Object[] arguments) throws Throwable;
 
     @Override

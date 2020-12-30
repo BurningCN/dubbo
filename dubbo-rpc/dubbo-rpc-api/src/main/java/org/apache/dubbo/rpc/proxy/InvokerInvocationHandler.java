@@ -32,6 +32,8 @@ import java.lang.reflect.Method;
 /**
  * InvokerHandler
  */
+// OK
+// 接口就是JDK原生的InvocationHandler
 public class InvokerInvocationHandler implements InvocationHandler {
     private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
     private final Invoker<?> invoker;
@@ -40,23 +42,32 @@ public class InvokerInvocationHandler implements InvocationHandler {
     private String protocolServiceKey;
 
     public InvokerInvocationHandler(Invoker<?> handler) {
+        // 被代理对象、目标对象（惯用法都是这样通过构造函数传入被代理对象）
         this.invoker = handler;
+        // eg:test://test:11/test?group=dubbo&version=1.1
         this.url = invoker.getUrl();
+        // eg:dubbo/test:1.1  由{group}/{interfaceName}:{version}组成 进去
         String serviceKey = this.url.getServiceKey();
+        // eg:dubbo/test:1.1:test 由serviceKey+Protocol组成，进去
         this.protocolServiceKey = this.url.getProtocolServiceKey();
         if (serviceKey != null) {
             this.consumerModel = ApplicationModel.getConsumerModel(serviceKey);
         }
     }
 
+    // 调用代理对象的方法（代理对象本身和目标对象一样都是实现接口，基于接口代理）都会转到这里，内部会调用目标对象对应的方法
+    // 第一个参数就是代理类对象
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (method.getDeclaringClass() == Object.class) {
+            // 如果是Object方法直接调用即可
             return method.invoke(invoker, args);
         }
         String methodName = method.getName();
         Class<?>[] parameterTypes = method.getParameterTypes();
+        // 如果方法没有参数
         if (parameterTypes.length == 0) {
+            // 调用invoker相关方法  --- > 和以往method.invoke(invoker,args)不同，这里是直接对象.方法
             if ("toString".equals(methodName)) {
                 return invoker.toString();
             } else if ("$destroy".equals(methodName)) {
@@ -65,13 +76,18 @@ public class InvokerInvocationHandler implements InvocationHandler {
             } else if ("hashCode".equals(methodName)) {
                 return invoker.hashCode();
             }
+            // 一个参数且方法名是equals
         } else if (parameterTypes.length == 1 && "equals".equals(methodName)) {
+            // 调用invoker相关方法
             return invoker.equals(args[0]);
         }
-        RpcInvocation rpcInvocation = new RpcInvocation(method, invoker.getInterface().getName(), protocolServiceKey, args);
+        // 构建RpcInvocation
+        RpcInvocation rpcInvocation = new RpcInvocation(method,
+                invoker.getInterface().getName(), protocolServiceKey, args);
+        // {group}/{interfaceName}:{version}
         String serviceKey = invoker.getUrl().getServiceKey();
+        // 设置目标service的唯一名称的值为serviceKey
         rpcInvocation.setTargetServiceUniqueName(serviceKey);
-
         // invoker.getUrl() returns consumer url.
         RpcContext.setRpcContext(invoker.getUrl());
 
@@ -80,6 +96,9 @@ public class InvokerInvocationHandler implements InvocationHandler {
             rpcInvocation.put(Constants.METHOD_MODEL, consumerModel.getMethodModel(method));
         }
 
+        // 调用目标方法
+        // 以往我们的写法都是method.invoke(invoker,args);下面是纯目标对象.方法的调用，而且只是invoke方法
+        // invoke方法返回AsyncRpcResult，调用其recreate 进去
         return invoker.invoke(rpcInvocation).recreate();
     }
 }

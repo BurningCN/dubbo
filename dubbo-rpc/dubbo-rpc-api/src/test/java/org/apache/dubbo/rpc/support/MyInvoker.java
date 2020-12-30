@@ -29,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * MockInvoker.java
  */
+// OK
 public class MyInvoker<T> implements Invoker<T> {
 
     URL url;
@@ -46,22 +47,16 @@ public class MyInvoker<T> implements Invoker<T> {
         this.hasException = hasException;
     }
 
+    // invoker接口的方法
     @Override
     public Class<T> getInterface() {
         return type;
     }
 
-    public URL getUrl() {
-        return url;
-    }
-
-    @Override
-    public boolean isAvailable() {
-        return false;
-    }
-
+    // invoker接口的方法
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
+        // 创建一个response
         AppResponse result = new AppResponse();
         if (!hasException) {
             result.setValue("alibaba");
@@ -69,7 +64,19 @@ public class MyInvoker<T> implements Invoker<T> {
             result.setException(new RuntimeException("mocked exception"));
         }
 
+        // 异步结果，注意直接completedFuture了，因为为了做测试
         return new AsyncRpcResult(CompletableFuture.completedFuture(result), invocation);
+    }
+
+    // 下面三个都是Node接口的
+    @Override
+    public URL getUrl() {
+        return url;
+    }
+
+    @Override
+    public boolean isAvailable() {
+        return false;
     }
 
     @Override

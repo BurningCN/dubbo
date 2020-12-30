@@ -33,11 +33,23 @@ public class JdkProxyFactory extends AbstractProxyFactory {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getProxy(Invoker<T> invoker, Class<?>[] interfaces) {
-        return (T) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, new InvokerInvocationHandler(invoker));
+        // 原生jdk创建代理类，基于接口的（Javassist也是基于接口的）
+        return (T) Proxy.newProxyInstance(
+                // 线程上下文加载器
+                Thread.currentThread().getContextClassLoader(),
+                // 基于这些接口列表生成代理类
+                interfaces,
+                // InvokerInvocationHandler里面含有代理的逻辑
+                new InvokerInvocationHandler(invoker));
     }
 
+    // eg
+    // proxy = {DemoServiceImpl@1949}
+    // type = {Class@1932} "interface org.apache.dubbo.rpc.support.DemoService"
+    // url = {URL@1936} "test://test:11/test?group=dubbo&version=1.1"
     @Override
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
+        //
         return new AbstractProxyInvoker<T>(proxy, type, url) {
             @Override
             protected Object doInvoke(T proxy, String methodName,

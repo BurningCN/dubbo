@@ -45,13 +45,85 @@ import java.util.Map;
 
 public class GenericServiceTest {
 
+    public class ProxyFactory$Adaptive implements org.apache.dubbo.rpc.ProxyFactory {
+        public org.apache.dubbo.rpc.Invoker getInvoker(java.lang.Object arg0, java.lang.Class arg1, org.apache.dubbo.common.URL arg2) throws org.apache.dubbo.rpc.RpcException {
+            if (arg2 == null) throw new IllegalArgumentException("url == null");
+            org.apache.dubbo.common.URL url = arg2;
+            // 从url获取proxy参数的值，如果没有用默认javassist作为extName
+            String extName = url.getParameter("proxy", "javassist");
+            if(extName == null) throw new IllegalStateException("Failed to get extension (org.apache.dubbo.rpc.ProxyFactory) name from url (" + url.toString() + ") use keys([proxy])");
+            // 获取extName（比如javassist）扩展类实例 ----> ☆ 这点看出自适应扩展类的主要作用其实就是从url获取一些信息创建其他扩展类实例并调用目标方法
+            org.apache.dubbo.rpc.ProxyFactory extension = (org.apache.dubbo.rpc.ProxyFactory)ExtensionLoader.getExtensionLoader(org.apache.dubbo.rpc.ProxyFactory.class).getExtension(extName);
+            // 调用扩展类的同名方法（自适应扩展类有点代理模式的意思）
+            return extension.getInvoker(arg0, arg1, arg2);
+        }
+        public java.lang.Object getProxy(org.apache.dubbo.rpc.Invoker arg0, boolean arg1) throws org.apache.dubbo.rpc.RpcException {
+            if (arg0 == null) throw new IllegalArgumentException("org.apache.dubbo.rpc.Invoker argument == null");
+            if (arg0.getUrl() == null) throw new IllegalArgumentException("org.apache.dubbo.rpc.Invoker argument getUrl() == null");
+            org.apache.dubbo.common.URL url = arg0.getUrl();
+            String extName = url.getParameter("proxy", "javassist");
+            if(extName == null) throw new IllegalStateException("Failed to get extension (org.apache.dubbo.rpc.ProxyFactory) name from url (" + url.toString() + ") use keys([proxy])");
+            org.apache.dubbo.rpc.ProxyFactory extension = (org.apache.dubbo.rpc.ProxyFactory)ExtensionLoader.getExtensionLoader(org.apache.dubbo.rpc.ProxyFactory.class).getExtension(extName);
+            return extension.getProxy(arg0, arg1);
+        }
+        public java.lang.Object getProxy(org.apache.dubbo.rpc.Invoker arg0) throws org.apache.dubbo.rpc.RpcException {
+            if (arg0 == null) throw new IllegalArgumentException("org.apache.dubbo.rpc.Invoker argument == null");
+            if (arg0.getUrl() == null) throw new IllegalArgumentException("org.apache.dubbo.rpc.Invoker argument getUrl() == null");
+            org.apache.dubbo.common.URL url = arg0.getUrl();
+            String extName = url.getParameter("proxy", "javassist");
+            if(extName == null) throw new IllegalStateException("Failed to get extension (org.apache.dubbo.rpc.ProxyFactory) name from url (" + url.toString() + ") use keys([proxy])");
+            org.apache.dubbo.rpc.ProxyFactory extension = (org.apache.dubbo.rpc.ProxyFactory)ExtensionLoader.getExtensionLoader(org.apache.dubbo.rpc.ProxyFactory.class).getExtension(extName);
+            return extension.getProxy(arg0);
+        }
+    }
+
+    public class Protocol$Adaptive implements org.apache.dubbo.rpc.Protocol {
+        public java.util.List getServers()  {
+            throw new UnsupportedOperationException("The method public default java.util.List org.apache.dubbo.rpc.Protocol.getServers() of interface org.apache.dubbo.rpc.Protocol is not adaptive method!");
+        }
+        public void destroy()  {
+            throw new UnsupportedOperationException("The method public abstract void org.apache.dubbo.rpc.Protocol.destroy() of interface org.apache.dubbo.rpc.Protocol is not adaptive method!");
+        }
+        public int getDefaultPort()  {
+            throw new UnsupportedOperationException("The method public abstract int org.apache.dubbo.rpc.Protocol.getDefaultPort() of interface org.apache.dubbo.rpc.Protocol is not adaptive method!");
+        }
+        public org.apache.dubbo.rpc.Exporter export(org.apache.dubbo.rpc.Invoker arg0) throws org.apache.dubbo.rpc.RpcException {
+            if (arg0 == null) throw new IllegalArgumentException("org.apache.dubbo.rpc.Invoker argument == null");
+            if (arg0.getUrl() == null) throw new IllegalArgumentException("org.apache.dubbo.rpc.Invoker argument getUrl() == null");
+            org.apache.dubbo.common.URL url = arg0.getUrl();
+            String extName = ( url.getProtocol() == null ? "dubbo" : url.getProtocol() );
+            if(extName == null) throw new IllegalStateException("Failed to get extension (org.apache.dubbo.rpc.Protocol) name from url (" + url.toString() + ") use keys([protocol])");
+            org.apache.dubbo.rpc.Protocol extension = (org.apache.dubbo.rpc.Protocol)ExtensionLoader.getExtensionLoader(org.apache.dubbo.rpc.Protocol.class).getExtension(extName);
+            return extension.export(arg0);
+        }
+        public org.apache.dubbo.rpc.Invoker refer(java.lang.Class arg0, org.apache.dubbo.common.URL arg1) throws org.apache.dubbo.rpc.RpcException {
+            if (arg1 == null) throw new IllegalArgumentException("url == null");
+            org.apache.dubbo.common.URL url = arg1;
+            String extName = ( url.getProtocol() == null ? "dubbo" : url.getProtocol() );
+            if(extName == null) throw new IllegalStateException("Failed to get extension (org.apache.dubbo.rpc.Protocol) name from url (" + url.toString() + ") use keys([protocol])");
+            org.apache.dubbo.rpc.Protocol extension = (org.apache.dubbo.rpc.Protocol)ExtensionLoader.getExtensionLoader(org.apache.dubbo.rpc.Protocol.class).getExtension(extName);
+            return extension.refer(arg0, arg1);
+        }
+    }
     @Test
     public void testGeneric() {
         DemoService server = new DemoServiceImpl();
+        // 两个自适应类的源码我粘出来放到上面了，对后面的调用很关键，注意一下
         ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
         Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
+
         URL url = URL.valueOf("dubbo://127.0.0.1:5342/" + DemoService.class.getName() + "?version=1.0.0");
-        Exporter<DemoService> exporter = protocol.export(proxyFactory.getInvoker(server, DemoService.class, url));
+        // 去看下上面ProxyFactory$Adaptive的getInvoker方法，最后进入Javassist的getInvoker方法，进去
+        Invoker<DemoService> invokerTemp = proxyFactory.getInvoker(server, DemoService.class, url);
+
+        // 去看下上面Protocol$Adaptive的export方法，最后进入DubboProtocol的export方法，但是注意了！！！getExtension最后返回的其实是
+        // QosProtocolWrapper，原因是因为在getExtension内部处理会调用createExtension(String name, boolean wrap)，且默认wrap是ture
+        // 即扩展类实例（比如DubboProtocol）需要被包装，对于Protocol来说在loadClass的时候有三个WrapperClass（根据是否含有拷贝构造函数），
+        // 分别是QosProtocolWrapper、ProtocolFilterWrapper、ProtocolListenerWrapper，按照@Activate(order=xx)的值以及WrapperComparator.COMPARATOR
+        // 进行排序，然后千层饼一样包装（其实是责任链模式），最后就是这样的QosProtocolWrapper（ProtocolFilterWrapper（ProtocolListenerWrapper（DubboProtocol））））
+        // 然后export一层层深入调用，每层加了自己的逻辑。 ----> 前面说的不对，getInvoker会进入StubProxyFactoryWrapper的getInvoker
+        // 所以QosProtocolWrapper#export进去
+        Exporter<DemoService> exporter = protocol.export(invokerTemp);
         Invoker<DemoService> invoker = protocol.refer(DemoService.class, url);
 
         GenericService client = (GenericService) proxyFactory.getProxy(invoker, true);

@@ -40,5 +40,5 @@
 
 **021.SpringExtensionFactory。**dubbo的其中一种容器工厂，用于获取spring相关的bean，内部有缓存所有add进来的ioc容器，获取bean的时候实际是循环遍历从ioc容器获取。不同容器的beanName是可以重复的。
 
-
+**022.责任链模式，扩展类的Wrapper类。** 去看下上面Protocol$Adaptive的export方法，最后进入DubboProtocol的export方法，但是注意了！！！getExtension最后返回的是QosProtocolWrapper，原因是因为在getExtension内部处理会调用createExtension(String name, boolean wrap)，且默认wrap是ture即扩展类实例（比如DubboProtocol）需要被包装，对于Protocol来说在loadClass的时候有三个WrapperClass（根据是否含有拷贝构造函数），分别是QosProtocolWrapper、ProtocolFilterWrapper、ProtocolListenerWrapper，按照@Activate(order=xx)的值以及WrapperComparator.COMPARATOR进行排序，然后千层饼一样包装（其实是责任链模式），最后QosProtocolWrapper（ProtocolFilterWrapper（ProtocolListenerWrapper（DubboProtocol））））然后export一层层深入调用，每层加了自己的逻辑
 

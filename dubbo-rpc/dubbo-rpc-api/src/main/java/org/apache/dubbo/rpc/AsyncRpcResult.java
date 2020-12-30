@@ -142,6 +142,7 @@ public class AsyncRpcResult implements Result {
 
     public Result getAppResponse() {
         try {
+            // easy
             if (responseFuture.isDone()) {
                 return responseFuture.get();
             }
@@ -183,11 +184,14 @@ public class AsyncRpcResult implements Result {
 
     @Override
     public Object recreate() throws Throwable {
+        // invocation在invoker的invoke方法通过该类的构造方法传参过来赋值的
         RpcInvocation rpcInvocation = (RpcInvocation) invocation;
+        //
         if (InvokeMode.FUTURE == rpcInvocation.getInvokeMode()) {
             return RpcContext.getContext().getFuture();
         }
 
+        // 两个方法都进去，recreate是AppResponse的方法
         return getAppResponse().recreate();
     }
 

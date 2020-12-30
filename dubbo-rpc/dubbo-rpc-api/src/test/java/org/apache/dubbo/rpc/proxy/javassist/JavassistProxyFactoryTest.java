@@ -18,6 +18,7 @@ package org.apache.dubbo.rpc.proxy.javassist;
 
 import org.apache.dubbo.rpc.proxy.AbstractProxyTest;
 
+// OK
 public class JavassistProxyFactoryTest extends AbstractProxyTest {
 
     static {

@@ -18,6 +18,7 @@ package org.apache.dubbo.rpc;
 
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.extension.Adaptive;
+import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.extension.SPI;
 
 import static org.apache.dubbo.rpc.Constants.PROXY_KEY;

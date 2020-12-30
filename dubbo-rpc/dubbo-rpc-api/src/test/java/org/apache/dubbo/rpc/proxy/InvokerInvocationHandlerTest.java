@@ -27,6 +27,7 @@ import java.lang.reflect.Method;
 
 import static org.mockito.Mockito.when;
 
+// OK
 public class InvokerInvocationHandlerTest {
 
     private Invoker<?> invoker;
@@ -36,7 +37,9 @@ public class InvokerInvocationHandlerTest {
     public void setUp() {
         URL url = URL.valueOf("mock://localhost:8080/FooService?group=mock&version=1.0.0");
         invoker = Mockito.mock(Invoker.class);
+        // mock一个invoker
         when(invoker.getUrl()).thenReturn(url);
+        // 进去
         invokerInvocationHandler = new InvokerInvocationHandler(invoker);
     }
 
@@ -45,8 +48,10 @@ public class InvokerInvocationHandlerTest {
         String methodName = "toString";
 
         when(invoker.toString()).thenReturn(methodName);
+        // 获取目标类invoker的toString方法
         Method method = invoker.getClass().getMethod(methodName);
 
+        // 进去
         Object result = invokerInvocationHandler.invoke(null, method, new Object[]{});
         Assertions.assertEquals(methodName, result);
     }

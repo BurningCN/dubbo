@@ -752,7 +752,7 @@ public class ExtensionLoader<T> {
             if (wrap) {
 
                 List<Class<?>> wrapperClassesList = new ArrayList<>();
-                // 该set会在加载文件资源发现类如果满足(loadClass方法内调用)isWrapperClass方法的时候进行填充（可以看下Ext5Wrapper1、Ext5Wrapper2）
+                // 该cachedWrapperClasses会在加载文件资源发现类如果满足(loadClass方法内调用)isWrapperClass方法的时候进行填充（可以看下Ext5Wrapper1、Ext5Wrapper2）
                 if (cachedWrapperClasses != null) {
                     wrapperClassesList.addAll(cachedWrapperClasses);
                     // 给wrapper排个序，COMPARATOR进去
