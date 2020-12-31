@@ -87,6 +87,8 @@ public class ApplicationModel {
         }
     }
 
+    // Loader有三个子类 正好对应下面三个方法
+
     public static Environment getEnvironment() {
         return (Environment) LOADER.getExtension(Environment.NAME);
     }

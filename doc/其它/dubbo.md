@@ -42,3 +42,11 @@
 
 **022.责任链模式，扩展类的Wrapper类。** 去看下上面Protocol$Adaptive的export方法，最后进入DubboProtocol的export方法，但是注意了！！！getExtension最后返回的是QosProtocolWrapper，原因是因为在getExtension内部处理会调用createExtension(String name, boolean wrap)，且默认wrap是ture即扩展类实例（比如DubboProtocol）需要被包装，对于Protocol来说在loadClass的时候有三个WrapperClass（根据是否含有拷贝构造函数），分别是QosProtocolWrapper、ProtocolFilterWrapper、ProtocolListenerWrapper，按照@Activate(order=xx)的值以及WrapperComparator.COMPARATOR进行排序，然后千层饼一样包装（其实是责任链模式），最后QosProtocolWrapper（ProtocolFilterWrapper（ProtocolListenerWrapper（DubboProtocol））））然后export一层层深入调用，每层加了自己的逻辑
 
+**023.ProxyFactory**。含有getProxy和getInvoker，利用jdk和Javassist生成基于接口的代理类。
+
+**024.hashCode和equals的常见写法。**hashcode是 result = primie*result + att==null?0:attr.hashCode()，equals就不说了。随便找一个参考下吧
+
+**025.从getXXX方法提取XXX提取以及根据驼峰转为split分割的字符串。** 详见calculatePropertyFromGetter和camelToSplitName。
+
+**026.值结果参数。**new一个对象，作为参数传入到一个不带返回值的方法，内部会对这个参数填值。ApplicationConfigTest.testName测程序
+

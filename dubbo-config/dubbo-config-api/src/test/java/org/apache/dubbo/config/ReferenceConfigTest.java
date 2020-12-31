@@ -30,6 +30,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.apache.dubbo.rpc.Constants.LOCAL_PROTOCOL;
 
+// OK
+// 对应<dubbo:reference>标签
 public class ReferenceConfigTest {
 
     @BeforeEach

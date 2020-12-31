@@ -150,10 +150,12 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
      */
     public Configuration getConfiguration() {
         if (globalConfiguration == null) {
+            // 复合的配置
             globalConfiguration = new CompositeConfiguration();
             if (dynamicConfiguration != null) {
                 globalConfiguration.addConfiguration(dynamicConfiguration);
             }
+            // 填充这么5个（第一个主要处理System.getProperty的，第二个主要处理System.getenv(key)）
             globalConfiguration.addConfiguration(systemConfiguration);
             globalConfiguration.addConfiguration(environmentConfiguration);
             globalConfiguration.addConfiguration(appExternalConfiguration);

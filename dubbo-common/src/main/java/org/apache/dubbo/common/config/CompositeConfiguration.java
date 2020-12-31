@@ -78,6 +78,7 @@ public class CompositeConfiguration implements Configuration {
         Configuration firstMatchingConfiguration = null;
         for (Configuration config : configList) {
             try {
+                // 看哪个配置类包含key
                 if (config.containsKey(key)) {
                     firstMatchingConfiguration = config;
                     break;
@@ -87,6 +88,7 @@ public class CompositeConfiguration implements Configuration {
             }
         }
         if (firstMatchingConfiguration != null) {
+            // 取值
             return firstMatchingConfiguration.getProperty(key);
         } else {
             return null;
@@ -109,6 +111,7 @@ public class CompositeConfiguration implements Configuration {
                 value = getInternalProperty(prefix + key);
             }
         } else {
+            // 进去
             value = getInternalProperty(key);
         }
         return value != null ? value : defaultValue;

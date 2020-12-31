@@ -52,6 +52,7 @@ import static org.apache.dubbo.config.Constants.TEST_ENVIRONMENT;
  *
  * @export
  */
+// OK
 public class ApplicationConfig extends AbstractConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationConfig.class);
 
@@ -73,7 +74,7 @@ public class ApplicationConfig extends AbstractConfig {
     private String owner;
 
     /**
-     * Application's organization (BU)
+     * Application's organization (BU) Business Unit,业务单元
      */
     private String organization;
 
@@ -119,7 +120,7 @@ public class ApplicationConfig extends AbstractConfig {
     private String dumpDirectory;
 
     /**
-     * Whether to enable qos or not
+     * Whether to enable qos or not  QoS（Quality of Service，服务质量）
      */
     private Boolean qosEnable;
 
@@ -171,6 +172,7 @@ public class ApplicationConfig extends AbstractConfig {
         setName(name);
     }
 
+    // 一些getXX方法上面就有这个注解，在父类AbstractConfig会用到进行处理，一般至少有个key，然后以kv的方式存到map（k就是key=后面的值，v就是getXX返回的值）
     @Parameter(key = APPLICATION_KEY, required = true, useKeyAsProperty = false)
     public String getName() {
         return name;
@@ -179,6 +181,7 @@ public class ApplicationConfig extends AbstractConfig {
     public void setName(String name) {
         this.name = name;
         if (StringUtils.isEmpty(id)) {
+            // 如果没有setId过，那么id = name
             id = name;
         }
     }
@@ -226,6 +229,7 @@ public class ApplicationConfig extends AbstractConfig {
                     || TEST_ENVIRONMENT.equals(environment)
                     || PRODUCTION_ENVIRONMENT.equals(environment))) {
 
+                // 仅支持3种环境变量：test、product、develop
                 throw new IllegalStateException(String.format("Unsupported environment: %s, only support %s/%s/%s, default is %s.",
                         environment,
                         DEVELOPMENT_ENVIRONMENT,
@@ -238,12 +242,14 @@ public class ApplicationConfig extends AbstractConfig {
     }
 
     public RegistryConfig getRegistry() {
+        // 一个ApplicationConfig仅有一个RegistryConfig
         return CollectionUtils.isEmpty(registries) ? null : registries.get(0);
     }
 
     public void setRegistry(RegistryConfig registry) {
         List<RegistryConfig> registries = new ArrayList<RegistryConfig>(1);
         registries.add(registry);
+        // 一个ApplicationConfig仅有一个RegistryConfig
         this.registries = registries;
     }
 
@@ -253,6 +259,7 @@ public class ApplicationConfig extends AbstractConfig {
 
     @SuppressWarnings({"unchecked"})
     public void setRegistries(List<? extends RegistryConfig> registries) {
+        // 和前面的一样，直接赋值操作
         this.registries = (List<RegistryConfig>) registries;
     }
 
@@ -461,6 +468,7 @@ public class ApplicationConfig extends AbstractConfig {
 
     @Override
     public void refresh() {
+        // 进去
         super.refresh();
         appendEnvironmentProperties();
     }
@@ -470,12 +478,15 @@ public class ApplicationConfig extends AbstractConfig {
             parameters = new HashMap<>();
         }
 
+        // 返回的为EnvironmentAdapter（看SPI文件）
         Set<InfraAdapter> adapters = ExtensionLoader.getExtensionLoader(InfraAdapter.class).getSupportedExtensionInstances();
         if (CollectionUtils.isNotEmpty(adapters)) {
             Map<String, String> inputParameters = new HashMap<>();
             inputParameters.put(APPLICATION_KEY, getName());
             inputParameters.put(HOST_KEY, getHostname());
+
             for (InfraAdapter adapter : adapters) {
+                // 进去
                 Map<String, String> extraParameters = adapter.getExtraAttributes(inputParameters);
                 if (CollectionUtils.isNotEmptyMap(extraParameters)) {
                     extraParameters.forEach((key, value) -> {
@@ -483,6 +494,7 @@ public class ApplicationConfig extends AbstractConfig {
                         if (key.startsWith(prefix)) {
                             key = key.substring(prefix.length());
                         }
+                        // 填充到parameters
                         parameters.put(key, value);
                     });
                 }

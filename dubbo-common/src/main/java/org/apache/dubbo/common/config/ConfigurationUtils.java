@@ -63,6 +63,7 @@ public class ConfigurationUtils {
      * @return
      */
     public static Configuration getGlobalConfiguration() {
+        // getConfiguration进去
         return ApplicationModel.getEnvironment().getConfiguration();
     }
 
@@ -93,10 +94,12 @@ public class ConfigurationUtils {
     }
 
     public static String getProperty(String property) {
+        // 进去
         return getProperty(property, null);
     }
 
     public static String getProperty(String property, String defaultValue) {
+        // getGlobalConfiguration、getString都进去
         return StringUtils.trim(getGlobalConfiguration().getString(property, defaultValue));
     }
 

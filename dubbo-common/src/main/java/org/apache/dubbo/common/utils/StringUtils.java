@@ -895,6 +895,7 @@ public final class StringUtils {
             return camelName;
         }
         StringBuilder buf = null;
+        // camelName假设为serviceKey
         for (int i = 0; i < camelName.length(); i++) {
             char ch = camelName.charAt(i);
             // 检测当前字符是否为大写字母
@@ -902,15 +903,22 @@ public final class StringUtils {
                 if (buf == null) {
                     buf = new StringBuilder();
                     if (i > 0) {
+                        // s2: serviceKey 遍历到K的时候 是大写字母且i>0进这个分支,下面的操作就是把serviceKey从[0,i)的字符填充到buf
+                        // 此时buf = service
                         buf.append(camelName, 0, i);
                     }
                 }
                 if (i > 0) {
                     // 向 sb 中添加点号
+                    // s3:此时buf = "service"+split split可以是. - 等
                     buf.append(split);
                 }
                 // 将字符变为小写，并添加到 sb 中
+                // s4:此时buf = "service"+split+"k"
                 buf.append(Character.toLowerCase(ch));
+
+                // s1: serviceKey的service每个字符肯定进下面这个分支
+                // 此时buf = service
             } else if (buf != null) {
                 // 添加字符到 sb 中
                 buf.append(ch);

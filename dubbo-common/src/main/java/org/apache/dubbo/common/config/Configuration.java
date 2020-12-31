@@ -43,6 +43,7 @@ public interface Configuration {
      * format, default value otherwise.
      */
     default String getString(String key, String defaultValue) {
+        // 进去
         return convert(String.class, key, defaultValue);
     }
 
@@ -106,6 +107,7 @@ public interface Configuration {
      * null if the configuration contains no mapping for this key.
      */
     default Object getProperty(String key) {
+        // 进去
         return getProperty(key, null);
     }
 
@@ -118,6 +120,7 @@ public interface Configuration {
      * @return the value to which this configuration maps the specified key, or default value if the configuration
      * contains no mapping for this key.
      */
+    // 被重写了，进去
     default Object getProperty(String key, Object defaultValue) {
         Object value = getInternalProperty(key);
         return value != null ? value : defaultValue;
@@ -139,6 +142,7 @@ public interface Configuration {
 
     default <T> T convert(Class<T> cls, String key, T defaultValue) {
         // we only process String properties for now
+        // 进去
         String value = (String) getProperty(key);
 
         if (value == null) {

@@ -39,12 +39,17 @@ public class EnvironmentAdapter implements InfraAdapter {
      */
     @Override
     public Map<String, String> getExtraAttributes(Map<String, String> params) {
+        // params参数根本没用到
+
         Map<String, String> parameters = new HashMap<>();
 
+        // 进去
         String rawLabels = ConfigurationUtils.getProperty(DUBBO_LABELS);
         if (StringUtils.isNotEmpty(rawLabels)) {
+            // 分号分割  看上面1.例子
             String[] labelPairs = SEMICOLON_SPLIT_PATTERN.split(rawLabels);
             for (String pair : labelPairs) {
+                // = 分割
                 String[] label = EQUAL_SPLIT_PATTERN.split(pair);
                 if (label.length == 2) {
                     parameters.put(label[0], label[1]);
@@ -54,8 +59,10 @@ public class EnvironmentAdapter implements InfraAdapter {
 
         String rawKeys = ConfigurationUtils.getProperty(DUBBO_ENV_KEYS);
         if (StringUtils.isNotEmpty(rawKeys)) {
+            // , 分割  看上面2.例子
             String[] keys = COMMA_SPLIT_PATTERN.split(rawKeys);
             for (String key : keys) {
+                // 这个key就是系统属性的key了，比如上面2.例子的DUBBO_KEY1
                 String value = ConfigurationUtils.getProperty(key);
                 if (value != null) {
                     parameters.put(key, value);

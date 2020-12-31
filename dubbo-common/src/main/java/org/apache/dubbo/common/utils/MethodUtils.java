@@ -75,7 +75,7 @@ public interface MethodUtils {
                 && !"getClass".equals(name) && !"getObject".equals(name)
                 && Modifier.isPublic(method.getModifiers())
                 && method.getParameterTypes().length == 0
-                // method.getReturnType() api
+                // method.getReturnType() api  这里限定get方法返回primitive类型的
                 && ClassUtils.isPrimitive(method.getReturnType());
     }
 

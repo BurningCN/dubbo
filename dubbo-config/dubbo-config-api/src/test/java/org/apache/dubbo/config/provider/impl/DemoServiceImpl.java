@@ -26,12 +26,14 @@ import java.util.List;
 /**
  * DemoServiceImpl
  */
+// OK
 public class DemoServiceImpl implements DemoService {
 
     public String sayName(String name) {
         return "say:" + name;
     }
 
+    // Box
     public Box getBox() {
         return null;
     }
@@ -40,6 +42,7 @@ public class DemoServiceImpl implements DemoService {
         throw new DemoException("DemoServiceImpl");
     }
 
+    // User
     public List<User> getUsers(List<User> users) {
         return users;
     }

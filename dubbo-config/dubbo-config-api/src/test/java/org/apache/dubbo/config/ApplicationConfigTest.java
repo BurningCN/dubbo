@@ -36,18 +36,28 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
+// OK
+// 对应<dubbo:application>标签，可以配置的属性在dubbo.xsd说明了，全局搜<xsd:complexType name="applicationType">也可以
 public class ApplicationConfigTest {
     @Test
     public void testName() throws Exception {
         ApplicationConfig application = new ApplicationConfig();
+        // 进去(内部name=id，id可以通过setId赋值)
         application.setName("app");
         assertThat(application.getName(), equalTo("app"));
+
         application = new ApplicationConfig("app2");
         assertThat(application.getName(), equalTo("app2"));
+
         Map<String, String> parameters = new HashMap<String, String>();
+        // 进去
         ApplicationConfig.appendParameters(parameters, application);
+        // parameters相当于是一个值-结果参数，拿到ApplicationConfig里面的属性值
+        // application -> app2
         assertThat(parameters, hasEntry(APPLICATION_KEY, "app2"));
     }
+
+
 
     @Test
     public void testVersion() throws Exception {
@@ -56,9 +66,10 @@ public class ApplicationConfigTest {
         assertThat(application.getVersion(), equalTo("1.0.0"));
         Map<String, String> parameters = new HashMap<String, String>();
         ApplicationConfig.appendParameters(parameters, application);
+        // "application.version" -> "1.0.0"
         assertThat(parameters, hasEntry("application.version", "1.0.0"));
     }
-
+    // easy
     @Test
     public void testOwner() throws Exception {
         ApplicationConfig application = new ApplicationConfig("app");
@@ -66,6 +77,7 @@ public class ApplicationConfigTest {
         assertThat(application.getOwner(), equalTo("owner"));
     }
 
+    // easy
     @Test
     public void testOrganization() throws Exception {
         ApplicationConfig application = new ApplicationConfig("app");
@@ -73,6 +85,7 @@ public class ApplicationConfigTest {
         assertThat(application.getOrganization(), equalTo("org"));
     }
 
+    // easy
     @Test
     public void testArchitecture() throws Exception {
         ApplicationConfig application = new ApplicationConfig("app");
@@ -83,18 +96,25 @@ public class ApplicationConfigTest {
     @Test
     public void testEnvironment1() throws Exception {
         ApplicationConfig application = new ApplicationConfig("app");
+        // 设置环境，进去
         application.setEnvironment("develop");
         assertThat(application.getEnvironment(), equalTo("develop"));
+
         application.setEnvironment("test");
         assertThat(application.getEnvironment(), equalTo("test"));
+
         application.setEnvironment("product");
         assertThat(application.getEnvironment(), equalTo("product"));
     }
+
+
+
 
     @Test
     public void testEnvironment2() throws Exception {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             ApplicationConfig application = new ApplicationConfig("app");
+            // 设置一个不允许设置的环境变量
             application.setEnvironment("illegal-env");
         });
     }
@@ -103,8 +123,12 @@ public class ApplicationConfigTest {
     public void testRegistry() throws Exception {
         ApplicationConfig application = new ApplicationConfig("app");
         RegistryConfig registry = new RegistryConfig();
+        // 进去
         application.setRegistry(registry);
+        // 进去
         assertThat(application.getRegistry(), sameInstance(registry));
+        // 进去
+        // 和前面的setRegistry区分开，一个是传RegistryConfig，一个是传List<RegistryConfig>
         application.setRegistries(Collections.singletonList(registry));
         assertThat(application.getRegistries(), contains(registry));
         assertThat(application.getRegistries(), hasSize(1));
@@ -113,10 +137,13 @@ public class ApplicationConfigTest {
     @Test
     public void testMonitor() throws Exception {
         ApplicationConfig application = new ApplicationConfig("app");
+        // 进去
         application.setMonitor(new MonitorConfig("monitor-addr"));
         assertThat(application.getMonitor().getAddress(), equalTo("monitor-addr"));
+        // 进去
         application.setMonitor("monitor-addr");
         assertThat(application.getMonitor().getAddress(), equalTo("monitor-addr"));
+        // RegistryConfig、MonitorConfig都可以作为ApplicationConfig的属性
     }
 
     @Test
@@ -140,9 +167,12 @@ public class ApplicationConfigTest {
         assertThat(application.getDumpDirectory(), equalTo("/dump"));
         Map<String, String> parameters = new HashMap<String, String>();
         ApplicationConfig.appendParameters(parameters, application);
+        // "application" -> "app"
+        // "dump.directory" -> "/dump"
         assertThat(parameters, hasEntry(DUMP_DIRECTORY, "/dump"));
     }
 
+    // easy
     @Test
     public void testQosEnable() throws Exception {
         ApplicationConfig application = new ApplicationConfig("app");
@@ -153,6 +183,7 @@ public class ApplicationConfigTest {
         assertThat(parameters, hasEntry(QOS_ENABLE, "true"));
     }
 
+    // easy
     @Test
     public void testQosPort() throws Exception {
         ApplicationConfig application = new ApplicationConfig("app");
@@ -160,6 +191,7 @@ public class ApplicationConfigTest {
         assertThat(application.getQosPort(), equalTo(8080));
     }
 
+    // easy
     @Test
     public void testQosAcceptForeignIp() throws Exception {
         ApplicationConfig application = new ApplicationConfig("app");
@@ -175,6 +207,7 @@ public class ApplicationConfigTest {
         ApplicationConfig application = new ApplicationConfig("app");
         application.setQosAcceptForeignIp(true);
         Map<String, String> parameters = new HashMap<String, String>();
+        // 可以放自己的kv
         parameters.put("k1", "v1");
         ApplicationConfig.appendParameters(parameters, application);
         assertThat(parameters, hasEntry("k1", "v1"));
@@ -185,8 +218,14 @@ public class ApplicationConfigTest {
     public void testAppendEnvironmentProperties() {
         try {
             ApplicationConfig application = new ApplicationConfig("app");
+            // setProperty 两个参数 kv
             System.setProperty("dubbo.labels", "tag1=value1;tag2=value2 ; tag3 = value3");
+            // 进去
             application.refresh();
+            // 此时parameters 为
+            //"tag1" -> "value1"
+            //"tag2" -> "value2"
+            //"tag3" -> "value3"
             Map<String, String> parameters = application.getParameters();
             Assertions.assertEquals("value1", parameters.get("tag1"));
             Assertions.assertEquals("value2", parameters.get("tag2"));
@@ -210,6 +249,7 @@ public class ApplicationConfigTest {
             Assertions.assertEquals("value2", urlParameters.get("tag2"));
             Assertions.assertEquals("value3", urlParameters.get("tag3"));
         } finally {
+            // setProperty、getProperty、clearProperty三个api注意下
             System.clearProperty("dubbo.labels");
             System.clearProperty("dubbo.keys");
         }

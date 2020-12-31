@@ -118,41 +118,63 @@ public abstract class AbstractConfig implements Serializable {
         if (config == null) {
             return;
         }
+        // Config一般是其子类，比如ApplicationConfig
         Method[] methods = config.getClass().getMethods();
         for (Method method : methods) {
             try {
                 String name = method.getName();
+                // 进去
                 if (MethodUtils.isGetter(method)) {
+                    // 获取@Parameter注解
                     Parameter parameter = method.getAnnotation(Parameter.class);
+
+                    // 方法返回类型为Object 或者 parameter注解里面的excluded值为true，那么不处理这个方法
                     if (method.getReturnType() == Object.class || parameter != null && parameter.excluded()) {
                         continue;
                     }
+                    // 以ApplicationConfig的getVersion为例
+                    //    @Parameter(key = "application.version")
+                    //    public String getVersion() {
+                    //        return version;
+                    //    }
                     String key;
                     if (parameter != null && parameter.key().length() > 0) {
+                        // 获取key值 application.version
                         key = parameter.key();
                     } else {
+                        // 获取getXXX的XXX属性名称并根绝驼峰转化按照split分割返回
                         key = calculatePropertyFromGetter(name);
                     }
+                    // get方法没有参数，所以invoke传对象即可
                     Object value = method.invoke(config);
+                    // 转化为字符串，因为前面isGetter内部限定get方法返回primitive类型的，所以这里放心转
                     String str = String.valueOf(value).trim();
                     if (value != null && str.length() > 0) {
+                        // 假设前面getVersion返回1.0
+
                         if (parameter != null && parameter.escaped()) {
                             str = URL.encode(str);
                         }
+                        // 是否含有append=true（默认为false）
                         if (parameter != null && parameter.append()) {
                             String pre = parameters.get(key);
                             if (pre != null && pre.length() > 0) {
+                                // 拼接
                                 str = pre + "," + str;
                             }
                         }
+                        // 有前缀的话拼一下
                         if (prefix != null && prefix.length() > 0) {
                             key = prefix + "." + key;
                         }
+                        // 存到map {application.version:1.0}
                         parameters.put(key, str);
                     } else if (parameter != null && parameter.required()) {
                         throw new IllegalStateException(config.getClass().getSimpleName() + "." + key + " == null");
                     }
+                    // 如果前面不是getXX方法，判断是不是getParameters方法，进去看下怎么判断的
                 } else if (isParametersGetter(method)) {
+                    //
                     Map<String, String> map = (Map<String, String>) method.invoke(config, new Object[0]);
                     parameters.putAll(convert(map, prefix));
                 }
@@ -272,8 +294,11 @@ public abstract class AbstractConfig implements Serializable {
     }
 
     private static String calculatePropertyFromGetter(String name) {
-        int i = name.startsWith("get") ? 3 : 2;
-        return StringUtils.camelToSplitName(name.substring(i, i + 1).toLowerCase() + name.substring(i + 1), ".");
+        int i = name.startsWith("get") ? 3 : 2;// 2的意思就是isXX方法
+        // 获取属性名称
+        String property = name.substring(i, i + 1).toLowerCase() + name.substring(i + 1);
+        // 驼峰转为.分割的格式，比如ServiceKey = service.key
+        return StringUtils.camelToSplitName(property, ".");
     }
 
     private static String calculateAttributeFromGetter(String getter) {
