@@ -118,11 +118,12 @@ public abstract class AbstractConfig implements Serializable {
         if (config == null) {
             return;
         }
-        // Config一般是其子类，比如ApplicationConfig
+        // Config一般是其子类，比如ApplicationConfig，获取所有方法
         Method[] methods = config.getClass().getMethods();
         for (Method method : methods) {
             try {
                 String name = method.getName();
+                // 处理get方法或者getParameters方法
                 // 进去
                 if (MethodUtils.isGetter(method)) {
                     // 获取@Parameter注解
@@ -153,10 +154,13 @@ public abstract class AbstractConfig implements Serializable {
                         // 假设前面getVersion返回1.0
 
                         if (parameter != null && parameter.escaped()) {
+                            // utf8编码下，进去（比如/被编码为%2F）
                             str = URL.encode(str);
                         }
                         // 是否含有append=true（默认为false）
                         if (parameter != null && parameter.append()) {
+                            // 从map中取出来，比如用于一开始就put了一个entry比如num:one，而比如getNumber方法前面计算出来的key是num（从parameter注解获得的或者属性本身）
+                            // getNumber的返回值为1,那么还需在前面拼上"one," 即为"one,1" --- > 详见testAppendParameters1
                             String pre = parameters.get(key);
                             if (pre != null && pre.length() > 0) {
                                 // 拼接
@@ -169,13 +173,15 @@ public abstract class AbstractConfig implements Serializable {
                         }
                         // 存到map {application.version:1.0}
                         parameters.put(key, str);
+
+                        // 如果前面getXX调用返回null，但是@Parameter(...required=true)，那么抛异常
                     } else if (parameter != null && parameter.required()) {
                         throw new IllegalStateException(config.getClass().getSimpleName() + "." + key + " == null");
                     }
                     // 如果前面不是getXX方法，判断是不是getParameters方法，进去看下怎么判断的
                 } else if (isParametersGetter(method)) {
-                    //
                     Map<String, String> map = (Map<String, String>) method.invoke(config, new Object[0]);
+                    // 做一下转化（key加prefix前缀、-变成.），进去
                     parameters.putAll(convert(map, prefix));
                 }
             } catch (Exception e) {
@@ -189,6 +195,8 @@ public abstract class AbstractConfig implements Serializable {
         appendAttributes(parameters, config, null);
     }
 
+    // 已经废弃了，和appendParameters的区别在于：
+    // 这个仅处理带有@Parameter注解的、map的value不限于String类型
     @Deprecated
     protected static void appendAttributes(Map<String, Object> parameters, Object config, String prefix) {
         if (config == null) {
@@ -348,7 +356,7 @@ public abstract class AbstractConfig implements Serializable {
     /**
      * @param parameters the raw parameters
      * @param prefix     the prefix
-     * @return the parameters whose raw key will replace "-" to "."
+     * @return the parameters whose raw key will replace "-" to "." <---注意这个
      * @revised 2.7.8 "private" to be "protected"
      */
     protected static Map<String, String> convert(Map<String, String> parameters, String prefix) {
@@ -385,9 +393,12 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    // 结合AbstractConfigTest.appendAnnotation测试程序
     protected void appendAnnotation(Class<?> annotationClass, Object annotation) {
         Method[] methods = annotationClass.getMethods();
+        // 遍历注解的所有方法
         for (Method method : methods) {
+            // 满足不是Object类的方法、返回值不是void、没有参数、公有的不是静态的
             if (method.getDeclaringClass() != Object.class
                     && method.getReturnType() != void.class
                     && method.getParameterTypes().length == 0
@@ -398,19 +409,28 @@ public abstract class AbstractConfig implements Serializable {
                     if ("interfaceClass".equals(property) || "interfaceName".equals(property)) {
                         property = "interface";
                     }
+                    // 构建set方法 str
                     String setter = "set" + property.substring(0, 1).toUpperCase() + property.substring(1);
+                    // 调用方法获取返回值
                     Object value = method.invoke(annotation);
+                    // 返回值不null且不是默认值
                     if (value != null && !value.equals(method.getDefaultValue())) {
+                        // 如果是基本数据类型，获取其包装类型，否则返回类型自己，目的是为了后面获取this的set方法（this一般是AbstractConfig的子类对象）
                         Class<?> parameterType = ReflectUtils.getBoxedClass(method.getReturnType());
                         if ("filter".equals(property) || "listener".equals(property)) {
                             parameterType = String.class;
+                            // 比如 @Config(listener = {"l1, l2"}) ，value = new String[]{"l1,l2"}，经过下面的操作value = "l1,l2"
                             value = StringUtils.join((String[]) value, ",");
                         } else if ("parameters".equals(property)) {
                             parameterType = Map.class;
+                            // 比如 @Config(parameters = {"k1", "v1", "k2", "v2"})，value=new String["k1","v1","k2","v2"]，经过下面的操作value为map，两个entry{k1:v1,k2:v2}
                             value = CollectionUtils.toStringMap((String[]) value);
                         }
                         try {
+                            // this.getClass，这个this一般是AbstractConfig的子类对象，因为整个方法最终目的就是把传进来的注解的相关属性值通过
+                            // 调用xxConfig的对应setXX赋值进去
                             Method setterMethod = getClass().getMethod(setter, parameterType);
+                            // 调用set方法赋值
                             setterMethod.invoke(this, value);
                         } catch (NoSuchMethodException e) {
                             // ignore
@@ -432,12 +452,15 @@ public abstract class AbstractConfig implements Serializable {
      * <p>
      * Notice! This method should include all properties in the returning map, treat @Parameter differently compared to appendParameters.
      */
+    // 看上面最后一行注释前半句就是该方法的作用，然后还有一些意思就是说这个方法和appendParameters有不少重复的地方，耦合了，希望重构下
+    // 而且和appendParameters对待@Parameter是不一样的
     public Map<String, String> getMetaData() {
         Map<String, String> metaData = new HashMap<>();
         Method[] methods = this.getClass().getMethods();
         for (Method method : methods) {
             try {
                 String name = method.getName();
+                // 是否是元方法， 其实就是判断是不是getXX(或者isXX)方法 进去
                 if (MethodUtils.isMetaMethod(method)) {
                     String key;
                     Parameter parameter = method.getAnnotation(Parameter.class);
@@ -465,8 +488,11 @@ public abstract class AbstractConfig implements Serializable {
                     if (value != null && str.length() > 0) {
                         metaData.put(key, str);
                     } else {
+                        // 方法上面注释说了，获取所有的属性，即使属性的值为null
                         metaData.put(key, null);
                     }
+
+                    // getParameters方法处理
                 } else if (isParametersGetter(method)) {
                     Map<String, String> map = (Map<String, String>) method.invoke(this, new Object[0]);
                     metaData.putAll(convert(map, ""));
@@ -521,28 +547,34 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
+    // 这个toString是一个关键，这就是为啥每次断点变量窗口XXXConfig后面都会带什么<dubbo:xx xx=xx xx=xx/>
     @Override
     public String toString() {
         try {
             StringBuilder buf = new StringBuilder();
             buf.append("<dubbo:");
+            // 获取tagName，this是AbstractConfig的子类对象，比如ApplicationConfig进行getTagName就是application、ReferenceConfig就是reference，进去
             buf.append(getTagName(getClass()));
             Method[] methods = getClass().getMethods();
             for (Method method : methods) {
                 try {
                     if (MethodUtils.isGetter(method)) {
                         String name = method.getName();
+                        // 根据getXx方法取出xx属性名称
                         String key = calculateAttributeFromGetter(name);
 
                         try {
+                            // 触发这个api，看看this对应的类里面有没有xx字段
                             getClass().getDeclaredField(key);
                         } catch (NoSuchFieldException e) {
                             // ignore
                             continue;
                         }
 
+                        // 调用getXx方法获取返回值
                         Object value = method.invoke(this);
                         if (value != null) {
+                            // k=v 拼接
                             buf.append(" ");
                             buf.append(key);
                             buf.append("=\"");
@@ -555,6 +587,8 @@ public abstract class AbstractConfig implements Serializable {
                 }
             }
             buf.append(" />");
+            // 比如AbstractConfigTest.appendAnnotation测试方法，下面结果就是 <dubbo:annotation listener="l1, l2" filter="f1, f2" />
+            // 比如ApplicationConfigTest.testVersion测试方法，下面结果就是 <dubbo:application version="1.0.0" name="app" hostname="bogon" />
             return buf.toString();
         } catch (Throwable t) {
             logger.warn(t.getMessage(), t);
