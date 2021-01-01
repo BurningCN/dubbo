@@ -26,7 +26,10 @@ import java.util.List;
 
 /**
  * This is an abstraction specially customized for the sequence Dubbo retrieves properties.
+ *
+ * 这是一个为Dubbo检索属性的序列特别定制的抽象
  */
+// OK
 public class CompositeConfiguration implements Configuration {
     private Logger logger = LoggerFactory.getLogger(CompositeConfiguration.class);
 
@@ -36,12 +39,15 @@ public class CompositeConfiguration implements Configuration {
     /**
      * List holding all the configuration
      */
+    // 类名本身就是Composite组合，所以是汇聚了多个不同种类的Configuration实现
     private List<Configuration> configList = new LinkedList<Configuration>();
 
+    // 这两个构造方法都是在Environment方法调用的
     public CompositeConfiguration() {
         this(null, null);
     }
 
+    // 带有prefix和id的，这两个值一般是AbstractConfig子类传来的
     public CompositeConfiguration(String prefix, String id) {
         if (StringUtils.isNotEmpty(prefix) && !prefix.endsWith(".")) {
             this.prefix = prefix + ".";
@@ -95,23 +101,31 @@ public class CompositeConfiguration implements Configuration {
         }
     }
 
+    // 重写了接口的default修饰的方法，但是跟了下其实没有调用点（出现的调用点列表其实是父接口的containsKey）
     @Override
     public boolean containsKey(String key) {
+        // anyMatch有一个满足即可
         return configList.stream().anyMatch(c -> c.containsKey(key));
     }
 
+    // 重写了接口的default修饰的方法，调用链路一般是这样的：
+    // compositeConfiguration.getString(extractPropertyName(getClass(), method)) ，getString是Configuration的方法，
+    // 最后流转到Configuration的default Object getProperty(String key)方法，内部触发 return this.getProperty(key, null);
+    // 此时的this就是compositeConfiguration对象，也就是会调用下面的方法，主要做了一个prefix+id的拼接（如果有的话）
     @Override
     public Object getProperty(String key, Object defaultValue) {
         Object value = null;
         if (StringUtils.isNotEmpty(prefix)) {
             if (StringUtils.isNotEmpty(id)) {
+                // prefix+id+key
                 value = getInternalProperty(prefix + id + "." + key);
             }
             if (value == null) {
+                // prefix+key
                 value = getInternalProperty(prefix + key);
             }
         } else {
-            // 进去
+            // key 进去
             value = getInternalProperty(key);
         }
         return value != null ? value : defaultValue;

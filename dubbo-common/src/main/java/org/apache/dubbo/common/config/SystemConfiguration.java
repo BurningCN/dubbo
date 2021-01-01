@@ -23,7 +23,9 @@ package org.apache.dubbo.common.config;
  * @See ConfigUtils#getProperty(String)
  * @see PropertiesConfiguration
  */
+// OK
 public class SystemConfiguration implements Configuration {
+
 
     @Override
     public Object getInternalProperty(String key) {

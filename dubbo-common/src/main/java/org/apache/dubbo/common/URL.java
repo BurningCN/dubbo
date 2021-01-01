@@ -417,6 +417,7 @@ class URL implements Serializable {
             return "";
         }
         try {
+            // 编码
             return URLEncoder.encode(value, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.getMessage(), e);

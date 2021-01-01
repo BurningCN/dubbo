@@ -22,6 +22,7 @@ import java.util.Map;
 /**
  * In-memory configuration
  */
+// OK
 public class InmemoryConfiguration implements Configuration {
 
     // stores the configuration key-value pairs

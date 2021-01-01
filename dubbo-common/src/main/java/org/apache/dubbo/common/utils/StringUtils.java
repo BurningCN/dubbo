@@ -956,6 +956,7 @@ public final class StringUtils {
     }
 
     public static String toOSStyleKey(String key) {
+        // 先转大写，然后.替换为_，比如dubbo.key的结果就是DUBBO_KEY
         key = key.toUpperCase().replaceAll(DOT_REGEX, UNDERLINE_SEPARATOR);
         if (!key.startsWith("DUBBO_")) {
             key = "DUBBO_" + key;

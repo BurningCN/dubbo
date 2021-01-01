@@ -21,6 +21,7 @@ import java.util.NoSuchElementException;
 /**
  * Configuration interface, to fetch the value for the specified key.
  */
+// OK
 public interface Configuration {
     /**
      * Get a string associated with the given configuration key.
@@ -29,7 +30,8 @@ public interface Configuration {
      * @return The associated string.
      */
     default String getString(String key) {
-        return convert(String.class, key, null);
+        // 进去
+        return getString(key, null);
     }
 
     /**
@@ -42,6 +44,7 @@ public interface Configuration {
      * @return The associated string if key is found and has valid
      * format, default value otherwise.
      */
+    // getString的重载直接看这个
     default String getString(String key, String defaultValue) {
         // 进去
         return convert(String.class, key, defaultValue);
@@ -61,6 +64,7 @@ public interface Configuration {
         return i == null ? defaultValue : i;
     }
 
+    // getInt(eger)的重载直接看这个
     default Integer getInteger(String key, Integer defaultValue) {
         try {
             return convert(Integer.class, key, defaultValue);
@@ -82,6 +86,7 @@ public interface Configuration {
         return this.getBoolean(key, toBooleanObject(defaultValue));
     }
 
+    // getBoolean的重载直接看这个
     default Boolean getBoolean(String key, Boolean defaultValue) {
         try {
             return convert(Boolean.class, key, defaultValue);
@@ -102,10 +107,15 @@ public interface Configuration {
      * will stay constant over time (i.e. further update operations on the
      * configuration may change its internal state).
      *
+     * 从configuration中获取property。这是检索属性值最基本的get方法。在一个典型的configuration接口实现中的其他get方法(返回特定的数据类型)将
+     * 在内部使用此方法（getProperty）。在这个级别的变量替换还没有执行。返回的对象是传递的属性值的内部表示形式在关键。它属于{@code Configuration}对象。所以调用者
+     * 不应该修改此对象。不能保证这个对象随时间保持不变(进一步更新操作configuration可以改变它的内部状态)。
+     *
      * @param key property to retrieve
      * @return the value to which this configuration maps the specified key, or
      * null if the configuration contains no mapping for this key.
      */
+    // gx
     default Object getProperty(String key) {
         // 进去
         return getProperty(key, null);
@@ -120,12 +130,18 @@ public interface Configuration {
      * @return the value to which this configuration maps the specified key, or default value if the configuration
      * contains no mapping for this key.
      */
-    // 被重写了，进去
+    // 这个方法被CompositeConfiguration重写了，外界一般和CompositeConfiguration接触，一般链路是这样的，
+    // CompositeConfiguration.getString -> Configuration.convert. ->Configuration.getProperty(String key)（上面的方法）
+    // ->CompositeConfiguration.getProperty(String key, Object defaultValue)->内部遍历多个Configuration
+    // ->Configuration.containsKey(String key)->Configuration.getPro...这个就是下面的方法
     default Object getProperty(String key, Object defaultValue) {
+        // 该方法是一个模板方法，getInternalProperty被不同子类实现
+
         Object value = getInternalProperty(key);
         return value != null ? value : defaultValue;
     }
 
+    // 被不同子类实现
     Object getInternalProperty(String key);
 
     /**
@@ -150,6 +166,7 @@ public interface Configuration {
         }
 
         Object obj = value;
+        // 这两个api注意下，下面的条件要满足的话，cls肯定是String.class
         if (cls.isInstance(value)) {
             return cls.cast(value);
         }
@@ -178,6 +195,7 @@ public interface Configuration {
     }
 
     static Boolean toBooleanObject(boolean bool) {
+        // 基本数据类型转化包装类型
         return bool ? Boolean.TRUE : Boolean.FALSE;
     }
 }

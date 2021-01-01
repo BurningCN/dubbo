@@ -27,6 +27,7 @@ import java.util.Map;
 /**
  * The type Inmemory configuration test.
  */
+// OK
 class InmemoryConfigurationTest {
 
     private InmemoryConfiguration memConfig;
@@ -54,7 +55,9 @@ class InmemoryConfigurationTest {
         Assertions.assertFalse(memConfig.containsKey(MOCK_KEY));
         Assertions.assertNull(memConfig.getString(MOCK_KEY));
         Assertions.assertNull(memConfig.getProperty(MOCK_KEY));
+        // 进去
         memConfig.addProperty(MOCK_KEY, MOCK_VALUE);
+        // 进去
         Assertions.assertTrue(memConfig.containsKey(MOCK_KEY));
         Assertions.assertEquals(MOCK_VALUE, memConfig.getInternalProperty(MOCK_KEY));
         Assertions.assertEquals(MOCK_VALUE, memConfig.getString(MOCK_KEY, MOCK_VALUE));

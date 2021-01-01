@@ -21,10 +21,12 @@ import org.apache.dubbo.common.utils.StringUtils;
 /**
  * Configuration from system environment
  */
+// OK
 public class EnvironmentConfiguration implements Configuration {
 
     @Override
     public Object getInternalProperty(String key) {
+        // 系统环境变量获取(环境变量key的值是区分大小写的)
         String value = System.getenv(key);
         if (StringUtils.isEmpty(value)) {
             value = System.getenv(StringUtils.toOSStyleKey(key));

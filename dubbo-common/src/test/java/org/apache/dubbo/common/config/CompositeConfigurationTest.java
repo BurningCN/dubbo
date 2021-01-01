@@ -19,5 +19,6 @@ package org.apache.dubbo.common.config;
 /**
  *
  */
+// OK
 public class CompositeConfigurationTest {
 }

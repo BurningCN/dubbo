@@ -26,16 +26,21 @@ import java.util.Map;
 /**
  * This class receives an {@link AbstractConfig} and exposes its attributes through {@link Configuration}
  */
+// OK
+// 看上面注解
 public class ConfigConfigurationAdapter implements Configuration {
 
     private Map<String, String> metaData;
 
     public ConfigConfigurationAdapter(AbstractConfig config) {
+        // 获取AbstractConfig的属性信息，以map的方式返回，的进去
         Map<String, String> configMetadata = config.getMetaData();
         metaData = new HashMap<>(configMetadata.size());
         for (Map.Entry<String, String> entry : configMetadata.entrySet()) {
+            // 获取Config的prefix和id  这部分建议放到for外面
             String prefix = config.getPrefix().endsWith(".") ? config.getPrefix() : config.getPrefix() + ".";
             String id = StringUtils.isEmpty(config.getId()) ? "" : config.getId() + ".";
+            // prefix+id+key
             metaData.put(prefix + id + entry.getKey(), entry.getValue());
         }
     }
