@@ -68,6 +68,7 @@ public class ApplicationConfigTest {
         ApplicationConfig.appendParameters(parameters, application);
         // "application.version" -> "1.0.0"
         assertThat(parameters, hasEntry("application.version", "1.0.0"));
+        System.out.println(application);
     }
     // easy
     @Test

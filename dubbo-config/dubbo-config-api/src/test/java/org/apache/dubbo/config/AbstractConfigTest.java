@@ -40,6 +40,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+// OK
 public class AbstractConfigTest {
 
     //FIXME
@@ -109,8 +110,20 @@ public class AbstractConfigTest {
     @Test
     public void testAppendParameters1() throws Exception {
         Map<String, String> parameters = new HashMap<String, String>();
+        // 加了这个，appendParameters内部处理config对象的getXX方法计算出来的key如果是num的话，那么会用ONE拼接getXX的返回值
         parameters.put("num", "ONE");
-        AbstractConfig.appendParameters(parameters, new ParameterConfig(1, "hello/world", 30, "password"), "prefix");
+        // 第三个prefix注意
+        AbstractConfig.appendParameters(parameters,
+                new ParameterConfig(1, "hello/world", 30, "password"), "prefix");
+//"prefix.key.2" -> "two"            // 这2个是ParameterConfig对象里面的getParameters里面填充的两个entry，只不过在原有entry的key前面拼接了prefix
+//"prefix.key.1" -> "one"
+//"prefix.key-2" -> "two"            // 在处理getParameters返回结果的map的时候，如果发现有-连接的会新生成一个.连接的
+//"prefix.num" -> "ONE,1"            // getNumber上面的@Parameter(key=num)所以是prefix.num，value部分的原因看上面第二行代码上面注释
+//"num" -> "ONE"                     // 第二行代码加的
+//"prefix.age" -> "30"               // getAge()没有@Paramater注解，所以key就是prefix.age
+//"prefix.naming" -> "hello%2Fworld" // @Parameter(key = "naming") 所以key为prefix.naming，value部分有%2F因为@Parameter(...escaped=true..)所以会encode编码
+        // 且注意getPassword上面的@Parameter(excluded = true) 所以没有填充到结果集
+
         Assertions.assertEquals("one", parameters.get("prefix.key.1"));
         Assertions.assertEquals("two", parameters.get("prefix.key.2"));
         Assertions.assertEquals("ONE,1", parameters.get("prefix.num"));
@@ -125,6 +138,7 @@ public class AbstractConfigTest {
     public void testAppendParameters2() throws Exception {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             Map<String, String> parameters = new HashMap<String, String>();
+            // 传递空参数构造的对象，导致getNaming返回null，但是方法上面注解@Parmeter(...required=true)，即必须这个属性有值，那么内部肯定抛异常
             AbstractConfig.appendParameters(parameters, new ParameterConfig());
         });
     }
@@ -142,6 +156,7 @@ public class AbstractConfigTest {
         AbstractConfig.appendParameters(parameters, new ParameterConfig(1, "hello/world", 30, "password"));
         Assertions.assertEquals("one", parameters.get("key.1"));
         Assertions.assertEquals("two", parameters.get("key.2"));
+        // 和第一个测试程序的区别就是如下。因为没有先前put("num",xxx)
         Assertions.assertEquals("1", parameters.get("num"));
         Assertions.assertEquals("hello%2Fworld", parameters.get("naming"));
         Assertions.assertEquals("30", parameters.get("age"));
@@ -150,6 +165,7 @@ public class AbstractConfigTest {
     @Test
     public void testAppendAttributes1() throws Exception {
         Map<String, Object> parameters = new HashMap<String, Object>();
+        //  这个仅处理带有@Parameter注解的、map的value不限于String类型，进去
         AbstractConfig.appendAttributes(parameters, new AttributeConfig('l', true, (byte) 0x01), "prefix");
         Assertions.assertEquals('l', parameters.get("prefix.let"));
         Assertions.assertEquals(true, parameters.get("prefix.activate"));
@@ -159,6 +175,7 @@ public class AbstractConfigTest {
     @Test
     public void testAppendAttributes2() throws Exception {
         Map<String, Object> parameters = new HashMap<String, Object>();
+        // 不加prefix
         AbstractConfig.appendAttributes(parameters, new AttributeConfig('l', true, (byte) 0x01));
         Assertions.assertEquals('l', parameters.get("let"));
         Assertions.assertEquals(true, parameters.get("activate"));
@@ -167,17 +184,22 @@ public class AbstractConfigTest {
 
     @Test
     public void checkExtension() throws Exception {
-        Assertions.assertThrows(IllegalStateException.class, () -> ConfigValidationUtils.checkExtension(Greeting.class, "hello", "world"));
+        Assertions.assertThrows(IllegalStateException.class, () ->
+                // 检查Greeting这个spi接口有没有扩展名为world的扩展类，进去
+                ConfigValidationUtils.checkExtension(Greeting.class, "hello", "world"));
     }
 
     @Test
     public void checkMultiExtension1() throws Exception {
-        Assertions.assertThrows(IllegalStateException.class, () -> ConfigValidationUtils.checkMultiExtension(Greeting.class, "hello", "default,world"));
+        Assertions.assertThrows(IllegalStateException.class, () ->
+                // 检查多个扩展名
+                ConfigValidationUtils.checkMultiExtension(Greeting.class, "hello", "default,world"));
     }
 
     @Test
     public void checkMultiExtension2() throws Exception {
-        Assertions.assertThrows(IllegalStateException.class, () -> ConfigValidationUtils.checkMultiExtension(Greeting.class, "hello", "default,-world"));
+        Assertions.assertThrows(IllegalStateException.class, () ->
+                ConfigValidationUtils.checkMultiExtension(Greeting.class, "hello", "default,-world"));
     }
 
     @Test
@@ -187,6 +209,7 @@ public class AbstractConfigTest {
             for (int i = 0; i <= 200; i++) {
                 builder.append("a");
             }
+            // 长度不超过200，builder的长度是201，进去
             ConfigValidationUtils.checkLength("hello", builder.toString());
         });
     }
@@ -198,15 +221,19 @@ public class AbstractConfigTest {
             for (int i = 0; i <= 200; i++) {
                 builder.append("a");
             }
+            // path的长度依然最大为200
             ConfigValidationUtils.checkPathLength("hello", builder.toString());
         });
     }
 
     @Test
     public void checkName() throws Exception {
-        Assertions.assertThrows(IllegalStateException.class, () -> ConfigValidationUtils.checkName("hello", "world%"));
+        Assertions.assertThrows(IllegalStateException.class, () ->
+        // 通配符不满足
+                ConfigValidationUtils.checkName("hello", "world%"));
     }
 
+    // 下面几个check暂时不看，直接跳到appendAnnotation
     @Test
     public void checkNameHasSymbol() throws Exception {
         try {
@@ -275,14 +302,18 @@ public class AbstractConfigTest {
             parameters = {"k1", "v1", "k2", "v2"})
     public void appendAnnotation() throws Exception {
         Config config = getClass().getMethod("appendAnnotation").getAnnotation(Config.class);
+        // 这个是Test的一个内部类，继承AbstractConfig的
         AnnotationConfig annotationConfig = new AnnotationConfig();
+        // 进去
         annotationConfig.appendAnnotation(Config.class, config);
+        // 上面的方法会把config注解对象里面的属性值填充annotationConfig的对应属性中，此时从annotationConfig都能取出来了
         Assertions.assertSame(Greeting.class, annotationConfig.getInterface());
         Assertions.assertEquals("f1, f2", annotationConfig.getFilter());
         Assertions.assertEquals("l1, l2", annotationConfig.getListener());
         Assertions.assertEquals(2, annotationConfig.getParameters().size());
         Assertions.assertEquals("v1", annotationConfig.getParameters().get("k1"));
         Assertions.assertEquals("v2", annotationConfig.getParameters().get("k2"));
+        // toString方法进去
         assertThat(annotationConfig.toString(), Matchers.containsString("filter=\"f1, f2\" "));
         assertThat(annotationConfig.toString(), Matchers.containsString("listener=\"l1, l2\" "));
     }
@@ -290,32 +321,53 @@ public class AbstractConfigTest {
     @Test
     public void testRefreshAll() {
         try {
+
             OverrideConfig overrideConfig = new OverrideConfig();
             overrideConfig.setAddress("override-config://127.0.0.1:2181");
             overrideConfig.setProtocol("override-config");
-            overrideConfig.setEscape("override-config://");
+            overrideConfig.setEscape("override-config://"); // 3 ConfigConfigurationAdapter（OverrideConfig的属性会填充到此Configuration）
             overrideConfig.setExclude("override-config");
+            // dubbo.override.prefix: 7 ConfigConfigurationAdapter
+
+            // toString方法去看下
+            // <dubbo:override escape="override-config://" exclude="override-config" address="override-config://127.0.0.1:2181" protocol="override-config" />
+
 
             Map<String, String> external = new HashMap<>();
             external.put("dubbo.override.address", "external://127.0.0.1:2181");
             // @Parameter(exclude=true)
-            external.put("dubbo.override.exclude", "external");
+            external.put("dubbo.override.exclude", "external"); // 4 InmemoryConfiguration（external会填充到此Configuration）
             // @Parameter(key="key1", useKeyAsProperty=false)
-            external.put("dubbo.override.key", "external");
+            external.put("dubbo.override.key", "external");// 5 InmemoryConfiguration
             // @Parameter(key="key2", useKeyAsProperty=true)
             external.put("dubbo.override.key2", "external");
+
+            // 额外说一下上面的@Parameter(..useKeyAsProperty=false..)的含义，可以去看下OverrideConfig类的，正好有两个getXx方法
+            // 上面的useKeyAsProperty一个是true，一个是false，他们其实影响ConfigConfigurationAdapter的metaData这个map的key！
+            // 因为metaData的生成是依赖AbstractConfig的getMetaData方法调用，getMetaData方法内部就会处理这个useKeyAsProperty，
+            // 如果为true，那么就使用@Parameter(key=xx)的xx作为metaData 这个 map的key，否则根据属性本身生成key
+            // 因为是做refresh方法内部的属性覆盖实验，所以后两个external.put的key是特意指定的（这里就不展开了...）
+
+
+            // getEnvironment内部就会创建Environment对象，注意其构造方法。external这个map会赋值给Environment对象的externalConfigurationMap属性
             ApplicationModel.getEnvironment().setExternalConfigMap(external);
+            // 内部其实就是把externalConfigurationMap属性填充InmemoryConfiguration类型对象（属性名称叫externalConfiguration）的store属性中，进去
             ApplicationModel.getEnvironment().initialize();
 
-            System.setProperty("dubbo.override.address", "system://127.0.0.1:2181");
-            System.setProperty("dubbo.override.protocol", "system");
+            System.setProperty("dubbo.override.address", "system://127.0.0.1:2181"); // 1 SystemConfiguration
+            System.setProperty("dubbo.override.protocol", "system");// 2 SystemConfiguration
             // this will not override, use 'key' instead, @Parameter(key="key1", useKeyAsProperty=false)
             System.setProperty("dubbo.override.key1", "system");
-            System.setProperty("dubbo.override.key2", "system");
+            System.setProperty("dubbo.override.key2", "system");// 6 SystemConfiguration
 
+            // 前面之所以是dubbo.override作为prefix是因为AbstractConfig的getPrefix是有默认值的，这个会作为CompositeConfiguration的prefix值
+            // refresh内部属性获取的顺序在上面用数字写出来了，以及是从哪个Configuration取出来的
             // Load configuration from  system properties -> externalConfiguration -> RegistryConfig -> dubbo.properties
             overrideConfig.refresh();
 
+            // 前面refresh内部触发了对应的setXx方法，将属性赋了值，但是注意Configuration的优先级，先前声明的key被后面声明（但是优先级更高的）同名key覆盖掉
+            // 就比如代码最开始先声明overrideConfig.address属性的值肯定是"override-config://127.0.0.1:2181"，但是SystemConfiguration的优先级比
+            // ConfigConfigurationAdapter的高，所以address的值肯定是dubbo.override.address
             Assertions.assertEquals("system://127.0.0.1:2181", overrideConfig.getAddress());
             Assertions.assertEquals("system", overrideConfig.getProtocol());
             Assertions.assertEquals("override-config://", overrideConfig.getEscape());
@@ -330,6 +382,7 @@ public class AbstractConfigTest {
         }
     }
 
+    // 前面 testRefreshAll 这里 testRefreshSystem肯定更好理解了
     @Test
     public void testRefreshSystem() {
         try {
@@ -345,11 +398,17 @@ public class AbstractConfigTest {
 
             overrideConfig.refresh();
 
+            // 下两行对应的属性虽然在OverrideConfig配置了（在refresh内部填充到ConfigConfigurationAdapter），
+            // 但是SystemConfiguration的优先级更高，所以同名key优先取其的
             Assertions.assertEquals("system://127.0.0.1:2181", overrideConfig.getAddress());
             Assertions.assertEquals("system", overrideConfig.getProtocol());
-            Assertions.assertEquals("override-config://", overrideConfig.getEscape());
+            // 只在SystemConfiguration配置过
             Assertions.assertEquals("system", overrideConfig.getKey());
+            // 只在OverrideConfig（ConfigConfigurationAdapter）配置过
+            Assertions.assertEquals("override-config://", overrideConfig.getEscape());
+
         } finally {
+            // 恢复现场
             System.clearProperty("dubbo.override.address");
             System.clearProperty("dubbo.override.protocol");
             System.clearProperty("dubbo.override.key1");
@@ -357,6 +416,7 @@ public class AbstractConfigTest {
         }
     }
 
+    // easy
     @Test
     public void testRefreshProperties() throws Exception {
         try {
@@ -382,6 +442,7 @@ public class AbstractConfigTest {
         }
     }
 
+    // easy
     @Test
     public void testRefreshExternal() {
         try {
@@ -406,6 +467,8 @@ public class AbstractConfigTest {
 
             overrideConfig.refresh();
 
+            // 有的key在 ConfigConfigurationAdapter（OverrideConfig）和InmemoryConfiguration（external map）同名了，
+            // 但是和InmemoryConfiguration的优先级更高，所以取其的
             Assertions.assertEquals("external://127.0.0.1:2181", overrideConfig.getAddress());
             Assertions.assertEquals("external", overrideConfig.getProtocol());
             Assertions.assertEquals("external://", overrideConfig.getEscape());
@@ -465,8 +528,10 @@ public class AbstractConfigTest {
 
 
             Map<String, String> external = new HashMap<>();
+            // refresh内部StringUtils.parseParameters(value)会处理成map
             external.put("dubbo.override.parameters", "[{key3:value3},{key4:value4},{key2:value5}]");
             ApplicationModel.getEnvironment().setExternalConfigMap(external);
+            // 内部会把external填充到 InmemoryConfiguration externalConfiguration对象的store属性中
             ApplicationModel.getEnvironment().initialize();
 
             ConfigCenterConfig configCenter = new ConfigCenterConfig();
@@ -475,15 +540,20 @@ public class AbstractConfigTest {
             overrideConfig.refresh();
 
             Assertions.assertEquals("value1", overrideConfig.getParameters().get("key1"));
+            // 上面配置了两个key2，不过refresh内部会用第二个key的v覆盖掉前一个
             Assertions.assertEquals("value5", overrideConfig.getParameters().get("key2"));
             Assertions.assertEquals("value3", overrideConfig.getParameters().get("key3"));
             Assertions.assertEquals("value4", overrideConfig.getParameters().get("key4"));
 
+            // SystemConfiguration的优先级更高了，肯定取其的，而不会取InmemoryConfiguration（external）的了
             System.setProperty("dubbo.override.parameters", "[{key3:value6}]");
             overrideConfig.refresh();
-
+            // 所以这里的key3 = value6
             Assertions.assertEquals("value6", overrideConfig.getParameters().get("key3"));
             Assertions.assertEquals("value4", overrideConfig.getParameters().get("key4"));
+            // 注意了InmemoryConfiguration的parameters参数还是会取的，所以下面通过，我们说SystemConfiguration的优先级更高是体现在，前后
+            // 两种Configuration有key值相同的情况取优先级更高的val
+            Assertions.assertEquals("value5",overrideConfig.getParameters().get("key2"));
         } finally {
             System.clearProperty("dubbo.override.parameters");
             ApplicationModel.getEnvironment().clearExternalConfigs();
@@ -530,6 +600,7 @@ public class AbstractConfigTest {
         overrideConfig.setEscape("override-config://");
         overrideConfig.setExclude("override-config");
 
+        // 进去
         Map<String, String> metaData = overrideConfig.getMetaData();
         Assertions.assertEquals("override-config://127.0.0.1:2181", metaData.get("address"));
         Assertions.assertEquals("override-config", metaData.get("protocol"));
@@ -541,16 +612,22 @@ public class AbstractConfigTest {
 
     @Test
     public void testEquals() {
+        // 先去看AbstractConfig的equals方法
+
         ApplicationConfig application1 = new ApplicationConfig();
         ApplicationConfig application2 = new ApplicationConfig();
         application1.setName("app1");
         application2.setName("app2");
+        // 不等，因为equals内部必须要保证name相同
         Assertions.assertNotEquals(application1, application2);
+
+
         application1.setName("sameName");
         application2.setName("sameName");
         Assertions.assertEquals(application1, application2);
 
         ProtocolConfig protocol1 = new ProtocolConfig();
+        // 因为其getHost方法上面@Parameter(excluded = true)，不参与一些属性的操作，比如内部的equals，所以即使这个属性不等，但是其他属性是等的，那么还是equals的
         protocol1.setHost("127.0.0.1");// excluded
         protocol1.setName("dubbo");
         ProtocolConfig protocol2 = new ProtocolConfig();
@@ -560,13 +637,14 @@ public class AbstractConfigTest {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.ANNOTATION_TYPE})
+    @Target({ElementType.ANNOTATION_TYPE})// 元注解
     public @interface ConfigField {
         String value() default "";
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+    //@ConfigField  // 元注解也可以放在这里
     public @interface Config {
         Class<?> interfaceClass() default void.class;
 
@@ -578,6 +656,7 @@ public class AbstractConfigTest {
 
         String[] parameters() default {};
 
+        // 元注解也可以作为返回值
         ConfigField[] configFields() default {};
 
         ConfigField configField() default @ConfigField;

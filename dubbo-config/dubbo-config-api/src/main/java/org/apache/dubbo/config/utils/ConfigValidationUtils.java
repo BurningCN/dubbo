@@ -552,9 +552,11 @@ public class ConfigValidationUtils {
             String[] values = value.split("\\s*[,]+\\s*");
             for (String v : values) {
                 if (v.startsWith(REMOVE_VALUE_PREFIX)) {
+                    // 截取-后面的字符串
                     v = v.substring(1);
                 }
                 if (DEFAULT_KEY.equals(v)) {
+                    // default不处理
                     continue;
                 }
                 if (!ExtensionLoader.getExtensionLoader(type).hasExtension(v)) {
@@ -565,10 +567,12 @@ public class ConfigValidationUtils {
     }
 
     public static void checkLength(String property, String value) {
+        // value的长度不超过200
         checkProperty(property, value, MAX_LENGTH, null);
     }
 
     public static void checkPathLength(String property, String value) {
+        // 200
         checkProperty(property, value, MAX_PATH_LENGTH, null);
     }
 

@@ -890,6 +890,7 @@ public final class StringUtils {
         return buf.toString();
     }
 
+    // 按照驼峰解析且如果有多个词的话用split连接
     public static String camelToSplitName(String camelName, String split) {
         if (isEmpty(camelName)) {
             return camelName;
@@ -1067,6 +1068,7 @@ public final class StringUtils {
      * @param rawParameters format like '[{a:b},{c:d}]'
      * @return
      */
+    // 主要是构建一个map，比如上面的例子那么就是map里有两个entry
     public static Map<String, String> parseParameters(String rawParameters) {
 
         Matcher matcher = PARAMETERS_PATTERN.matcher(rawParameters);

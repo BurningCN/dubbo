@@ -71,7 +71,6 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
                 this.setAppExternalConfigMap(config.getAppExternalConfiguration());
             }
         });
-
         // 下两个都是InmemoryConfiguration类型对象，把参数赋值到里面的store属性
         this.externalConfiguration.setProperties(externalConfigurationMap);
         this.appExternalConfiguration.setProperties(appExternalConfigurationMap);
@@ -117,12 +116,17 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
      * @param config
      * @return
      */
+    // 看上面注释
     public synchronized CompositeConfiguration getPrefixedConfiguration(AbstractConfig config) {
+        // 创建一个复合配置CompositeConfiguration，config.getPrefix()的值有默认值（dubbo.xx，去看下），进去
         CompositeConfiguration prefixedConfiguration = new CompositeConfiguration(config.getPrefix(), config.getId());
+        // 将config的一些属性信息填充到ConfigConfigurationAdapter，进去
         Configuration configuration = new ConfigConfigurationAdapter(config);
+        // 默认true
         if (this.isConfigCenterFirst()) {
             // The sequence would be: SystemConfiguration -> AppExternalConfiguration -> ExternalConfiguration -> AbstractConfig -> PropertiesConfiguration
             // Config center has the highest priority
+            // 以下几个变量都在构造方法里面得到赋值的（除configuration）
             prefixedConfiguration.addConfiguration(systemConfiguration);
             prefixedConfiguration.addConfiguration(environmentConfiguration);
             prefixedConfiguration.addConfiguration(appExternalConfiguration);

@@ -57,7 +57,7 @@ public interface MethodUtils {
                 && !"set".equals(method.getName())
                 && Modifier.isPublic(method.getModifiers())
                 && method.getParameterCount() == 1
-                // 进去
+                // set方法要满足参数isPrimitive，进去
                 && ClassUtils.isPrimitive(method.getParameterTypes()[0]);
     }
 
@@ -87,6 +87,7 @@ public interface MethodUtils {
      * @return whether the given method is meta method
      */
     public static boolean isMetaMethod(Method method) {
+        // 其实就是判断是不是getXX(或者isXX)方法
         String name = method.getName();
         if (!(name.startsWith("get") || name.startsWith("is"))) {
             return false;

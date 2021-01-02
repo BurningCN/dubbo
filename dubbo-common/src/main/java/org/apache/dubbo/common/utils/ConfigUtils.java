@@ -164,7 +164,7 @@ public class ConfigUtils {
 
     public static Properties getProperties() {
         // PROPERTIES是private static volatile
-        // 使用volatile+syn确保PROPERTIES的单例
+        // 使用volatile+syn确保PROPERTIES的单例 （ 实现了延迟加载的功能，因为加载文件内容涉及到io操作，相对耗时）
         if (PROPERTIES == null) {
             synchronized (ConfigUtils.class) {
                 if (PROPERTIES == null) {
@@ -174,7 +174,7 @@ public class ConfigUtils {
                         // 系统属性获取不到的话，从环境变量获取
                         path = System.getenv(CommonConstants.DUBBO_PROPERTIES_KEY);
                         if (path == null || path.length() == 0) {
-                            // 都获取不到赋值默认的
+                            // 都获取不到赋值默认的，即dubbo.properties
                             path = CommonConstants.DEFAULT_DUBBO_PROPERTIES;
                         }
                     }

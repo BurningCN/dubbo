@@ -37,7 +37,7 @@ public class ConfigConfigurationAdapter implements Configuration {
         Map<String, String> configMetadata = config.getMetaData();
         metaData = new HashMap<>(configMetadata.size());
         for (Map.Entry<String, String> entry : configMetadata.entrySet()) {
-            // 获取Config的prefix和id  这部分建议放到for外面
+            // 获取AbstractConfig的prefix和id  这部分建议放到for外面
             String prefix = config.getPrefix().endsWith(".") ? config.getPrefix() : config.getPrefix() + ".";
             String id = StringUtils.isEmpty(config.getId()) ? "" : config.getId() + ".";
             // prefix+id+key

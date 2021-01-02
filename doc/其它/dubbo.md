@@ -48,5 +48,15 @@
 
 **025.从getXXX方法提取XXX提取以及根据驼峰转为split分割的字符串。** 详见calculatePropertyFromGetter和camelToSplitName。
 
-**026.值结果参数。**new一个对象，作为参数传入到一个不带返回值的方法，内部会对这个参数填值。ApplicationConfigTest.testName测程序
+**026.值结果参数。**new一个对象，作为参数传入到一个不带返回值的方法，内部会对这个参数填值。ApplicationConfigTest.testName测程序。
+
+**027.CompositeConfiguration的设计+AbstractConfig的refresh操作。**CompositeConfiguration是一种组合不同场景Configuration的Configuration；AbstractConfig的refresh操作，把CompositeConfiguration的一些参数赋值给AbstractConfig的一些属性赋值，且考虑到不同场景Configuration的优先级，同名key优先取谁的值。
+
+**028.一些恢复现场的操作。**test程序System.setProperty(x,y)在最后一定clearProperty、filed.isAccessable() = false的时候设置为true最后在还原为false。
+
+**029.Properties和文件的交互。**properties.load(this.getClass().getResourceAsStream("/dubbo.properties"));
+
+**030.两个AbstractConfig的子类对象是否equals的逻辑。**name相同、两个对象同名同参的getXx方法的返回值相同。还有个小技巧就是如果@parameter注解带有exclued为true，那么不参与比较。
+
+**031.延迟加载。**compositeConfiguration内部匹配到PropertiesConfiguration有属性xx参数的话，在PropertiesConfiguration.getInternalProperty内部有延迟加载模式，因为加载文件内容涉及到io操作，相对耗时。
 

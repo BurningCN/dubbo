@@ -127,6 +127,7 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
     // ConfigCenterConfig correlative methods
 
     public void addConfigCenter(ConfigCenterConfig configCenter) {
+        // 进去
         addConfig(configCenter);
     }
 

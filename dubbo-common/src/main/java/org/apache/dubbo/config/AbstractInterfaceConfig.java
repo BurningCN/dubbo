@@ -582,7 +582,9 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             ConfigManager configManager = ApplicationModel.getConfigManager();
             Collection<ConfigCenterConfig> configs = configManager.getConfigCenters();
             if (CollectionUtils.isEmpty(configs)
+                    // noneMatch api 注意下
                     || configs.stream().noneMatch(existed -> existed.equals(configCenter))) {
+                // 进去
                 configManager.addConfigCenter(configCenter);
             }
         }

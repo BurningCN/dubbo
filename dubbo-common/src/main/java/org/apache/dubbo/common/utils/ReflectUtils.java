@@ -955,6 +955,7 @@ public final class ReflectUtils {
         if (parameterTypes != null && parameterTypes.length > 0) {
             signature += StringUtils.join(parameterTypes);
         }
+        // 反射耗性能，加了缓存
         Method method = SIGNATURE_METHODS_CACHE.get(signature);
         if (method != null) {
             return method;
@@ -980,6 +981,7 @@ public final class ReflectUtils {
             for (int i = 0; i < parameterTypes.length; i++) {
                 types[i] = ReflectUtils.name2class(parameterTypes[i]);
             }
+            // 名称+参数类型
             method = clazz.getMethod(methodName, types);
 
         }
