@@ -217,7 +217,7 @@ public class DubboBootstrap extends GenericEventListener {
         ShutdownHookCallbacks.INSTANCE.addCallback(new ShutdownHookCallback() {
             @Override
             public void callback() throws Throwable {
-                //
+                // 进去
                 DubboBootstrap.this.destroy();
             }
         });
@@ -1263,6 +1263,7 @@ public class DubboBootstrap extends GenericEventListener {
     public void destroy() {
         if (destroyLock.tryLock()) {
             try {
+                // 进去
                 DubboShutdownHook.destroyAll();
 
                 if (started.compareAndSet(true, false)

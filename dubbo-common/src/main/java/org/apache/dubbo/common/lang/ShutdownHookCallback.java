@@ -24,6 +24,7 @@ import org.apache.dubbo.common.extension.SPI;
  * @since 2.7.5
  */
 // OK
+// 可以配置优先级，子类重写getPriority即可
 @SPI
 public interface ShutdownHookCallback extends Prioritized {
 

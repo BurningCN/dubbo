@@ -30,6 +30,8 @@ import static org.apache.dubbo.common.function.ThrowableAction.execute;
  *
  * @since 2.7.5
  */
+// OK
+// 上面英文注解很好懂
 public class ShutdownHookCallbacks {
 
     // static修饰 单例
@@ -44,6 +46,7 @@ public class ShutdownHookCallbacks {
         loadCallbacks();
     }
 
+    // gx
     public ShutdownHookCallbacks addCallback(ShutdownHookCallback callback) {
         // sync锁
         synchronized (this) {
@@ -53,8 +56,10 @@ public class ShutdownHookCallbacks {
         return this;
     }
 
+    // gx
     public Collection<ShutdownHookCallback> getCallbacks() {
         synchronized (this) {
+            // 排个序
             sort(this.callbacks);
             return this.callbacks;
         }
@@ -66,13 +71,14 @@ public class ShutdownHookCallbacks {
         }
     }
 
+    // gx
     private void loadCallbacks() {
         // 获取ShutdownHookCallback加载器，看下ShutdownHookCallback接口
         // ExtensionLoader类是多实例的，不是所有type公用的，注意了。一个type（@SPI接口）一个ExtensionLoader。
         ExtensionLoader<ShutdownHookCallback> loader =
                 ExtensionLoader.getExtensionLoader(ShutdownHookCallback.class);
-        // 获取所有实例，并调用addCallback（其实就是获取ShutdownHookCallback的子类，存到该类的list容器）
-        // 获取其下的所有子类实例，进去
+        // 获取所有实例，并调用addCallback（其实就是获取根据SPI机制ShutdownHookCallback的子类，存到该类的list容器）
+        //  目前测试程序有一个，可以看下ShutdownHookCallback的PSI文件
         loader.getSupportedExtensionInstances().forEach(this::addCallback);
     }
 

@@ -21,6 +21,7 @@ package org.apache.dubbo.common.lang;
  *
  * @since 2.7.5
  */
+// OK
 public class DefaultShutdownHookCallback implements ShutdownHookCallback {
 
     private boolean executed = false;
@@ -30,6 +31,7 @@ public class DefaultShutdownHookCallback implements ShutdownHookCallback {
         executed = true;
     }
 
+    // 该方法验证上面的callback方法有无被调用
     public boolean isExecuted() {
         return executed;
     }

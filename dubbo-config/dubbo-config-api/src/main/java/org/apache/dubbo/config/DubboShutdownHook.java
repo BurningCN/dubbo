@@ -33,17 +33,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * The shutdown hook thread to do the clean up stuff.
  * This is a singleton in order to ensure there is only one shutdown hook registered.
- * Because {@link ApplicationShutdownHooks} use {@link java.util.IdentityHashMap}
+ * Because {@link //ApplicationShutdownHooks} use {@link java.util.IdentityHashMap}
  * to store the shutdown hooks.
  */
+// OK
 public class DubboShutdownHook extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(DubboShutdownHook.class);
 
-    // 进去
+    // 线程对象单例模式（饿汉），进去
     private static final DubboShutdownHook DUBBO_SHUTDOWN_HOOK = new DubboShutdownHook("DubboShutdownHook");
 
-    // ShutdownHookCallbacks.INSTANCE，是一个单例，单例模式使用的是饿汉，进去
+    // 回调对象单例模式（饿汉），进去
     private final ShutdownHookCallbacks callbacks = ShutdownHookCallbacks.INSTANCE;
 
     /**
@@ -58,10 +59,12 @@ public class DubboShutdownHook extends Thread {
 
     private final EventDispatcher eventDispatcher = EventDispatcher.getDefaultExtension();
 
+    // 单例模式-需要设计成私有构造防止外部直接new
     private DubboShutdownHook(String name) {
         super(name);
     }
 
+    // 单例模式-给外界访问内部实例的公有方法
     public static DubboShutdownHook getDubboShutdownHook() {
         return DUBBO_SHUTDOWN_HOOK;
     }
@@ -71,6 +74,8 @@ public class DubboShutdownHook extends Thread {
         if (logger.isInfoEnabled()) {
             logger.info("Run shutdown hook now.");
         }
+        // 该钩子的主要作用就是在jvm关闭的时候触发回调函数以及销毁一些资源，只是doDestroy目前来看仅仅是派发了事件，而该类的destroyAll方法调用是通过
+        // 注册callback（在callback内部调用的），可以跟下后面register方法的调用点就知道了
 
         // 进去
         callback();
@@ -93,6 +98,7 @@ public class DubboShutdownHook extends Thread {
     /**
      * Register the ShutdownHook
      */
+    // gx
     public void register() {
         // 只注册一次
         if (registered.compareAndSet(false, true)) {
@@ -100,7 +106,7 @@ public class DubboShutdownHook extends Thread {
             DubboShutdownHook dubboShutdownHook = getDubboShutdownHook();
             // 添加dubboShutdownHook，addShutdownHook本身就需要一个线程对象，然后再jvm关闭的时候会调用其run方法。去看run
             Runtime.getRuntime().addShutdownHook(dubboShutdownHook);
-            //
+            // 派遣、发送"DubboShutdownHook Registered Event"事件
             dispatch(new DubboShutdownHookRegisteredEvent(dubboShutdownHook));
         }
     }
@@ -109,6 +115,7 @@ public class DubboShutdownHook extends Thread {
      * Unregister the ShutdownHook
      */
     public void unregister() {
+        // 对比上面的方法
         if (registered.compareAndSet(true, false)) {
             DubboShutdownHook dubboShutdownHook = getDubboShutdownHook();
             Runtime.getRuntime().removeShutdownHook(dubboShutdownHook);

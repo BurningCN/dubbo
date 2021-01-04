@@ -61,3 +61,8 @@
 **031.延迟加载。**compositeConfiguration内部匹配到PropertiesConfiguration有属性xx参数的话，在PropertiesConfiguration.getInternalProperty内部有延迟加载模式，因为加载文件内容涉及到io操作，相对耗时。
 
 **032.isValid方法，动态指定是否可用。**checkRegistry方法：registries里面有很多对象，如果暂时不想某些类型的注册中心对象生效，可以isValid置为false
+
+**033.ConfigManager的read、write方法。**ConfigManager内部关于configsCache的读写业务逻辑操作都封装了runnable任务/callable，并传给write或者后面的read，并且write、read方法内部使用读写锁保护了configCache。
+
+**034.DubboShutdownHook。**在DubboBootstrap的构造方法内部向jvm注册了一个DubboShutdownHook，其run方法主要是执行所有注册的回调以及资源清理动作（还涉及到一些事件派发）。回调的注册在DubboShuthookCallbacks类，填充了很多DubboShuthookCallback(且有优先级)，并根据spi能加载配置的子类对象。注：DubboShutdownHook、DubboShuthookCallbacks都是饿汉单例的。
+
