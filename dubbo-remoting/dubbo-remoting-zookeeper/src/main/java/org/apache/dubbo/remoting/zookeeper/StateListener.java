@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.remoting.zookeeper;
 
+// OK
 public interface StateListener {
 
     int SESSION_LOST = 0;

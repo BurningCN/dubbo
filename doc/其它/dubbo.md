@@ -64,5 +64,10 @@
 
 **033.ConfigManager的read、write方法。**ConfigManager内部关于configsCache的读写业务逻辑操作都封装了runnable任务/callable，并传给write或者后面的read，并且write、read方法内部使用读写锁保护了configCache。
 
-**034.DubboShutdownHook。**在DubboBootstrap的构造方法内部向jvm注册了一个DubboShutdownHook，其run方法主要是执行所有注册的回调以及资源清理动作（还涉及到一些事件派发）。回调的注册在DubboShuthookCallbacks类，填充了很多DubboShuthookCallback(且有优先级)，并根据spi能加载配置的子类对象。注：DubboShutdownHook、DubboShuthookCallbacks都是饿汉单例的。
+**034.DubboShutdownHook。**在DubboBootstrap的构造方法内部向jvm注册了一个DubboShutdownHook，其run方法主要是执行所有注册的回调以及资源清理动作（还涉及到一些事件派发）。回调的注册在DubboShuthookCallbacks类，填充了很多DubboShuthookCallback(且有优先级)，并根据spi能加载配置的子类对象。注：DubboShutdownHook、DubboShuthookCallbacks都是饿汉单例的。DubboBootStrap是双重检查的单例模式。
 
+**035.类结构设计，接口->Abstract类->实现类**。Abstract里面可以放置一些公共逻辑，实现模板方法模式。比如ZookeeperClient->AbstractZookeeperClient->CuratorZookeeperClient，ZookeeperTransporter->AbstractZookeeperTransporter->CuratorZookeeperTransporter等。
+
+**036.观察者模式。**详见AbstractZookeeperClient的stateChanged方法。被观察者的状态变化，调用所有观察者的方法
+
+036.Curator连接zk的客户端。

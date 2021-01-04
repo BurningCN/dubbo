@@ -36,6 +36,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 /**
  * AbstractZookeeperTransporterTest
  */
+// OK
 public class AbstractZookeeperTransporterTest {
     private TestingServer zkServer;
     private ZookeeperClient zookeeperClient;
@@ -46,6 +47,7 @@ public class AbstractZookeeperTransporterTest {
     public void setUp() throws Exception {
         zkServerPort = NetUtils.getAvailablePort();
         zkServer = new TestingServer(zkServerPort, true);
+        zkServerPort = 2181;
         zookeeperClient = new CuratorZookeeperTransporter().connect(URL.valueOf("zookeeper://127.0.0.1:" +
                 zkServerPort + "/service"));
         abstractZookeeperTransporter = new CuratorZookeeperTransporter();

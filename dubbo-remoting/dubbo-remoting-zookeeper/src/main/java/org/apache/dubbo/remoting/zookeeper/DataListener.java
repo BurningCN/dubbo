@@ -19,6 +19,7 @@ package org.apache.dubbo.remoting.zookeeper;
 /**
  * 2019-02-26
  */
+// OK
 public interface DataListener {
 
     void dataChanged(String path, Object value, EventType eventType);

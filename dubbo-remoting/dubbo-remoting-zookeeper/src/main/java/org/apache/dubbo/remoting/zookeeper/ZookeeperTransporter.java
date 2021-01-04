@@ -21,6 +21,10 @@ import org.apache.dubbo.common.extension.Adaptive;
 import org.apache.dubbo.common.extension.SPI;
 import org.apache.dubbo.remoting.Constants;
 
+
+// OK
+// ZookeeperClient->AbstractZookeeperClient->CuratorZookeeperClient
+// ZookeeperTransporter->AbstractZookeeperTransporter->CuratorZookeeperTransporter
 @SPI("curator")
 public interface ZookeeperTransporter {
 

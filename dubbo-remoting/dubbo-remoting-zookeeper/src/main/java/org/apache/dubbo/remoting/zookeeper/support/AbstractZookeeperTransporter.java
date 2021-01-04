@@ -54,6 +54,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
     public ZookeeperClient connect(URL url) {
         ZookeeperClient zookeeperClient;
         // address format: {[username:password@]address}
+        // 进去
         List<String> addressList = getURLBackupAddress(url);
         // The field define the zookeeper server , including protocol, host, port, username, password
         if ((zookeeperClient = fetchAndUpdateZookeeperClientCache(addressList)) != null && zookeeperClient.isConnected()) {
@@ -66,7 +67,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
                 logger.info("find valid zookeeper client from the cache for address: " + url);
                 return zookeeperClient;
             }
-
+            // 进去
             zookeeperClient = createZookeeperClient(url);
             logger.info("No valid zookeeper client found from cache, therefore create a new client for url. " + url);
             writeToClientMap(addressList, zookeeperClient);
@@ -99,6 +100,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
             }
         }
         if (zookeeperClient != null && zookeeperClient.isConnected()) {
+            // 进去
             writeToClientMap(addressList, zookeeperClient);
         }
         return zookeeperClient;
@@ -110,6 +112,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
      * @param url such as:zookeeper://127.0.0.1:2181?127.0.0.1:8989,127.0.0.1:9999
      * @return such as 127.0.0.1:2181,127.0.0.1:8989,127.0.0.1:9999
      */
+    // 看上面注释（因为连接ZK的url很有可能是指定了多个address）
     List<String> getURLBackupAddress(URL url) {
         List<String> addressList = new ArrayList<String>();
         addressList.add(url.getAddress());

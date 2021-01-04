@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 
+// OK
 public class CuratorZookeeperClientTest {
     private TestingServer zkServer;
     private CuratorZookeeperClient curatorClient;
@@ -50,21 +51,28 @@ public class CuratorZookeeperClientTest {
     @BeforeEach
     public void setUp() throws Exception {
         int zkServerPort = NetUtils.getAvailablePort();
+        // 创建zk服务端
         zkServer = new TestingServer(zkServerPort, true);
+        // 如果自己本地开启了zkServer的话，可以如下手动设置为默认的2181
+        zkServerPort = 2181;
+        // 连接zk服务端，返回client，进去
         curatorClient = new CuratorZookeeperClient(URL.valueOf("zookeeper://127.0.0.1:" +
                 zkServerPort + "/org.apache.dubbo.registry.RegistryService"));
         client = CuratorFrameworkFactory.newClient(zkServer.getConnectString(), new ExponentialBackoffRetry(1000, 3));
         client.start();
     }
 
+    // easy
     @Test
     public void testCheckExists() {
+        // 看这个例子，难不成保存到zk的微服务信息都是这样的？应该是的
         String path = "/dubbo/org.apache.dubbo.demo.DemoService/providers";
         curatorClient.create(path, false);
         assertThat(curatorClient.checkExists(path), is(true));
         assertThat(curatorClient.checkExists(path + "/noneexits"), is(false));
     }
 
+    // easy
     @Test
     public void testChildrenPath() {
         String path = "/dubbo/org.apache.dubbo.demo.DemoService/providers";
@@ -81,6 +89,7 @@ public class CuratorZookeeperClientTest {
         String path = "/dubbo/org.apache.dubbo.demo.DemoService/providers";
         curatorClient.create(path, false);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
+        // 添加path节点孩子变化的监听
         curatorClient.addTargetChildListener(path, new CuratorZookeeperClient.CuratorWatcherImpl() {
 
             @Override
@@ -88,6 +97,7 @@ public class CuratorZookeeperClientTest {
                 countDownLatch.countDown();
             }
         });
+        // 在path下创建了一个孩子，肯定会触发上面的Process方法
         curatorClient.createPersistent(path + "/provider1");
         countDownLatch.await();
     }
@@ -96,11 +106,13 @@ public class CuratorZookeeperClientTest {
     @Test
     public void testWithInvalidServer() {
         Assertions.assertThrows(IllegalStateException.class, () -> {
+            // url有误
             curatorClient = new CuratorZookeeperClient(URL.valueOf("zookeeper://127.0.0.1:1/service"));
             curatorClient.create("/testPath", true);
         });
     }
 
+    // easy
     @Test
     public void testWithStoppedServer() throws IOException {
         Assertions.assertThrows(IllegalStateException.class, () -> {
@@ -113,16 +125,20 @@ public class CuratorZookeeperClientTest {
     @Test
     public void testRemoveChildrenListener() {
         ChildListener childListener = mock(ChildListener.class);
+        // 进去
         curatorClient.addChildListener("/children", childListener);
+        // 进去
         curatorClient.removeChildListener("/children", childListener);
     }
 
     @Test
     public void testCreateExistingPath() {
         curatorClient.create("/pathOne", false);
+        // 进去
         curatorClient.create("/pathOne", false);
     }
 
+    // easy
     @Test
     public void testConnectedStatus() {
         curatorClient.createEphemeral("/testPath");
@@ -138,6 +154,7 @@ public class CuratorZookeeperClientTest {
         assertThat(curatorClient.checkExists(path), is(false));
         assertNull(curatorClient.getContent(path));
 
+        // 进去
         curatorClient.create(path, content, false);
         assertThat(curatorClient.checkExists(path), is(true));
         assertEquals(curatorClient.getContent(path), content);
@@ -158,6 +175,7 @@ public class CuratorZookeeperClientTest {
 
     @AfterEach
     public void tearDown() throws Exception {
+        // 进去
         curatorClient.close();
         zkServer.stop();
     }
@@ -172,6 +190,7 @@ public class CuratorZookeeperClientTest {
         String valueFromCache = curatorClient.getContent(path + "/d.json");
         Assertions.assertEquals(value, valueFromCache);
         final AtomicInteger atomicInteger = new AtomicInteger(0);
+        // 注册节点数据变更的监听
         curatorClient.addTargetDataListener(listenerPath, new CuratorZookeeperClient.CuratorWatcherImpl() {
             @Override
             public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
@@ -182,8 +201,10 @@ public class CuratorZookeeperClientTest {
 
         valueFromCache = curatorClient.getContent(path + "/d.json");
         Assertions.assertNotNull(valueFromCache);
+        // listenerPath节点的孩子节点数据变更，前面 childEvent就会触发，输出和计数器++
         curatorClient.getClient().setData().forPath(path + "/d.json", "sdsdf".getBytes());
         curatorClient.getClient().setData().forPath(path + "/d.json", "dfsasf".getBytes());
+        // delete操作也会触发前面回调
         curatorClient.delete(path + "/d.json");
         curatorClient.delete(path);
         valueFromCache = curatorClient.getContent(path + "/d.json");

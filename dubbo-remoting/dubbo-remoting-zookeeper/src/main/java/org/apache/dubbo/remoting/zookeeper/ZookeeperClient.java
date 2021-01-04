@@ -21,6 +21,10 @@ import org.apache.dubbo.common.URL;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+
+// OK
+// ZookeeperClient->AbstractZookeeperClient->CuratorZookeeperClient
+// ZookeeperTransporter->AbstractZookeeperTransporter->CuratorZookeeperTransporter
 public interface ZookeeperClient {
 
     void create(String path, boolean ephemeral);

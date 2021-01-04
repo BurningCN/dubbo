@@ -21,6 +21,7 @@ import org.apache.zookeeper.Watcher;
 /**
  * 2019-02-26
  */
+// OK
 public enum EventType {
     None(-1),
     NodeCreated(1),

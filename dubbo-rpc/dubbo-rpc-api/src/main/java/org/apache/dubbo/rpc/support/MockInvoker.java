@@ -81,8 +81,10 @@ final public class MockInvoker<T> implements Invoker<T> {
             value = mock;
         } else if (StringUtils.isNumeric(mock, false)) {
             value = JSON.parse(mock);
+            // 识别为json，转化为 map
         } else if (mock.startsWith("{")) {
             value = JSON.parseObject(mock, Map.class);
+            // 识别为json，转化为 list
         } else if (mock.startsWith("[")) {
             value = JSON.parseObject(mock, List.class);
         } else {
@@ -178,13 +180,16 @@ final public class MockInvoker<T> implements Invoker<T> {
 
     @SuppressWarnings("unchecked")
     public static Object getMockObject(String mockService, Class serviceType) {
+        // 是否是默认
         boolean isDefault = ConfigUtils.isDefault(mockService);
         if (isDefault) {
+            // 是的话 拼接Mock作为"实现类"的全限定名
             mockService = serviceType.getName() + "Mock";
         }
 
         Class<?> mockClass;
         try {
+            // 加载类
             mockClass = ReflectUtils.forName(mockService);
         } catch (Exception e) {
             if (!isDefault) {// does not check Spring bean if it is default config.
@@ -200,12 +205,14 @@ final public class MockInvoker<T> implements Invoker<T> {
                     + ", please check if there's mock class or instance implementing interface "
                     + serviceType.getName(), e);
         }
+        // 是否是接口的实现类
         if (mockClass == null || !serviceType.isAssignableFrom(mockClass)) {
             throw new IllegalStateException("The mock class " + mockClass.getName() +
                     " not implement interface " + serviceType.getName());
         }
 
         try {
+            // 创建实例并返回
             return mockClass.newInstance();
         } catch (InstantiationException e) {
             throw new IllegalStateException("No default constructor from mock class " + mockClass.getName(), e);
