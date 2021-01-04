@@ -43,12 +43,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.5
  */
+// OK
 public class ConfigManagerTest {
 
     private ConfigManager configManager = getConfigManager();
 
     @BeforeEach
     public void init() {
+        // 进去
         configManager.destroy();
     }
 
@@ -60,14 +62,17 @@ public class ConfigManagerTest {
     @Test
     public void testDefaultValues() {
         // assert single
+        // 进去
         assertFalse(configManager.getApplication().isPresent());
         assertFalse(configManager.getMonitor().isPresent());
         assertFalse(configManager.getModule().isPresent());
         assertFalse(configManager.getMetrics().isPresent());
 
         // providers and consumers
+        // 进去
         assertFalse(configManager.getDefaultProvider().isPresent());
         assertFalse(configManager.getDefaultConsumer().isPresent());
+        // 进去
         assertTrue(configManager.getProviders().isEmpty());
         assertTrue(configManager.getConsumers().isEmpty());
 
@@ -92,10 +97,11 @@ public class ConfigManagerTest {
         assertTrue(configManager.getMetadataConfigs().isEmpty());
     }
 
-    // Test ApplicationConfig correlative methods
+    // Test ApplicationConfig correlative（相关的） methods
     @Test
     public void testApplicationConfig() {
         ApplicationConfig config = new ApplicationConfig();
+        // 进去
         configManager.setApplication(config);
         assertTrue(configManager.getApplication().isPresent());
         assertEquals(config, configManager.getApplication().get());
@@ -133,20 +139,28 @@ public class ConfigManagerTest {
     @Test
     public void testProviderConfig() {
         ProviderConfig config = new ProviderConfig();
+        // asList两个元素，一个为null，内部处理肯定忽略了，所以后面的configs.size = 0
+        // 进去
         configManager.addProviders(asList(config, null));
+        // 进去
         Collection<ProviderConfig> configs = configManager.getProviders();
         assertEquals(1, configs.size());
         assertEquals(config, configs.iterator().next());
+        // 因为ProviderConfig有isDefault方法，但是isDefault的值为null，所以也判断为默认的，进去
         assertTrue(configManager.getDefaultProvider().isPresent());
 
+        // 前面addProviders的时候，内部判断config么有id，且是默认的，所以其id设定为了ProviderConfig#default。下面手动设置一个id
         config.setId(DEFAULT_KEY);
+        // 内部会通过从configsCache根据tagName取出map，这个map已经有一个值了，就是前面的config
         configManager.addProvider(config);
+        // 进去，内部会判定前面两个config都是default，只不过返回的时候只取get(0)
         assertTrue(configManager.getDefaultProvider().isPresent());
         configs = configManager.getProviders();
         assertEquals(2, configs.size());
     }
 
     // Test ConsumerConfig correlative methods
+    // 下面同前一个方法，不多说
     @Test
     public void testConsumerConfig() {
         ConsumerConfig config = new ConsumerConfig();
@@ -171,9 +185,11 @@ public class ConfigManagerTest {
         Collection<ProtocolConfig> configs = configManager.getProtocols();
         assertEquals(1, configs.size());
         assertEquals(config, configs.iterator().next());
+        // 上面的config也是默认的，进去
         assertFalse(configManager.getDefaultProtocols().isEmpty());
     }
 
+    // 同testProtocolConfig方法，不说了
     // Test RegistryConfig correlative methods
     @Test
     public void testRegistryConfig() {
@@ -185,6 +201,7 @@ public class ConfigManagerTest {
         assertFalse(configManager.getDefaultRegistries().isEmpty());
     }
 
+    // 同testProtocolConfig方法，不说了
     // Test ConfigCenterConfig correlative methods
     @Test
     public void testConfigCenterConfig() {
@@ -202,12 +219,14 @@ public class ConfigManagerTest {
         configManager.addConfig(new ProtocolConfig());
 
         assertTrue(configManager.getApplication().isPresent());
+        // 因为ApplicationConfig只有一个，所以上面用了Optional包装了，而下面Config对象有多个，返回的是List
         assertFalse(configManager.getProviders().isEmpty());
         assertFalse(configManager.getProtocols().isEmpty());
     }
 
     @Test
     public void testRefreshAll() {
+        // 进去
         configManager.refreshAll();
     }
 
@@ -215,15 +234,19 @@ public class ConfigManagerTest {
     public void testDefaultConfig() {
         ProviderConfig providerConfig = new ProviderConfig();
         providerConfig.setDefault(false);
+        // ProviderConfig的isDefault方法返回false
         assertFalse(ConfigManager.isDefaultConfig(providerConfig));
 
         ProviderConfig providerConfig1 = new ProviderConfig();
+        // ProviderConfig的isDefault方法返回null
         assertTrue(ConfigManager.isDefaultConfig(providerConfig1));
 
         ProviderConfig providerConfig3 = new ProviderConfig();
         providerConfig.setDefault(true);
+        // ProviderConfig的isDefault方法返回true
         assertTrue(ConfigManager.isDefaultConfig(providerConfig3));
 
+        // 前面是ProviderConfig，这里是ProtocolConfig
         ProtocolConfig protocolConfig = new ProtocolConfig();
         protocolConfig.setDefault(false);
         assertFalse(ConfigManager.isDefaultConfig(protocolConfig));

@@ -21,6 +21,7 @@ package org.apache.dubbo.common.context;
  *
  * @since 2.7.5
  */
+// OK
 public interface Lifecycle {
 
     /**

@@ -41,16 +41,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * and many Consumer Model which is about subscribed services.
  * <p>
  *
+ * {@link ExtensionLoader}， {@code DubboBootstrap}和这个类ApplicationModel目前被设计成
+ * 单例或静态的(本身完全静态或使用一些静态字段)。因此,实例
+ * 从它们返回的是处理范围。如果你想在单个进程上支持多个dubbo服务器您可能需要重构这三个类。
+ * 在处理RPC调用过程中表示一个使用Dubbo和存储基本元数据信息的应用程序。
+ * ApplicationModel包括许多关于已发布服务的ProviderModel和许多关于订阅服务ConsumerModel。
  */
 
+// OK
 public class ApplicationModel {
     protected static final Logger LOGGER = LoggerFactory.getLogger(ApplicationModel.class);
     public static final String NAME = "application";
 
     private static AtomicBoolean INIT_FLAG = new AtomicBoolean(false);
 
+    // 无调用处
     public static void init() {
         if (INIT_FLAG.compareAndSet(false, true)) {
+            // ApplicationInitListener 目前无子类
             ExtensionLoader<ApplicationInitListener> extensionLoader = ExtensionLoader.getExtensionLoader(ApplicationInitListener.class);
             Set<String> listenerNames = extensionLoader.getSupportedExtensions();
             for (String listenerName : listenerNames) {
@@ -75,7 +83,7 @@ public class ApplicationModel {
         return getServiceRepository().lookupReferredService(serviceKey);
     }
 
-    // 先看下FrameworkExt接口，然后getExtensionLoader进去
+    // 获取FrameworkExt的ExtensionLoader
     private static final ExtensionLoader<FrameworkExt> LOADER = ExtensionLoader.getExtensionLoader(FrameworkExt.class);
 
     public static void initFrameworkExts() {
@@ -94,7 +102,6 @@ public class ApplicationModel {
     }
 
     public static ConfigManager getConfigManager() {
-        // 先看看LOADER
         return (ConfigManager) LOADER.getExtension(ConfigManager.NAME);
     }
 
@@ -103,6 +110,7 @@ public class ApplicationModel {
     }
 
     public static ApplicationConfig getApplicationConfig() {
+        // ApplicationConfig会存储到ConfigManger，进去
         return getConfigManager().getApplicationOrElseThrow();
     }
 
@@ -126,6 +134,7 @@ public class ApplicationModel {
 
     // only for unit test
     public static void reset() {
+        // 三个FrameworkExt的子类都重写了LifeAdapter的destroy方法，都进去看下
         getServiceRepository().destroy();
         getConfigManager().destroy();
         getEnvironment().destroy();

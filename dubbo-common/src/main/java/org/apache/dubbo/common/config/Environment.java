@@ -31,7 +31,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+// OK
+// 主要是存放各种Configuration的
 public class Environment extends LifecycleAdapter implements FrameworkExt {
+    // SPI扩展名
     public static final String NAME = "environment";
 
     private final PropertiesConfiguration propertiesConfiguration;
@@ -40,15 +43,16 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
     private final InmemoryConfiguration externalConfiguration;
     private final InmemoryConfiguration appExternalConfiguration;
 
-    private CompositeConfiguration globalConfiguration;
+    private CompositeConfiguration globalConfiguration; // 这个主要是聚合前面几种Configuration
 
-    private Map<String, String> externalConfigurationMap = new HashMap<>();
+    private Map<String, String> externalConfigurationMap = new HashMap<>();// 这两个map和前面两个InmemoryConfiguration对应
     private Map<String, String> appExternalConfigurationMap = new HashMap<>();
 
     private boolean configCenterFirst = true;
 
     private DynamicConfiguration dynamicConfiguration;
 
+    // gx没调用处，那显然就是反射newInstance创建的（ExtensionLoader.getExtension(NAME) ）
     public Environment() {
         this.propertiesConfiguration = new PropertiesConfiguration();
         this.systemConfiguration = new SystemConfiguration();
@@ -76,6 +80,7 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
         this.appExternalConfiguration.setProperties(appExternalConfigurationMap);
     }
 
+    // 下两个set方法加了@DisableInject注解，用以在创建Extension实例的时候 在inject的过程忽略该set
     @DisableInject
     public void setExternalConfigMap(Map<String, String> externalConfiguration) {
         if (externalConfiguration != null) {
@@ -90,18 +95,22 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
         }
     }
 
+    // gx
     public Map<String, String> getExternalConfigurationMap() {
         return externalConfigurationMap;
     }
 
+    // gx
     public Map<String, String> getAppExternalConfigurationMap() {
         return appExternalConfigurationMap;
     }
 
+    // gx
     public void updateExternalConfigurationMap(Map<String, String> externalMap) {
         this.externalConfigurationMap.putAll(externalMap);
     }
 
+    // gx
     public void updateAppExternalConfigurationMap(Map<String, String> externalMap) {
         this.appExternalConfigurationMap.putAll(externalMap);
     }
@@ -113,10 +122,16 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
      * At present, there are many configuration sources, including AbstractConfig (API, XML, annotation), - D, config center, etc.
      * This method helps us to filter out the most priority values from various configuration sources.
      *
+     * 在启动时，Dubbo是由各种配置驱动的，比如应用程序、注册表、协议等。
+     * 所有配置都将聚合到一个数据总线URL中，然后驱动后续流程。
+     * < p >
+     * 目前，有许多配置源，包括AbstractConfig (API、XML、annotation)、- D、config center等。
+     * 这个方法帮助我们从各种配置源中过滤出优先级最高的值。
+     *
      * @param config
      * @return
      */
-    // 看上面注释
+    // gx
     public synchronized CompositeConfiguration getPrefixedConfiguration(AbstractConfig config) {
         // 创建一个复合配置CompositeConfiguration，config.getPrefix()的值有默认值（dubbo.xx，去看下），进去
         CompositeConfiguration prefixedConfiguration = new CompositeConfiguration(config.getPrefix(), config.getId());
@@ -124,9 +139,9 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
         Configuration configuration = new ConfigConfigurationAdapter(config);
         // 默认true
         if (this.isConfigCenterFirst()) {
-            // The sequence would be: SystemConfiguration -> AppExternalConfiguration -> ExternalConfiguration -> AbstractConfig -> PropertiesConfiguration
+            // The sequence would be: SystemConfiguration -> [[ AppExternalConfiguration -> ExternalConfiguration -> AbstractConfig ]] -> PropertiesConfiguration
             // Config center has the highest priority
-            // 以下几个变量都在构造方法里面得到赋值的（除configuration）
+            // 以下几个变量（除configuration）都在构造方法里面得到赋值的
             prefixedConfiguration.addConfiguration(systemConfiguration);
             prefixedConfiguration.addConfiguration(environmentConfiguration);
             prefixedConfiguration.addConfiguration(appExternalConfiguration);
@@ -134,8 +149,8 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
             prefixedConfiguration.addConfiguration(configuration);
             prefixedConfiguration.addConfiguration(propertiesConfiguration);
         } else {
-            // The sequence would be: SystemConfiguration -> AbstractConfig -> AppExternalConfiguration -> ExternalConfiguration -> PropertiesConfiguration
-            // Config center has the highest priority
+            // The sequence would be: SystemConfiguration -> [[ AbstractConfig -> AppExternalConfiguration -> ExternalConfiguration ]] -> PropertiesConfiguration
+            // Config center has the highest priority todo need pr 这句注释不对
             prefixedConfiguration.addConfiguration(systemConfiguration);
             prefixedConfiguration.addConfiguration(environmentConfiguration);
             prefixedConfiguration.addConfiguration(configuration);
@@ -143,6 +158,11 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
             prefixedConfiguration.addConfiguration(externalConfiguration);
             prefixedConfiguration.addConfiguration(propertiesConfiguration);
         }
+
+        // 前面Config center has the highest priority 我的理解是这样的，appExternalConfiguration和externalConfiguration的值都是
+        // 在initialize方法通过configCenter的两个map属性赋值过来的， 所以这两个Configuration就代表Config center，而他们的优先级是相对于
+        // ConfigConfigurationAdapter的，可以看上面两个sequence的[[ ]] 之间的排列顺序关系，而[[ ]] 之外的排列顺序是固定的
+
         return prefixedConfiguration;
     }
 
@@ -151,10 +171,16 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
      * 1. URL, The value in the URL is relatively fixed. we can get value directly.
      * 2. The configuration exposed in this method is convenient for us to query the latest values from multiple
      * prioritized sources, it also guarantees that configs changed dynamically can take effect on the fly.
+     *
+         有两种方法可以在暴露/引用或运行时获取配置:
+         1. URL, URL中的值是相对固定的。我们可以直接获得value。
+         2. 这个方法中暴露的配置便于我们从多个优先级的源中查询最新的值，它还保证动态更改的配置可以动态生效。
+     *
      */
+    // gx
     public Configuration getConfiguration() {
         if (globalConfiguration == null) {
-            // 复合的配置
+            // 复合的配置（不带prefix）
             globalConfiguration = new CompositeConfiguration();
             if (dynamicConfiguration != null) {
                 globalConfiguration.addConfiguration(dynamicConfiguration);
@@ -169,6 +195,7 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
         return globalConfiguration;
     }
 
+    // gx
     public boolean isConfigCenterFirst() {
         return configCenterFirst;
     }

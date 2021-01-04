@@ -19,6 +19,7 @@ package org.apache.dubbo.common.context;
 import org.apache.dubbo.common.extension.SPI;
 
 // 含有SPI注解，看看父接口
+// OK
 @SPI
 public interface FrameworkExt extends Lifecycle {
 

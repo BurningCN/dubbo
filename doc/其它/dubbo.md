@@ -60,3 +60,4 @@
 
 **031.延迟加载。**compositeConfiguration内部匹配到PropertiesConfiguration有属性xx参数的话，在PropertiesConfiguration.getInternalProperty内部有延迟加载模式，因为加载文件内容涉及到io操作，相对耗时。
 
+**032.isValid方法，动态指定是否可用。**checkRegistry方法：registries里面有很多对象，如果暂时不想某些类型的注册中心对象生效，可以isValid置为false
