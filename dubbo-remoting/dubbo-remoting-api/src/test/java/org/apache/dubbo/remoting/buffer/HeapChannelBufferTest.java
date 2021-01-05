@@ -29,6 +29,7 @@ public class HeapChannelBufferTest extends AbstractChannelBufferTest {
 
     @Override
     protected ChannelBuffer newBuffer(int capacity) {
+        // 进去
         buffer = ChannelBuffers.buffer(capacity);
         Assertions.assertEquals(0, buffer.writerIndex());
         return buffer;

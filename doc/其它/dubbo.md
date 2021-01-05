@@ -73,3 +73,7 @@
 036.Curator连接zk的客户端。
 
 **037.连接复用，缓存设计。**AbstractZookeeperTransport的connect方法内部两次查询缓存，都查不到才会创建zkClinet，利用缓存实现连接复用，不会多次创建相同的connection。
+
+**038.抽象工厂模式。**ChannelBufferFactory接口、ChannelBuffer接口以及相关的实现类利用了标准的抽象工厂模式。
+
+**039.动态缓冲区，自动扩容。**详见ensureWritableBytes以及重写的方法（2倍递增直到超过期望的最小目标容量）

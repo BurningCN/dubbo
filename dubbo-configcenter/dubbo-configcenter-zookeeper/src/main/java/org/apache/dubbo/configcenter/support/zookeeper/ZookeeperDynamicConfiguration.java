@@ -44,22 +44,32 @@ public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration 
     private URL url;
 
 
+    // OK
     ZookeeperDynamicConfiguration(URL url, ZookeeperTransporter zookeeperTransporter) {
+        // 进去
         super(url);
         this.url = url;
+        // 进去
         rootPath = getRootPath(url);
 
+        // 用以等待"初始化完毕"的闭锁
         initializedLatch = new CountDownLatch(1);
+        // 进去
         this.cacheListener = new CacheListener(rootPath, initializedLatch);
+        // 创建线程池
         this.executor = Executors.newFixedThreadPool(1, new NamedThreadFactory(this.getClass().getSimpleName(), true));
 
+        // 进去
         zkClient = zookeeperTransporter.connect(url);
+        // 进去
         zkClient.addDataListener(rootPath, cacheListener, executor);
         try {
             // Wait for connection
             long timeout = url.getParameter("init.timeout", 5000);
+            // 在初始化超时范围内进行等待
             boolean isCountDown = this.initializedLatch.await(timeout, TimeUnit.MILLISECONDS);
             if (!isCountDown) {
+                // 返回false，表示await超时了，依然没有人调用countdown，如下日志
                 throw new IllegalStateException("Failed to receive INITIALIZED event from zookeeper, pls. check if url "
                         + url + " is correct");
             }

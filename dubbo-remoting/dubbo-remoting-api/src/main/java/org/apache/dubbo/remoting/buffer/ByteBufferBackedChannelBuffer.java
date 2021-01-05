@@ -28,11 +28,13 @@ public class ByteBufferBackedChannelBuffer extends AbstractChannelBuffer {
 
     private final int capacity;
 
+    // 传进来的可能是直接缓冲区也能是堆缓冲区
     public ByteBufferBackedChannelBuffer(ByteBuffer buffer) {
         if (buffer == null) {
             throw new NullPointerException("buffer");
         }
 
+        // easy 不说了
         this.buffer = buffer.slice();
         capacity = buffer.remaining();
         writerIndex(capacity);

@@ -22,7 +22,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+// OK
 public abstract class AbstractChannelBuffer implements ChannelBuffer {
+
+    // 仅仅存储了读写指针，capacity在不同的子类实现不同，暴露给外界的是capacity()方法
 
     private int readerIndex;
 
@@ -32,11 +35,13 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
     private int markedWriterIndex;
 
+    // getReaderIndex
     @Override
     public int readerIndex() {
         return readerIndex;
     }
 
+    // setReaderIndex
     @Override
     public void readerIndex(int readerIndex) {
         if (readerIndex < 0 || readerIndex > writerIndex) {
@@ -60,6 +65,7 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
     @Override
     public void setIndex(int readerIndex, int writerIndex) {
+        // 这个条件看出了三者的关系
         if (readerIndex < 0 || readerIndex > writerIndex || writerIndex > capacity()) {
             throw new IndexOutOfBoundsException();
         }
@@ -72,13 +78,17 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
         readerIndex = writerIndex = 0;
     }
 
+
     @Override
     public boolean readable() {
+        // 进去
         return readableBytes() > 0;
     }
 
+
     @Override
     public boolean writable() {
+        // 进去
         return writableBytes() > 0;
     }
 
@@ -117,6 +127,7 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
         if (readerIndex == 0) {
             return;
         }
+        // 进去
         setBytes(0, this, readerIndex, writerIndex - readerIndex);
         writerIndex -= readerIndex;
         markedReaderIndex = Math.max(markedReaderIndex - readerIndex, 0);
@@ -126,6 +137,7 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
     @Override
     public void ensureWritableBytes(int writableBytes) {
+        // 默认非动态缓冲区，空间不够抛异常，去看下动态缓冲区重写的
         if (writableBytes > writableBytes()) {
             throw new IndexOutOfBoundsException();
         }
@@ -133,11 +145,13 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
     @Override
     public void getBytes(int index, byte[] dst) {
+        // 进去
         getBytes(index, dst, 0, dst.length);
     }
 
     @Override
     public void getBytes(int index, ChannelBuffer dst) {
+        // 进去
         getBytes(index, dst, dst.writableBytes());
     }
 
@@ -146,7 +160,9 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
         if (length > dst.writableBytes()) {
             throw new IndexOutOfBoundsException();
         }
+        // 进去
         getBytes(index, dst, dst.writerIndex(), length);
+        // 更新dst的写指针
         dst.writerIndex(dst.writerIndex() + length);
     }
 
@@ -157,6 +173,7 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
     @Override
     public void setBytes(int index, ChannelBuffer src) {
+        // 进去
         setBytes(index, src, src.readableBytes());
     }
 
@@ -165,6 +182,7 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
         if (length > src.readableBytes()) {
             throw new IndexOutOfBoundsException();
         }
+        // 进去
         setBytes(index, src, src.readerIndex(), length);
         src.readerIndex(src.readerIndex() + length);
     }
@@ -253,7 +271,9 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
     @Override
     public void writeBytes(byte[] src, int srcIndex, int length) {
+        // 将字节数组的内容写到buf，同时写指针++。进去
         setBytes(writerIndex, src, srcIndex, length);
+
         writerIndex += length;
     }
 
@@ -300,17 +320,20 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
     @Override
     public ChannelBuffer copy() {
+        // 生成自身的一个拷贝
         return copy(readerIndex, readableBytes());
     }
 
     @Override
     public ByteBuffer toByteBuffer() {
+        // ChannelBuffer转化为ByteBuffer，进去
         return toByteBuffer(readerIndex, readableBytes());
     }
 
     @Override
     public boolean equals(Object o) {
         return o instanceof ChannelBuffer
+                // 进去
                 && ChannelBuffers.equals(this, (ChannelBuffer) o);
     }
 
@@ -321,11 +344,13 @@ public abstract class AbstractChannelBuffer implements ChannelBuffer {
 
     @Override
     public int compareTo(ChannelBuffer that) {
+        // 类似Integr.compare等方法，不少都是这种命名方式（或者str1.compareTo(str2)），进去
         return ChannelBuffers.compare(this, that);
     }
 
     @Override
     public String toString() {
+        // 三个重要指针输出下即可
         return getClass().getSimpleName() + '(' +
                 "ridx=" + readerIndex + ", " +
                 "widx=" + writerIndex + ", " +

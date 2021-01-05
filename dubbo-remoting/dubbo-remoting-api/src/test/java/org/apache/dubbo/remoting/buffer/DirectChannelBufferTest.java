@@ -24,7 +24,9 @@ public class DirectChannelBufferTest extends AbstractChannelBufferTest {
 
     @Override
     protected ChannelBuffer newBuffer(int capacity) {
+        // 进去
         buffer = ChannelBuffers.directBuffer(capacity);
+        // 看对应实现
         Assertions.assertEquals(0, buffer.writerIndex());
         return buffer;
     }

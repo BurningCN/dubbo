@@ -38,6 +38,7 @@ public class HeapChannelBuffer extends AbstractChannelBuffer {
      * @param length the length of the new byte array
      */
     public HeapChannelBuffer(int length) {
+        // 第一个参数创建指定长度的字节数组，23参数为读写指针，进去
         this(new byte[length], 0, 0);
     }
 
@@ -61,7 +62,9 @@ public class HeapChannelBuffer extends AbstractChannelBuffer {
         if (array == null) {
             throw new NullPointerException("array");
         }
+        // 主要是给属性的赋值操作
         this.array = array;
+        // 进去
         setIndex(readerIndex, writerIndex);
     }
 
@@ -98,14 +101,17 @@ public class HeapChannelBuffer extends AbstractChannelBuffer {
     @Override
     public void getBytes(int index, ChannelBuffer dst, int dstIndex, int length) {
         if (dst instanceof HeapChannelBuffer) {
+            // 转化/获取其字节数组，调用getBytes进行拷贝
             getBytes(index, ((HeapChannelBuffer) dst).array, dstIndex, length);
         } else {
+            // 调用dst的setBytes方法
             dst.setBytes(dstIndex, array, index, length);
         }
     }
 
     @Override
     public void getBytes(int index, byte[] dst, int dstIndex, int length) {
+        // 各参数含义点进去看
         System.arraycopy(array, index, dst, dstIndex, length);
     }
 
@@ -141,6 +147,7 @@ public class HeapChannelBuffer extends AbstractChannelBuffer {
 
     @Override
     public void setBytes(int index, byte[] src, int srcIndex, int length) {
+        // 将字节数组的数据拷贝到array中
         System.arraycopy(src, srcIndex, array, index, length);
     }
 
@@ -213,6 +220,7 @@ public class HeapChannelBuffer extends AbstractChannelBuffer {
 
     @Override
     public ByteBuffer toByteBuffer(int index, int length) {
+        //
         return ByteBuffer.wrap(array, index, length);
     }
 }

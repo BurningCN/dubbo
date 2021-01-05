@@ -55,7 +55,9 @@ public abstract class AbstractChannelBufferTest {
 
     @BeforeEach
     public void init() {
+        // 去看实现
         buffer = newBuffer(CAPACITY);
+        // 经常见到以当前时间戳作为随机数种子的
         seed = System.currentTimeMillis();
         random = new Random(seed);
     }
@@ -67,7 +69,9 @@ public abstract class AbstractChannelBufferTest {
 
     @Test
     public void initialState() {
+        // 去看实现，进去
         assertEquals(CAPACITY, buffer.capacity());
+        // 去看实现，进去
         assertEquals(0, buffer.readerIndex());
     }
 
@@ -75,10 +79,12 @@ public abstract class AbstractChannelBufferTest {
     public void readerIndexBoundaryCheck1() {
         Assertions.assertThrows(IndexOutOfBoundsException.class, () -> {
             try {
+                // 设置写指针， 这个指定不会抛异常，进去（AbstractChannelBuffer）
                 buffer.writerIndex(0);
             } catch (IndexOutOfBoundsException e) {
                 fail();
             }
+            // -1<0肯定抛异常，进去
             buffer.readerIndex(-1);
         });
     }
@@ -91,6 +97,7 @@ public abstract class AbstractChannelBufferTest {
             } catch (IndexOutOfBoundsException e) {
                 fail();
             }
+            // 肯定抛异常，进去
             buffer.readerIndex(buffer.capacity() + 1);
         });
     }
@@ -103,10 +110,12 @@ public abstract class AbstractChannelBufferTest {
             } catch (IndexOutOfBoundsException e) {
                 fail();
             }
+            // readerIndex > writerIndex 肯定抛异常，进去
             buffer.readerIndex(CAPACITY * 3 / 2);
         });
     }
 
+    // easy
     @Test
     public void readerIndexBoundaryCheck4() {
         buffer.writerIndex(0);
@@ -115,6 +124,7 @@ public abstract class AbstractChannelBufferTest {
         buffer.readerIndex(buffer.capacity());
     }
 
+    // easy
     @Test
     public void writerIndexBoundaryCheck1() {
         Assertions.assertThrows(IndexOutOfBoundsException.class, () -> {
@@ -132,6 +142,7 @@ public abstract class AbstractChannelBufferTest {
             } catch (IndexOutOfBoundsException e) {
                 fail();
             }
+            // writeIndex > capacity 抛异常
             buffer.writerIndex(buffer.capacity() + 1);
         });
     }
@@ -145,6 +156,7 @@ public abstract class AbstractChannelBufferTest {
             } catch (IndexOutOfBoundsException e) {
                 fail();
             }
+            // writerIndex < readerIndex  抛异常
             buffer.writerIndex(CAPACITY / 4);
         });
     }
@@ -158,16 +170,19 @@ public abstract class AbstractChannelBufferTest {
 
     @Test
     public void getByteBoundaryCheck1() {
+        // getByte去看实现，-1肯定不对，至少从0
         Assertions.assertThrows(IndexOutOfBoundsException.class, () -> buffer.getByte(-1));
     }
 
     @Test
     public void getByteBoundaryCheck2() {
+        // capacity也不行
         Assertions.assertThrows(IndexOutOfBoundsException.class, () -> buffer.getByte(buffer.capacity()));
     }
 
     @Test
     public void getByteArrayBoundaryCheck1() {
+        // 两个参数的意思就是把读到的一个字节存到第二个参数的字节数组
         Assertions.assertThrows(IndexOutOfBoundsException.class, () -> buffer.getBytes(-1, new byte[0]));
     }
 

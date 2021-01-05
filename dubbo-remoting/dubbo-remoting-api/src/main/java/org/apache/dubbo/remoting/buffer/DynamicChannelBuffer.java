@@ -29,6 +29,7 @@ public class DynamicChannelBuffer extends AbstractChannelBuffer {
     private ChannelBuffer buffer;
 
     public DynamicChannelBuffer(int estimatedLength) {
+        // 默认使用的是堆缓冲区工厂（来进行buffer的创建）---> 使用的是标准的抽象工厂模式!
         this(estimatedLength, HeapChannelBufferFactory.getInstance());
     }
 
@@ -45,6 +46,7 @@ public class DynamicChannelBuffer extends AbstractChannelBuffer {
 
     @Override
     public void ensureWritableBytes(int minWritableBytes) {
+        // 当前可写空间还够，直接返回
         if (minWritableBytes <= writableBytes()) {
             return;
         }
@@ -53,14 +55,20 @@ public class DynamicChannelBuffer extends AbstractChannelBuffer {
         if (capacity() == 0) {
             newCapacity = 1;
         } else {
+            // 一般是这个
             newCapacity = capacity();
         }
+        // 计算能容纳目标的最小容量
         int minNewCapacity = writerIndex() + minWritableBytes;
+        // 如果最小容量超过当前newCapacity，那么就需要对newCapacity进行扩容，<< 1 就是*2，循环判断，
+        // 直到满足newCapacity >= minNewCapacity ，同时能确保newCapacity是2的倍数
         while (newCapacity < minNewCapacity) {
             newCapacity <<= 1;
         }
 
+        // 申请newCapacity大小的缓冲区
         ChannelBuffer newBuffer = factory().getBuffer(newCapacity);
+        // 把原来的数据拷贝/写到新的缓冲区
         newBuffer.writeBytes(buffer, 0, writerIndex());
         buffer = newBuffer;
     }

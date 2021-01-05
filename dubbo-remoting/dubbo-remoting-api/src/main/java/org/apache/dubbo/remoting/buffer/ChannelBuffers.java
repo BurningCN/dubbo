@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 
 public final class ChannelBuffers {
 
+    // 堆缓冲区
     public static final ChannelBuffer EMPTY_BUFFER = new HeapChannelBuffer(0);
 
     private ChannelBuffers() {
@@ -31,6 +32,7 @@ public final class ChannelBuffers {
     }
 
     public static ChannelBuffer dynamicBuffer(int capacity) {
+        // 进去
         return new DynamicChannelBuffer(capacity);
     }
 
@@ -46,6 +48,7 @@ public final class ChannelBuffers {
         if (capacity == 0) {
             return EMPTY_BUFFER;
         }
+        // 进去
         return new HeapChannelBuffer(capacity);
     }
 
@@ -84,6 +87,7 @@ public final class ChannelBuffers {
             return EMPTY_BUFFER;
         }
 
+        // 借助的实际还是netty的api，ByteBufferBackedChannelBuffer进去
         ChannelBuffer buffer = new ByteBufferBackedChannelBuffer(
                 ByteBuffer.allocateDirect(capacity));
         buffer.clear();
@@ -91,17 +95,20 @@ public final class ChannelBuffers {
     }
 
     public static boolean equals(ChannelBuffer bufferA, ChannelBuffer bufferB) {
+
         final int aLen = bufferA.readableBytes();
+        // 可读字节数要相等
         if (aLen != bufferB.readableBytes()) {
             return false;
         }
 
-        final int byteCount = aLen & 7;
+        final int byteCount = aLen & 7; // 7 = 0111 结果最大为7 ？ 后面for循环只比较7个字节？
 
         int aIndex = bufferA.readerIndex();
         int bIndex = bufferB.readerIndex();
 
         for (int i = byteCount; i > 0; i--) {
+            // 每个字节都要相等
             if (bufferA.getByte(aIndex) != bufferB.getByte(bIndex)) {
                 return false;
             }
@@ -131,13 +138,17 @@ public final class ChannelBuffers {
     }
 
     public static int compare(ChannelBuffer bufferA, ChannelBuffer bufferB) {
+
         final int aLen = bufferA.readableBytes();
         final int bLen = bufferB.readableBytes();
+        // 取两个buffer的最小可读字节数
         final int minLength = Math.min(aLen, bLen);
 
+        // 取各自的读指针
         int aIndex = bufferA.readerIndex();
         int bIndex = bufferB.readerIndex();
 
+        // 然后挨个进行字节比较，双指针比较，很easy
         for (int i = minLength; i > 0; i--) {
             byte va = bufferA.getByte(aIndex);
             byte vb = bufferB.getByte(bIndex);
@@ -146,9 +157,12 @@ public final class ChannelBuffers {
             } else if (va < vb) {
                 return -1;
             }
+            // 一轮比较厚，双指针++
             aIndex++;
             bIndex++;
         }
+
+        // 如果前面每个字节都相等，那么根据可读字节长度比较
 
         return aLen - bLen;
     }

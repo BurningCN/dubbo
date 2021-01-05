@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * TODO refactor using mockito
  */
+// OK
 public class ZookeeperDynamicConfigurationTest {
     private static CuratorFramework client;
 
@@ -58,11 +59,15 @@ public class ZookeeperDynamicConfigurationTest {
     public static void setUp() throws Exception {
         zkServer = new TestingServer(zkServerPort, true);
 
+        zkServerPort = 2181;
+        // 使用的是Curator客户端
         client = CuratorFrameworkFactory.newClient("127.0.0.1:" + zkServerPort, 60 * 1000, 60 * 1000,
                 new ExponentialBackoffRetry(1000, 3));
+        // 启动，发起连接
         client.start();
 
         try {
+            // 写数据到zk，进去
             setData("/dubbo/config/dubbo/dubbo.properties", "The content from dubbo.properties");
             setData("/dubbo/config/dubbo/service:version:group.configurators", "The content from configurators");
             setData("/dubbo/config/appname", "The content from higer level node");
@@ -73,8 +78,10 @@ public class ZookeeperDynamicConfigurationTest {
         }
 
 
+        // 构建URL
         configUrl = URL.valueOf("zookeeper://127.0.0.1:" + zkServerPort);
 
+        // URL的协议值就是SPI扩展名，获取对应的扩展实例（此模块下，SPI文件里面配置了zk的），getDynamicConfiguration进去
         configuration = ExtensionLoader.getExtensionLoader(DynamicConfigurationFactory.class).getExtension(configUrl.getProtocol()).getDynamicConfiguration(configUrl);
     }
 
@@ -83,6 +90,7 @@ public class ZookeeperDynamicConfigurationTest {
         zkServer.stop();
     }
 
+    // easy
     private static void setData(String path, String data) throws Exception {
         if (client.checkExists().forPath(path) == null) {
             client.create().creatingParentsIfNeeded().forPath(path);

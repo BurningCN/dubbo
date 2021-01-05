@@ -19,14 +19,19 @@ package org.apache.dubbo.remoting.buffer;
 
 import java.nio.ByteBuffer;
 
+// OK
+// 具体工厂
 public class DirectChannelBufferFactory implements ChannelBufferFactory {
 
+    // 饿汉单例
     private static final DirectChannelBufferFactory INSTANCE = new DirectChannelBufferFactory();
 
+    // 严格来说不是单例模式，这个是public
     public DirectChannelBufferFactory() {
         super();
     }
 
+    // 获取单例的方法
     public static ChannelBufferFactory getInstance() {
         return INSTANCE;
     }
@@ -37,8 +42,10 @@ public class DirectChannelBufferFactory implements ChannelBufferFactory {
             throw new IllegalArgumentException("capacity: " + capacity);
         }
         if (capacity == 0) {
+            // 进去
             return ChannelBuffers.EMPTY_BUFFER;
         }
+        // 进去
         return ChannelBuffers.directBuffer(capacity);
     }
 
@@ -57,7 +64,9 @@ public class DirectChannelBufferFactory implements ChannelBufferFactory {
             throw new IndexOutOfBoundsException("length: " + length);
         }
 
+        // 调用上面的重载方法，创建一个空的直接缓冲区
         ChannelBuffer buf = getBuffer(length);
+        // 将字节数组的数据写到buf
         buf.writeBytes(array, offset, length);
         return buf;
     }

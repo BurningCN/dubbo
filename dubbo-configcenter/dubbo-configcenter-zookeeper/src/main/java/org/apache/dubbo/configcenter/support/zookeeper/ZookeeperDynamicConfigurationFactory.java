@@ -28,12 +28,14 @@ public class ZookeeperDynamicConfigurationFactory extends AbstractDynamicConfigu
 
     private ZookeeperTransporter zookeeperTransporter;
 
+    // 在newInstance实例化之后会 inject ZookeeperTransporter$Adaptive
     public void setZookeeperTransporter(ZookeeperTransporter zookeeperTransporter) {
         this.zookeeperTransporter = zookeeperTransporter;
     }
 
     @Override
     protected DynamicConfiguration createDynamicConfiguration(URL url) {
+        // 进去
         return new ZookeeperDynamicConfiguration(url, zookeeperTransporter);
     }
 }

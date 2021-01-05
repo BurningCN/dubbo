@@ -24,6 +24,7 @@ public class ByteBufferBackedChannelBufferTest extends AbstractChannelBufferTest
 
     @Override
     protected ChannelBuffer newBuffer(int capacity) {
+        // 堆缓冲区，ByteBufferBackedChannelBuffer进去
         buffer = new ByteBufferBackedChannelBuffer(ByteBuffer.allocate(capacity));
         return buffer;
     }

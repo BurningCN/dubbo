@@ -201,6 +201,8 @@ import java.nio.ByteBuffer;
  *
  *
  */
+// OK
+// 大部分方法的注释很好懂，和nio的byteBuf一样有读写指针
 public interface ChannelBuffer extends Comparable<ChannelBuffer> {
 
     /**
@@ -210,12 +212,12 @@ public interface ChannelBuffer extends Comparable<ChannelBuffer> {
 
     /**
      * Sets the {@code readerIndex} and {@code writerIndex} of this buffer to
-     * {@code 0}. This method is identical to {@link #setIndex(int, int)
+     * {@code 0}. This method is identical（相同的） to {@link #setIndex(int, int)
      * setIndex(0, 0)}.
      * <p/>
      * Please note that the behavior of this method is different from that of
      * NIO buffer, which sets the {@code limit} to the {@code capacity} of the
-     * buffer.
+     * buffer.（意思就是说 NIO Buffer的clear方法除了把r=w=0，还把limit=capacity）
      */
     void clear();
 
@@ -249,13 +251,14 @@ public interface ChannelBuffer extends Comparable<ChannelBuffer> {
     /**
      * Makes sure the number of {@linkplain #writableBytes() the writable bytes}
      * is equal to or greater than the specified value.  If there is enough
-     * writable bytes in this buffer, this method returns with no side effect.
+     * writable bytes in this buffer, this method returns with no side effect（无副作用、无反应）.
      * Otherwise: <ul> <li>a non-dynamic buffer will throw an {@link
      * IndexOutOfBoundsException}.</li> <li>a dynamic buffer will expand its
      * capacity so that the number of the {@link #writableBytes() writable
      * bytes} becomes equal to or greater than the specified value. The
-     * expansion involves the reallocation of the internal buffer and
-     * consequently memory copy.</li> </ul>
+     * expansion involves（包括） the reallocation（重分配） of the internal buffer and
+     * consequently（因此、从而） memory copy.</li> </ul>
+     * 上面注意的地方就是：在可写空间不够的时候，非动态缓冲区会抛异常，动态缓冲区会扩展容量
      *
      * @param writableBytes the expected minimum number of writable bytes
      * @throws IndexOutOfBoundsException if {@linkplain #writableBytes() the
@@ -412,7 +415,7 @@ public interface ChannelBuffer extends Comparable<ChannelBuffer> {
     boolean isDirect();
 
     /**
-     * Marks the current {@code readerIndex} in this buffer.  You can reposition
+     * Marks the current {@code readerIndex} in this buffer.  You can reposition（重新定位）
      * the current {@code readerIndex} to the marked {@code readerIndex} by
      * calling {@link #resetReaderIndex()}. The initial value of the marked
      * {@code readerIndex} is {@code 0}.
