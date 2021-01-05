@@ -68,10 +68,12 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             int sessionExpireMs = url.getParameter(ZK_SESSION_EXPIRE_KEY, DEFAULT_SESSION_TIMEOUT_MS);
             // 创建CuratorFrameworkFactory构建者
             CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
+                    // 返回的可能是多个地址 eg:127.0.0.1:2181,127.0.0.1:65487,127.0.0.1:65483，进去
                     .connectString(url.getBackupAddress())
                     .retryPolicy(new RetryNTimes(1, 1000))
                     .connectionTimeoutMs(timeout)
                     .sessionTimeoutMs(sessionExpireMs);
+            // eg: "us1:pw1" ，就是用户名密码，URL.valueOf("zk://us1:pw1@ip:port")
             String authority = url.getAuthority();
             if (authority != null && authority.length() > 0) {
                 builder = builder.authorization("digest", authority.getBytes());
@@ -279,6 +281,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
     }
 
     // 实现两个接口，关注不同的事件
+    // todo CuratorWatcher、TreeCacheListener这两个接口区别还有待研究
     static class CuratorWatcherImpl implements CuratorWatcher, TreeCacheListener {
 
         private CuratorFramework client;
@@ -327,7 +330,6 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
                 EventType eventType = null;
                 String content = null;
                 String path = null;
-                // 下面是节点本身的事件
                 switch (type) {
                     case NODE_ADDED:
                         eventType = EventType.NodeCreated;
@@ -360,6 +362,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
                 dataListener.dataChanged(path, content, eventType);
             }
         }
+
     }
 
     // 连接的相关监听/回调

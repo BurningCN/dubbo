@@ -38,8 +38,10 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
  * <p>
  * If you want to extends this, implements createZookeeperClient.
  */
+// OK
 public abstract class AbstractZookeeperTransporter implements ZookeeperTransporter {
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperTransporter.class);
+    // 缓存所有已连接客户端
     private final Map<String, ZookeeperClient> zookeeperClientMap = new ConcurrentHashMap<>();
 
     /**
@@ -56,20 +58,27 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
         // address format: {[username:password@]address}
         // 进去
         List<String> addressList = getURLBackupAddress(url);
-        // The field define the zookeeper server , including protocol, host, port, username, password
+        // The addressList field define the zookeeper server , including protocol, host, port, username, password
+        // fetchAndUpdateZookeeperClientCache、isConnected进去
         if ((zookeeperClient = fetchAndUpdateZookeeperClientCache(addressList)) != null && zookeeperClient.isConnected()) {
+            // 日志
             logger.info("find valid zookeeper client from the cache for address: " + url);
             return zookeeperClient;
         }
         // avoid creating too many connections， so add lock
         synchronized (zookeeperClientMap) {
+            // 常见做法，加锁后进来不是立马写操作，而是先读操作，查一遍，下面的步骤和前面的if一致
             if ((zookeeperClient = fetchAndUpdateZookeeperClientCache(addressList)) != null && zookeeperClient.isConnected()) {
                 logger.info("find valid zookeeper client from the cache for address: " + url);
                 return zookeeperClient;
             }
-            // 进去
+            // 创建zkClient，进去
+            // 注意下：前面两处从缓存取zkClient，取不到才如下创建（内部发起连接）。这就体现了map缓存设计的好处，同一个url(实际是多个addressList有交集)
+            // 在connect的时候不会创建多份zkClient，而是会合理的利用缓存，减少连接消耗。
             zookeeperClient = createZookeeperClient(url);
+            // 日志
             logger.info("No valid zookeeper client found from cache, therefore create a new client for url. " + url);
+            // 写map
             writeToClientMap(addressList, zookeeperClient);
         }
         return zookeeperClient;
@@ -81,6 +90,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
      *            such as: zookeeper://127.0.0.1:2181/org.apache.dubbo.remoting.zookeeper.ZookeeperTransporter
      * @return
      */
+    // 看上面注释，去看下实现
     protected abstract ZookeeperClient createZookeeperClient(URL url);
 
     /**
@@ -95,6 +105,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
 
         ZookeeperClient zookeeperClient = null;
         for (String address : addressList) {
+            // 先从缓存中根据address找到已连接的zkClient
             if ((zookeeperClient = zookeeperClientMap.get(address)) != null && zookeeperClient.isConnected()) {
                 break;
             }
@@ -116,6 +127,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
     List<String> getURLBackupAddress(URL url) {
         List<String> addressList = new ArrayList<String>();
         addressList.add(url.getAddress());
+        // 取backup参数的值，eg: xx?backup=127.0.0.1:9999
         addressList.addAll(url.getParameter(RemotingConstants.BACKUP_KEY, Collections.EMPTY_LIST));
 
         String authPrefix = null;
@@ -150,6 +162,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
      */
     void writeToClientMap(List<String> addressList, ZookeeperClient zookeeperClient) {
         for (String address : addressList) {
+            // 所有相关的address都是一个zkClient
             zookeeperClientMap.put(address, zookeeperClient);
         }
     }

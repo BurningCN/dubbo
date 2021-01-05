@@ -190,7 +190,7 @@ public class CuratorZookeeperClientTest {
         String valueFromCache = curatorClient.getContent(path + "/d.json");
         Assertions.assertEquals(value, valueFromCache);
         final AtomicInteger atomicInteger = new AtomicInteger(0);
-        // 注册节点数据变更的监听
+        // 注册监听
         curatorClient.addTargetDataListener(listenerPath, new CuratorZookeeperClient.CuratorWatcherImpl() {
             @Override
             public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {

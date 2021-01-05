@@ -71,3 +71,5 @@
 **036.观察者模式。**详见AbstractZookeeperClient的stateChanged方法。被观察者的状态变化，调用所有观察者的方法
 
 036.Curator连接zk的客户端。
+
+**037.连接复用，缓存设计。**AbstractZookeeperTransport的connect方法内部两次查询缓存，都查不到才会创建zkClinet，利用缓存实现连接复用，不会多次创建相同的connection。

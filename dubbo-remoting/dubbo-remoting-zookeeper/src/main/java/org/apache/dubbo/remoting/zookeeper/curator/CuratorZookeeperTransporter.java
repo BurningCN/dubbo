@@ -20,9 +20,11 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.remoting.zookeeper.ZookeeperClient;
 import org.apache.dubbo.remoting.zookeeper.support.AbstractZookeeperTransporter;
 
+// OK
 public class CuratorZookeeperTransporter extends AbstractZookeeperTransporter {
     @Override
     public ZookeeperClient createZookeeperClient(URL url) {
+        // 进去
         return new CuratorZookeeperClient(url);
     }
 
