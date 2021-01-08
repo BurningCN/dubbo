@@ -25,15 +25,11 @@ import java.util.stream.Stream;
 import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE;
 import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE_ASYNC;
 
-/**
- *
- */
+
+// OK
 public class MethodDescriptor {
     private final Method method;
-    //    private final boolean isCallBack;
-//    private final boolean isFuture;
     private final String paramDesc;
-    // duplicate filed as paramDesc, but with different format.
     private final String[] compatibleParamSignatures;
     private final Class<?>[] parameterClasses;
     private final Class<?> returnClass;
@@ -45,6 +41,7 @@ public class MethodDescriptor {
         this.method = method;
         this.parameterClasses = method.getParameterTypes();
         this.returnClass = method.getReturnType();
+        // 注意
         this.returnTypes = ReflectUtils.getReturnTypes(method);
         this.paramDesc = ReflectUtils.getDesc(parameterClasses);
         this.compatibleParamSignatures = Stream.of(parameterClasses)

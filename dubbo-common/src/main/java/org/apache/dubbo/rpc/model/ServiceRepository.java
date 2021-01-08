@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentMap;
 import static org.apache.dubbo.common.BaseServiceMetadata.interfaceFromServiceKey;
 import static org.apache.dubbo.common.BaseServiceMetadata.versionFromServiceKey;
 
+// OK
 public class ServiceRepository extends LifecycleAdapter implements FrameworkExt {
 
     public static final String NAME = "repository";
@@ -49,20 +50,31 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
     // useful to find a provider model quickly with serviceInterfaceName:version
     private ConcurrentMap<String, ProviderModel> providersWithoutGroup = new ConcurrentHashMap<>();
 
+    // 在第一次getExtension获取该类实例的时候，会触发如下方法，实现填充几个service
     public ServiceRepository() {
+        // BuiltinServiceDetector ：返内装式服务探测器，有四个子类
         Set<BuiltinServiceDetector> builtinServices
                 = ExtensionLoader.getExtensionLoader(BuiltinServiceDetector.class).getSupportedExtensionInstances();
         if (CollectionUtils.isNotEmpty(builtinServices)) {
             for (BuiltinServiceDetector service : builtinServices) {
+                // 挨个注册下，getService方法实现和registerService进去
                 registerService(service.getService());
             }
         }
     }
 
+    public static void main(String[] args) {
+        ServiceRepository serviceRepository = (ServiceRepository)ExtensionLoader.getExtensionLoader(FrameworkExt.class).getExtension("repository");
+    }
+
+    // gx 除了上面的，重点关注ServiceConfig的调用处
     public ServiceDescriptor registerService(Class<?> interfaceClazz) {
+
         return services.computeIfAbsent(interfaceClazz.getName(),
+                // 进去
                 _k -> new ServiceDescriptor(interfaceClazz));
     }
+
 
     /**
      * See {@link #registerService(Class)}
@@ -71,14 +83,17 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
      * 1. services with different interfaces are not allowed to have the same path.
      * 2. services share the same interface but has different group/version can share the same path.
      * 3. path's default value is the name of the interface.
-     *
+     * * 1。不同接口的服务不允许有相同的路径。
+     * * 2。服务共享相同的接口，但不同的组/版本可以共享相同的路径。
+     * * 3。path的默认值是接口名。
      * @param path
      * @param interfaceClass
      * @return
      */
+    // gx
     public ServiceDescriptor registerService(String path, Class<?> interfaceClass) {
         ServiceDescriptor serviceDescriptor = registerService(interfaceClass);
-        // if path is different with interface name, add extra path mapping
+        // if path is different with interface name, add extra（额外的） path mapping
         if (!interfaceClass.getName().equals(path)) {
             services.putIfAbsent(path, serviceDescriptor);
         }
@@ -111,13 +126,16 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
 
     }
 
-    public void registerProvider(String serviceKey,
-                                 Object serviceInstance,
-                                 ServiceDescriptor serviceModel,
-                                 ServiceConfigBase<?> serviceConfig,
-                                 ServiceMetadata serviceMetadata) {
+    // gx
+    public void registerProvider(String serviceKey, // URL.buildKey(interfaceName, getGroup(), getVersion());
+                                 Object serviceInstance,// 接口实现类
+                                 ServiceDescriptor serviceModel,// 服务描述，先前调用register返回的
+                                 ServiceConfigBase<?> serviceConfig,// ServiceConfig this 对象
+                                 ServiceMetadata serviceMetadata) {// 元数据
+        // 构建ProviderModel
         ProviderModel providerModel = new ProviderModel(serviceKey, serviceInstance, serviceModel, serviceConfig,
                 serviceMetadata);
+        // 存到下两个容器
         providers.putIfAbsent(serviceKey, providerModel);
         providersWithoutGroup.putIfAbsent(keyWithoutGroup(serviceKey), providerModel);
     }
@@ -137,6 +155,7 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
         return Collections.unmodifiableList(new ArrayList<>(services.values()));
     }
 
+    // 前面注册到了容器，这个就是从容器查，其实就是做了缓存作用
     public ServiceDescriptor lookupService(String interfaceName) {
         return services.get(interfaceName);
     }
