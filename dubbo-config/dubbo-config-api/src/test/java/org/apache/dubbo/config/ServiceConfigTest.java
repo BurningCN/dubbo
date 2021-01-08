@@ -28,6 +28,7 @@ import org.apache.dubbo.registry.Registry;
 import org.apache.dubbo.rpc.Exporter;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Protocol;
+import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.service.GenericService;
 
 import org.junit.jupiter.api.AfterEach;
@@ -66,10 +67,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.withSettings;
 
+// OK
 public class ServiceConfigTest {
     private Protocol protocolDelegate = Mockito.mock(Protocol.class);
     private Registry registryDelegate = Mockito.mock(Registry.class);
     private Exporter exporter = Mockito.mock(Exporter.class);
+
     private ServiceConfig<DemoServiceImpl> service = new ServiceConfig<DemoServiceImpl>();
     private ServiceConfig<DemoServiceImpl> service2 = new ServiceConfig<DemoServiceImpl>();
     private ServiceConfig<DemoServiceImpl> delayService = new ServiceConfig<DemoServiceImpl>();
@@ -80,28 +83,36 @@ public class ServiceConfigTest {
         MockRegistryFactory2.registry = registryDelegate;
         Mockito.when(protocolDelegate.export(Mockito.any(Invoker.class))).thenReturn(exporter);
 
-        ApplicationConfig app = new ApplicationConfig("app");
+
+        ApplicationConfig app = new ApplicationConfig("app");// <dubbo:application hostname="B-RHDTJG5H-2145" name="app" />
 
         ProtocolConfig protocolConfig = new ProtocolConfig();
         protocolConfig.setName("mockprotocol2");
 
         ProviderConfig provider = new ProviderConfig();
         provider.setExport(true);
-        provider.setProtocol(protocolConfig);
+        provider.setProtocol(protocolConfig);// ProtocolConfig 给 ProviderConfig
+
 
         RegistryConfig registry = new RegistryConfig();
         registry.setProtocol("mockprotocol2");
-        registry.setAddress("N/A");
+        registry.setAddress("N/A"); // <dubbo:registry address="N/A" protocol="mockprotocol2" port="0" />
+
 
         ArgumentConfig argument = new ArgumentConfig();
         argument.setIndex(0);
         argument.setCallback(false);
 
         MethodConfig method = new MethodConfig();
-        method.setName("echo");
-        method.setArguments(Collections.singletonList(argument));
+        method.setName("echo");// <dubbo:method name="echo" />
+        method.setArguments(Collections.singletonList(argument)); // ArgumentConfig 给 MethodConfig
 
+
+        // ApplicationConfig、ProviderConfig、RegistryConfig、MethodConfig给ServiceConfig
+
+        // 进去
         service.setProvider(provider);
+        // 进去（前后两个set操作会把config对象添加到ConfigManager中）
         service.setApplication(app);
         service.setRegistry(registry);
         service.setInterface(DemoService.class);
@@ -114,7 +125,7 @@ public class ServiceConfigTest {
         service2.setInterface(DemoService.class);
         service2.setRef(new DemoServiceImpl());
         service2.setMethods(Collections.singletonList(method));
-        service2.setProxy("testproxyfactory");
+        service2.setProxy("testproxyfactory"); //
 
         delayService.setProvider(provider);
         delayService.setApplication(app);
@@ -122,21 +133,38 @@ public class ServiceConfigTest {
         delayService.setInterface(DemoService.class);
         delayService.setRef(new DemoServiceImpl());
         delayService.setMethods(Collections.singletonList(method));
-        delayService.setDelay(100);
+        delayService.setDelay(100); //
 
-//        ApplicationModel.getConfigManager().clear();
     }
 
     @AfterEach
     public void tearDown() {
-//        ApplicationModel.getConfigManager().clear();
+        ApplicationModel.getConfigManager().clear();
     }
 
     @Test
     public void testExport() throws Exception {
+        // 进去
         service.export();
 
         assertThat(service.getExportedUrls(), hasSize(1));
+        // mockprotocol2://30.25.58.102:53011/org.apache.dubbo.config.api.DemoService
+        // ?anyhost=true
+        // &application=app
+        // &bind.ip=30.25.58.102
+        // &bind.port=53011
+        // &deprecated=false
+        // &dubbo=2.0.2
+        // &dynamic=true
+        // &echo.0.callback=false
+        // &export=true
+        // &generic=false
+        // &interface=org.apache.dubbo.config.api.DemoService
+        // &methods=sayName,getUsers,echo,getBox,throwDemoException
+        // &pid=29913
+        // &release=
+        // &side=provider
+        // &timestamp=1610096148618
         URL url = service.toUrl();
         assertThat(url.getProtocol(), equalTo("mockprotocol2"));
         assertThat(url.getPath(), equalTo(DemoService.class.getName()));
@@ -156,28 +184,35 @@ public class ServiceConfigTest {
 
     @Test
     public void testProxy() throws Exception {
+        // 前置程序setProxy了
         service2.export();
 
         assertThat(service2.getExportedUrls(), hasSize(1));
-        assertEquals(2, TestProxyFactory.count); // local injvm and registry protocol, so expected is 2
+        // local injvm and registry protocol, so expected is 2，可以打断点的确是调用了两次
+        assertEquals(2, TestProxyFactory.count);
     }
 
 
+    // easy
     @Test
     public void testDelayExport() throws Exception {
         delayService.export();
         assertTrue(delayService.getExportedUrls().isEmpty());
-        //add 300ms to ensure that the delayService has been exported
+        // add 300ms to ensure that the delayService has been exported
         TimeUnit.MILLISECONDS.sleep(delayService.getDelay() + 300);
         assertThat(delayService.getExportedUrls(), hasSize(1));
     }
 
     @Test
-    @Disabled("cannot pass in travis")
+
     public void testUnexport() throws Exception {
+
+        // 这个参数注意下
         System.setProperty(SHUTDOWN_WAIT_KEY, "0");
         try {
+
             service.export();
+            // 进去
             service.unexport();
             Thread.sleep(1000);
             Mockito.verify(exporter, Mockito.atLeastOnce()).unexport();
@@ -192,6 +227,7 @@ public class ServiceConfigTest {
         service.setInterface(Greeting.class.getName());
         service.setRef(Mockito.mock(Greeting.class));
         assertThat(service.getInterfaceClass() == Greeting.class, is(true));
+
         service = new ServiceConfig<Greeting>();
         service.setRef(Mockito.mock(Greeting.class, withSettings().extraInterfaces(GenericService.class)));
         assertThat(service.getInterfaceClass() == GenericService.class, is(true));
@@ -201,6 +237,7 @@ public class ServiceConfigTest {
     public void testInterface1() throws Exception {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             ServiceConfig<DemoService> service = new ServiceConfig<DemoService>();
+            // 放入的实现类、不是接口，抛异常
             service.setInterface(DemoServiceImpl.class);
         });
     }
@@ -214,6 +251,7 @@ public class ServiceConfigTest {
 
     @Test
     public void testProvider() throws Exception {
+        // 这里没加泛型
         ServiceConfig service = new ServiceConfig();
         ProviderConfig provider = new ProviderConfig();
         service.setProvider(provider);
@@ -223,10 +261,15 @@ public class ServiceConfigTest {
     @Test
     public void testGeneric1() throws Exception {
         ServiceConfig service = new ServiceConfig();
+
+        // 下几个变量都是代表 Generic 的
+
         service.setGeneric(GENERIC_SERIALIZATION_DEFAULT);
         assertThat(service.getGeneric(), equalTo(GENERIC_SERIALIZATION_DEFAULT));
+
         service.setGeneric(GENERIC_SERIALIZATION_NATIVE_JAVA);
         assertThat(service.getGeneric(), equalTo(GENERIC_SERIALIZATION_NATIVE_JAVA));
+
         service.setGeneric(GENERIC_SERIALIZATION_BEAN);
         assertThat(service.getGeneric(), equalTo(GENERIC_SERIALIZATION_BEAN));
     }
@@ -235,6 +278,7 @@ public class ServiceConfigTest {
     public void testGeneric2() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             ServiceConfig service = new ServiceConfig();
+            // 这个设置抛异常，因为能识别为generic的就那几个
             service.setGeneric("illegal");
         });
     }
