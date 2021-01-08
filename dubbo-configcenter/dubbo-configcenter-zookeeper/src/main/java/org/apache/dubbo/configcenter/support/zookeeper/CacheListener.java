@@ -37,19 +37,27 @@ import static org.apache.dubbo.common.constants.CommonConstants.PATH_SEPARATOR;
  *
  */
 
+// OK
+// 作为ZookeeperDynamicConfiguration的属性，其keyListeners存放了业务方指定的针对key的监听器，当key/path的节点信息发生变更，就会挨个调用
+// ConfigurationListener.process方法
 public class CacheListener implements DataListener {
     private static final int MIN_PATH_DEPTH = 5;
 
+    // 参考类上面注释
     private Map<String, Set<ConfigurationListener>> keyListeners = new ConcurrentHashMap<>();
+    // 用于等待connect zk 初始化完毕的闭锁
     private CountDownLatch initializedLatch;
+    // 从ZookeeperDynamicConfiguration构造方法传过来的
     private String rootPath;
 
     public CacheListener(String rootPath, CountDownLatch initializedLatch) {
         this.rootPath = rootPath;
+        // 跟下使用处
         this.initializedLatch = initializedLatch;
     }
 
     public void addListener(String key, ConfigurationListener configurationListener) {
+        // 一个key可以有多个监听器
         Set<ConfigurationListener> listeners = this.keyListeners.computeIfAbsent(key, k -> new CopyOnWriteArraySet<>());
         listeners.add(configurationListener);
     }
@@ -61,6 +69,53 @@ public class CacheListener implements DataListener {
         }
     }
 
+    // 实现了DataListener接口的方法，主要在CuratorWatcherImpl的childEvent调用的时候，最后会触发下面的方法
+    @Override
+    public void dataChanged(String path, Object value, EventType eventType) {
+        if (eventType == null) {
+            return;
+        }
+
+        if (eventType == EventType.INITIALIZED) {
+            // 当收到这个事件的时候，就countdown，ZookeeperDynamicConfiguration在initializedLatch.await就解除阻塞了，表示连接完成并初始化完毕
+            initializedLatch.countDown();
+            return;
+        }
+
+        if (path == null || (value == null && eventType != EventType.NodeDeleted)) {
+            return;
+        }
+
+        // TODO We only care the changes happened on a specific path level, for example
+        //  /dubbo/config/dubbo/configurators, other config changes not in this level will be ignored,
+        if (path.split("/").length >= MIN_PATH_DEPTH) {
+            // 将path转化为key，就是/转化为.
+            String key = pathToKey(path);
+            ConfigChangeType changeType;
+            switch (eventType) {
+                case NodeCreated:
+                    changeType = ConfigChangeType.ADDED;
+                    break;
+                case NodeDeleted:
+                    changeType = ConfigChangeType.DELETED;
+                    break;
+                case NodeDataChanged:
+                    changeType = ConfigChangeType.MODIFIED;
+                    break;
+                default:
+                    return;
+            }
+
+            // 创建事件对象
+            ConfigChangedEvent configChangeEvent = new ConfigChangedEvent(key, getGroup(path), (String) value, changeType);
+            // 获取指定path下的业务方注册的监听器们
+            Set<ConfigurationListener> listeners = keyListeners.get(path);
+            if (CollectionUtils.isNotEmpty(listeners)) {
+                // 挨个调用
+                listeners.forEach(listener -> listener.process(configChangeEvent));
+            }
+        }
+    }
     /**
      * This is used to convert a configuration nodePath into a key
      * TODO doc
@@ -87,48 +142,5 @@ public class CacheListener implements DataListener {
             }
         }
         return path;
-    }
-
-
-    @Override
-    public void dataChanged(String path, Object value, EventType eventType) {
-        if (eventType == null) {
-            return;
-        }
-
-        if (eventType == EventType.INITIALIZED) {
-            initializedLatch.countDown();
-            return;
-        }
-
-        if (path == null || (value == null && eventType != EventType.NodeDeleted)) {
-            return;
-        }
-
-        // TODO We only care the changes happened on a specific path level, for example
-        //  /dubbo/config/dubbo/configurators, other config changes not in this level will be ignored,
-        if (path.split("/").length >= MIN_PATH_DEPTH) {
-            String key = pathToKey(path);
-            ConfigChangeType changeType;
-            switch (eventType) {
-                case NodeCreated:
-                    changeType = ConfigChangeType.ADDED;
-                    break;
-                case NodeDeleted:
-                    changeType = ConfigChangeType.DELETED;
-                    break;
-                case NodeDataChanged:
-                    changeType = ConfigChangeType.MODIFIED;
-                    break;
-                default:
-                    return;
-            }
-
-            ConfigChangedEvent configChangeEvent = new ConfigChangedEvent(key, getGroup(path), (String) value, changeType);
-            Set<ConfigurationListener> listeners = keyListeners.get(path);
-            if (CollectionUtils.isNotEmpty(listeners)) {
-                listeners.forEach(listener -> listener.process(configChangeEvent));
-            }
-        }
     }
 }

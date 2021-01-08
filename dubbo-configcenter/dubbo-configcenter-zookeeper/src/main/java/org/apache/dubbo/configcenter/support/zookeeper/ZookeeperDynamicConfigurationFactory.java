@@ -24,8 +24,10 @@ import org.apache.dubbo.remoting.zookeeper.ZookeeperTransporter;
 /**
  *
  */
+// OK
 public class ZookeeperDynamicConfigurationFactory extends AbstractDynamicConfigurationFactory {
 
+    // 这个属性作用就是调用其connect方法返回zkClient的
     private ZookeeperTransporter zookeeperTransporter;
 
     // 在newInstance实例化之后会 inject ZookeeperTransporter$Adaptive

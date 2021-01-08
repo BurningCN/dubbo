@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 /**
  *
  */
+// OK
 public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration {
 
     private Executor executor;
@@ -54,14 +55,14 @@ public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration 
 
         // 用以等待"初始化完毕"的闭锁
         initializedLatch = new CountDownLatch(1);
-        // 进去
+        // 很重要，监听zk节点的
         this.cacheListener = new CacheListener(rootPath, initializedLatch);
         // 创建线程池
         this.executor = Executors.newFixedThreadPool(1, new NamedThreadFactory(this.getClass().getSimpleName(), true));
 
-        // 进去
+        // 进去（连接完成之后会调用cacheListener的process方法，内部会将initializedLatch.countdwon，后面就能解除阻塞了）
         zkClient = zookeeperTransporter.connect(url);
-        // 进去
+        // 进去，注意添加了线程池
         zkClient.addDataListener(rootPath, cacheListener, executor);
         try {
             // Wait for connection
@@ -100,7 +101,7 @@ public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration 
 
     @Override
     protected String doGetConfig(String pathKey) throws Exception {
-        return zkClient.getContent(pathKey);
+        return zkClient.getContent(pathKey); // 看实现，进去
     }
 
     @Override
@@ -116,6 +117,7 @@ public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration 
 
     @Override
     protected void doAddListener(String pathKey, ConfigurationListener listener) {
+        // cacheListener在构造函数得到初始化，addListener进去
         cacheListener.addListener(pathKey, listener);
     }
 
