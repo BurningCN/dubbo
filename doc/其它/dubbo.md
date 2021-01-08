@@ -77,3 +77,10 @@
 **038.抽象工厂模式。**ChannelBufferFactory接口、ChannelBuffer接口以及相关的实现类利用了标准的抽象工厂模式。
 
 **039.动态缓冲区，自动扩容。**详见ensureWritableBytes以及重写的方法（2倍递增直到超过期望的最小目标容量）
+
+**040.过滤器、责任链模式。**在调用Protocol实例的export方法的时候，会经过FilterProtocol的export，内部会取出很多filter进行拦截。我们也可以根据自己进行扩展。
+
+041.AbstractRegistry注册、订阅、同步异步保存文件、文件锁
+
+**042.根据url搞线程池。**AbstractDynamicConfiguration，构造函数会根据url参数来创建线程池（前缀、核心线程从url取），以及getConfig、removeConfig等操作当做一个任务交给线程池执行，以及根据timeout值来决定是带超时的阻塞还是不带...
+

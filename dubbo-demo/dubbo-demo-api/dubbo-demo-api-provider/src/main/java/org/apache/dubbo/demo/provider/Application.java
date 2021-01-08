@@ -51,10 +51,13 @@ public class Application {
 
         // 单例，进去
         DubboBootstrap bootstrap = DubboBootstrap.getInstance();
-        //
+        // 创建ApplicationConfig然后存到ConfigManager，两个都进去
         bootstrap.application(new ApplicationConfig("dubbo-demo-api-provider"))
+                // 两个都进去
                 .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
+                // 进去
                 .service(service)
+                // 进去
                 .start()
                 .await();
     }

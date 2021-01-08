@@ -45,12 +45,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.5
  */
+// OK
 public class AbstractDynamicConfigurationTest {
 
     private AbstractDynamicConfiguration configuration;
 
     @BeforeEach
     public void init() {
+        // 进去
         configuration = new AbstractDynamicConfiguration(null) {
             @Override
             protected String doGetConfig(String key, String group) throws Exception {
@@ -91,6 +93,7 @@ public class AbstractDynamicConfigurationTest {
                 .addParameter(THREAD_POOL_SIZE_PARAM_NAME, 10)
                 .addParameter(THREAD_POOL_KEEP_ALIVE_TIME_PARAM_NAME, 100);
 
+        // 进去
         AbstractDynamicConfiguration configuration = new AbstractDynamicConfiguration(url) {
 
             @Override
@@ -109,33 +112,56 @@ public class AbstractDynamicConfigurationTest {
             }
         };
 
+        // 验证前面url的参数是否对线程池的配置发生影响
+
         ThreadPoolExecutor threadPoolExecutor = configuration.getWorkersThreadPool();
         ThreadFactory threadFactory = threadPoolExecutor.getThreadFactory();
 
+        // lambda什么也不干
         Thread thread = threadFactory.newThread(() -> {
         });
 
+        // 线程池的一些信息直接获取和前面url配置的比较
         assertEquals(10, threadPoolExecutor.getCorePoolSize());
         assertEquals(10, threadPoolExecutor.getMaximumPoolSize());
         assertEquals(100, threadPoolExecutor.getKeepAliveTime(TimeUnit.MILLISECONDS));
+        // NamedThreadFactory的newThread去看，的确是test-thread-1
         assertEquals("test-thread-1", thread.getName());
     }
 
     @Test
     public void testPublishConfig() {
+        // 进DynamicConfiguration接口的默认方法publishConfig返回false
         assertFalse(configuration.publishConfig(null, null));
         assertFalse(configuration.publishConfig(null, null, null));
     }
 
     @Test
     public void testGetConfigKeys() {
+        // 进DynamicConfiguration接口的默认方法getConfigKeys
         assertTrue(configuration.getConfigKeys(null).isEmpty());
     }
 
     @Test
     public void testGetConfig() {
+        // 进去 内部涉及到线程池
         assertNull(configuration.getConfig(null, null));
         assertNull(configuration.getConfig(null, null, 200));
+    }
+
+    /**
+     * Test {@link AbstractDynamicConfiguration#removeConfig(String, String)} and
+     * {@link AbstractDynamicConfiguration#doRemoveConfig(String, String)} methods
+     *
+     * @since 2.7.8
+     */
+    @Test
+    public void testRemoveConfigAndDoRemoveConfig() throws Exception {
+        String key = null;
+        String group = null;
+        // 进去 内部涉及到线程池
+        assertEquals(configuration.removeConfig(key, group), configuration.doRemoveConfig(key, group));
+        assertFalse(configuration.removeConfig(key, group));
     }
 
     @Test
@@ -163,6 +189,7 @@ public class AbstractDynamicConfigurationTest {
 
     @Test
     public void testClose() throws Exception {
+        // 进去
         configuration.close();
     }
 
@@ -174,6 +201,7 @@ public class AbstractDynamicConfigurationTest {
      */
     @Test
     public void testGetGroupAndGetDefaultGroup() {
+        // 肯定相等（因为在new AbstractDynamicConfiguration的时候能确保group的缺省值/默认值为dubbo）
         assertEquals(configuration.getGroup(), configuration.getDefaultGroup());
         assertEquals(DEFAULT_GROUP, configuration.getDefaultGroup());
     }
@@ -186,21 +214,10 @@ public class AbstractDynamicConfigurationTest {
      */
     @Test
     public void testGetTimeoutAndGetDefaultTimeout() {
+        // 参考前面group
         assertEquals(configuration.getTimeout(), configuration.getDefaultTimeout());
         assertEquals(-1L, configuration.getDefaultTimeout());
     }
 
-    /**
-     * Test {@link AbstractDynamicConfiguration#removeConfig(String, String)} and
-     * {@link AbstractDynamicConfiguration#doRemoveConfig(String, String)} methods
-     *
-     * @since 2.7.8
-     */
-    @Test
-    public void testRemoveConfigAndDoRemoveConfig() throws Exception {
-        String key = null;
-        String group = null;
-        assertEquals(configuration.removeConfig(key, group), configuration.doRemoveConfig(key, group));
-        assertFalse(configuration.removeConfig(key, group));
-    }
+
 }

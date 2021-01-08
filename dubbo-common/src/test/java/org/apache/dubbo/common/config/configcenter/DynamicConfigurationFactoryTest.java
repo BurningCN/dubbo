@@ -28,10 +28,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @since 2.7.5
  */
+// OK
 public class DynamicConfigurationFactoryTest {
 
     @Test
     public void testDefaultExtension() {
+        // 看下common模块下的DynamicConfigurationFactory对应的SPI文件，里面配了两个类，默认的是nop
         DynamicConfigurationFactory factory = getExtensionLoader(DynamicConfigurationFactory.class).getDefaultExtension();
         assertEquals(NopDynamicConfigurationFactory.class, factory.getClass());
         assertEquals(NopDynamicConfigurationFactory.class, getExtensionLoader(DynamicConfigurationFactory.class).getExtension("nop").getClass());

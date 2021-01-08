@@ -30,13 +30,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @see AbstractDynamicConfigurationFactory
  * @since 2.7.5
  */
+// OK
 public class AbstractDynamicConfigurationFactoryTest {
 
     private AbstractDynamicConfigurationFactory factory;
 
     @BeforeEach
     public void init() {
+        // 创建一个工厂
         factory = new AbstractDynamicConfigurationFactory() {
+            // 实现抽象方法
             @Override
             protected DynamicConfiguration createDynamicConfiguration(URL url) {
                 return new NopDynamicConfiguration(url);
@@ -47,6 +50,7 @@ public class AbstractDynamicConfigurationFactoryTest {
     @Test
     public void testGetDynamicConfiguration() {
         URL url = URL.valueOf("nop://127.0.0.1");
+        // 进去
         assertEquals(factory.getDynamicConfiguration(url), factory.getDynamicConfiguration(url));
     }
 }

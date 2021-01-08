@@ -52,6 +52,7 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
      * @param key      the key to represent a configuration
      * @param listener configuration listener
      */
+    // 主要是对key进行监听的
     default void addListener(String key, ConfigurationListener listener) {
         addListener(key, getDefaultGroup(), listener);
     }
@@ -97,6 +98,7 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
      * @return target configuration mapped to the given key and the given group
      */
     default String getConfig(String key, String group) {
+        // 进去
         return getConfig(key, group, getDefaultTimeout());
     }
 
@@ -139,6 +141,7 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
      * @since 2.7.5
      */
     default boolean publishConfig(String key, String content) throws UnsupportedOperationException {
+        // 进去
         return publishConfig(key, getDefaultGroup(), content);
     }
 
@@ -152,6 +155,7 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
      * @throws UnsupportedOperationException If the under layer does not support
      * @since 2.7.5
      */
+    // 这种映射关系：key+group->content
     default boolean publishConfig(String key, String group, String content) throws UnsupportedOperationException {
         return false;
     }

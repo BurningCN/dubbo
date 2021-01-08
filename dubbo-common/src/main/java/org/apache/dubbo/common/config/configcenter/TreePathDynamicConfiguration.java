@@ -63,11 +63,15 @@ public abstract class TreePathDynamicConfiguration extends AbstractDynamicConfig
 
     private final String rootPath;
 
+    // gx
     public TreePathDynamicConfiguration(URL url) {
+        // 进去
         super(url);
+        // 进去
         this.rootPath = getRootPath(url);
     }
 
+    // gx
     public TreePathDynamicConfiguration(String rootPath,
                                         String threadPoolPrefixName,
                                         int threadPoolSize,
@@ -80,8 +84,11 @@ public abstract class TreePathDynamicConfiguration extends AbstractDynamicConfig
 
     @Override
     protected final String doGetConfig(String key, String group) throws Exception {
+        // 进去
         String pathKey = buildPathKey(group, key);
+        // 进去
         return doGetConfig(pathKey);
+
     }
 
     @Override
@@ -99,6 +106,7 @@ public abstract class TreePathDynamicConfiguration extends AbstractDynamicConfig
     @Override
     public final void addListener(String key, String group, ConfigurationListener listener) {
         String pathKey = buildPathKey(group, key);
+        // 进去
         doAddListener(pathKey, listener);
     }
 
@@ -131,7 +139,7 @@ public abstract class TreePathDynamicConfiguration extends AbstractDynamicConfig
         return buildPath(rootPath, group);
     }
 
-    protected String buildPathKey(String group, String key) {
+    protected String buildPathKey(String group, String key) { // 经过下面步骤完整的key为： rootPath + group + key
         return buildPath(buildGroupPath(group), key);
     }
 
@@ -143,16 +151,20 @@ public abstract class TreePathDynamicConfiguration extends AbstractDynamicConfig
      */
     protected String getRootPath(URL url) {
 
+        // buildRootPath看下
         String rootPath = url.getParameter(CONFIG_ROOT_PATH_PARAM_NAME, buildRootPath(url));
 
+        // 标准化下
         rootPath = normalize(rootPath);
 
         int rootPathLength = rootPath.length();
 
+        // 去除最后的/
         if (rootPathLength > 1 && rootPath.endsWith(PATH_SEPARATOR)) {
             rootPath = rootPath.substring(0, rootPathLength - 1);
         }
 
+        // 默认的为/dubbo/config
         return rootPath;
     }
 

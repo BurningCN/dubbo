@@ -36,6 +36,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
  *
  * @since 2.7.5
  */
+// OK
 public abstract class AbstractDynamicConfiguration implements DynamicConfiguration {
 
     public static final String PARAM_NAME_PREFIX = "dubbo.config-center.";
@@ -70,6 +71,7 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
     /**
      * Default keep alive time in milliseconds for threads in {@link ThreadPoolExecutor} is 1 minute( 60 * 1000 ms)
      */
+    // 这种api记住，就不需要自己 60*1000了
     public static final long DEFAULT_THREAD_POOL_KEEP_ALIVE_TIME = TimeUnit.MINUTES.toMillis(1);
 
     /**
@@ -84,10 +86,20 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
 
     private final String group;
 
+    // 和前面线程池配合。submit返回的future，进行get(timeout)限定超时的
     private final long timeout;
 
     public AbstractDynamicConfiguration(URL url) {
-        this(getThreadPoolPrefixName(url), getThreadPoolSize(url), getThreadPoolKeepAliveTime(url), getGroup(url),
+        // 几个参数都是从url获取，this进去
+        // eg:default://?dubbo.config-center.thread-pool.keep-alive-time=100&dubbo.config-center.thread-pool.prefix=test&dubbo.config-center.thread-pool.size=10
+        // 上面?后面的截取出来的参数对如下：
+        // dubbo.config-center.thread-pool.keep-alive-time=100
+        // dubbo.config-center.thread-pool.prefix=test
+        // dubbo.config-center.thread-pool.size=10
+        // 三个get方法进去看看
+        this(getThreadPoolPrefixName(url), getThreadPoolSize(url), getThreadPoolKeepAliveTime(url),
+                // 下两个方法进去
+                getGroup(url),
                 getTimeout(url));
     }
 
@@ -96,8 +108,11 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
                                         long keepAliveTime,
                                         String group,
                                         long timeout) {
+        // 创建工作线程池，进去
         this.workersThreadPool = initWorkersThreadPool(threadPoolPrefixName, threadPoolSize, keepAliveTime);
+        // 默认值为dubbo
         this.group = group;
+        // 默认值为-1
         this.timeout = timeout;
     }
 
@@ -111,6 +126,8 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
 
     @Override
     public final String getConfig(String key, String group, long timeout) throws IllegalStateException {
+        // 以key+group为键获取值，execute使用线程去执行这个获取值的任务，且有超时时间，lambda表达式->右边是有返回值的，正好execute方法的参数
+        // 就是Callable。execute进去
         return execute(() -> doGetConfig(key, group), timeout);
     }
 
@@ -122,14 +139,17 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
     @Override
     public final void close() throws Exception {
         try {
+            // 子类实现
             doClose();
         } finally {
+            // 进去
             doFinally();
         }
     }
 
     @Override
     public boolean removeConfig(String key, String group) {
+        // 使用线程进行移除，移除成功后返回true，execute进去
         return Boolean.TRUE.equals(execute(() -> doRemoveConfig(key, group), -1L));
     }
 
@@ -186,9 +206,10 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
      * @param timeout timeout in milliseconds
      */
     protected final void execute(Runnable task, long timeout) {
+        // runnable的任务，转化为callable
         execute(() -> {
             task.run();
-            return null;
+            return null;// 返回null即可
         }, timeout);
     }
 
@@ -204,7 +225,8 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
         V value = null;
         try {
 
-            if (timeout < 1) { // less or equal 0
+            if (timeout < 1) {
+                // 如果超时时间<=0，那么就表示调用放不需要设置超时，直接call即可，一直阻塞
                 value = task.call();
             } else {
                 Future<V> future = workersThreadPool.submit(task);
@@ -223,6 +245,7 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
     }
 
     private void doFinally() {
+        // 进去
         shutdownWorkersThreadPool();
     }
 
@@ -240,6 +263,7 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
     }
 
     protected static String getThreadPoolPrefixName(URL url) {
+        // 进去
         return getParameter(url, THREAD_POOL_PREFIX_PARAM_NAME, DEFAULT_THREAD_POOL_PREFIX);
     }
 
@@ -291,6 +315,7 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
     protected static String getGroup(URL url) {
         String group = getParameter(url, GROUP_PARAM_NAME, null);
         return StringUtils.isBlank(group) ? getParameter(url, GROUP_KEY, DEFAULT_GROUP) : group;
+        // 缺省值为dubbo
     }
 
     /**
@@ -302,5 +327,6 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
      */
     protected static long getTimeout(URL url) {
         return getParameter(url, TIMEOUT_PARAM_NAME, -1L);
+        // 缺省值为-1
     }
 }
