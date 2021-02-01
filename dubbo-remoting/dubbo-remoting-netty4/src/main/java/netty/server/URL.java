@@ -1,4 +1,5 @@
 package netty.server;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,7 +62,6 @@ public class URL {
     public Map<String, String> getParameters() {
         return parameters;
     }
-
 
 
     public int getPositiveParameter(String key, int defaultValue) {
@@ -236,9 +236,7 @@ public class URL {
         return new URL.Builder().username(username).host(host).port(port).pwd(pwd).protocol(protocol).parameters(parameters).path(path).build();
     }
 
-    
-    
-    
+
     public String getHost() {
         return host;
     }
@@ -309,10 +307,8 @@ public class URL {
         if (value.equals(getParameters().get(key))) { // value != null
             return this;
         }
-
-        Map<String, String> map = new HashMap<>(getParameters());
-        map.put(key, value);
-
+        getParameters().put(key,value);
+        // todo myRPC  原版本是深拷贝 我这里直接返回本身  why？
         return this;
     }
 }
