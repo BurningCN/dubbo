@@ -32,10 +32,11 @@ public class NettyTransporterTest {
     @Test
     public void testClientNotSendHeartbeat() throws RemotingException, InterruptedException {
         NettyTransporter transporter = new NettyTransporter();
-        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=5000&dont.send=true");
+        // 这里设置两个参数对，dont.send=true&reconnect=false  关闭重连
+        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=5000&dont.send=true&reconnect=false");
         transporter.bind(url, getMockHandler());
         transporter.connect(url, getMockHandler());
-        Thread.sleep(15 * 1000);
+        Thread.sleep(60 * 1000);
     }
 
     @Test
@@ -74,6 +75,17 @@ public class NettyTransporterTest {
         }, "testThread");
         thread.start();
         return thread;
+    }
+
+    @Test
+    public void testReconnect() throws RemotingException, InterruptedException {
+        NettyTransporter transporter = new NettyTransporter();
+        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=1000&dont.send=true&reconnect=true");
+        transporter.bind(url, getMockHandler());
+        Client client = transporter.connect(url, getMockHandler());
+        Thread.sleep(20 * 1000);
+        client.close();
+        Thread.sleep(10 * 1000);
     }
 
 

@@ -20,7 +20,7 @@ public abstract class AbstractServer implements Server {
     public AbstractServer(URL url, ChannelHandler handler) {// 待 需要传入一个对象，根据对象取值
         this.url = url;
         this.bindAddress = new InetSocketAddress(url.getHost(), url.getPort());
-        this.idleTimeout = computeIdleTimeout(url);
+        this.idleTimeout = UrlUtils.getIdleTimeout(url);
         this.codec = getChannelCodec(url);
         this.handler = handler;
         doOpen();
@@ -29,14 +29,6 @@ public abstract class AbstractServer implements Server {
     protected Codec2 getChannelCodec(URL url) {
         return new ExchangeCodec();
         // todo myRPC 需要支持spi
-    }
-    private int computeIdleTimeout(URL url) {
-        int heartbeat = url.getPositiveParameter(Constants.HEARTBEAT, Constants.DEFAULT_HEARTBEAT);
-        int idleTimeout = url.getPositiveParameter(Constants.HEARTBEAT_TIMEOUT_KEY, heartbeat * 3);
-        if (idleTimeout < heartbeat * 2) {
-            throw new IllegalArgumentException("idleTimeout< heartbeat*2");
-        }
-        return idleTimeout;
     }
 
     public ChannelHandler getChannelHandler() {

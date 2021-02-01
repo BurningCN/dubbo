@@ -37,6 +37,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
             NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url);
             System.out.println(DataTimeUtil.now() + "The connection of " + channel.getLocalAddress() + " -> " + channel.getRemoteAddress() + " is disconnected.");
             handler.disconnected(channel);
+            NettyChannel.removeChannel(ctx.channel()); // 特别注意这行代码非常重要！！！客户端的自动重连任务需要active的状态值，而该行就是将其置为false
         } catch (RemotingException e) {
             e.printStackTrace();
         }

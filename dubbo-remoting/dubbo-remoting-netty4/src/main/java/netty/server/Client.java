@@ -10,5 +10,11 @@ import java.util.concurrent.ExecutorService;
 public interface Client {
     void connect() throws RemotingException;
 
+    void disconnect() throws RemotingException;
+
+    void reconnect() throws RemotingException;
+
+    void close() throws RemotingException; // 区别于Channel的close，这里是关闭客户端（当然内部会调用channel.close）
+
     InnerChannel getChannel();
 }

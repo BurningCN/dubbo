@@ -64,13 +64,7 @@ public class URL {
         return parameters;
     }
 
-    public boolean getParameter(String key, boolean defaultValue) {
-        if (parameters != null) { // todo myRPC 这里不应该判空
-            String value = parameters.get(key);
-            return (value == null || value.isEmpty()) ? defaultValue : Boolean.parseBoolean(value);
-        }
-        return false;
-    }
+
 
     public int getPositiveParameter(String key, int defaultValue) {
         if (defaultValue <= 0) {
@@ -90,6 +84,14 @@ public class URL {
             }
         }
         return number == null ? -1 : number.intValue();
+    }
+
+    public boolean getParameter(String key, boolean defaultValue) {
+        if (parameters != null) { // todo myRPC 这里不应该判空
+            String value = parameters.get(key);
+            return (value == null || value.isEmpty()) ? defaultValue : Boolean.parseBoolean(value);
+        }
+        return false;
     }
 
     public void setParameters(Map<String, String> parameters) {

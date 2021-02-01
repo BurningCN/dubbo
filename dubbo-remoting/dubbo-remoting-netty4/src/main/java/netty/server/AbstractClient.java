@@ -28,12 +28,14 @@ public abstract class AbstractClient implements Client {
         this.serverAddress = new InetSocketAddress(url.getHost(), url.getPort());
         this.channelHandler = channelHandler;
         this.connectionTimeout = url.getPositiveParameter(Constants.CONNECT_TIMEOUT, Constants.DEFAULT_CONNECT_TIMEOUT);
-        this.idleTimeout = url.getPositiveParameter(Constants.HEARTBEAT, Constants.DEFAULT_HEARTBEAT);
+        this.idleTimeout = UrlUtils.getHeartbeat(url);
         this.sendTimeout = url.getPositiveParameter(Constants.SEND_TIMEOUT, Constants.DEFAULT_SEND_TIMEOUT);
         this.sent = url.getParameter(Constants.SENT, false);
         doOpen();
         connect();
+        doStartTimer();
     }
+
 
     public ChannelHandler getChannelHandler() {
         return channelHandler;
@@ -46,21 +48,70 @@ public abstract class AbstractClient implements Client {
 
     @Override
     public void connect() throws RemotingException {
-        connectLock.lock();
-        try {
-            if (isConnected()) {
-                return;
+        if (!isConnected()) {
+            try {
+                connectLock.lock();
+                if (!isConnected()) {
+                    doConnect();
+                    if (!isConnected()) {
+                        throw new RemotingException();
+                    } else {
+                        // System.out.println("客户端连接成功，服务端地址为：" + getServerAddress());
+                    }
+                }
+            } catch (RemotingException e) {
+                throw e;
+            } finally {
+                connectLock.unlock();
             }
-            doConnect();
-            if (!isConnected()) {
-                throw new RemotingException();
-            } else {
-                // System.out.println("客户端连接成功，服务端地址为：" + getServerAddress());
+        }
+    }
+
+    @Override
+    public void disconnect() throws RemotingException {
+        if (isConnected()) {
+            try {
+                connectLock.lock();
+                if (isConnected()) {
+                    InnerChannel channel = getChannel();
+                    if (channel != null) {
+                        channel.close();
+                    }
+                    // doDisconnect(); 不需要
+                }
+            } finally {
+                connectLock.unlock();
             }
-        } catch (RemotingException e) {
-            throw e;
-        } finally {
-            connectLock.unlock();
+        }
+    }
+
+    @Override
+    public void reconnect() throws RemotingException {
+        if (!isConnected()) {
+            try {
+                connectLock.lock();
+                if (!isConnected()) {
+                    disconnect();
+                    connect();
+                }
+            } finally {
+                connectLock.unlock();
+            }
+        }
+    }
+
+    @Override
+    public void close() throws RemotingException {
+        if (isConnected()) {
+            try {
+                connectLock.lock();
+                if (isConnected()) {
+                    disconnect();
+                    doClose();
+                }
+            } finally {
+                connectLock.unlock();
+            }
         }
     }
 
@@ -72,6 +123,9 @@ public abstract class AbstractClient implements Client {
 
     protected abstract void doOpen();
 
+    protected abstract void doClose();
+
+    protected abstract void doStartTimer();
 
     public InetSocketAddress getServerAddress() {
         return serverAddress;

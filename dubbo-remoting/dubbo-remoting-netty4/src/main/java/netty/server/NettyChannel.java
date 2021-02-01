@@ -172,6 +172,7 @@ public class NettyChannel implements InnerChannel {
         }
     }
 
+
     // ===== ===== ===== Address ===== ===== ===== ===== =====
     @Override
     public InetSocketAddress getRemoteAddress() {
