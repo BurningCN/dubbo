@@ -1,6 +1,4 @@
 package netty.server;
-
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -238,11 +236,83 @@ public class URL {
         return new URL.Builder().username(username).host(host).port(port).pwd(pwd).protocol(protocol).parameters(parameters).path(path).build();
     }
 
+    
+    
+    
     public String getHost() {
         return host;
     }
 
     public int getPort() {
         return port;
+    }
+
+    public URL addParameter(String key, boolean value) {
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, char value) {
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, byte value) {
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, short value) {
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, int value) {
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, long value) {
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, float value) {
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, double value) {
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, Enum<?> value) {
+        if (value == null) {
+            return this;
+        }
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, Number value) {
+        if (value == null) {
+            return this;
+        }
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, CharSequence value) {
+        if (value == null || value.length() == 0) {
+            return this;
+        }
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public URL addParameter(String key, String value) {
+        if (StringUtils.isEmpty(key)
+                || StringUtils.isEmpty(value)) {
+            return this;
+        }
+        // if value doesn't change, return immediately
+        if (value.equals(getParameters().get(key))) { // value != null
+            return this;
+        }
+
+        Map<String, String> map = new HashMap<>(getParameters());
+        map.put(key, value);
+
+        return this;
     }
 }

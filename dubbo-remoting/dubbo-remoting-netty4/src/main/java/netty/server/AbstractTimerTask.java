@@ -25,9 +25,7 @@ public abstract class AbstractTimerTask implements Runnable {
             while (!isStopped()) {
                 Collection<InnerChannel> channels = channelProvider.getChannels();
                 for (InnerChannel channel : channels) {
-                    if (!channel.isConnected()) {
-                        doTask(channel);
-                    }
+                    doTask(channel);
                 }
                 Thread.sleep(interval);
             }

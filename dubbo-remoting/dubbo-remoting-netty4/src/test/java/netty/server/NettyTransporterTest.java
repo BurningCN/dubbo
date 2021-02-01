@@ -1,5 +1,7 @@
 package netty.server;
+
 import org.junit.jupiter.api.Test;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -32,8 +34,10 @@ public class NettyTransporterTest {
     @Test
     public void testClientNotSendHeartbeat() throws RemotingException, InterruptedException {
         NettyTransporter transporter = new NettyTransporter();
-        // 这里设置两个参数对，dont.send=true&reconnect=false  关闭重连
-        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=5000&dont.send=true&reconnect=false");
+        // 这里设置两个参数对，dont.send.heartbeat=true&reconnect=false  关闭重连
+        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=5000");
+        url.addParameter("dont.send.heartbeat", true);
+        url.addParameter("reconnect", false);
         transporter.bind(url, getMockHandler());
         transporter.connect(url, getMockHandler());
         Thread.sleep(60 * 1000);
@@ -80,18 +84,41 @@ public class NettyTransporterTest {
     @Test
     public void testReconnect() throws RemotingException, InterruptedException {
         NettyTransporter transporter = new NettyTransporter();
-        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=1000&dont.send=true&reconnect=true");
+        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=1000");
+        url.addParameter("dont.send.heartbeat", true);
+        url.addParameter("reconnect", true);
         transporter.bind(url, getMockHandler());
         Client client = transporter.connect(url, getMockHandler());
         Thread.sleep(20 * 1000);
         client.close();
-        Thread.sleep(10 * 1000);
+        Thread.sleep(5 * 1000);
     }
 
+    @Test
+    public void testHeartbeatByTask() throws Exception, RemotingException {
+        NettyTransporter transporter = new NettyTransporter();
+        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=1000");
+        url.addParameter("dont.send.heartbeat", true);
+        url.addParameter("sendHeartbeatByTask", true);
+        transporter.bind(url, getMockHandler());
+        transporter.connect(url, getMockHandler());
+        // 注意这里  + 前面dont.send.heartbeat=true
+        Thread.sleep(20 * 1000);
+    }
+
+    @Test
+    public void testNotReconnectAndHeartbeatByTask() throws Exception, RemotingException {
+        NettyTransporter transporter = new NettyTransporter();
+        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=1000");
+        url.addParameter("dont.send.heartbeat", true);
+        url.addParameter("reconnect", false);
+        transporter.bind(url, getMockHandler());
+        NettyClient client = (NettyClient) transporter.connect(url, getMockHandler());
+        Thread.sleep(20 * 1000);
+    }
 
     public ChannelHandler getMockHandler() {
         return new DecodeHandler(new HeaderExchangeHandler(new MockChannelHandler()));
     }
-
 
 }

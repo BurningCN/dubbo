@@ -19,6 +19,7 @@ public class NettyClient extends AbstractClient {
     private Bootstrap bootstrap;
     private volatile InnerChannel channel;
     private ReconnectTimerTask reconnectTimerTask;
+    private HeartBeatTimerTask heartBeatTimerTask;
 
     public NettyClient(URL url, ChannelHandler channelHandler) throws RemotingException {
         super(url, ChannelHandlers.wrap(channelHandler));
@@ -67,10 +68,15 @@ public class NettyClient extends AbstractClient {
     protected void doStartTimer() {
         startReconnectTask();
         startHeartBeatTask();
-
     }
 
     private void startHeartBeatTask() {
+        if (!canHandleIdle()) {
+            AbstractTimerTask.ChannelProvider channelProvider = () -> Collections.singletonList(getChannel());
+            int heartbeat = UrlUtils.getHeartbeat(getUrl());
+            long heartbeatTick = calculateLeastDuration(heartbeat);
+            this.heartBeatTimerTask = new HeartBeatTimerTask(channelProvider, heartbeatTick, heartbeat);
+        }
     }
 
     private void startReconnectTask() {
@@ -78,7 +84,7 @@ public class NettyClient extends AbstractClient {
             AbstractTimerTask.ChannelProvider channelProvider = () -> Collections.singletonList(getChannel());
             int idleTimeout = UrlUtils.getIdleTimeout(getUrl());
             long heartbeatTimeoutTick = calculateLeastDuration(idleTimeout);
-            this.reconnectTimerTask = new ReconnectTimerTask(channelProvider, heartbeatTimeoutTick, idleTimeout,this);
+            this.reconnectTimerTask = new ReconnectTimerTask(channelProvider, heartbeatTimeoutTick, idleTimeout, this);
         }
     }
 
@@ -98,10 +104,21 @@ public class NettyClient extends AbstractClient {
     @Override
     protected void doClose() {
         reconnectTimerTask.stop();
+        heartBeatTimerTask.stop();
     }
 
     @Override
     public InnerChannel getChannel() {
         return channel;
     }
+
+    @Override
+
+    public boolean canHandleIdle() {
+        if(getUrl().getParameter("sendHeartbeatByTask",false)){ // only for test
+            return false;
+        }
+        return true;
+    }
+
 }
