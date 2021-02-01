@@ -20,34 +20,28 @@ public class HeaderExchangeHandler extends AbstractChannelHandlerDelegate {
     }
 
     @Override
-    public void connected(Channel channel) throws RemotingException {
-        ExchangeChannel exChannel = HeaderExchangeChannel.getOrAddChannel(channel);
-        handler.connected(exChannel);
+    public void connected(InnerChannel channel) throws RemotingException {
+        handler.connected(channel);
     }
 
     @Override
-    public void disconnected(Channel channel) throws RemotingException {
-        ExchangeChannel exChannel = HeaderExchangeChannel.getOrAddChannel(channel);
+    public void disconnected(InnerChannel channel) throws RemotingException {
         try {
-            handler.disconnected(exChannel);
+            handler.disconnected(channel);
         } finally {
             DefaultFuture.closeChannel(channel);
-            HeaderExchangeChannel.removeChannel(channel);
         }
-
-
     }
 
     @Override
-    public void caught(Channel channel, Throwable exception) throws RemotingException {
+    public void caught(InnerChannel channel, Throwable exception) throws RemotingException {
         // todo myRPC
     }
 
     // channelWrite 比如客户端发数据
     @Override
-    public void sent(Channel channel, Object message) throws RemotingException {
-        ExchangeChannel exChannel = HeaderExchangeChannel.getOrAddChannel(channel);
-        handler.sent(exChannel, message);
+    public void sent(InnerChannel channel, Object message) throws RemotingException {
+        handler.sent(channel, message);
         if (message instanceof Request) {
             Request req = (Request) message;
             DefaultFuture.sent(req);
@@ -56,7 +50,7 @@ public class HeaderExchangeHandler extends AbstractChannelHandlerDelegate {
     }
 
     @Override
-    public void received(Channel channel, Object msg) throws RemotingException {
+    public void received(InnerChannel channel, Object msg) throws RemotingException {
 
         if (msg instanceof Request) {
             handleRequest(channel, (Request) msg);
@@ -75,8 +69,8 @@ public class HeaderExchangeHandler extends AbstractChannelHandlerDelegate {
         DefaultFuture.handlerResponse(response);
     }
 
-    private void handleRequest(Channel channel, Request msg) throws RemotingException {
-        ExchangeChannel exChannel = HeaderExchangeChannel.getOrAddChannel(channel);
+    private void handleRequest(InnerChannel channel, Request msg) throws RemotingException {
+        
         Request request = msg;
         if (request.isEvent() && request.getData() != null && request.getData().equals(Constants.READONLY_EVENT)) {
             channel.setAttribute(CHANNEL_ATTRIBUTE_READONLY_KEY, Boolean.TRUE);
@@ -86,7 +80,7 @@ public class HeaderExchangeHandler extends AbstractChannelHandlerDelegate {
 //            }
             try {
                 Object data = request.getData();
-                CompletableFuture<Object> reply = handler.reply(exChannel, data);
+                CompletableFuture<Object> reply = handler.reply(channel, data);
                 reply.whenComplete((result, t) -> {
                     try {
                         if (t == null) {
@@ -96,7 +90,7 @@ public class HeaderExchangeHandler extends AbstractChannelHandlerDelegate {
                             response.setStatus(Response.SERVICE_ERROR);
                             response.setErrorMessage("exception:" + t.getMessage()); // todo myRPC 需要提供更完整的异常消息
                         }
-                        exChannel.send(response);
+                        channel.send(response);
                     } catch (RemotingException e) {
                         e.printStackTrace();
                     }
@@ -104,7 +98,7 @@ public class HeaderExchangeHandler extends AbstractChannelHandlerDelegate {
             } catch (Throwable e) {
                 response.setStatus(Response.SERVICE_ERROR);
                 response.setErrorMessage(e.getMessage());
-                exChannel.send(response);
+                channel.send(response);
             }
         } else {
             handler.received(channel, msg.getData());

@@ -43,7 +43,7 @@ public class NettyTransporterTest {
         AtomicInteger success = new AtomicInteger(0);
         Thread testThread = startThread(futureList, success);
         for (int i = 0; i < 100; i++) {
-            //futureList.put(client.request("client hello " + i, 100000, null));
+            futureList.put(client.getChannel().request("client hello " + i));
             Thread.sleep(50);
         }
         while (success.get() != 100) {

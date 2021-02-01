@@ -7,7 +7,7 @@ package netty.server;
 public class NettyTransporter implements Transporter {
 
     @Override
-    public RemotingServer bind(URL url, ChannelHandler handler) throws RemotingException{
+    public Server bind(URL url, ChannelHandler handler) throws RemotingException{
         return new NettyServer(url,handler);
     }
 

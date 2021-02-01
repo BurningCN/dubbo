@@ -12,7 +12,7 @@ public class MockChannelHandler implements ExchangeHandler {
     private static AtomicLong index = new AtomicLong(0);
 
     @Override
-    public CompletableFuture<Object> reply(ExchangeChannel channel, Object request) {
+    public CompletableFuture<Object> reply(InnerChannel channel, Object request) {
         // request的处理...
         CompletableFuture<Object> completableFuture = new CompletableFuture<>();
         completableFuture.complete("server hello " + index.incrementAndGet());
@@ -20,22 +20,22 @@ public class MockChannelHandler implements ExchangeHandler {
     }
 
     @Override
-    public void connected(Channel channel) throws RemotingException {
+    public void connected(InnerChannel channel) throws RemotingException {
 
     }
 
     @Override
-    public void disconnected(Channel channel) throws RemotingException {
+    public void disconnected(InnerChannel channel) throws RemotingException {
 
     }
 
     @Override
-    public void sent(Channel channel, Object message) throws RemotingException {
+    public void sent(InnerChannel channel, Object message) throws RemotingException {
 
     }
 
     @Override
-    public void received(Channel channel, Object message) throws RemotingException {
+    public void received(InnerChannel channel, Object message) throws RemotingException {
         if (message instanceof Request) {
             Request request = (Request) message;
             System.out.println(request.getData());
@@ -44,7 +44,7 @@ public class MockChannelHandler implements ExchangeHandler {
     }
 
     @Override
-    public void caught(Channel channel, Throwable exception) throws RemotingException {
+    public void caught(InnerChannel channel, Throwable exception) throws RemotingException {
 
     }
 }

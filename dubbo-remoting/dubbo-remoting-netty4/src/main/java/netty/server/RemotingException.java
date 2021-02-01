@@ -18,7 +18,7 @@ public class RemotingException extends Throwable {
 
     // ==== =====  不带cause
 
-    public RemotingException(Channel channel, String msg) {
+    public RemotingException(InnerChannel channel, String msg) {
         this(channel == null ? null : channel.getLocalAddress(), channel == null ? null : channel.getRemoteAddress(),
                 msg);
     }
@@ -31,7 +31,7 @@ public class RemotingException extends Throwable {
     }
 
     // ==== =====  带cause
-    public RemotingException(Channel channel, String message, Throwable cause) {
+    public RemotingException(InnerChannel channel, String message, Throwable cause) {
         this(channel == null ? null : channel.getLocalAddress(), channel == null ? null : channel.getRemoteAddress(),
                 message, cause);
     }

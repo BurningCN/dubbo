@@ -6,13 +6,13 @@ package netty.server;
  * @date 2021/1/29 21:14
  */
 public interface ChannelHandler {
-    void connected(Channel channel) throws RemotingException;
+    void connected(InnerChannel channel) throws RemotingException;
 
-    void disconnected(Channel channel) throws RemotingException;
+    void disconnected(InnerChannel channel) throws RemotingException;
 
-    void sent(Channel channel, Object message) throws RemotingException;
+    void sent(InnerChannel channel, Object message) throws RemotingException;
 
-    void received(Channel channel, Object message) throws RemotingException;
+    void received(InnerChannel channel, Object message) throws RemotingException;
 
-    void caught(Channel channel, Throwable exception) throws RemotingException;
+    void caught(InnerChannel channel, Throwable exception) throws RemotingException;
 }

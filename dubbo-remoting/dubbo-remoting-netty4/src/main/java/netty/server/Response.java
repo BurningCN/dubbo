@@ -12,6 +12,7 @@ public class Response {
     public static final byte SERVICE_ERROR = 70;
     public static final byte CHANNEL_INACTIVE = 35;
     public static final byte SERVER_THREADPOOL_EXHAUSTED_ERROR = 100;
+    public static final byte BAD_REQUEST = 40;
     private long id;
     private String version;
     private boolean isEvent;

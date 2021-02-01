@@ -42,15 +42,9 @@ public abstract class AbstractClient implements Client {
     protected Codec2 getChannelCodec(URL url) {
         return new ExchangeCodec();
         // todo myRPC 需要支持spi
-//        String codeName = url.getProtocol();
-//        ExtensionLoader loader = ExtensionLoader.getExtensionLoader(Codec2.class);
-//        if (loader.hasExtension(codeName)){
-//            return loader.getExtension(codeName);
-//        }else{
-//            return null;
-//        }
     }
 
+    @Override
     public void connect() throws RemotingException {
         connectLock.lock();
         try {
@@ -71,10 +65,8 @@ public abstract class AbstractClient implements Client {
     }
 
     public boolean isConnected() {
-        return getChannel() != null && getChannel().isActive();
+        return getChannel().isConnected();
     }
-
-    protected abstract Channel getChannel();
 
     protected abstract void doConnect() throws RemotingException;
 
@@ -96,6 +88,10 @@ public abstract class AbstractClient implements Client {
     public int getIdleTimeout() {
         System.out.println("客户端读空闲：" + idleTimeout);
         return idleTimeout;
+    }
+
+    public URL getUrl() {
+        return url;
     }
 
     public int getSendTimeout() {

@@ -11,7 +11,7 @@ public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
     }
 
     @Override
-    public void received(Channel channel, Object message) throws RemotingException {
+    public void received(InnerChannel channel, Object message) throws RemotingException {
         if (message instanceof MultiMessage) {
             MultiMessage list = (MultiMessage) message;
             for (Object obj : list) {

@@ -16,27 +16,27 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
     }
 
     @Override
-    public void connected(Channel channel) throws RemotingException {
+    public void connected(InnerChannel channel) throws RemotingException {
         setReadTimestamp(channel);
         setWriteTimestamp(channel);
         super.connected(channel);
     }
 
     @Override
-    public void disconnected(Channel channel) throws RemotingException {
+    public void disconnected(InnerChannel channel) throws RemotingException {
         setReadTimestamp(channel);
         setWriteTimestamp(channel);
         super.disconnected(channel);
     }
 
     @Override
-    public void sent(Channel channel, Object message) throws RemotingException {
+    public void sent(InnerChannel channel, Object message) throws RemotingException {
         setWriteTimestamp(channel);
         super.sent(channel, message);
     }
 
     @Override
-    public void received(Channel channel, Object msg) throws RemotingException {
+    public void received(InnerChannel channel, Object msg) throws RemotingException {
         setReadTimestamp(channel);
         if (isHeartbeatRequest(msg)) {
             Request request = (Request) msg;
@@ -55,11 +55,11 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
         super.received(channel, msg);
     }
 
-    private void setReadTimestamp(Channel channel) {
+    private void setReadTimestamp(InnerChannel channel) {
         channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());
     }
 
-    private void setWriteTimestamp(Channel channel) {
+    private void setWriteTimestamp(InnerChannel channel) {
         channel.setAttribute(KEY_WRITE_TIMESTAMP, System.currentTimeMillis());
     }
 

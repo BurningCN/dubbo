@@ -6,7 +6,7 @@ import java.net.InetSocketAddress;
  * @author geyu
  * @date 2021/1/28 13:52
  */
-public abstract class AbstractServer implements RemotingServer {
+public abstract class AbstractServer implements Server {
 
     private ChannelHandler handler;
     private InetSocketAddress bindAddress;
@@ -50,7 +50,7 @@ public abstract class AbstractServer implements RemotingServer {
     }
 
     public int getIdleTimeout() {
-        System.out.println("服务端读写空闲："+idleTimeout);
+        System.out.println("服务端读写空闲：" + idleTimeout);
         return idleTimeout;
     }
 

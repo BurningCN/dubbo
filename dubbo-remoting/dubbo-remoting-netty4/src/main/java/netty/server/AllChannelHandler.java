@@ -15,7 +15,7 @@ public class AllChannelHandler extends AbstractChannelHandlerDelegate {
     }
 
     @Override
-    public void connected(Channel channel) throws RemotingException {
+    public void connected(InnerChannel channel) throws RemotingException {
         try {
             getSharedExecutorServer().execute(new ChannelEventTask(handler, channel, CONNECTED));
         } catch (Throwable t) {
@@ -25,7 +25,7 @@ public class AllChannelHandler extends AbstractChannelHandlerDelegate {
     }
 
     @Override
-    public void disconnected(Channel channel) throws RemotingException {
+    public void disconnected(InnerChannel channel) throws RemotingException {
         try {
             getSharedExecutorServer().execute(new ChannelEventTask(handler, channel, DISCONNECTED));
         } catch (Throwable t) {
@@ -34,7 +34,7 @@ public class AllChannelHandler extends AbstractChannelHandlerDelegate {
     }
 
     @Override
-    public void received(Channel channel, Object message) throws RemotingException {
+    public void received(InnerChannel channel, Object message) throws RemotingException {
         try {
             getSharedExecutorServer().execute(new ChannelEventTask(handler, channel, RECEIVED, message));
         } catch (Throwable t) {
@@ -47,7 +47,7 @@ public class AllChannelHandler extends AbstractChannelHandlerDelegate {
     }
 
     @Override
-    public void caught(Channel channel, Throwable exception) throws RemotingException {
+    public void caught(InnerChannel channel, Throwable exception) throws RemotingException {
         try {
             getSharedExecutorServer().execute(new ChannelEventTask(handler, channel, CAUGHT,exception));
         } catch (Throwable t) {

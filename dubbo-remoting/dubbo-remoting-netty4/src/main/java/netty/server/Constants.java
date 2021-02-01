@@ -16,7 +16,7 @@ public interface Constants {
     String SENT = "sent";
     String SEND_TIMEOUT = "send.timeout";
     int DEFAULT_SEND_TIMEOUT = 1000;
-    String SENT_KEY =  "sent";
+    String SENT_KEY = "sent";
     String CHANNEL_ATTRIBUTE_READONLY_KEY = "channel.readonly";
     String TIMEOUT_KEY = "timeout";
     int DEFAULT_TIMEOUT = 1000;

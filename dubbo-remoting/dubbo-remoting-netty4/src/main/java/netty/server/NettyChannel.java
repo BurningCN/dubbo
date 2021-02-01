@@ -2,44 +2,50 @@ package netty.server;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import org.apache.dubbo.remoting.transport.netty4.NettyClient;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static netty.server.CommonConstants.*;
+import static netty.server.CommonConstants.DEFAULT_TIMEOUT;
+import static netty.server.CommonConstants.TIMEOUT_KEY;
 
 /**
  * @author geyu
  * @date 2021/1/31 14:25
  */
-public class NettyChannel extends AbstractChannel {
+public class NettyChannel implements InnerChannel {
 
     private final Channel channel;
     private static final Map<Channel, NettyChannel> CHANNEL_MAP = new ConcurrentHashMap<>();
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
     private AtomicBoolean active = new AtomicBoolean(false);
+    private URL url;
 
-    private NettyChannel(Channel channel, URL url, ChannelHandler handler) {
-        super(url, handler);// 进去
+    private NettyChannel(Channel channel, URL url) {
         if (channel == null) {
             throw new IllegalArgumentException("netty channel == null;");
         }
         this.channel = channel;
+        this.url = url;
+    }
+
+    public URL getUrl() {
+        return url;
     }
 
     // ===== ===== ===== CHANNEL_MAP ===== ===== ===== ===== =====
 
-    public static NettyChannel getOrAddChannel(Channel channel, URL url, ChannelHandler handler) {
+    public static NettyChannel getOrAddChannel(Channel channel, URL url) {
         if (channel == null) {
             return null;
         }
         NettyChannel ret = CHANNEL_MAP.get(channel);
         if (ret == null) {
-            NettyChannel nettyChannel = new NettyChannel(channel, url, handler);
+            NettyChannel nettyChannel = new NettyChannel(channel, url);
             ret = nettyChannel;
             if (channel.isActive()) {
                 nettyChannel.markActive(true);
@@ -59,19 +65,25 @@ public class NettyChannel extends AbstractChannel {
         }
     }
 
-
-
     // ===== ===== ===== send、close ===== ===== ===== ===== =====
+    @Override
+    public void send(Object message) throws RemotingException {
+        send(message, false);
+    }
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
-        super.send(message, sent);
+        if (!isConnected()) {
+            throw new RemotingException(this, "Failed to send message "
+                    + (message == null ? "" : message.getClass().getName()) + ":" + org.apache.dubbo.remoting.utils.PayloadDropper.getRequestWithoutData(message)
+                    + ", cause: Channel closed. channel: " + getLocalAddress() + " -> " + getRemoteAddress());
+        }
         try {
             boolean success = false;
             int timeout = 0;
             ChannelFuture future = channel.writeAndFlush(message);
             if (sent) {
-                timeout = getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+                timeout = url.getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
                 success = future.await(timeout);
                 if (future.cause() != null) {
                     throw future.cause();
@@ -92,8 +104,46 @@ public class NettyChannel extends AbstractChannel {
     }
 
     @Override
+    public CompletableFuture<Object> request(Object request) throws RemotingException {
+        return request(request, null);
+    }
+
+    @Override
+    public CompletableFuture<Object> request(Object request, int timeout) throws RemotingException {
+        return request(request, timeout, null);
+    }
+
+    @Override
+    public CompletableFuture<Object> request(Object request, ExecutorService executor) throws RemotingException {
+        return request(request, -1, null);
+    }
+
+    @Override
+    public CompletableFuture<Object> request(Object data, int timeout, ExecutorService executor) throws RemotingException {
+        if (!isConnected()) {
+            throw new RemotingException(this.getLocalAddress(), null, "Failed to send message " + data + ", cause: The channel " + this + " is closed!");
+        }
+        Request request = new Request();
+        request.setVersion(Version.DEFAULT_VERSION);
+        request.setTwoWay(true);
+        request.setData(data);
+        DefaultFuture future = DefaultFuture.newFuture(this, request, timeout, executor);
+        try {
+            send(request);
+        } catch (RemotingException e) {
+            future.cancel();
+            throw e;
+        }
+        return future;
+    }
+
+    @Override
+    public void close(int timeout) {
+
+    }
+
+    @Override
     public void close() {
-        super.close();
         removeChannelIfDisconnected(channel);
         attributes.clear();
         channel.close(); // 关键
@@ -108,7 +158,7 @@ public class NettyChannel extends AbstractChannel {
 
     @Override
     public boolean isConnected() {
-        return active.get() && !isClosed();
+        return active.get();
     }
 
     static void removeChannelIfDisconnected(Channel channel) {
@@ -165,10 +215,6 @@ public class NettyChannel extends AbstractChannel {
             return true;
         if (o == null)
             return false;
-//        if(o instanceof NettyClient){
-//            NettyClient channel = (NettyClient) o;
-//            return this.channel.equals(channel.);
-//        }
         if (this.getClass() != o.getClass())
             return false;
         NettyChannel other = (NettyChannel) o;
@@ -192,6 +238,7 @@ public class NettyChannel extends AbstractChannel {
 
     @Override
     public String toString() {
-        return "NettyChannel:[" + channel + "]";
+        return "NettyChannel:[" + channel + "]," + getLocalAddress() + " -> " + getRemoteAddress();
     }
+
 }

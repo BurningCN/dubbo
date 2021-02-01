@@ -2,13 +2,11 @@ package netty.server;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
-import io.netty.channel.Channel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
-import org.apache.dubbo.remoting.transport.netty4.NettyClientHandler;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -17,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class NettyClient extends AbstractClient {
     private Bootstrap bootstrap;
-    private volatile Channel channel;
+    private volatile InnerChannel channel;
 
     public NettyClient(URL url, ChannelHandler channelHandler) throws RemotingException {
         super(url, ChannelHandlers.wrap(channelHandler));
@@ -41,7 +39,7 @@ public class NettyClient extends AbstractClient {
                         pipeline.addLast("decoder", nettyCodecAdapter.getInternalDecoder());
                         pipeline.addLast("encoder", nettyCodecAdapter.getInternalEncoder());
                         pipeline.addLast("idle-state", new IdleStateHandler(getIdleTimeout(), 0, 0, TimeUnit.MILLISECONDS));
-                        //pipeline.addLast("handler", new NettyClientHandler(getChannelHandler(), NettyClient.this));
+                        pipeline.addLast("handler", new NettyClientHandler(getChannelHandler(), getUrl()));
                     }
                 });
     }
@@ -50,12 +48,11 @@ public class NettyClient extends AbstractClient {
         ChannelFuture channelFuture = bootstrap.connect(getServerAddress());
         boolean ret = channelFuture.awaitUninterruptibly(getConnectTimeout());
         if (ret && channelFuture.isSuccess()) {
-            Channel oldChannel = channel;
+            InnerChannel oldChannel = channel;
             if (oldChannel != null) {
                 oldChannel.close();
             }
-            channel = channelFuture.channel();
-
+            channel = NettyChannel.getOrAddChannel(channelFuture.channel(), getUrl());
         } else if (channelFuture.cause() != null) {
             throw new RemotingException();
         } else { // 超时
@@ -64,7 +61,7 @@ public class NettyClient extends AbstractClient {
     }
 
     @Override
-    protected Channel getChannel() {
+    public InnerChannel getChannel() {
         return channel;
     }
 }

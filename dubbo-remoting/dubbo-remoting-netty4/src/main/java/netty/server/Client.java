@@ -8,4 +8,7 @@ import java.util.concurrent.ExecutorService;
  * @date 2021/1/28 18:13
  */
 public interface Client {
+    void connect() throws RemotingException;
+
+    InnerChannel getChannel();
 }

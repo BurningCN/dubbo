@@ -38,7 +38,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         try {
-            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(),url);
             channels.putIfAbsent(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), ctx.channel());
             handler.connected(channel);
             System.out.println(now() + "The connection of " + channel.getRemoteAddress() + " -> " + channel.getLocalAddress() + " is established.");
@@ -52,7 +52,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         try {
-            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(),url);
             channels.remove(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()));
             NettyChannel.removeChannel(ctx.channel());
             handler.disconnected(channel);
@@ -66,7 +66,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         super.userEventTriggered(ctx, evt);
         if (evt instanceof IdleStateEvent) {
-            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(),url);
             try {
                 System.out.println(now() + "IdleStateEvent triggered, close channel " + channel);
                 channel.close();
@@ -79,7 +79,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         try {
-            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(),url);
             handler.caught(channel, cause);
             NettyChannel.removeChannelIfDisconnected(ctx.channel());
         } catch (RemotingException e) {
@@ -90,7 +90,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
-            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(),url);
             handler.received(channel, msg);
         } catch (RemotingException e) {
 
@@ -102,7 +102,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         try {
             // 其他的都可以不需要super，这里必须要调用，把数据发给对端
             super.write(ctx, msg, promise);
-            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+            NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(),url);
             handler.sent(channel, msg);
         } catch (RemotingException e) {
 

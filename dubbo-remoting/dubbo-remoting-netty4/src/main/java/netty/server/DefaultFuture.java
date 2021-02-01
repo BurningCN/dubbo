@@ -5,6 +5,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.*;
 
+import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_TIMEOUT;
+import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
+
 /**
  * @author geyu
  * @date 2021/1/30 17:10
@@ -14,22 +17,22 @@ public class DefaultFuture extends CompletableFuture<Object> {
     private final long id;
     private final int timeout;
     private final long start = System.currentTimeMillis();
-    private final Channel channel;
+    private final InnerChannel channel;
     private volatile long sent;
     private static final Map<Long, DefaultFuture> futureTable = new ConcurrentHashMap<>();
-    private static final Map<Long, Channel> channelTable = new ConcurrentHashMap<>();
+    private static final Map<Long, InnerChannel> channelTable = new ConcurrentHashMap<>();
     private static final ScheduledExecutorService schedule = Executors.newSingleThreadScheduledExecutor();// todo myRPC 线程名称
     private final ExecutorService executor;
 
-    public static DefaultFuture newFuture(Channel channel, Request req, int timeout, ExecutorService executor) {
+    public static DefaultFuture newFuture(InnerChannel channel, Request req, int timeout, ExecutorService executor) {
         return new DefaultFuture(channel, req, timeout, executor);
     }
 
-    private DefaultFuture(Channel channel, Request req, int timeout, ExecutorService executor) {
+    private DefaultFuture(InnerChannel channel, Request req, int timeout, ExecutorService executor) {
         this.channel = channel;
         this.request = req;
         this.id = req.getId();
-        this.timeout = timeout;
+        this.timeout = timeout > 0 ? timeout : channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
         this.executor = executor;
         this.futureTable.put(id, this);
         this.channelTable.put(id, channel);
@@ -44,15 +47,15 @@ public class DefaultFuture extends CompletableFuture<Object> {
         this.sent = System.currentTimeMillis();
     }
 
-    public static boolean hasFuture(Channel channel) {
+    public static boolean hasFuture(InnerChannel channel) {
         return channelTable.containsValue(channel);
     }
 
     public static DefaultFuture getFuture(long id) {
         return futureTable.get(id);
     }
-    public static void closeChannel(Channel channel) {
-        for (Map.Entry<Long, Channel> entry : channelTable.entrySet()) {
+    public static void closeChannel(InnerChannel channel) {
+        for (Map.Entry<Long, InnerChannel> entry : channelTable.entrySet()) {
             if (entry.getValue() == channel) {
                 DefaultFuture future = futureTable.get(entry.getKey());
                 if (future != null && !future.isDone()) {
@@ -64,7 +67,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
                     Response disconnectResponse = new Response(future.getId());
                     disconnectResponse.setStatus(Response.CHANNEL_INACTIVE);
-                    disconnectResponse.setErrorMessage("Channel " +
+                    disconnectResponse.setErrorMessage("InnerChannel " +
                             channel +
                             " is inactive. Directly return the unFinished request : " +
                             future.getRequest());

@@ -13,7 +13,7 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
     }
 
     @Override
-    public void received(Channel channel, Object message) throws RemotingException {
+    public void received(InnerChannel channel, Object message) throws RemotingException {
         // if(message instanceof Decodeable){}
         if (message instanceof Request) {
             decode(((Request) message).getData());

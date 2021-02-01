@@ -7,24 +7,24 @@ package netty.server;
 public class ChannelEventTask implements Runnable {
 
     private final ChannelHandler handler;
-    private final Channel channel;
+    private final InnerChannel channel;
     private final ChannelState state;
     private final Object msg;
     private final Throwable exception;
 
-    public ChannelEventTask(ChannelHandler handler, Channel channel, ChannelState state) {
+    public ChannelEventTask(ChannelHandler handler, InnerChannel channel, ChannelState state) {
         this(handler, channel, state, null, null);
     }
 
-    public ChannelEventTask(ChannelHandler handler, Channel channel, ChannelState state, Object msg) {
+    public ChannelEventTask(ChannelHandler handler, InnerChannel channel, ChannelState state, Object msg) {
         this(handler, channel, state, msg, null);
     }
 
-    public ChannelEventTask(ChannelHandler handler, Channel channel, ChannelState state, Throwable exception) {
+    public ChannelEventTask(ChannelHandler handler, InnerChannel channel, ChannelState state, Throwable exception) {
         this(handler, channel, state, null, exception);
     }
 
-    public ChannelEventTask(ChannelHandler handler, Channel channel, ChannelState state, Object msg, Throwable exception) {
+    public ChannelEventTask(ChannelHandler handler, InnerChannel channel, ChannelState state, Object msg, Throwable exception) {
         this.handler = handler;
         this.channel = channel;
         this.state = state;
