@@ -86,13 +86,13 @@ public abstract class AbstractChannelHandlerDelegate implements ChannelHandlerDe
     }
 
     protected ExecutorService getSharedExecutorServer() {
-        ExecutorRepository repository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
+        /*ExecutorRepository repository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
         ExecutorService executorService = repository.getExecutor(url);
         if (executorService == null) {
             executorService = repository.createExecutor(url);
-        }
+        }*/
         // todo myRPC 上面都是空实现 ，临时如下
-        executorService = Executors.newFixedThreadPool(4, r -> {
+        ExecutorService executorService = Executors.newFixedThreadPool(4, r -> {
             Thread thread = new Thread(r);
             thread.setName("dispatch thread");
             return thread;

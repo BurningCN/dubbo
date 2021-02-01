@@ -1,53 +1,61 @@
 package netty.server;
-
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author geyu
  * @date 2021/1/29 15:20
  */
 public class NettyTransporterTest {
+
     @Test
-    public void init() throws RemotingException {
+    public void testConnect() throws RemotingException, InterruptedException {
         NettyTransporter transporter = new NettyTransporter();
         URL url = URL.valueOf("dubbo://localhost:9991/");
-        transporter.bind(url, null);
-        transporter.connect(url, null);
+        transporter.bind(url, getMockHandler());
+        transporter.connect(url, getMockHandler());
+        Thread.sleep(15 * 1000);
     }
 
     @Test
     public void testHeartbeat() throws RemotingException, InterruptedException {
         NettyTransporter transporter = new NettyTransporter();
         URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=5000");
-        transporter.bind(url, null);
-        transporter.connect(url, null);
-        Thread.sleep(100 * 10000);
+        transporter.bind(url, getMockHandler());
+        transporter.connect(url, getMockHandler());
+        Thread.sleep(15 * 1000);
     }
 
     @Test
-    public void testRequest() throws RemotingException, InterruptedException, ExecutionException {
+    public void testClientNotSendHeartbeat() throws RemotingException, InterruptedException {
+        NettyTransporter transporter = new NettyTransporter();
+        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=5000&dont.send=true");
+        transporter.bind(url, getMockHandler());
+        transporter.connect(url, getMockHandler());
+        Thread.sleep(15 * 1000);
+    }
+
+    @Test
+    public void testRequestAndReply() throws RemotingException, InterruptedException, ExecutionException {
         NettyTransporter transporter = new NettyTransporter();
         URL url = URL.valueOf("dubbo://localhost:9991/test");
-        MockChannelHandler handler = new MockChannelHandler();
-        transporter.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler)));
-        Client client = transporter.connect(url, new DecodeHandler(new HeaderExchangeHandler(handler)));
+        transporter.bind(url, getMockHandler());
+        Client client = transporter.connect(url, getMockHandler());
+
         LinkedBlockingQueue<CompletableFuture<Object>> futureList = new LinkedBlockingQueue<>();
         AtomicInteger success = new AtomicInteger(0);
         Thread testThread = startThread(futureList, success);
+
         for (int i = 0; i < 100; i++) {
             futureList.put(client.getChannel().request("client hello " + i));
-            Thread.sleep(50);
+            Thread.sleep(500);
         }
         while (success.get() != 100) {
             System.out.println(success.get());
+            Thread.sleep(10);
         }
         testThread.interrupt();
     }
@@ -66,6 +74,11 @@ public class NettyTransporterTest {
         }, "testThread");
         thread.start();
         return thread;
+    }
+
+
+    public ChannelHandler getMockHandler() {
+        return new DecodeHandler(new HeaderExchangeHandler(new MockChannelHandler()));
     }
 
 

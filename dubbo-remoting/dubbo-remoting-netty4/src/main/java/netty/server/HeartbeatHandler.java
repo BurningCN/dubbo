@@ -41,9 +41,9 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
         if (isHeartbeatRequest(msg)) {
             Request request = (Request) msg;
             if (request.isTwoWay()) {
-                Response response = new Response(request.getId());
+                Response response = new Response(request.getId(),request.getVersion());
                 response.setEvent(CommonConstants.HEARTBEAT_EVENT);
-                channel.send(msg);
+                channel.send(response);
                 System.out.println("Received request heartbeat from remote channel " + channel.getRemoteAddress());
             }
             return;

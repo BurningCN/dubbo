@@ -21,11 +21,15 @@ public abstract class AbstractServer implements Server {
         this.url = url;
         this.bindAddress = new InetSocketAddress(url.getHost(), url.getPort());
         this.idleTimeout = computeIdleTimeout(url);
-        this.codec = new ExchangeCodec();
+        this.codec = getChannelCodec(url);
         this.handler = handler;
         doOpen();
     }
 
+    protected Codec2 getChannelCodec(URL url) {
+        return new ExchangeCodec();
+        // todo myRPC 需要支持spi
+    }
     private int computeIdleTimeout(URL url) {
         int heartbeat = url.getPositiveParameter(Constants.HEARTBEAT, Constants.DEFAULT_HEARTBEAT);
         int idleTimeout = url.getPositiveParameter(Constants.HEARTBEAT_TIMEOUT_KEY, heartbeat * 3);

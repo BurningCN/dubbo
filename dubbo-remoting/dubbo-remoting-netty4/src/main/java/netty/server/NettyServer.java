@@ -52,6 +52,7 @@ public class NettyServer extends AbstractServer {
 
         ChannelFuture future = serverBootstrap.bind(getBindAddress());
         future.syncUninterruptibly();
+        System.out.println("sever bind successfully");
         serverNettyChannel = future.channel();
     }
 }

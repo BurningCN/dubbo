@@ -46,10 +46,12 @@ public class NettyChannel implements InnerChannel {
         NettyChannel ret = CHANNEL_MAP.get(channel);
         if (ret == null) {
             NettyChannel nettyChannel = new NettyChannel(channel, url);
-            ret = nettyChannel;
             if (channel.isActive()) {
                 nettyChannel.markActive(true);
                 ret = CHANNEL_MAP.putIfAbsent(channel, nettyChannel);
+            }
+            if (ret == null) {
+                ret = nettyChannel;
             }
         }
         return ret;
@@ -79,7 +81,7 @@ public class NettyChannel implements InnerChannel {
                     + ", cause: Channel closed. channel: " + getLocalAddress() + " -> " + getRemoteAddress());
         }
         try {
-            boolean success = false;
+            boolean success = true;
             int timeout = 0;
             ChannelFuture future = channel.writeAndFlush(message);
             if (sent) {

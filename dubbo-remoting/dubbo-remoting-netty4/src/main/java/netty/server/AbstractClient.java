@@ -65,7 +65,7 @@ public abstract class AbstractClient implements Client {
     }
 
     public boolean isConnected() {
-        return getChannel().isConnected();
+        return getChannel() != null && getChannel().isConnected();
     }
 
     protected abstract void doConnect() throws RemotingException;
@@ -102,7 +102,7 @@ public abstract class AbstractClient implements Client {
         return connectionTimeout;
     }
 
-    public boolean getSent(){
+    public boolean getSent() {
         return sent;
     }
 }
