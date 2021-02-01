@@ -48,6 +48,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMESTAMP_KEY;
  *
  * @export
  */
+// OK
 public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     private static final long serialVersionUID = -1559314110797223229L;
@@ -178,15 +179,18 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
      * Check whether the registry config is exists, and then conversion it to {@link RegistryConfig}
      */
     public void checkRegistry() {
+        // 进去
         convertRegistryIdsToRegistries();
 
         for (RegistryConfig registryConfig : registries) {
+            // 是否有效，这个是一个小技巧，比如registries里面有很多对象，如果暂时不想某些类型的注册中心对象生效，可以isValid置为false
             if (!registryConfig.isValid()) {
                 throw new IllegalStateException("No registry config found or it's not a valid config! " +
                         "The registry config is: " + registryConfig);
             }
         }
     }
+
 
     public static void appendRuntimeParameters(Map<String, String> map) {
         map.put(DUBBO_VERSION_KEY, Version.getProtocolVersion());
@@ -195,15 +199,21 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         if (ConfigUtils.getPid() > 0) {
             map.put(PID_KEY, String.valueOf(ConfigUtils.getPid()));
         }
+        //"release" -> ""
+        //"deprecated" -> "false"
+        //"dubbo" -> "2.0.2"
+        //"pid" -> "9072"
     }
 
     /**
      * Check whether the remote service interface and the methods meet with Dubbo's requirements.it mainly check, if the
      * methods configured in the configuration file are included in the interface of remote service
      *
+     * 检查远程服务接口和方法是否符合Dubbo的要求。主要检查配置文件中配置的方法是否包含在远程服务的接口中
+     *
      * @param interfaceClass the interface of remote service
      * @param methods        the methods configured
-     */
+     */ // 方法主要判断interfaceClass接口里面是否完全含有methods这些方法，否则抛异常
     public void checkInterfaceAndMethods(Class<?> interfaceClass, List<MethodConfig> methods) {
         // interface cannot be null
         Assert.notNull(interfaceClass, new IllegalStateException("interface not allow null!"));
@@ -220,13 +230,16 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 methodBean.refresh();
                 String methodName = methodBean.getName();
                 if (StringUtils.isEmpty(methodName)) {
+                    //<dubbo:method> name attribute is required! Please check:
+                    // <dubbo:service interface="org.apache.dubbo.config.api.Greeting" ... ><dubbo:method name="" ... /></<dubbo:reference>
                     throw new IllegalStateException("<dubbo:method> name attribute is required! Please check: " +
                             "<dubbo:service interface=\"" + interfaceClass.getName() + "\" ... >" +
                             "<dubbo:method name=\"\" ... /></<dubbo:reference>");
                 }
-
+                // 比如当前methodConfig的toString:<dubbo:method name="nihao" service="org.apache.dubbo.config.api.Greeting" />
+                // 这里判断接口里面是否含有这个方法（Greeting接口是否含有nihao方法）
                 boolean hasMethod = Arrays.stream(interfaceClass.getMethods()).anyMatch(method -> method.getName().equals(methodName));
-                if (!hasMethod) {
+                if (!hasMethod) { // The interface org.apache.dubbo.config.api.Greeting not found method nihao
                     throw new IllegalStateException("The interface " + interfaceClass.getName()
                             + " not found method " + methodName);
                 }
@@ -239,53 +252,77 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     /**
      * Legitimacy check of stub, note that: the local will deprecated, and replace with <code>stub</code>
      *
+     * 检查stub的合法性，注意:local将弃用，并替换为<code>stub</code>
+     *
      * @param interfaceClass for provider side, it is the {@link Class} of the service that will be exported; for consumer
      *                       side, it is the {@link Class} of the remote service interface
+     * 对于提供者端，它是将被导出的服务的Class;对于消费者端，它是远程服务接口的Class
      */
+
+    // 方法主要检查local和stub是不是interfaceClass的实现类，以及是否含有interfaceClass类型参数的构造器
     public void checkStubAndLocal(Class<?> interfaceClass) {
+        // 上面参数传入的是 接口.class，下面的local、stub是接口的实现类的全限定名（String）
+
+        // 进去
         verifyStubAndLocal(local, "Local", interfaceClass);
         verifyStubAndLocal(stub, "Stub", interfaceClass);
     }
     
     public void verifyStubAndLocal(String className, String label, Class<?> interfaceClass){
     	if (ConfigUtils.isNotEmpty(className)) {
+    	    // 根据全限定名加载class
             Class<?> localClass = ConfigUtils.isDefault(className) ?
+                    // forName进去
                     ReflectUtils.forName(interfaceClass.getName() + label) : ReflectUtils.forName(className);
-                        verify(interfaceClass, localClass);
+            // 校验，进去
+            verify(interfaceClass, localClass);
             }
     }
 
     private void verify(Class<?> interfaceClass, Class<?> localClass) {
+        // 看日志
         if (!interfaceClass.isAssignableFrom(localClass)) {
+            // eg:The local implementation class org.apache.dubbo.config.mock.GreetingLocal1 not implement interface org.apache.dubbo.config.api.Greeting
             throw new IllegalStateException("The local implementation class " + localClass.getName() +
                     " not implement interface " + interfaceClass.getName());
         }
 
         try {
-            //Check if the localClass a constructor with parameter who's type is interfaceClass
+            // 检查localClass是否有一个带参数的构造函数，其类型是interfaceClass，进去
             ReflectUtils.findConstructor(localClass, interfaceClass);
         } catch (NoSuchMethodException e) {
+            // eg:No such constructor "public GreetingLocal2(org.apache.dubbo.config.api.Greeting)" in local implementation class org.apache.dubbo.config.mock.GreetingLocal2
             throw new IllegalStateException("No such constructor \"public " + localClass.getSimpleName() +
                     "(" + interfaceClass.getName() + ")\" in local implementation class " + localClass.getName());
         }
     }
 
+    // 方法整体逻辑和 convertRegistryIdsToRegistries 相似
     private void convertRegistryIdsToRegistries() {
+        // 进去
         computeValidRegistryIds();
         if (StringUtils.isEmpty(registryIds)) {
             if (CollectionUtils.isEmpty(registries)) {
+                // ids和list都为空
+
+                // 从ConfigManager获取默认的注册中心，进去（比如demo-api-provider的程序，一开始就调用dubboBootstrap.registery(xx)方法xx注册到了configManager，所以肯定能取到）
                 List<RegistryConfig> registryConfigs = ApplicationModel.getConfigManager().getDefaultRegistries();
                 if (registryConfigs.isEmpty()) {
+                    // 为空的话构建一个
                     registryConfigs = new ArrayList<>();
                     RegistryConfig registryConfig = new RegistryConfig();
+                    // refresh把CompositeConfiguration的一些值填充到registryConfig，结合testCheckRegistry1，那么有两个值，对应的
+                    // toString的结果为：<dubbo:registry address="addr1" port="0"/>
                     registryConfig.refresh();
                     registryConfigs.add(registryConfig);
-                } else {
+                } else { // 一般前面从configManager是能取到的，因为业务方一般都会制定注册中心信息
                     registryConfigs = new ArrayList<>(registryConfigs);
                 }
-                setRegistries(registryConfigs);
+                setRegistries(registryConfigs); // 赋值给自己的属性
             }
         } else {
+            // 下面的逻辑不说了，参考 convertRegistryIdsToRegistries
+
             String[] ids = COMMA_SPLIT_PATTERN.split(registryIds);
             List<RegistryConfig> tmpRegistries = new ArrayList<>();
             Arrays.stream(ids).forEach(id -> {
@@ -347,8 +384,9 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     
     protected void computeValidRegistryIds() {
         if (StringUtils.isEmpty(getRegistryIds())) {
+            // 如果当前getRegistryIds为空，那么从ApplicationConfig获取registryIds
             if (getApplication() != null && StringUtils.isNotEmpty(getApplication().getRegistryIds())) {
-                setRegistryIds(getApplication().getRegistryIds());
+                setRegistryIds(getApplication().getRegistryIds());// 赋值给自己的属性
             }
         }
     }
@@ -455,6 +493,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         if (application != null) {
             return application;
         }
+        // 上面为null的话，从configManager获取，再获取不到就抛异常，进去，以demo-api-provider举例，一般都是走到这一步，而启动程序开始就DubboBootstrap.application(xx)注册了到configManager
         return ApplicationModel.getConfigManager().getApplicationOrElseThrow();
     }
 
@@ -462,8 +501,11 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     public void setApplication(ApplicationConfig application) {
         this.application = application;
         if (application != null) {
+            // 获取configManager
             ConfigManager configManager = ApplicationModel.getConfigManager();
+            // 如果configManager没有Application的话，把当前application的赋值进去
             configManager.getApplication().orElseGet(() -> {
+                // 进去
                 configManager.setApplication(application);
                 return application;
             });
@@ -499,7 +541,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         setRegistries(registries);
     }
 
-    public List<RegistryConfig> getRegistries() {
+    public List<RegistryConfig> getRegistries() {// 注意setRegistries的调用处，就知道registries怎么就能有值了
         return registries;
     }
 
@@ -627,6 +669,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         if (metadataReportConfig != null) {
             return metadataReportConfig;
         }
+        // 进去。一般是能获得的（useRegistryAsMetadataCenterIfNecessary会填充MetadataReportConfig到configManger）
         Collection<MetadataReportConfig> metadataReportConfigs = ApplicationModel.getConfigManager().getMetadataConfigs();
         if (CollectionUtils.isNotEmpty(metadataReportConfigs)) {
             return metadataReportConfigs.iterator().next();

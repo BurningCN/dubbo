@@ -35,6 +35,7 @@ public class EventListenerTest {
 
         assertEquals(EchoEvent.class, findEventType(EchoEventListener.class));
         assertEquals(Event.class, findEventType(EchoEventListener2.class));
+
     }
 
     @Test

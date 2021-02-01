@@ -31,19 +31,23 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 
+// OK
 public class UnsafeByteArrayOutputStreamTest {
     @Test
     public void testWrongSize() {
+        // 进去
         Assertions.assertThrows(IllegalArgumentException.class, () -> new UnsafeByteArrayOutputStream(-1));
     }
 
     @Test
     public void testWrite() {
+        // 进去
         UnsafeByteArrayOutputStream outputStream = new UnsafeByteArrayOutputStream(1);
-        outputStream.write((int) 'a');
-        outputStream.write("bc".getBytes(), 0, 2);
-
+        outputStream.write((int) 'a'); // 进去
+        outputStream.write("bc".getBytes(), 0, 2); // 进去
+        // 进去
         assertThat(outputStream.size(), is(3));
+        // 进去
         assertThat(outputStream.toString(), is("abc"));
     }
 
@@ -51,7 +55,7 @@ public class UnsafeByteArrayOutputStreamTest {
     public void testToByteBuffer() {
         UnsafeByteArrayOutputStream outputStream = new UnsafeByteArrayOutputStream(1);
         outputStream.write((int) 'a');
-
+        // 进去
         ByteBuffer byteBuffer = outputStream.toByteBuffer();
         assertThat(byteBuffer.get(), is("a".getBytes()[0]));
     }
@@ -60,11 +64,13 @@ public class UnsafeByteArrayOutputStreamTest {
     public void testExtendLengthForBuffer() throws IOException {
         UnsafeByteArrayOutputStream outputStream = new UnsafeByteArrayOutputStream(1);
         for (int i = 0; i < 10; i++) {
+            // 前面size初始值为1，这里填充10个byte，内部会自动扩容
             outputStream.write(i);
         }
         assertThat(outputStream.size(), is(10));
 
         OutputStream stream = mock(OutputStream.class);
+        // 进去
         outputStream.writeTo(stream);
         Mockito.verify(stream).write(any(byte[].class), anyInt(), eq(10));
     }
@@ -74,6 +80,7 @@ public class UnsafeByteArrayOutputStreamTest {
         UnsafeByteArrayOutputStream outputStream = new UnsafeByteArrayOutputStream();
         outputStream.write("Hòa Bình".getBytes());
 
+        // 进去，字符集
         assertThat(outputStream.toString("UTF-8"), is("Hòa Bình"));
     }
 }

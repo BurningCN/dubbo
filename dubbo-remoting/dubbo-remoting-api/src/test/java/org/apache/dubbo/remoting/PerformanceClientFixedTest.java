@@ -30,6 +30,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_TIMEOUT;
 import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 import static org.apache.dubbo.remoting.Constants.CONNECTIONS_KEY;
 
+@Deprecated
 public class PerformanceClientFixedTest  {
 
     private static final Logger logger = LoggerFactory.getLogger(PerformanceClientTest.class);

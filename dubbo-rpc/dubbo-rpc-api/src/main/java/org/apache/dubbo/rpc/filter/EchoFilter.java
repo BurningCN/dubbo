@@ -30,12 +30,14 @@ import static org.apache.dubbo.rpc.Constants.$ECHO;
 /**
  * Dubbo provided default Echo echo service, which is available for all dubbo provider service interface.
  */
+// OK
 @Activate(group = CommonConstants.PROVIDER, order = -110000)
 public class EchoFilter implements Filter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
         if (inv.getMethodName().equals($ECHO) && inv.getArguments() != null && inv.getArguments().length == 1) {
+            // 进去
             return AsyncRpcResult.newDefaultAsyncResult(inv.getArguments()[0], inv);
         }
         return invoker.invoke(inv);

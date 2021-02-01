@@ -33,17 +33,23 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 
 import java.util.concurrent.ThreadFactory;
 
+// OK
 public class NettyEventLoopFactory {
+    // gx
     public static EventLoopGroup eventLoopGroup(int threads, String threadFactoryName) {
+        // DefaultThreadFactory是netty包定义的
         ThreadFactory threadFactory = new DefaultThreadFactory(threadFactoryName, true);
+        // Epoll 和 Nio 两种
         return shouldEpoll() ? new EpollEventLoopGroup(threads, threadFactory) :
                 new NioEventLoopGroup(threads, threadFactory);
     }
 
+    // gx
     public static Class<? extends SocketChannel> socketChannelClass() {
         return shouldEpoll() ? EpollSocketChannel.class : NioSocketChannel.class;
     }
 
+    // gx 主要获取io模型的channelClass
     public static Class<? extends ServerSocketChannel> serverSocketChannelClass() {
         return shouldEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class;
     }

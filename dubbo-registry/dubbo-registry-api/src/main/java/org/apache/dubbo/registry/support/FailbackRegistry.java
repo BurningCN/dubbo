@@ -44,6 +44,8 @@ import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_PERIOD_KEY;
 /**
  * FailbackRegistry. (SPI, Prototype, ThreadSafe)
  */
+// OK
+// FailbackRegistry也是个抽象类，继承AbstractRegistry 抽象类，它主要是实现了失败重试的功能
 public abstract class FailbackRegistry extends AbstractRegistry {
 
     /*  retry task map */
@@ -62,13 +64,16 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     private final int retryPeriod;
 
     // Timer for failure retry, regular check if there is a request for failure, and if there is, an unlimited retry
+    // 失败重试计时器，定期检查是否有失败请求，如果有，无限制的重试
     private final HashedWheelTimer retryTimer;
 
     public FailbackRegistry(URL url) {
+        // 进去
         super(url);
+        // 默认5s
         this.retryPeriod = url.getParameter(REGISTRY_RETRY_PERIOD_KEY, DEFAULT_REGISTRY_RETRY_PERIOD);
-
         // since the retry task will not be very much. 128 ticks is enough.
+        // 因为重试任务不会很多。128 ticks就够了。
         retryTimer = new HashedWheelTimer(new NamedThreadFactory("DubboRegistryRetryTimer", true), retryPeriod, TimeUnit.MILLISECONDS, 128);
     }
 
@@ -90,6 +95,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         failedUnsubscribed.remove(h);
     }
 
+    // gx
     private void addFailedRegistered(URL url) {
         FailedRegisteredTask oldOne = failedRegistered.get(url);
         if (oldOne != null) {
@@ -97,11 +103,15 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
         FailedRegisteredTask newTask = new FailedRegisteredTask(url, this);
         oldOne = failedRegistered.putIfAbsent(url, newTask);
+        // putIfAbsent返回旧值
         if (oldOne == null) {
-            // never has a retry task. then start a new task for retry.
+            // never has a retry task. then start a new task for retry. <-注意
+            // 延迟retryPeriod时间后执行newTask，retryTimer(HashedWheelTimer)时间点到了之后会，newTask(TimeTask 接口实现类)的run方法，
+            // run是继承自AbstractTimeTask的，其最后一步调用doRetry方法，触发具体子类实例的方法
             retryTimer.newTimeout(newTask, retryPeriod, TimeUnit.MILLISECONDS);
         }
     }
+
 
     private void removeFailedRegistered(URL url) {
         FailedRegisteredTask f = failedRegistered.remove(url);
@@ -110,6 +120,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    // gx 方法大体参考addFailedRegistered
     private void addFailedUnregistered(URL url) {
         FailedUnregisteredTask oldOne = failedUnregistered.get(url);
         if (oldOne != null) {
@@ -130,7 +141,9 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    // gx 方法大体参考addFailedRegistered
     protected void addFailedSubscribed(URL url, NotifyListener listener) {
+        // Holder是该类内部类
         Holder h = new Holder(url, listener);
         FailedSubscribedTask oldOne = failedSubscribed.get(h);
         if (oldOne != null) {
@@ -150,9 +163,11 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         if (f != null) {
             f.cancel();
         }
+        // 在removeFailedSubscribed方法里调用removeFailed[Un]subscribed  进去
         removeFailedUnsubscribed(url, listener);
     }
 
+    // gx 方法大体参考addFailedRegistered
     private void addFailedUnsubscribed(URL url, NotifyListener listener) {
         Holder h = new Holder(url, listener);
         FailedUnsubscribedTask oldOne = failedUnsubscribed.get(h);
@@ -194,19 +209,25 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void register(URL url) {
+        // 判断url（serviceUrl）的协议类型是否被registryUrl支持，进去
         if (!acceptable(url)) {
+            // 日志
             logger.info("URL " + url + " will not be registered to Registry. Registry " + url + " does not accept service of this protocol type.");
             return;
         }
+        // 进去
         super.register(url);
+        // 移除正在重试的（如果有的话），进去
         removeFailedRegistered(url);
         removeFailedUnregistered(url);
+
         try {
+            // 模板方法，由子类实现
             // Sending a registration request to the server side
             doRegister(url);
         } catch (Exception e) {
             Throwable t = e;
-
+            // 获取 check 参数，若 check = true 将会直接抛出异常
             // If the startup detection is opened, the Exception is thrown directly.
             boolean check = getUrl().getParameter(Constants.CHECK_KEY, true)
                     && url.getParameter(Constants.CHECK_KEY, true)
@@ -220,10 +241,12 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             } else {
                 logger.error("Failed to register " + url + ", waiting for retry, cause: " + t.getMessage(), t);
             }
-
-            // Record a failed registration request to a failed list, retry regularly
+            // Record a failed registration request to a failed list, retry regularly  将失败的注册请求记录到失败列表中，定期重试
+            // 进去
             addFailedRegistered(url);
         }
+        // 如上，我们重点关注 doRegister 方法调用即可，其他的代码先忽略。doRegister 方法是一个模板方法，因此我们到 FailbackRegistry
+        // 子类 ZookeeperRegistry 中进行分析
     }
 
     @Override
@@ -245,6 +268,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    // 参考register方法
     @Override
     public void unregister(URL url) {
         super.unregister(url);
@@ -290,20 +314,23 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    // 参考register方法
     @Override
     public void subscribe(URL url, NotifyListener listener) {
-        super.subscribe(url, listener);
-        removeFailedSubscribed(url, listener);
+        super.subscribe(url, listener); // 进去
+        removeFailedSubscribed(url, listener);// 进去
         try {
-            // Sending a subscription request to the server side
-            doSubscribe(url, listener);
+            // Sending a subscription request to the server side 向服务器端发送订阅请求
+            doSubscribe(url, listener);// 进去，doSubscribe是抽象方法，子类实现，看zk的
         } catch (Exception e) {
             Throwable t = e;
-
+            // 进去
             List<URL> urls = getCacheUrls(url);
             if (CollectionUtils.isNotEmpty(urls)) {
                 notify(url, listener, urls);
-                logger.error("Failed to subscribe " + url + ", Using cached list: " + urls + " from cache file: " + getUrl().getParameter(FILE_KEY, System.getProperty("user.home") + "/dubbo-registry-" + url.getHost() + ".cache") + ", cause: " + t.getMessage(), t);
+                logger.error("Failed to subscribe " + url + ", Using cached list: " + urls + " from cache file: "
+                        + getUrl().getParameter(FILE_KEY, System.getProperty("user.home")
+                        + "/dubbo-registry-" + url.getHost() + ".cache") + ", cause: " + t.getMessage(), t);
             } else {
                 // If the startup detection is opened, the Exception is thrown directly.
                 boolean check = getUrl().getParameter(Constants.CHECK_KEY, true)
@@ -324,6 +351,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    // 参考register方法
     @Override
     public void unsubscribe(URL url, NotifyListener listener) {
         super.unsubscribe(url, listener);
@@ -361,6 +389,10 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             throw new IllegalArgumentException("notify listener == null");
         }
         try {
+            // eg
+            // url : provider://192.168.1.7:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=192.168.1.7&bind.port=20880&category=configurators&check=false&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=49618&release=&side=provider&timestamp=1610289127057
+            // listener : RegistryProtocol$OverrideListener
+            // urls :   empty://192.168.1.7:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=192.168.1.7&bind.port=20880&category=configurators&check=false&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=49618&release=&side=provider&timestamp=1610289127057"
             doNotify(url, listener, urls);
         } catch (Exception t) {
             // Record a failed registration request to a failed list
@@ -369,6 +401,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
     protected void doNotify(URL url, NotifyListener listener, List<URL> urls) {
+        // 进去
         super.notify(url, listener, urls);
     }
 

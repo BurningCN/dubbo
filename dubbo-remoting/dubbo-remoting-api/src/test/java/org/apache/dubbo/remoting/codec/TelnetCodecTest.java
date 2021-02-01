@@ -37,6 +37,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+// OK
 public class TelnetCodecTest {
     protected Codec2 codec;
     byte[] UP = new byte[]{27, 91, 65};
@@ -53,6 +54,7 @@ public class TelnetCodecTest {
     }
 
     protected AbstractMockChannel getServerSideChannel(URL url) {
+        // serverSide要保证local address 和 url.getAddress() 相等 ，去看 isClientSide 方法
         url = url.addParameter(AbstractMockChannel.LOCAL_ADDRESS, url.getAddress())
                 .addParameter(AbstractMockChannel.REMOTE_ADDRESS, "127.0.0.1:12345");
         AbstractMockChannel channel = new AbstractMockChannel(url);
@@ -62,6 +64,7 @@ public class TelnetCodecTest {
     protected AbstractMockChannel getCliendSideChannel(URL url) {
         url = url.addParameter(AbstractMockChannel.LOCAL_ADDRESS, "127.0.0.1:12345")
                 .addParameter(AbstractMockChannel.REMOTE_ADDRESS, url.getAddress());
+        // 进去
         AbstractMockChannel channel = new AbstractMockChannel(url);
         return channel;
     }
@@ -105,16 +108,17 @@ public class TelnetCodecTest {
     }
 
     protected void testDecode_assertEquals(byte[] request, Object ret) throws IOException {
+        // 进去
         testDecode_assertEquals(request, ret, true);
     }
 
     protected void testDecode_assertEquals(byte[] request, Object ret, boolean isServerside) throws IOException {
-        //init channel
+        // init channel 进去
         Channel channel = isServerside ? getServerSideChannel(url) : getCliendSideChannel(url);
-        //init request string
+        // init request string 进去
         ChannelBuffer buffer = ChannelBuffers.wrappedBuffer(request);
 
-        //decode
+        // decode 进去
         Object obj = codec.decode(channel, buffer);
         Assertions.assertEquals(ret, obj);
     }
@@ -151,13 +155,14 @@ public class TelnetCodecTest {
         if (channel == null) {
             channel = getServerSideChannel(url);
         }
-
+        // 进去
         byte[] buf = objectToByte(request);
         ChannelBuffer buffer = ChannelBuffers.wrappedBuffer(buf);
 
         //decode
         Object obj = codec.decode(channel, buffer);
         Assertions.assertEquals(expectret, obj);
+        // getReceivedMessage 进去
         Assertions.assertEquals(channelReceive, channel.getReceivedMessage());
     }
 
@@ -166,10 +171,12 @@ public class TelnetCodecTest {
         Channel channel = getServerSideChannel(url);
         //init request string
         Person request = new Person();
+        // 字节数组拼接，进去
         byte[] newbuf = join(objectToByte(request), enterbytes);
+        // 存到buffer
         ChannelBuffer buffer = ChannelBuffers.wrappedBuffer(newbuf);
 
-        //decode
+        //decode 如果enterbytes是ENTER的字节数组，内部在endWith判断就能通过，进去
         Object obj = codec.decode(channel, buffer);
         if (isNeedmore) {
             Assertions.assertEquals(Codec2.DecodeResult.NEED_MORE_INPUT, obj);
@@ -190,39 +197,50 @@ public class TelnetCodecTest {
 
     @Test
     public void testDecode_String_ClientSide() throws IOException {
+        // 进去
         testDecode_assertEquals("aaa".getBytes(), "aaa", false);
     }
 
     @Test
     public void testDecode_BlankMessage() throws IOException {
+        // 进去
         testDecode_assertEquals(new byte[]{}, Codec2.DecodeResult.NEED_MORE_INPUT);
     }
 
     @Test
     public void testDecode_String_NoEnter() throws IOException {
+        // 标记为服务端的数据，进行decode的时候，数据一定得以换行符结尾，如下就不行，会返回NEED_MORE_INPUT
+        // 进去
         testDecode_assertEquals("aaa", Codec2.DecodeResult.NEED_MORE_INPUT);
     }
 
     @Test
     public void testDecode_String_WithEnter() throws IOException {
+        // 有Enter结尾，进去
         testDecode_assertEquals("aaa\n", "aaa");
     }
 
     @Test
     public void testDecode_String_MiddleWithEnter() throws IOException {
+        // 有Enter不过在中间，内部对ENTER的匹配，调用endWith不通过，进去
         testDecode_assertEquals("aaa\r\naaa", Codec2.DecodeResult.NEED_MORE_INPUT);
     }
 
     @Test
     public void testDecode_Person_ObjectOnly() throws IOException {
+        // 没有Enter，内部对ENTER的匹配，调用endWith不通过，进去
         testDecode_assertEquals(new Person(), Codec2.DecodeResult.NEED_MORE_INPUT);
     }
 
     @Test
     public void testDecode_Person_WithEnter() throws IOException {
-        testDecode_PersonWithEnterByte(new byte[]{'\r', '\n'}, false);//windows end
+        // ENTER = Arrays.asList(
+        //            new byte[]{'\r', '\n'} /* Windows Enter */,
+        //            new byte[]{'\n'} /* Linux Enter */);
+        // person带Enter，进去
+        testDecode_PersonWithEnterByte(new byte[]{'\r', '\n'}, false);//windows end  这个满足
         testDecode_PersonWithEnterByte(new byte[]{'\n', '\r'}, true);
-        testDecode_PersonWithEnterByte(new byte[]{'\n'}, false); //linux end
+        testDecode_PersonWithEnterByte(new byte[]{'\n'}, false); //linux end  这个满足
         testDecode_PersonWithEnterByte(new byte[]{'\r'}, true);
         testDecode_PersonWithEnterByte(new byte[]{'\r', 100}, true);
     }
@@ -230,7 +248,7 @@ public class TelnetCodecTest {
     @Test
     public void testDecode_WithExitByte() throws IOException {
         HashMap<byte[], Boolean> exitbytes = new HashMap<byte[], Boolean>();
-        exitbytes.put(new byte[]{3}, true); /* Windows Ctrl+C */
+        exitbytes.put(new byte[]{3}, true); /* Windows Ctrl+C */   // 传入Telnet的decode方法的msg消息字节数组就是这个，表示要关闭channel
         exitbytes.put(new byte[]{1, 3}, false); //must equal the bytes
         exitbytes.put(new byte[]{-1, -12, -1, -3, 6}, true); /* Linux Ctrl+C */
         exitbytes.put(new byte[]{1, -1, -12, -1, -3, 6}, false); //must equal the bytes
@@ -247,7 +265,7 @@ public class TelnetCodecTest {
         testDecode_assertEquals(new byte[]{'\b'}, Codec2.DecodeResult.NEED_MORE_INPUT, new String(new byte[]{32, 8}));
 
         // test chinese
-        byte[] chineseBytes = "中".getBytes();
+        byte[] chineseBytes = "中".getBytes(); // 三个字节
         byte[] request = join(chineseBytes, new byte[]{'\b'});
         testDecode_assertEquals(request, Codec2.DecodeResult.NEED_MORE_INPUT, new String(new byte[]{32, 32, 8, 8}));
         //There may be some problem handling chinese (negative number recognition). Ignoring this problem, the backspace key is only meaningfully input in a real telnet program.
@@ -267,14 +285,16 @@ public class TelnetCodecTest {
     public void testDecode_History_UP() throws IOException {
         //init channel
         AbstractMockChannel channel = getServerSideChannel(url);
-
+        // up结尾，表示发送历史的上一个消息
+        // 一开始肯定没有任何历史
         testDecode_assertEquals(channel, UP, Codec2.DecodeResult.NEED_MORE_INPUT, null);
 
         String request1 = "aaa\n";
         Object expected1 = "aaa";
-        //init history
+        // init history（aaa\n在Telnet解析后将aaa会存到history）
         testDecode_assertEquals(channel, request1, expected1, null);
 
+        // 前面存到了历史，此时再次执行就能从channel收到消息了
         testDecode_assertEquals(channel, UP, Codec2.DecodeResult.NEED_MORE_INPUT, expected1);
     }
 

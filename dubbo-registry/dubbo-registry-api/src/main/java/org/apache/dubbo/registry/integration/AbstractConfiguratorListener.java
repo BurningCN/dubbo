@@ -34,20 +34,28 @@ import java.util.List;
 /**
  * AbstractConfiguratorListener
  */
+// OK
 public abstract class AbstractConfiguratorListener implements ConfigurationListener {
     private static final Logger logger = LoggerFactory.getLogger(AbstractConfiguratorListener.class);
 
     protected List<Configurator> configurators = Collections.emptyList();
+
+    // 获取默认的治理规则仓库
     protected GovernanceRuleRepository ruleRepository = ExtensionLoader.getExtensionLoader(
             GovernanceRuleRepository.class).getDefaultExtension();
 
+    // 被子类的构造方法中调用
     protected final void initWith(String key) {
+        // this是具体子类对象，进去
         ruleRepository.addListener(key, this);
+        // 根据key（group+key）获取值，进去
         String rawConfig = ruleRepository.getRule(key, DynamicConfiguration.DEFAULT_GROUP);
         if (!StringUtils.isEmpty(rawConfig)) {
+            // 根据获得的规则获取配置对象，进去
             genConfiguratorsFromRawRule(rawConfig);
         }
     }
+
 
     protected final void stopListen(String key) {
         ruleRepository.removeListener(key, this);
@@ -75,6 +83,7 @@ public abstract class AbstractConfiguratorListener implements ConfigurationListe
         boolean parseSuccess = true;
         try {
             // parseConfigurators will recognize app/service config automatically.
+            // 两个方法都进去
             configurators = Configurator.toConfigurators(ConfigParser.parseConfigurators(rawConfig))
                     .orElse(configurators);
         } catch (Exception e) {

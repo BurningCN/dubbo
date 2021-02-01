@@ -38,6 +38,7 @@ import static org.mockito.Mockito.mock;
  * EventFilterTest.java
  * TODO rely on callback integration test for now
  */
+// OK
 public class FutureFilterTest {
     private static RpcInvocation invocation;
     private Filter eventFilter = new FutureFilter();

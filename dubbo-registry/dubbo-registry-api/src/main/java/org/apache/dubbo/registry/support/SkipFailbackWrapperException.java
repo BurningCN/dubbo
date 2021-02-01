@@ -23,14 +23,17 @@ package org.apache.dubbo.registry.support;
  *
  * @see FailbackRegistry
  */
+// OK
 public class SkipFailbackWrapperException extends RuntimeException {
+    // gx
     public SkipFailbackWrapperException(Throwable cause) {
         super(cause);
     }
 
+    // 重写了RuntimeException的方法
     @Override
     public synchronized Throwable fillInStackTrace() {
-        // do nothing
+        // do nothing !
         return null;
     }
 }

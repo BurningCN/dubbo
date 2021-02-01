@@ -30,6 +30,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 /**
  * ThreadPoolStatusChecker
  */
+// OK
 @Activate
 public class ThreadPoolStatusChecker implements StatusChecker {
 
@@ -41,12 +42,12 @@ public class ThreadPoolStatusChecker implements StatusChecker {
         StringBuilder msg = new StringBuilder();
         Status.Level level = Status.Level.OK;
         for (Map.Entry<String, Object> entry : executors.entrySet()) {
-            String port = entry.getKey();
-            ExecutorService executor = (ExecutorService) entry.getValue();
+            String port = entry.getKey();// 端口
+            ExecutorService executor = (ExecutorService) entry.getValue(); // 线程池   --- > 一个端口一个线程池
 
             if (executor instanceof ThreadPoolExecutor) {
                 ThreadPoolExecutor tp = (ThreadPoolExecutor) executor;
-                boolean ok = tp.getActiveCount() < tp.getMaximumPoolSize() - 1;
+                boolean ok = tp.getActiveCount() < tp.getMaximumPoolSize() - 1; //  getActiveCount 活跃的线程数
                 Status.Level lvl = Status.Level.OK;
                 if (!ok) {
                     level = Status.Level.WARN;
@@ -56,6 +57,9 @@ public class ThreadPoolStatusChecker implements StatusChecker {
                 if (msg.length() > 0) {
                     msg.append(";");
                 }
+                // 几个线程池api注意下
+                // maximumPoolSize:是一个静态变量,在变量初始化的时候,有构造函数指定.
+                // largestPoolSize: 是一个动态变量,是记录Poll曾经达到的最高值,也就是 largestPoolSize<= maximumPoolSize.
                 msg.append("Pool status:").append(lvl).append(", max:").append(tp.getMaximumPoolSize()).append(", core:")
                         .append(tp.getCorePoolSize()).append(", largest:").append(tp.getLargestPoolSize()).append(", active:")
                         .append(tp.getActiveCount()).append(", task:").append(tp.getTaskCount()).append(", service port: ").append(port);

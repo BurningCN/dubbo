@@ -42,6 +42,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREADPOOL_KEY;
 /**
  * AbstractClient
  */
+// OK
 public abstract class AbstractClient extends AbstractEndpoint implements Client {
 
     protected static final String CLIENT_THREAD_POOL_NAME = "DubboClientHandler";
@@ -52,13 +53,13 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     private ExecutorRepository executorRepository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
 
     public AbstractClient(URL url, ChannelHandler handler) throws RemotingException {
-        super(url, handler);
+        super(url, handler); // AllChannelHandler -> DecodeHandler  ->  HeaderExchangeHandler ->   ExchangeHandlerDispatcher
 
         needReconnect = url.getParameter(Constants.SEND_RECONNECT_KEY, false);
-
+        // 进去
         initExecutor(url);
 
-        try {
+        try {// 进去 末班方法
             doOpen();
         } catch (Throwable t) {
             close();
@@ -68,7 +69,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         }
 
         try {
-            // connect.
+            // connect. // 进去
             connect();
             if (logger.isInfoEnabled()) {
                 logger.info("Start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress() + " connect to the server " + getRemoteAddress());
@@ -92,14 +93,16 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     private void initExecutor(URL url) {
         url = ExecutorUtil.setThreadName(url, CLIENT_THREAD_POOL_NAME);
         url = url.addParameterIfAbsent(THREADPOOL_KEY, DEFAULT_CLIENT_THREADPOOL);
+        // 进去
         executor = executorRepository.createExecutorIfAbsent(url);
     }
 
     protected static ChannelHandler wrapChannelHandler(URL url, ChannelHandler handler) {
+        // 进去
         return ChannelHandlers.wrap(handler, url);
     }
 
-    public InetSocketAddress getConnectAddress() {
+    public InetSocketAddress getConnectAddress() {// filterLocalHost进去
         return new InetSocketAddress(NetUtils.filterLocalHost(getUrl().getHost()), getUrl().getPort());
     }
 
@@ -171,28 +174,31 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         if (needReconnect && !isConnected()) {
             connect();
         }
+        // NettyChannel 的 getChannel
         Channel channel = getChannel();
         //TODO Can the value returned by getChannel() be null? need improvement.
         if (channel == null || !channel.isConnected()) {
             throw new RemotingException(this, "message can not send, because channel is closed . url:" + getUrl());
         }
+        // NettyChannel 的 send
         channel.send(message, sent);
     }
 
     protected void connect() throws RemotingException {
         connectLock.lock();
-
+        // 下面是查询和doConnect多个操作，利用上面锁保证原子性
         try {
             if (isConnected()) {
                 return;
             }
 
             if (isClosed() || isClosing()) {
+                // 日志
                 logger.warn("No need to connect to server " + getRemoteAddress() + " from " + getClass().getSimpleName() + " "
                         + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion() + ", cause: client status is closed or closing.");
                 return;
             }
-
+            // 进去（子类NettyClient）
             doConnect();
 
             if (!isConnected()) {
@@ -248,6 +254,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
             connectLock.lock();
             try {
                 if (!isConnected()) {
+                    // 关闭+连接就是重连接
                     disconnect();
                     connect();
                 }

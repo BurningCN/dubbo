@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.rpc;
 
+// OK
 public enum InvokeMode {
 
     SYNC, ASYNC, FUTURE;

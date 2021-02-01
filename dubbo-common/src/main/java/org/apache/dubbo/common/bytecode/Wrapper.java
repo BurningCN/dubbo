@@ -115,91 +115,15 @@ public abstract class Wrapper {
 
         // 从缓存中获取或创建 Wrapper 实例（computeIfAbsent是如果存在的话返回之前的），makeWrapper进去
         return WRAPPER_MAP.computeIfAbsent(c, Wrapper::makeWrapper);
+        // 以demo-provider为例，此时MAP如下：
+        //{Class@1373} "class org.apache.dubbo.demo.provider.DemoServiceImpl" -> {Wrapper1@2500}---> ServiceConfig的exportLocal(URL url)触发
+        //{Class@1372} "interface org.apache.dubbo.demo.DemoService" -> {Wrapper0@2450} ---> 在 if (ProtocolUtils.isGeneric(generic)) 的else分支触发
     }
 
 
-    /*
-    public void setPropertyValue(Object o, String n, Object v) {
-        org.apache.dubbo.service.DemoServiceImpl w;
-        try {
-            w = ((org.apache.dubbo.service.DemoServiceImpl) $1);
-        } catch (Throwable e) {
-            throw new IllegalArgumentException(e);
-        }
-        throw new org.apache.dubbo.common.bytecode.NoSuchPropertyException("Not found property \"" + $2 + "\" field or setter method in class org.apache.dubbo.service.DemoServiceImpl.");
-    }
 
-    public Object getPropertyValue(Object o, String n) {
-        org.apache.dubbo.service.DemoServiceImpl w;
-        try {
-            w = ((org.apache.dubbo.service.DemoServiceImpl) $1);
-        } catch (Throwable e) {
-            throw new IllegalArgumentException(e);
-        }
-        if ($2.equals("threadName")) {
-            return ($w) w.getThreadName();
-        }
-        throw new org.apache.dubbo.common.bytecode.NoSuchPropertyException("Not found property \"" + $2 + "\" field or getter method in class org.apache.dubbo.service.DemoServiceImpl.");
-    }
-
-    // 这个方法非常重要！
-    public Object invokeMethod(Object o, String n, Class[] p, Object[] v) throws java.lang.reflect.InvocationTargetException {
-        org.apache.dubbo.service.DemoServiceImpl w;
-        try {
-            w = ((org.apache.dubbo.service.DemoServiceImpl) $1);
-        } catch (Throwable e) {
-            throw new IllegalArgumentException(e);
-        }
-        try {
-            if ("sayHello".equals($2) && $3.length == 1) {
-                return ($w) w.sayHello((java.lang.String) $4[0]);
-            }
-            if ("complexCompute".equals($2) && $3.length == 2) {
-                return ($w) w.complexCompute((java.lang.String) $4[0], (org.apache.dubbo.service.ComplexObject) $4[1]);
-            }
-            if ("findComplexObject".equals($2) && $3.length == 6) {
-                return ($w) w.findComplexObject((java.lang.String) $4[0], ((Number) $4[1]).intValue(), ((Number) $4[2]).longValue(), (java.lang.String[]) $4[3], (java.util.List) $4[4], (org.apache.dubbo.service.ComplexObject$TestEnum) $4[5]);
-            }
-            if ("getbyte".equals($2) && $3.length == 1) {
-                return ($w) w.getbyte(((Byte) $4[0]).byteValue());
-            }
-            if ("gerPerson".equals($2) && $3.length == 1) {
-                return ($w) w.gerPerson((org.apache.dubbo.service.Person) $4[0]);
-            }
-            if ("getThreadName".equals($2) && $3.length == 0) {
-                return ($w) w.getThreadName();
-            }
-            if ("enumlength".equals($2) && $3.length == 1 && $3[0].getName().equals("org.apache.dubbo.service.Type")) {
-                return ($w) w.enumlength((org.apache.dubbo.service.Type) $4[0]);
-            }
-            if ("enumlength".equals($2) && $3.length == 1 && $3[0].getName().equals("[Lorg.apache.dubbo.service.Type;")) {
-                return ($w) w.enumlength((org.apache.dubbo.service.Type[]) $4[0]);
-            }
-            if ("stringLength".equals($2) && $3.length == 1) {
-                return ($w) w.stringLength((java.lang.String) $4[0]);
-            }
-            if ("invoke".equals($2) && $3.length == 2) {
-                return ($w) w.invoke((java.lang.String) $4[0], (java.lang.String) $4[1]);
-            }
-            if ("get".equals($2) && $3.length == 1) {
-                return ($w) w.get((org.apache.dubbo.service.CustomArgument) $4[0]);
-            }
-            if ("timestamp".equals($2) && $3.length == 0) {
-                return ($w) w.timestamp();
-            }
-            if ("getSize".equals($2) && $3.length == 1 && $3[0].getName().equals("[Ljava.lang.String;")) {
-                return ($w) w.getSize((java.lang.String[]) $4[0]);
-            }
-            if ("getSize".equals($2) && $3.length == 1 && $3[0].getName().equals("[Ljava.lang.Object;")) {
-                return ($w) w.getSize((java.lang.Object[]) $4[0]);
-            }
-        } catch (Throwable e) {
-            throw new java.lang.reflect.InvocationTargetException(e);
-        }
-        throw new org.apache.dubbo.common.bytecode.NoSuchMethodException("Not found method \"" + $2 + "\" in class org.apache.dubbo.service.DemoServiceImpl.");
-    }
-    */
-    // 以DemoServiceImpl+testGeneric为例，生成的c1、c2、c3如上，自己可以对照看
+    // 以DemoServiceImpl+testGeneric为例，生成wrapper0文件在doc/wrapper-testGeneric包下，自己可以对照看
+    // 以demo模块的provider模块的Application，生成wrapper0文件在doc/wrapper-demo...包下，自己可以对照看
     private static Wrapper makeWrapper(Class<?> c) {
         // 检测 c 是否为基本类型，若是则抛出异常
         if (c.isPrimitive()) {

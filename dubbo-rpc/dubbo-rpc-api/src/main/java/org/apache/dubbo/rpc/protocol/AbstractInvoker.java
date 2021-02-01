@@ -47,6 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * This Invoker works on Consumer side.
  */
+// OK
 public abstract class AbstractInvoker<T> implements Invoker<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -66,6 +67,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
     }
 
     public AbstractInvoker(Class<T> type, URL url, String[] keys) {
+        // 进去
         this(type, url, convertAttachment(url, keys));
     }
 
@@ -134,14 +136,16 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
     @Override
     public Result invoke(Invocation inv) throws RpcException {
         // if invoker is destroyed due to address refresh from registry, let's allow the current invoke to proceed
+        // 如果调用程序由于注册表中的地址刷新而被销毁，那么让我们允许当前调用继续进行
         if (destroyed.get()) {
             logger.warn("Invoker for service " + this + " on consumer " + NetUtils.getLocalHost() + " is destroyed, "
                     + ", dubbo version is " + Version.getVersion() + ", this invoker should not be used any longer");
         }
         RpcInvocation invocation = (RpcInvocation) inv;
+        // 设置 Invoker
         invocation.setInvoker(this);
         if (CollectionUtils.isNotEmptyMap(attachment)) {
-            invocation.addObjectAttachmentsIfAbsent(attachment);
+            invocation.addObjectAttachmentsIfAbsent(attachment); // 填充处1  从属性attachment
         }
 
         Map<String, Object> contextAttachments = RpcContext.getContext().getObjectAttachments();
@@ -152,15 +156,22 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
              * by the built-in retry mechanism of the Dubbo. The attachment to update RpcContext will no longer work, which is
              * a mistake in most cases (for example, through Filter to RpcContext output traceId and spanId and other information).
              */
-            invocation.addObjectAttachments(contextAttachments);
+            invocation.addObjectAttachments(contextAttachments);// 填充处1 从RpcContext
         }
 
+        // getInvokeMode进去
         invocation.setInvokeMode(RpcUtils.getInvokeMode(url, invocation));
+        // 如果是异步调用，添加id，进去
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
 
         AsyncRpcResult asyncResult;
         try {
+            // 模板方法，被子类实现（比如去看DubboInvoker）
             asyncResult = (AsyncRpcResult) doInvoke(invocation);
+
+        // 其中大部分代码用于添加信息到 RpcInvocation#attachment 变量中，添加完毕后，调用 doInvoke 执行后续的调用。doInvoke 是一个抽象
+        // 方法，需要由子类实现，下面到 DubboInvoker 中看一下
+
         } catch (InvocationTargetException e) { // biz exception
             Throwable te = e.getTargetException();
             if (te == null) {
@@ -180,13 +191,17 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         } catch (Throwable e) {
             asyncResult = AsyncRpcResult.newDefaultAsyncResult(null, e, invocation);
         }
+        // 进去
         RpcContext.getContext().setFuture(new FutureAdapter(asyncResult.getResponseFuture()));
         return asyncResult;
     }
 
+    // gx
     protected ExecutorService getCallbackExecutor(URL url, Invocation inv) {
+        // getExecutor进去
         ExecutorService sharedExecutor = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension().getExecutor(url);
         if (InvokeMode.SYNC == RpcUtils.getInvokeMode(getUrl(), inv)) {
+            // 进去
             return new ThreadlessExecutor(sharedExecutor);
         } else {
             return sharedExecutor;

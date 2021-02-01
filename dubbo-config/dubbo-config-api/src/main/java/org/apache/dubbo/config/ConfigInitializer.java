@@ -22,6 +22,7 @@ import org.apache.dubbo.common.extension.SPI;
  * Dynamically add some parameters / check config
  */
 
+// OK
 @SPI
 public interface ConfigInitializer {
 

@@ -34,6 +34,7 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+// OK
 public class TokenFilterTest {
 
     private TokenFilter tokenFilter = new TokenFilter();
@@ -48,9 +49,9 @@ public class TokenFilterTest {
         when(invoker.invoke(any(Invocation.class))).thenReturn(new AppResponse("result"));
 
         Map<String, Object> attachments = new HashMap<>();
-        attachments.put(TOKEN_KEY, token);
+        attachments.put(TOKEN_KEY, token); // 和前面的token值相等
         Invocation invocation = Mockito.mock(Invocation.class);
-        when(invocation.getObjectAttachments()).thenReturn(attachments);
+        when(invocation.getObjectAttachments()).thenReturn(attachments);// attachments填充到invocation
 
         Result result = tokenFilter.invoke(invoker, invocation);
         Assertions.assertEquals("result", result.getValue());
@@ -67,9 +68,9 @@ public class TokenFilterTest {
             when(invoker.invoke(any(Invocation.class))).thenReturn(new AppResponse("result"));
 
             Map<String, Object> attachments = new HashMap<>();
-            attachments.put(TOKEN_KEY, "wrongToken");
+            attachments.put(TOKEN_KEY, "wrongToken"); // 和前面的token值不等
             Invocation invocation = Mockito.mock(Invocation.class);
-            when(invocation.getObjectAttachments()).thenReturn(attachments);
+            when(invocation.getObjectAttachments()).thenReturn(attachments);// attachments填充到invocation
 
             tokenFilter.invoke(invoker, invocation);
         });
@@ -85,6 +86,7 @@ public class TokenFilterTest {
             when(invoker.getUrl()).thenReturn(url);
             when(invoker.invoke(any(Invocation.class))).thenReturn(new AppResponse("result"));
 
+            // url含有token，但是invocation的attachment map没有，也会抛异常
             Invocation invocation = Mockito.mock(Invocation.class);
 
             tokenFilter.invoke(invoker, invocation);

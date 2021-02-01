@@ -21,6 +21,7 @@ import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.remoting.exchange.Request;
 import org.apache.dubbo.remoting.exchange.Response;
 
+// OK
 public class PayloadDropper {
     private static Logger logger = LoggerFactory.getLogger(PayloadDropper.class);
 
@@ -30,6 +31,7 @@ public class PayloadDropper {
      * @param message
      * @return
      */
+    // gx 主要是给NettyChannel使用的，在send抛异常的时候抛异常，并且带有msg，这里为了减少msg大小，将请求体和响应体置null。
     public static Object getRequestWithoutData(Object message) {
         if (logger.isDebugEnabled()) {
             return message;

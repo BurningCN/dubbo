@@ -26,6 +26,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * ExchangeHandlerAdapter
  */
+// OK
 public abstract class ExchangeHandlerAdapter extends TelnetHandlerAdapter implements ExchangeHandler {
 
     @Override

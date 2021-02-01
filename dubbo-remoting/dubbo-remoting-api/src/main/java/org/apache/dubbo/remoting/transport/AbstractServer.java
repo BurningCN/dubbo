@@ -43,8 +43,10 @@ import static org.apache.dubbo.remoting.Constants.IDLE_TIMEOUT_KEY;
 /**
  * AbstractServer
  */
+// OK
 public abstract class AbstractServer extends AbstractEndpoint implements RemotingServer {
 
+    // gx
     protected static final String SERVER_THREAD_POOL_NAME = "DubboServerHandler";
     private static final Logger logger = LoggerFactory.getLogger(AbstractServer.class);
     ExecutorService executor;
@@ -52,24 +54,27 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
     private InetSocketAddress bindAddress;
     private int accepts;
     private int idleTimeout;
-
+    // 去看下默认扩展构造器
     private ExecutorRepository executorRepository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
 
     public AbstractServer(URL url, ChannelHandler handler) throws RemotingException {
-        // 调用父类构造方法，这里就不用跟进去了，没什么复杂逻辑
-        super(url, handler);
+        // 传进来的handler是Wrap的：MultiMessageHandler(HeartbeatHandler(hanlder/ExchangeHandler))，最里层的就是我们的业务处理器，
+        // 比如 DubboProtocol 的 成员ExchangeHandler requestHandler
+        // 进去
+        super(url, handler); //eg  url :telnet://localhost:56780?codec=exchange&exchanger=header&heartbeat=1000&threadname=DubboServerHandler-localhost:56780&transporter=netty4
         localAddress = getUrl().toInetSocketAddress();
 
         // 获取 ip 和端口
         String bindIp = getUrl().getParameter(Constants.BIND_IP_KEY, getUrl().getHost());
         int bindPort = getUrl().getParameter(Constants.BIND_PORT_KEY, getUrl().getPort());
         if (url.getParameter(ANYHOST_KEY, false) || NetUtils.isInvalidLocalHost(bindIp)) {
-            // 设置 ip 为 0.0.0.0
+            // 如果满足上面的条件，即anyhost = true或者host为127.0.0.1、localhost、0.0.0.0等，就设置 ip 为 0.0.0.0，表示服务端的socket不选择ip，一个机器可以多ip/多宿的，这样其他客户端可以指定多个服务端ip，都能接收到
             bindIp = ANYHOST_VALUE;
         }
         bindAddress = new InetSocketAddress(bindIp, bindPort);
         // 获取最大可接受连接数
         this.accepts = url.getParameter(ACCEPTS_KEY, DEFAULT_ACCEPTS);
+        // 该值在NettyServer子类用到（这句话不对，子类用的不是这个，去看下int idleTimeout = UrlUtils.getIdleTimeout(getUrl()) ，从url取的key不一样）
         this.idleTimeout = url.getParameter(IDLE_TIMEOUT_KEY, DEFAULT_IDLE_TIMEOUT);
         try {
             // 调用模板方法 doOpen 启动服务器
@@ -82,6 +87,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
             throw new RemotingException(url.toInetSocketAddress(), null, "Failed to bind " + getClass().getSimpleName()
                     + " on " + getLocalAddress() + ", cause: " + t.getMessage(), t);
         }
+        //  创建executor
         executor = executorRepository.createExecutorIfAbsent(url);
     }
 
@@ -114,16 +120,18 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         } catch (Throwable t) {
             logger.error(t.getMessage(), t);
         }
+        // 进去
         executorRepository.updateThreadpool(url, executor);
+        // 更新父类的url
         super.setUrl(getUrl().addParameters(url.getParameters()));
     }
 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
-        Collection<Channel> channels = getChannels();
+        Collection<Channel> channels = getChannels(); // 去看NettyServer的getChannels方法
         for (Channel channel : channels) {
             if (channel.isConnected()) {
-                channel.send(message, sent);
+                channel.send(message, sent); // 发消息
             }
         }
     }
@@ -133,6 +141,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         if (logger.isInfoEnabled()) {
             logger.info("Close " + getClass().getSimpleName() + " bind " + getBindAddress() + ", export " + getLocalAddress());
         }
+        // 进去
         ExecutorUtil.shutdownNow(executor, 100);
         try {
             super.close();
@@ -169,10 +178,12 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         return idleTimeout;
     }
 
+    // gx 主要是NettyServeHandler#ChannelActive触发
     @Override
     public void connected(Channel ch) throws RemotingException {
         // If the server has entered the shutdown process, reject any new connection
-        if (this.isClosing() || this.isClosed()) {
+        if (this.isClosing() || this.isClosed()) {// 这里的this是NettyServer实例，注意有两个关闭状态：Closing和Closed，都进去看下
+            // 日志
             logger.warn("Close new channel " + ch + ", cause: server is closing or has been closed. For example, receive a new connect request while in shutdown process.");
             ch.close();
             return;
@@ -180,6 +191,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
 
         Collection<Channel> channels = getChannels();
         if (accepts > 0 && channels.size() > accepts) {
+            // 日志
             logger.error("Close channel " + ch + ", cause: The server " + ch.getLocalAddress() + " connections greater than max config " + accepts);
             ch.close();
             return;
@@ -189,11 +201,11 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
 
     @Override
     public void disconnected(Channel ch) throws RemotingException {
-        Collection<Channel> channels = getChannels();
-        if (channels.isEmpty()) {
+        Collection<Channel> channels = getChannels(); // 进去
+        if (channels.isEmpty()) { // 日志
             logger.warn("All clients has disconnected from " + ch.getLocalAddress() + ". You can graceful shutdown now.");
         }
-        super.disconnected(ch);
+        super.disconnected(ch);// 进去
     }
 
 }

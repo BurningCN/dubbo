@@ -67,6 +67,7 @@ public interface ThrowableFunction<T, R> {
      * @return the result after execution
      */
     static <T, R> R execute(T t, ThrowableFunction<T, R> function) {
+        //都是这样，第一个参数会作为参数方法的输入
         return function.execute(t);
     }
 }

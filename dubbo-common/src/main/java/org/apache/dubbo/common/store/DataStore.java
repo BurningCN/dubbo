@@ -21,6 +21,7 @@ import org.apache.dubbo.common.extension.SPI;
 
 import java.util.Map;
 
+// OK
 @SPI("simple")
 public interface DataStore {
 

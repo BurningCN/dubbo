@@ -27,6 +27,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
 import static org.apache.dubbo.rpc.Constants.TPS_LIMIT_RATE_KEY;
 import static org.apache.dubbo.rpc.Constants.TPS_LIMIT_INTERVAL_KEY;
 
+// OK
 public class DefaultTPSLimiterTest {
 
     private DefaultTPSLimiter defaultTPSLimiter = new DefaultTPSLimiter();
@@ -37,8 +38,9 @@ public class DefaultTPSLimiterTest {
         URL url = URL.valueOf("test://test");
         url = url.addParameter(INTERFACE_KEY, "org.apache.dubbo.rpc.file.TpsService");
         url = url.addParameter(TPS_LIMIT_RATE_KEY, 2);
-        url = url.addParameter(TPS_LIMIT_INTERVAL_KEY, 1000);
+        url = url.addParameter(TPS_LIMIT_INTERVAL_KEY, 1000);// 限制1s最多3次调用（rate从0计数，0、1、2都是允许的）
         for (int i = 0; i < 3; i++) {
+            // 进去
             Assertions.assertTrue(defaultTPSLimiter.isAllowable(url, invocation));
         }
     }
@@ -70,7 +72,7 @@ public class DefaultTPSLimiterTest {
         for (int i = 0; i < 3; i++) {
             Assertions.assertTrue(defaultTPSLimiter.isAllowable(url, invocation));
         }
-        url = url.addParameter(TPS_LIMIT_RATE_KEY, 2000);
+        url = url.addParameter(TPS_LIMIT_RATE_KEY, 2000); // 修改rate或者interval内部会重置
         for (int i = 0; i < 3; i++) {
             Assertions.assertTrue(defaultTPSLimiter.isAllowable(url, invocation));
         }

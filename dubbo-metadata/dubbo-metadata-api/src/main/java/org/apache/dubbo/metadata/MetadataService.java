@@ -40,6 +40,9 @@ import static org.apache.dubbo.common.URL.buildKey;
  * {@link #getExportedURLs()} and {@link #getSubscribedURLs()} respectively. What's more, {@link MetadataService}
  * also providers the fine-grain methods for the precise queries.
  *
+ * Dubbo元数据服务的框架接口定义了Dubbo服务提供者及其消费者之间的Dubbo服务注册和订阅契约。实现类将当做正常的dubbo服务而暴露出去,以用来被客户订阅,
+ * 它的version来自于version()方法 group来自serviceName(),这意味着,不同达博服务(应用程序)将导出不同{@link MetadataService},
+ * 保存所有的exported和订阅的元数据,他们存在{@link # getExportedURLs()}和{@link # getSubscribedURLs()}。此外，{@link MetadataService}还为精确查询提供了细粒度的方法。
  * @see WritableMetadataService
  * @since 2.7.5
  */

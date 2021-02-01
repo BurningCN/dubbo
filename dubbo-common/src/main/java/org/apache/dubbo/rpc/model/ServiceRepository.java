@@ -137,7 +137,7 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
                 serviceMetadata);
         // 存到下两个容器
         providers.putIfAbsent(serviceKey, providerModel);
-        providersWithoutGroup.putIfAbsent(keyWithoutGroup(serviceKey), providerModel);
+        providersWithoutGroup.putIfAbsent(keyWithoutGroup(serviceKey), providerModel);// eg:serviceKey = org.apache.dubbo.demo.DemoService:null，那么 keyWithoutGroup为org.apache.dubbo.demo.DemoService:null
     }
 
     private static String keyWithoutGroup(String serviceKey) {
@@ -178,6 +178,7 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
     }
 
     public ProviderModel lookupExportedService(String serviceKey) {
+        // providers的填充处在registerService的调用，而registerService的调用在ServiceConfig的doExportUrls方法
         return providers.get(serviceKey);
     }
 

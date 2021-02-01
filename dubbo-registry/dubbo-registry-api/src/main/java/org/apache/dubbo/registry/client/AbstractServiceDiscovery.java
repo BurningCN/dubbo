@@ -16,6 +16,8 @@
  */
 package org.apache.dubbo.registry.client;
 
+
+// OK
 public abstract class AbstractServiceDiscovery implements ServiceDiscovery {
 
     protected ServiceInstance serviceInstance;

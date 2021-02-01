@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.apache.dubbo.common.constants.CommonConstants.READONLY_EVENT;
 
 //TODO response test
+// OK
 public class HeaderExchangeHandlerTest {
 
     @Test
@@ -53,6 +54,7 @@ public class HeaderExchangeHandlerTest {
             }
         };
         HeaderExchangeHandler hexhandler = new HeaderExchangeHandler(exhandler);
+        // 进去
         hexhandler.received(mchannel, request);
     }
 
@@ -78,7 +80,7 @@ public class HeaderExchangeHandlerTest {
         };
         ExchangeHandler exhandler = new MockedExchangeHandler() {
             @Override
-            public CompletableFuture<Object> reply(ExchangeChannel channel, Object request) throws RemotingException {
+                public CompletableFuture<Object> reply(ExchangeChannel channel, Object request) throws RemotingException {
                 return CompletableFuture.completedFuture(request);
             }
 
@@ -88,12 +90,14 @@ public class HeaderExchangeHandlerTest {
             }
         };
         HeaderExchangeHandler hexhandler = new HeaderExchangeHandler(exhandler);
+        // 进去
         hexhandler.received(mchannel, request);
         Assertions.assertEquals(1, count.get());
     }
 
     @Test
     public void test_received_request_twoway_error_nullhandler() throws RemotingException {
+        // 进去
         Assertions.assertThrows(IllegalArgumentException.class, () -> new HeaderExchangeHandler(null));
     }
 
@@ -124,6 +128,7 @@ public class HeaderExchangeHandlerTest {
             }
         };
         HeaderExchangeHandler hexhandler = new HeaderExchangeHandler(exhandler);
+        // 进去
         hexhandler.received(mchannel, request);
         Assertions.assertEquals(1, count.get());
     }
@@ -132,8 +137,8 @@ public class HeaderExchangeHandlerTest {
     public void test_received_request_twoway_error_reqeustBroken() throws RemotingException {
         final Request request = new Request();
         request.setTwoWay(true);
-        request.setData(new BizException());
-        request.setBroken(true);
+        request.setData(new BizException()); // 注意
+        request.setBroken(true); // 注意
 
         final AtomicInteger count = new AtomicInteger(0);
         final Channel mchannel = new MockedChannel() {
@@ -149,6 +154,7 @@ public class HeaderExchangeHandlerTest {
             }
         };
         HeaderExchangeHandler hexhandler = new HeaderExchangeHandler(new MockedExchangeHandler());
+        // 进去
         hexhandler.received(mchannel, request);
         Assertions.assertEquals(1, count.get());
     }
@@ -157,11 +163,13 @@ public class HeaderExchangeHandlerTest {
     public void test_received_request_event_readonly() throws RemotingException {
         final Request request = new Request();
         request.setTwoWay(true);
-        request.setEvent(READONLY_EVENT);
+        request.setEvent(READONLY_EVENT);// setEvent注意 内部会把event标识为true
 
         final Channel mchannel = new MockedChannel();
         HeaderExchangeHandler hexhandler = new HeaderExchangeHandler(new MockedExchangeHandler());
+        // 进去
         hexhandler.received(mchannel, request);
+        // 内部如果判断是活动类型请求，并且是READONLY_EVENT的，那么会添加属性到channel中
         Assertions.assertTrue(mchannel.hasAttribute(Constants.CHANNEL_ATTRIBUTE_READONLY_KEY));
     }
 
@@ -169,7 +177,7 @@ public class HeaderExchangeHandlerTest {
     public void test_received_request_event_other_discard() throws RemotingException {
         final Request request = new Request();
         request.setTwoWay(true);
-        request.setEvent("my event");
+        request.setEvent("my event");// 进去
 
         final Channel mchannel = new MockedChannel() {
             @Override
@@ -191,6 +199,7 @@ public class HeaderExchangeHandlerTest {
                 throw new RemotingException(channel, "");
             }
         });
+        // 进去  这个测试压根都不会进MockedExchangeHandler、mchannel的方法，主要是因为这是活动请求，内部都不会流转到对前两个对象方法的调用
         hexhandler.received(mchannel, request);
     }
 

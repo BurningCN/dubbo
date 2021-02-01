@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 /**
  * UnsafeByteArrayOutputStream.
  */
+// OK
 public class UnsafeByteArrayOutputStream extends OutputStream {
     protected byte[] mBuffer;
 
@@ -44,6 +45,7 @@ public class UnsafeByteArrayOutputStream extends OutputStream {
     public void write(int b) {
         int newcount = mCount + 1;
         if (newcount > mBuffer.length) {
+            // 支持自动扩容，进去
             mBuffer = Bytes.copyOf(mBuffer, Math.max(mBuffer.length << 1, newcount));
         }
         mBuffer[mCount] = (byte) b;
@@ -62,6 +64,7 @@ public class UnsafeByteArrayOutputStream extends OutputStream {
         if (newcount > mBuffer.length) {
             mBuffer = Bytes.copyOf(mBuffer, Math.max(mBuffer.length << 1, newcount));
         }
+        // 注意
         System.arraycopy(b, off, mBuffer, mCount, len);
         mCount = newcount;
     }
@@ -92,6 +95,7 @@ public class UnsafeByteArrayOutputStream extends OutputStream {
     }
 
     public String toString(String charset) throws UnsupportedEncodingException {
+        // 字符集
         return new String(mBuffer, 0, mCount, charset);
     }
 

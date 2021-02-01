@@ -36,6 +36,7 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.LAZY_CONNECT_INITIAL
 /**
  * dubbo protocol support class.
  */
+// OK
 @SuppressWarnings("deprecation")
 final class ReferenceCountExchangeClient implements ExchangeClient {
 
@@ -44,8 +45,13 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     private ExchangeClient client;
 
+    // ReferenceCountExchangeClient 内部定义了一个引用计数变量 referenceCount，每当该对象被引用一次 referenceCount 都会进行自增。
+    // 每当 close 方法被调用时，referenceCount 进行自减。ReferenceCountExchangeClient 内部仅实现了一个引用计数的功能，其他方法并无复杂
+    // 逻辑，均是直接调用被装饰对象的相关方法。所以这里就不多说了，继续向下分析，这次是 HeaderExchangeClient。
+    // gx
     public ReferenceCountExchangeClient(ExchangeClient client) {
         this.client = client;
+        // 引用计数自增
         referenceCount.incrementAndGet();
         this.url = client.getUrl();
     }
@@ -57,6 +63,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     @Override
     public CompletableFuture<Object> request(Object request) throws RemotingException {
+        // 直接调用被装饰对象的同签名方法
         return client.request(request);
     }
 
@@ -77,6 +84,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     @Override
     public CompletableFuture<Object> request(Object request, int timeout) throws RemotingException {
+        // 直接调用被装饰对象的同签名方法
         return client.request(request, timeout);
     }
 
@@ -87,7 +95,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     @Override
     public CompletableFuture<Object> request(Object request, int timeout, ExecutorService executor) throws RemotingException {
-        return client.request(request, timeout, executor);
+        return client.request(request, timeout, executor);// 进去
     }
 
     @Override
@@ -146,15 +154,16 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
     }
 
     /**
-     * close() is not idempotent any longer
+     * close() is not idempotent any longer 不再是幂等的，因为需要做一些引用计数的操作
      */
     @Override
     public void close() {
-        close(0);
+        close(0); // 进去
     }
 
     @Override
     public void close(int timeout) {
+        // referenceCount 自减
         if (referenceCount.decrementAndGet() <= 0) {
             if (timeout == 0) {
                 client.close();
@@ -162,7 +171,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
             } else {
                 client.close(timeout);
             }
-
+            // 进去
             replaceWithLazyClient();
         }
     }
@@ -175,11 +184,14 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
     /**
      * when closing the client, the client needs to be set to LazyConnectExchangeClient, and if a new call is made,
      * the client will "resurrect".
+     * 关闭客户端时，客户端需要设置为LazyConnectExchangeClient，如果有新的调用，
+     * 客户端将“复活”。
      *
      * @return
      */
     private void replaceWithLazyClient() {
         // this is a defensive operation to avoid client is closed by accident, the initial state of the client is false
+        // 这是一种防御操作，以避免客户端被意外关闭，客户端的初始状态为false
         URL lazyUrl = url.addParameter(LAZY_CONNECT_INITIAL_STATE_KEY, Boolean.TRUE)
                 .addParameter(RECONNECT_KEY, Boolean.FALSE)
                 .addParameter(SEND_RECONNECT_KEY, Boolean.TRUE.toString())
@@ -187,8 +199,10 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
         /**
          * the order of judgment in the if statement cannot be changed.
+         * if语句中的判断顺序不能改变。
          */
         if (!(client instanceof LazyConnectExchangeClient) || client.isClosed()) {
+            // 进去
             client = new LazyConnectExchangeClient(lazyUrl, client.getExchangeHandler());
         }
     }
@@ -200,7 +214,9 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     /**
      * The reference count of current ExchangeClient, connection will be closed if all invokers destroyed.
+     * 如果销毁了所有调用程序，则当前ExchangeClient, connection的引用计数将被关闭。
      */
+    /** 引用计数自增，该方法由外部调用 */
     public void incrementAndGetCount() {
         referenceCount.incrementAndGet();
     }

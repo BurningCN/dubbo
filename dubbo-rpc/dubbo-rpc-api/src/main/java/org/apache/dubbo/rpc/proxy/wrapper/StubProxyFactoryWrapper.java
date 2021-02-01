@@ -45,6 +45,7 @@ import static org.apache.dubbo.rpc.Constants.STUB_KEY;
 /**
  * StubProxyFactoryWrapper
  */
+// Wrapper，包装了JdkProxyFactory和JavassistProxyFactory（在其拷贝构造函数传入这两个之一的实例）
 public class StubProxyFactoryWrapper implements ProxyFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StubProxyFactoryWrapper.class);
@@ -63,7 +64,7 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
 
     @Override
     public <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException {
-        T proxy = proxyFactory.getProxy(invoker, generic);
+        T proxy = proxyFactory.getProxy(invoker, generic);// 这里的proxyFactory为具体扩展实例了，这里的getProxy是父类AbstractProxyFactory的方法，进去
         if (GenericService.class != invoker.getInterface()) {
             URL url = invoker.getUrl();
             String stub = url.getParameter(STUB_KEY, url.getParameter(LOCAL_KEY));
@@ -111,11 +112,12 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> T getProxy(Invoker<T> invoker) throws RpcException {
-        return getProxy(invoker, false);
+        return getProxy(invoker, false);// 进去
     }
 
     @Override
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) throws RpcException {
+        // 进去
         return proxyFactory.getInvoker(proxy, type, url);
     }
 

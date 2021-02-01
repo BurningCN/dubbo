@@ -22,14 +22,21 @@ import java.util.Map;
 /**
  * This class provides map adapters to support attachments in RpcContext, Invocation and Result switch from
  * <String, String> to <String, Object>
+ *  这个类提供了映射适配器来支持RpcContext中的附件、调用和结果切换
+ *  <String, String>到<String, Object>
  */
+// OK
 public class AttachmentsAdapter {
 
+    // 继承了HashMap
     public static class ObjectToStringMap extends HashMap<String, String> {
         private Map<String, Object> attachments;
 
+        // 构造方法 gx
         public ObjectToStringMap(Map<String, Object> attachments) {
             for (Entry<String, Object> entry : attachments.entrySet()) {
+                // todo need pr 拼写错误
+                // convert进去
                 String converResult = convert(entry.getValue());
                 if (converResult != null) {
                     super.put(entry.getKey(), converResult);

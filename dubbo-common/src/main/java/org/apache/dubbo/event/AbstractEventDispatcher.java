@@ -63,13 +63,16 @@ public abstract class AbstractEventDispatcher implements EventDispatcher {
             throw new NullPointerException("executor must not be null");
         }
         this.executor = executor;
+        // 进去
         this.loadEventListenerInstances();
     }
 
     @Override
     public void addEventListener(EventListener<?> listener) throws NullPointerException, IllegalArgumentException {
         Listenable.assertListener(listener);
+        // 第二个参数是Consumer（listeners是入参，是一个容器），doInListener进去
         doInListener(listener, listeners -> {
+            // 把listener添加到listeners
             addIfAbsent(listeners, listener);
         });
     }
@@ -96,6 +99,8 @@ public abstract class AbstractEventDispatcher implements EventDispatcher {
     }
 
     protected Stream<EventListener> sortedListeners(Predicate<Map.Entry<Class<? extends Event>, List<EventListener>>> predicate) {
+
+        // 看Predicate<>泛型就知道一个Event有多个监听器（保存在listenersCache容器中，如下）
         return listenersCache
                 .entrySet()
                 .stream()
@@ -114,19 +119,23 @@ public abstract class AbstractEventDispatcher implements EventDispatcher {
     @Override
     public void dispatch(Event event) {
 
+        // 进去
         Executor executor = getExecutor();
 
         // execute in sequential or parallel execution model
+        // 按顺序或并行执行模型执行，取决于使用DirectEventDispatcher还是ParallelEventDispatcher，两个传了不同的线程池
         executor.execute(() -> {
+            // 参数是predicate，此predicate表示从listenersCache容器取出关注event的那些监听器，进去
             sortedListeners(entry -> entry.getKey().isAssignableFrom(event.getClass()))
                     .forEach(listener -> {
+                        // 是否是条件化的监听器，是的话，调用其accpet方法看是否接受这种event
                         if (listener instanceof ConditionalEventListener) {
                             ConditionalEventListener predicateEventListener = (ConditionalEventListener) listener;
                             if (!predicateEventListener.accept(event)) { // No accept
                                 return;
                             }
                         }
-                        // Handle the event
+                        // Handle the event 关键点
                         listener.onEvent(event);
                     });
         });
@@ -137,10 +146,12 @@ public abstract class AbstractEventDispatcher implements EventDispatcher {
      */
     @Override
     public final Executor getExecutor() {
+        // 这个是在构造方法传进来赋值的，而构造方法的调用是DirectEventDispatch的构造函数super(DIRECT_EXECUTOR);传进来一个Runnable::run 线程池
         return executor;
     }
 
     protected void doInListener(EventListener<?> listener, Consumer<Collection<EventListener>> consumer) {
+        // 进去
         Class<? extends Event> eventType = findEventType(listener);
         if (eventType != null) {
             synchronized (mutex) {
@@ -163,6 +174,7 @@ public abstract class AbstractEventDispatcher implements EventDispatcher {
      */
     protected void loadEventListenerInstances() {
         ExtensionLoader<EventListener> loader = ExtensionLoader.getExtensionLoader(EventListener.class);
+        // 获取所有的事件监听器扩展类实例，调用addEventListener添加到listenersCache容器
         loader.getSupportedExtensionInstances().forEach(this::addEventListener);
     }
 }

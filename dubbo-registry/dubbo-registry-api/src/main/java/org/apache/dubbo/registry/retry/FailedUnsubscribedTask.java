@@ -25,12 +25,14 @@ import org.apache.dubbo.registry.support.FailbackRegistry;
 /**
  * FailedUnsubscribedTask
  */
+// OK
 public final class FailedUnsubscribedTask extends AbstractRetryTask {
 
     private static final String NAME = "retry unsubscribe";
 
     private final NotifyListener listener;
 
+    // gx
     public FailedUnsubscribedTask(URL url, FailbackRegistry registry, NotifyListener listener) {
         super(url, registry, NAME);
         if (listener == null) {

@@ -33,6 +33,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.SIDE_KEY;
 /**
  * AbstractCodec
  */
+// OK
 public abstract class AbstractCodec implements Codec2 {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractCodec.class);
@@ -42,11 +43,15 @@ public abstract class AbstractCodec implements Codec2 {
     private static final String SERVER_SIDE = "server";
 
     protected static void checkPayload(Channel channel, long size) throws IOException {
+        // 默认的限制大小 8M
         int payload = Constants.DEFAULT_PAYLOAD;
         if (channel != null && channel.getUrl() != null) {
+            // url取得的大小
             payload = channel.getUrl().getParameter(Constants.PAYLOAD_KEY, Constants.DEFAULT_PAYLOAD);
         }
+        // payload < 0 表示无限制
         if (payload > 0 && size > payload) {
+            // 日志
             ExceedPayloadLimitException e = new ExceedPayloadLimitException(
                 "Data length too large: " + size + ", max payload: " + payload + ", channel: " + channel);
             logger.error(e);
@@ -55,6 +60,7 @@ public abstract class AbstractCodec implements Codec2 {
     }
 
     protected Serialization getSerialization(Channel channel) {
+        // 进去
         return CodecSupport.getSerialization(channel.getUrl());
     }
 
@@ -65,6 +71,8 @@ public abstract class AbstractCodec implements Codec2 {
         } else if (SERVER_SIDE.equals(side)) {
             return false;
         } else {
+            // 到这里side的值一般为null
+
             InetSocketAddress address = channel.getRemoteAddress();
             URL url = channel.getUrl();
             boolean isClient = url.getPort() == address.getPort()

@@ -18,9 +18,11 @@ package org.apache.dubbo.rpc;
 
 import java.util.concurrent.TimeUnit;
 
+// OK
 public final class TimeoutCountDown implements Comparable<TimeoutCountDown> {
 
   public static TimeoutCountDown newCountDown(long timeout, TimeUnit unit) {
+    // 进去
     return new TimeoutCountDown(timeout, unit);
   }
 
@@ -29,14 +31,15 @@ public final class TimeoutCountDown implements Comparable<TimeoutCountDown> {
   private volatile boolean expired;
 
   private TimeoutCountDown(long timeout, TimeUnit unit) {
-    timeoutInMillis = TimeUnit.MILLISECONDS.convert(timeout, unit);
-    deadlineInNanos = System.nanoTime() + TimeUnit.NANOSECONDS.convert(timeout, unit);
+    timeoutInMillis = TimeUnit.MILLISECONDS.convert(timeout, unit);// eg 3000 ms
+    deadlineInNanos = System.nanoTime() + TimeUnit.NANOSECONDS.convert(timeout, unit);// 死亡点
   }
 
   public long getTimeoutInMilli() {
     return timeoutInMillis;
   }
 
+  // gx
   public boolean isExpired() {
     if (!expired) {
       if (deadlineInNanos - System.nanoTime() <= 0) {
@@ -47,7 +50,17 @@ public final class TimeoutCountDown implements Comparable<TimeoutCountDown> {
     }
     return true;
   }
+  
+  // gx
+  public long elapsedMillis() {
+    if (isExpired()) {
+      return timeoutInMillis + TimeUnit.MILLISECONDS.convert(System.nanoTime() - deadlineInNanos, TimeUnit.NANOSECONDS);
+    } else {
+      return TimeUnit.MILLISECONDS.convert(deadlineInNanos - System.nanoTime(), TimeUnit.NANOSECONDS);
+    }
+  }
 
+  // gx
   public long timeRemaining(TimeUnit unit) {
     final long currentNanos = System.nanoTime();
     if (!expired && deadlineInNanos - currentNanos <= 0) {
@@ -56,13 +69,6 @@ public final class TimeoutCountDown implements Comparable<TimeoutCountDown> {
     return unit.convert(deadlineInNanos - currentNanos, TimeUnit.NANOSECONDS);
   }
 
-  public long elapsedMillis() {
-    if (isExpired()) {
-      return timeoutInMillis + TimeUnit.MILLISECONDS.convert(System.nanoTime() - deadlineInNanos, TimeUnit.NANOSECONDS);
-    } else {
-      return TimeUnit.MILLISECONDS.convert(deadlineInNanos - System.nanoTime(), TimeUnit.NANOSECONDS);
-    }
-  }
 
   @Override
   public String toString() {

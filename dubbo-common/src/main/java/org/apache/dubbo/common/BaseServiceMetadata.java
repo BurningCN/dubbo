@@ -62,7 +62,7 @@ public class BaseServiceMetadata {
         int versionIndex = serviceKey.indexOf(":");
         groupIndex = (groupIndex == -1) ? 0 : groupIndex + 1;
         versionIndex = (versionIndex == -1) ? serviceKey.length() : versionIndex;
-        return serviceKey.substring(groupIndex, versionIndex);
+        return serviceKey.substring(groupIndex, versionIndex);// 截取这段之间的，即/ 和 :之间的内容，如果没有这两个字符，就是原字符串
     }
 
     /**

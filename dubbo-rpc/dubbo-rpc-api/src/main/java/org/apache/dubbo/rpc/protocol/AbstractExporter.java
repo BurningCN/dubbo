@@ -24,6 +24,7 @@ import org.apache.dubbo.rpc.Invoker;
 /**
  * AbstractExporter.
  */
+// OK
 public abstract class AbstractExporter<T> implements Exporter<T> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -32,6 +33,8 @@ public abstract class AbstractExporter<T> implements Exporter<T> {
 
     private volatile boolean unexported = false;
 
+    // 构造方法，抽象类定义构造方法的意义的就是子类公用父类逻辑
+    // gx
     public AbstractExporter(Invoker<T> invoker) {
         if (invoker == null) {
             throw new IllegalStateException("service invoker == null");
@@ -50,12 +53,14 @@ public abstract class AbstractExporter<T> implements Exporter<T> {
         return invoker;
     }
 
+    // 规定了模板
     @Override
     public void unexport() {
         if (unexported) {
             return;
         }
         unexported = true;
+        // 将unexport的实际逻辑转移到invoker的destroy
         getInvoker().destroy();
     }
 

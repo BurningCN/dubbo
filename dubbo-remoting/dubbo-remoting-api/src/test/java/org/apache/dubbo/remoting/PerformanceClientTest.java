@@ -41,6 +41,7 @@ import static org.apache.dubbo.remoting.Constants.CONNECTIONS_KEY;
  * <p>
  * mvn clean test -Dtest=*PerformanceClientTest -Dserver=10.20.153.187:9911
  */
+@Deprecated
 public class PerformanceClientTest  {
 
     private static final Logger logger = LoggerFactory.getLogger(PerformanceClientTest.class);
@@ -72,6 +73,7 @@ public class PerformanceClientTest  {
             exchangeClients[i] = Exchangers.connect(url);
         }
 
+        // 进去
         List<String> serverEnvironment = (List<String>) exchangeClients[0].request("environment").get();
         List<String> serverScene = (List<String>) exchangeClients[0].request("scene").get();
 

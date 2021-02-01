@@ -39,6 +39,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 /**
  * ExchangeReceiver
  */
+// OK
 final class HeaderExchangeChannel implements ExchangeChannel {
 
     private static final Logger logger = LoggerFactory.getLogger(HeaderExchangeChannel.class);
@@ -49,33 +50,41 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     private volatile boolean closed = false;
 
+    // gx 两处，如果是 HeaderExchangeClient ，那么这里 channel就是NettyClient。如果是下面getOrAddChannel方法调用的，那么就是NettyChannel
     HeaderExchangeChannel(Channel channel) {
         if (channel == null) {
             throw new IllegalArgumentException("channel == null");
         }
+        // 这里的 channel 指向的是 NettyClient
         this.channel = channel;
     }
 
-    static HeaderExchangeChannel getOrAddChannel(Channel ch) {
+    // gx
+    static HeaderExchangeChannel getOrAddChannel(Channel ch) { // Channel ch为NettyChannel或者HeaderExchangeClient
         if (ch == null) {
             return null;
         }
+        // 注意是ch.getAttribute(CHANNEL_KEY)之后强转为HeaderExchangeChannel
         HeaderExchangeChannel ret = (HeaderExchangeChannel) ch.getAttribute(CHANNEL_KEY);
         if (ret == null) {
+            // 进去
             ret = new HeaderExchangeChannel(ch);
             if (ch.isConnected()) {
+                // HeaderExchangeChannel包装了ch且会作为属性存到ch中
                 ch.setAttribute(CHANNEL_KEY, ret);
             }
         }
         return ret;
     }
 
+    // gx
     static void removeChannelIfDisconnected(Channel ch) {
         if (ch != null && !ch.isConnected()) {
             ch.removeAttribute(CHANNEL_KEY);
         }
     }
 
+    // gx
     static void removeChannel(Channel ch) {
         if (ch != null) {
             ch.removeAttribute(CHANNEL_KEY);
@@ -84,7 +93,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     @Override
     public void send(Object message) throws RemotingException {
-        send(message, false);
+        send(message, false);// 进去
     }
 
     @Override
@@ -95,7 +104,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         if (message instanceof Request
                 || message instanceof Response
                 || message instanceof String) {
-            channel.send(message, sent);
+            channel.send(message, sent);// channel是NettyChannel 进去
         } else {
             Request request = new Request();
             request.setVersion(Version.getProtocolVersion());
@@ -107,6 +116,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     @Override
     public CompletableFuture<Object> request(Object request) throws RemotingException {
+        // 进去
         return request(request, null);
     }
 
@@ -117,6 +127,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     @Override
     public CompletableFuture<Object> request(Object request, ExecutorService executor) throws RemotingException {
+        // 进去
         return request(request, channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT), executor);
     }
 
@@ -128,17 +139,25 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         // create request.
         Request req = new Request();
         req.setVersion(Version.getProtocolVersion());
-        req.setTwoWay(true);
-        req.setData(request);
+        req.setTwoWay(true);// 设置双向通信标志为 true
+        req.setData(request);// 这里的 request 变量类型为 RpcInvocation
+
+        // 进去  前面send方法是没有返回值的，oneWay的，这里request方法是有返回值的，towway的，以DefaultFuture方式返回
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout, executor);
-        try {
+        try {// 进去 这里是channel是NettyClient，send是AbstractPeer的send
             channel.send(req);
         } catch (RemotingException e) {
+            // 前面send内部抛异常，会进这里
             future.cancel();
             throw e;
         }
+        // 返回 DefaultFuture 对象
         return future;
+
+        // 到这里大家终于看到了 Request 语义了，上面的方法首先定义了一个 Request 对象，然后再将该对象传给 NettyClient 的 send 方法，进行后续的
+        // 调用。需要说明的是，NettyClient 中并未实现 send 方法，该方法继承自父类 AbstractPeer，下面直接分析 AbstractPeer 的代码。
     }
+
 
     @Override
     public boolean isClosed() {
@@ -165,6 +184,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         closed = true;
         if (timeout > 0) {
             long start = System.currentTimeMillis();
+            // 看看超时这段时间，channel对应的任务能否完成
             while (DefaultFuture.hasFuture(channel)
                     && System.currentTimeMillis() - start < timeout) {
                 try {
@@ -174,6 +194,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
                 }
             }
         }
+        // 进去
         close();
     }
 

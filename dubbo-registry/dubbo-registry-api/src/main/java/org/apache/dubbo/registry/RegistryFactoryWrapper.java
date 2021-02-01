@@ -22,15 +22,23 @@ import org.apache.dubbo.common.extension.ExtensionLoader;
 
 import java.util.Collections;
 
+// OK
+// 类似 ProtocolListenerWrapper
 public class RegistryFactoryWrapper implements RegistryFactory {
     private RegistryFactory registryFactory;
 
+    // 拷贝构造函数，满足isWrapperClass
     public RegistryFactoryWrapper(RegistryFactory registryFactory) {
         this.registryFactory = registryFactory;
     }
 
     @Override
     public Registry getRegistry(URL url) {
+        // 类似 ProtocolListenerWrapper的export方法：
+        // return new ListenerExporterWrapper<T>(protocol.export(invoker),
+        //                Collections.unmodifiableList(ExtensionLoader.getExtensionLoader(ExporterListener.class)
+        //                        .getActivateExtension(invoker.getUrl(), EXPORTER_LISTENER_KEY)));
+        // ListenerRegistryWrapper进去
         return new ListenerRegistryWrapper(registryFactory.getRegistry(url),
                 Collections.unmodifiableList(ExtensionLoader.getExtensionLoader(RegistryServiceListener.class)
                         .getActivateExtension(url, "registry.listeners")));

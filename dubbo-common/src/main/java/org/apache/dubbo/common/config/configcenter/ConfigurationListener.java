@@ -19,13 +19,16 @@ package org.apache.dubbo.common.config.configcenter;
 import java.util.EventListener;
 
 /**
- * Config listener, will get notified when the config it listens on changes.
+ * Config listener, will get notified when the config it listens on changes. 配置监听器，将在它监听的配置变更时得到通知。
  */
+// OK
+// EventListener是rt包的类，是一个标记接口，没有方法。
 public interface ConfigurationListener extends EventListener {
 
     /**
      * Listener call back method. Listener gets notified by this method once there's any change happens on the config
      * the listener listens on.
+     * 监听器回调方法。一旦侦听器侦听的配置发生任何更改，该方法就会通知侦听器。
      *
      * @param event config change event
      */

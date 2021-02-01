@@ -92,6 +92,16 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage(), e);
         }
+        // CuratorZookeeperClient 构造方法主要用于创建和启动 CuratorFramework 实例。以上基本上都是 Curator 框架的代码，大家如果对
+        // Curator 框架不是很了解，可以参考 Curator 官方文档。
+        // 本节分析了 ZookeeperRegistry 实例的创建过程，整个过程并不是很复杂。大家在看完分析后，可以自行调试，以加深理解。现在注册中心实例创建好了，
+        // 接下来要做的事情是向注册中心注册服务，我们继续往下看
+        // 以 Zookeeper 为例，所谓的服务注册，本质上是将服务配置数据写入到 Zookeeper 的某个路径的节点下。为了让大家有一个直观的了解，下面我们将
+        // Dubbo 的 demo 跑起来，然后通过 Zookeeper 可视化客户端 ZooInspector 查看节点数据。如下：
+        // 此处无图，官网也缺图
+        // 从上图中可以看到 com.alibaba.dubbo.demo.DemoService 这个服务对应的配置信息（存储在 URL 中）最终被注册到了
+        // /dubbo/com.alibaba.dubbo.demo.DemoService/providers/ 节点下。搞懂了服务注册的本质，那么接下来我们就可以去阅读服务注册的代码了。
+        // 服务注册的接口为 register(URL)，这个方法定义在 FailbackRegistry 抽象类中。代码如下：
     }
 
     // 创建持久化节点
@@ -359,6 +369,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
                         break;
 
                 }
+                // 进去
                 dataListener.dataChanged(path, content, eventType);
             }
         }

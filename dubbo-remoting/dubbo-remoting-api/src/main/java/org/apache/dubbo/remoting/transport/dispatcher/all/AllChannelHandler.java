@@ -29,22 +29,31 @@ import org.apache.dubbo.remoting.transport.dispatcher.WrappedChannelHandler;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
+// OK
+// All表示，重写父类的全部方法，所有事件都交给/派发给线程池执行
 public class AllChannelHandler extends WrappedChannelHandler {
 
     public AllChannelHandler(ChannelHandler handler, URL url) {
-        super(handler, url);
+        super(handler, url);// 进去
     }
 
+    // sent 不需要处理
+
+    /** 处理连接事件 */
     @Override
     public void connected(Channel channel) throws RemotingException {
+        // 获取线程池 父类WrappedChannelHandler的方法 进去
         ExecutorService executor = getExecutorService();
         try {
+            // 将连接事件派发到线程池中处理  handler是DecodeHandler
             executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.CONNECTED));
         } catch (Throwable t) {
+            // ExecutionException 进去
             throw new ExecutionException("connect event", channel, getClass() + " error when process connected event .", t);
         }
     }
 
+    /** 处理断开事件 */
     @Override
     public void disconnected(Channel channel) throws RemotingException {
         ExecutorService executor = getExecutorService();
@@ -55,20 +64,25 @@ public class AllChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    /** 处理请求和响应消息，这里的 message 变量类型可能是 Request，也可能是 Response */
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
-        ExecutorService executor = getPreferredExecutorService(message);
+        ExecutorService executor = getPreferredExecutorService(message);// 进去
         try {
+            // 将请求和响应消息派发到线程池中处理
             executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));
         } catch (Throwable t) {
+            // 如果通信方式为双向通信，此时将 Server side ... threadpool is exhausted
+            // 错误信息封装到 Response 中，并返回给服务消费方。
         	if(message instanceof Request && t instanceof RejectedExecutionException){
-                sendFeedback(channel, (Request) message, t);
+                sendFeedback(channel, (Request) message, t);// 进去
                 return;
         	}
             throw new ExecutionException(message, channel, getClass() + " error when process received event .", t);
         }
     }
 
+    /** 处理异常信息 */
     @Override
     public void caught(Channel channel, Throwable exception) throws RemotingException {
         ExecutorService executor = getExecutorService();
@@ -78,4 +92,5 @@ public class AllChannelHandler extends WrappedChannelHandler {
             throw new ExecutionException("caught event", channel, getClass() + " error when process caught event .", t);
         }
     }
+    // 如上，请求对象会被封装 ChannelEventRunnable 中，ChannelEventRunnable 将会是服务调用过程的新起点。所以接下来我们以 ChannelEventRunnable 为起点向下探索。
 }

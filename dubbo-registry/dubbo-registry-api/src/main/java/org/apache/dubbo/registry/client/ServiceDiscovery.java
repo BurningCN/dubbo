@@ -43,6 +43,7 @@ import static org.apache.dubbo.event.EventDispatcher.getDefaultExtension;
  *
  * @since 2.7.5
  */
+// OK
 @SPI("zookeeper")
 public interface ServiceDiscovery extends Prioritized {
 

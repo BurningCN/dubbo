@@ -85,9 +85,12 @@ public class RpcInvocation implements Invocation, Serializable {
     }
 
     public RpcInvocation(Invocation invocation, Invoker<?> invoker) {
+        // 进去
         this(invocation.getMethodName(), invocation.getServiceName(), invocation.getProtocolServiceKey(),
                 invocation.getParameterTypes(), invocation.getArguments(), new HashMap<>(invocation.getObjectAttachments()),
                 invocation.getInvoker(), invocation.getAttributes());
+        this.targetServiceUniqueName = invocation.getTargetServiceUniqueName();
+        this.protocolServiceKey = invocation.getProtocolServiceKey();
         if (invoker != null) {
             URL url = invoker.getUrl();
             setAttachment(PATH_KEY, url.getPath());
@@ -110,8 +113,7 @@ public class RpcInvocation implements Invocation, Serializable {
                 setAttachment(APPLICATION_KEY, url.getParameter(APPLICATION_KEY));
             }
         }
-        this.targetServiceUniqueName = invocation.getTargetServiceUniqueName();
-        this.protocolServiceKey = invocation.getProtocolServiceKey();
+
     }
 
     public RpcInvocation(Invocation invocation) {
@@ -147,10 +149,12 @@ public class RpcInvocation implements Invocation, Serializable {
         this.attachments = attachments == null ? new HashMap<>() : attachments;
         this.attributes = attributes == null ? new HashMap<>() : attributes;
         this.invoker = invoker;
+        // 进去
         initParameterDesc();
     }
 
     private void initParameterDesc() {
+        // ServiceRepository >  ServiceDescriptor > MethodDescriptor
         ServiceRepository repository = ApplicationModel.getServiceRepository();
         if (StringUtils.isNotEmpty(serviceName)) {
             ServiceDescriptor serviceDescriptor = repository.lookupService(serviceName);
@@ -434,6 +438,7 @@ public class RpcInvocation implements Invocation, Serializable {
 
     @Override
     public String toString() {
+        // 这些是关键属性
         return "RpcInvocation [methodName=" + methodName + ", parameterTypes="
                 + Arrays.toString(parameterTypes) + ", arguments=" + Arrays.toString(arguments)
                 + ", attachments=" + attachments + "]";

@@ -45,6 +45,7 @@ public class AbstractMockChannel implements Channel {
 
     public AbstractMockChannel(URL remoteUrl) {
         this.remoteUrl = remoteUrl;
+        // 进去
         this.remoteAddress = NetUtils.toAddress(remoteUrl.getParameter(REMOTE_ADDRESS));
         this.localAddress = NetUtils.toAddress(remoteUrl.getParameter(LOCAL_ADDRESS));
     }

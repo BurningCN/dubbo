@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+// OK
+// 很easy，就是维护一个data map。
 public class SimpleDataStore implements DataStore {
 
     // <component name or id, <data-name, data-value>>

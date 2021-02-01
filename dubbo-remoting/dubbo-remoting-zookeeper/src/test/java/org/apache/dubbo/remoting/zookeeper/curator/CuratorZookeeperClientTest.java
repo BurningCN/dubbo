@@ -62,6 +62,12 @@ public class CuratorZookeeperClientTest {
         client.start();
     }
 
+    public static void main(String[] args) {
+        CuratorZookeeperClient curatorZookeeperClient = new CuratorZookeeperClient(URL.valueOf("zookeeper://127.0.0.1:" +
+                2181 + "/org.apache.dubbo.registry.RegistryService"));
+        curatorZookeeperClient.deletePath("/dubbo");
+    }
+
     // easy
     @Test
     public void testCheckExists() {

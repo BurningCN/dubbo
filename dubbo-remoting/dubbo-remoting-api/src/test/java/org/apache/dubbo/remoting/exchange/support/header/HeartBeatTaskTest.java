@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import static org.apache.dubbo.common.constants.CommonConstants.DUBBO_VERSION_KEY;
 import static org.apache.dubbo.remoting.Constants.HEARTBEAT_CHECK_TICK;
 
+// OK
 public class HeartBeatTaskTest {
 
     private URL url = URL.valueOf("dubbo://localhost:20880");
@@ -69,9 +70,11 @@ public class HeartBeatTaskTest {
 
         heartbeatTimer.newTimeout(heartbeatTimerTask, 250, TimeUnit.MILLISECONDS);
 
-        Thread.sleep(2000L);
+        Thread.sleep(10000L);
+        // 进去  在赋值处打断点
         List<Object> objects = channel.getSentObjects();
         Assertions.assertTrue(objects.size() > 0);
+        // 取出第一个值，是请求，且为心跳（HeartbeatTimerTask的doTask发送的）
         Object obj = objects.get(0);
         Assertions.assertTrue(obj instanceof Request);
         Request request = (Request) obj;

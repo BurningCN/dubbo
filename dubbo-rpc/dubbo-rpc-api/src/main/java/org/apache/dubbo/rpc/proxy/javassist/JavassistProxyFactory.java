@@ -42,7 +42,7 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
     // url = {URL@1936} "test://test:11/test?group=dubbo&version=1.1"
     @Override
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
-        // TODO Wrapper cannot handle this scenario correctly: the classname contains '$'
+        // TODO 包装器不能正确处理这个场景:类名包含'$'
         // 为目标类创建 Wrapper 进去
         final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
         // 创建匿名 Invoker 类对象，并实现 doInvoke 方法。

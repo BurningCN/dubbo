@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
 
+// OK
 public class RegistryConfigTest {
     @Test
     public void testProtocol() throws Exception {

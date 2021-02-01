@@ -62,7 +62,8 @@ public class NettyServer extends AbstractServer implements RemotingServer {
     private org.jboss.netty.channel.Channel channel;
 
     public NettyServer(URL url, ChannelHandler handler) throws RemotingException {
-        // 调用父类构造方法 进去
+        // super、wrap 进去
+        // Wrap：MultiMessageHandler(HeartbeatHandler(hanlder/ExchangeHandler))，最里层的就是我们的业务处理器，比如 DubboProtocol 的 成员ExchangeHandler requestHandler
         super(ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME), ChannelHandlers.wrap(handler, url));
     }
 
@@ -106,6 +107,12 @@ public class NettyServer extends AbstractServer implements RemotingServer {
         //
         // 到此，关于服务导出的过程就分析完了。整个过程比较复杂，大家在分析的过程中耐心一些。并且多写 Demo 进行调试，以便能够更好的理解代码逻辑。
         // 本节内容先到这里，接下来分析服务导出的另一块逻辑 — 服务注册
+
+        // 本节我们来分析服务注册过程，服务注册操作对于 Dubbo 来说不是必需的，通过服务直连的方式就可以绕过注册中心。但通常我们不会这么做，直连方式
+        // 不利于服务治理，仅推荐在测试服务时使用。对于 Dubbo 来说，注册中心虽不是必需，但却是必要的。因此，关于注册中心以及服务注册相关逻辑，我们
+        // 也需要搞懂。
+        // 本节内容以 Zookeeper 注册中心作为分析目标，其他类型注册中心大家可自行分析。下面从服务注册的入口方法开始分析，我们把目光再次移到
+        // RegistryProtocol 的 export 方法上---> 走到register(registryUrl, registeredProviderUrl)这1步骤，进去
     }
 
     @Override

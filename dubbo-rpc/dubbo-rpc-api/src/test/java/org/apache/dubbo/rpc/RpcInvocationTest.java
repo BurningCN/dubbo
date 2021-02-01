@@ -28,12 +28,15 @@ public class RpcInvocationTest {
     public void testAttachment() {
         RpcInvocation invocation = new RpcInvocation();
 
+        // 进去
         invocation.setAttachment("objectKey1", "value1");
         invocation.setAttachment("objectKey2", "value2");
         invocation.setAttachment("objectKey3", 1); // object
 
+        // 进去
         Assertions.assertEquals("value1", invocation.getObjectAttachment("objectKey1"));
         Assertions.assertEquals("value2", invocation.getAttachment("objectKey2"));
+        // 进去，内部会识别为string，所以获取不到值
         Assertions.assertNull(invocation.getAttachment("objectKey3"));
         Assertions.assertEquals(1, invocation.getObjectAttachment("objectKey3"));
         Assertions.assertEquals(3, invocation.getObjectAttachments().size());
@@ -41,6 +44,7 @@ public class RpcInvocationTest {
         HashMap<String, Object> map = new HashMap<>();
         map.put("mapKey1", 1);
         map.put("mapKey2", "mapValue2");
+        // 进去
         invocation.setObjectAttachments(map);
         Assertions.assertEquals(map, invocation.getObjectAttachments());
     }

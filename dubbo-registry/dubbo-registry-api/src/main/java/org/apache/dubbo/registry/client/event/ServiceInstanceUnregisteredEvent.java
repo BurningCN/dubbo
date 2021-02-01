@@ -27,6 +27,7 @@ import org.apache.dubbo.registry.client.ServiceInstance;
  * @see ServiceInstanceEvent
  * @since 2.7.5
  */
+// OK
 public class ServiceInstanceUnregisteredEvent extends ServiceInstanceEvent {
 
     public ServiceInstanceUnregisteredEvent(Object source, ServiceInstance serviceInstance) {

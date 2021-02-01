@@ -19,6 +19,7 @@ package org.apache.dubbo.common.status;
 /**
  * Status
  */
+// OK
 public class Status {
 
     private final Level level;

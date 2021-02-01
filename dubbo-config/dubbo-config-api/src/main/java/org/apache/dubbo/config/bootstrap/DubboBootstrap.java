@@ -140,6 +140,7 @@ public class DubboBootstrap extends GenericEventListener {
 
     private static final String NAME = DubboBootstrap.class.getSimpleName();
 
+    // 进去
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private static volatile DubboBootstrap instance;
@@ -153,9 +154,10 @@ public class DubboBootstrap extends GenericEventListener {
     private final Lock destroyLock = new ReentrantLock();
 
     private final ExecutorService executorService = newSingleThreadExecutor();
-
+    // getDefaultExtension 进去
     private final EventDispatcher eventDispatcher = EventDispatcher.getDefaultExtension();
 
+    // 去看下DefaultExecutorRepository的空参构造
     private final ExecutorRepository executorRepository = getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
 
     private final ConfigManager configManager;
@@ -207,6 +209,8 @@ public class DubboBootstrap extends GenericEventListener {
 
     // 私有的，防止外部直接调用
     private DubboBootstrap() {
+        // 隐式的调用了父类的空参构造，GenericEventListener 去看下
+
         // 进去
         configManager = ApplicationModel.getConfigManager();
         environment = ApplicationModel.getEnvironment();
@@ -224,11 +228,16 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     public void unRegisterShutdownHook() {
+        // 进去
         DubboShutdownHook.getDubboShutdownHook().unregister();
     }
 
+    // gx
     private boolean isOnlyRegisterProvider() {
+
+        // 看Application是c还是p，两个都进去
         Boolean registerConsumer = getApplication().getRegisterConsumer();
+        // 为空，或者为false 表示仅仅注册provider信息
         return registerConsumer == null || !registerConsumer;
     }
 
@@ -288,6 +297,7 @@ public class DubboBootstrap extends GenericEventListener {
      * @return current {@link DubboBootstrap} instance
      */
     public DubboBootstrap application(ApplicationConfig applicationConfig) {
+        // 存到configManager
         configManager.setApplication(applicationConfig);
         return this;
     }
@@ -379,6 +389,7 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     public DubboBootstrap service(ServiceConfig<?> serviceConfig) {
+        // serviceConfig添加到configManager
         configManager.addService(serviceConfig);
         return this;
     }
@@ -545,18 +556,23 @@ public class DubboBootstrap extends GenericEventListener {
         // 检查全局配置 进去
         checkGlobalConfigs();
 
-        // @since 2.7.8
+        // 启动元数据中心 进去
         startMetadataCenter();
 
+        // 初始化元数据中心 进去
         initMetadataService();
 
+        // 初始化事件监听器 进去
         initEventListener();
 
         if (logger.isInfoEnabled()) {
+            // DubboBootstrap has been initialized!
             logger.info(NAME + " has been initialized!");
         }
     }
 
+
+    // 下面又生成了一些xxConfig，并添加到了configManager的缓存中，以demo-api-provider为例，其缓存的内容见文件：demo-api-provider注册到configManger的内存数据.md
     private void checkGlobalConfigs() {
         // check Application
         ConfigValidationUtils.validateApplicationConfig(getApplication());
@@ -583,7 +599,7 @@ public class DubboBootstrap extends GenericEventListener {
         if (CollectionUtils.isEmpty(providers)) {
             configManager.getDefaultProvider().orElseGet(() -> {
                 ProviderConfig providerConfig = new ProviderConfig();
-                configManager.addProvider(providerConfig);
+                configManager.addProvider(providerConfig); // 添加到configManager
                 providerConfig.refresh();
                 return providerConfig;
             });
@@ -596,7 +612,7 @@ public class DubboBootstrap extends GenericEventListener {
         if (CollectionUtils.isEmpty(consumers)) {
             configManager.getDefaultConsumer().orElseGet(() -> {
                 ConsumerConfig consumerConfig = new ConsumerConfig();
-                configManager.addConsumer(consumerConfig);
+                configManager.addConsumer(consumerConfig);// 添加到configManager
                 consumerConfig.refresh();
                 return consumerConfig;
             });
@@ -606,7 +622,7 @@ public class DubboBootstrap extends GenericEventListener {
         }
 
         // check Monitor
-        ConfigValidationUtils.validateMonitorConfig(getMonitor());
+        ConfigValidationUtils.validateMonitorConfig(getMonitor());// getMonitor进去，其实例会 添加到configManager，下面几个同理
         // check Metrics
         ConfigValidationUtils.validateMetricsConfig(getMetrics());
         // check Module
@@ -617,6 +633,7 @@ public class DubboBootstrap extends GenericEventListener {
 
     private void startConfigCenter() {
 
+        // 使用注册作为配置中心，如果有必要的话，进去
         useRegistryAsConfigCenterIfNecessary();
 
         // 从ConfigManager中获得的所有的ConfigCenterConfig对象
@@ -624,24 +641,34 @@ public class DubboBootstrap extends GenericEventListener {
 
         // check Config Center
         if (CollectionUtils.isEmpty(configCenters)) {
+            // 如果集合为空，创建一个
             ConfigCenterConfig configCenterConfig = new ConfigCenterConfig();
+            // 刷新下
             configCenterConfig.refresh();
+            // 进去
             if (configCenterConfig.isValid()) {
+                // 有效的话添加到configManager
                 configManager.addConfigCenter(configCenterConfig);
                 configCenters = configManager.getConfigCenters();
             }
         } else {
             for (ConfigCenterConfig configCenterConfig : configCenters) {
+                // 和前面一样，刷新和检查
                 configCenterConfig.refresh();
                 ConfigValidationUtils.validateConfigCenterConfig(configCenterConfig);
             }
         }
-
+        // 到这里configCenters一般是不为空的（会进下面的分支），因为前面有 useRegistryAsConfigCenterIfNecessary 方法做保障。
         if (CollectionUtils.isNotEmpty(configCenters)) {
+            // 创建CompositeDynamicConfiguration
             CompositeDynamicConfiguration compositeDynamicConfiguration = new CompositeDynamicConfiguration();
+
             for (ConfigCenterConfig configCenter : configCenters) {
+                // 将configCenter转化为DynamicConfiguration，填充到compositeDynamicConfiguration
+                // 比如ZookeeperDynamicConfiguration就是是config center模块的）， prepareEnvironment 进去
                 compositeDynamicConfiguration.addConfiguration(prepareEnvironment(configCenter));
             }
+            // 存到environment
             environment.setDynamicConfiguration(compositeDynamicConfiguration);
         }
         configManager.refreshAll();
@@ -649,6 +676,7 @@ public class DubboBootstrap extends GenericEventListener {
 
     private void startMetadataCenter() {
 
+        // 进去
         useRegistryAsMetadataCenterIfNecessary();
 
         ApplicationConfig applicationConfig = getApplication();
@@ -676,13 +704,17 @@ public class DubboBootstrap extends GenericEventListener {
      * For compatibility purpose, use registry as the default config center when
      * there's no config center specified explicitly and
      * useAsConfigCenter of registryConfig is null or true
+     *
+     * 为了兼容，当没有明确指定配置中心，并且registryConfig的useAsConfigCenter为null或true时，使用registry作为默认的配置中心
      */
     private void useRegistryAsConfigCenterIfNecessary() {
         // we use the loading status of DynamicConfiguration to decide whether ConfigCenter has been initiated.
+        // 我们使用DynamicConfiguration的加载状态来决定ConfigCenter是否已经启动。
         if (environment.getDynamicConfiguration().isPresent()) {
             return;
         }
 
+        // 如果有专门添加过配置中心，则返回
         if (CollectionUtils.isNotEmpty(configManager.getConfigCenters())) {
             return;
         }
@@ -690,22 +722,32 @@ public class DubboBootstrap extends GenericEventListener {
         configManager
                 .getDefaultRegistries()
                 .stream()
+                // 找出符合能作为配置中心条件的Registry项，进去
                 .filter(this::isUsedRegistryAsConfigCenter)
+                // registryAsConfigCenter见名知意，map将Registry映射成ConfigCenter，进去
                 .map(this::registryAsConfigCenter)
+                // 添加到configManager
                 .forEach(configManager::addConfigCenter);
     }
 
     private boolean isUsedRegistryAsConfigCenter(RegistryConfig registryConfig) {
+        // 进去，第二个参数是supplier
         return isUsedRegistryAsCenter(registryConfig, registryConfig::getUseAsConfigCenter, "config",
                 DynamicConfigurationFactory.class);
     }
 
     private ConfigCenterConfig registryAsConfigCenter(RegistryConfig registryConfig) {
+        // 下面就是根据registryConfig的信息生成ConfigCenterConfig对象
+
+        // registryConfig的toString 比如 <dubbo:registry address="zookeeper://127.0.0.1:2181" protocol="zookeeper" port="2181" />
+        // ConfigCenterConfig下面填充各种参数之后，最后其toString 比如如下：
+        // <dubbo:config-center timeout="3000" group="dubbo" address="zookeeper://127.0.0.1:2181" protocol="zookeeper"
+        //                      port="2181" configFile="dubbo.properties" highestPriority="false" check="true" />
         String protocol = registryConfig.getProtocol();
         Integer port = registryConfig.getPort();
         String id = "config-center-" + protocol + "-" + port;
         ConfigCenterConfig cc = new ConfigCenterConfig();
-        cc.setId(id);
+        cc.setId(id); // 这个id很重要，返回的ConfigCenterConfig实例会填充到configManager，格式为：{config-center:{config-center-zookeeper-2181:cc}}
         if (cc.getParameters() == null) {
             cc.setParameters(new HashMap<>());
         }
@@ -726,9 +768,11 @@ public class DubboBootstrap extends GenericEventListener {
             cc.setTimeout(registryConfig.getTimeout().longValue());
         }
         cc.setHighestPriority(false);
+        //
         return cc;
     }
 
+    // 如下方法基本可以参考useRegistryAsConfigCenterIfNecessary
     private void useRegistryAsMetadataCenterIfNecessary() {
 
         Collection<MetadataReportConfig> metadataConfigs = configManager.getMetadataConfigs();
@@ -740,7 +784,9 @@ public class DubboBootstrap extends GenericEventListener {
         configManager
                 .getDefaultRegistries()
                 .stream()
+                // 进去
                 .filter(this::isUsedRegistryAsMetadataCenter)
+                // 进去
                 .map(this::registryAsMetadataCenter)
                 .forEach(configManager::addMetadataReport);
 
@@ -754,6 +800,8 @@ public class DubboBootstrap extends GenericEventListener {
     /**
      * Is used the specified registry as a center infrastructure
      *
+     * 是否使用指定的注册表作为中心基础设施
+     *
      * @param registryConfig       the {@link RegistryConfig}
      * @param usedRegistryAsCenter the configured value on
      * @param centerType           the type name of center
@@ -761,24 +809,34 @@ public class DubboBootstrap extends GenericEventListener {
      * @return
      * @since 2.7.8
      */
-    private boolean isUsedRegistryAsCenter(RegistryConfig registryConfig, Supplier<Boolean> usedRegistryAsCenter,
+    private boolean isUsedRegistryAsCenter(RegistryConfig registryConfig,
+                                           Supplier<Boolean> usedRegistryAsCenter, // 这个用法很好
                                            String centerType,
                                            Class<?> extensionClass) {
         final boolean supported;
-
         Boolean configuredValue = usedRegistryAsCenter.get();
-        if (configuredValue != null) { // If configured, take its value.
+        // If configured, take its value.
+        if (configuredValue != null) {
+            // api(和intValue一样)
             supported = configuredValue.booleanValue();
-        } else {                       // Or check the extension existence
+
+        // Or check the extension existence
+        } else {
+            // 比如registry配置的是zookeeper://ip:port , 那么getProtocol = zookeeper
             String protocol = registryConfig.getProtocol();
+            // eg:两个参数为 DynamicConfigurationFactory.class , Zookeeper ，而正好是满足的  ， 进去
+            // eg:两个参数为 MetadataReportFactory.class , Zookeeper，也是满足的
             supported = supportsExtension(extensionClass, protocol);
             if (logger.isInfoEnabled()) {
+                // eg:No value is configured in the registry, the DynamicConfigurationFactory extension[name : zookeeper] supports as the config center
+                // info方法进去，因为logger是FailsafeLogger，其info方法会拼dubbo version:xx 和 current host:xx
                 logger.info(format("No value is configured in the registry, the %s extension[name : %s] %s as the %s center"
                         , extensionClass.getSimpleName(), protocol, supported ? "supports" : "does not support", centerType));
             }
         }
 
         if (logger.isInfoEnabled()) {
+            // eg :The registry[<dubbo:registry address="zookeeper://127.0.0.1:2181" protocol="zookeeper" port="2181" />] will be used as the config center (或者 metadata center)
             logger.info(format("The registry[%s] will be %s as the %s center", registryConfig,
                     supported ? "used" : "not used", centerType));
         }
@@ -844,6 +902,7 @@ public class DubboBootstrap extends GenericEventListener {
         return metadataAddressBuilder.toString();
     }
 
+    // add registry + protocol  to configManager
     private void loadRemoteConfigs() {
         // registry ids to registry configs
         List<RegistryConfig> tmpRegistries = new ArrayList<>();
@@ -883,8 +942,12 @@ public class DubboBootstrap extends GenericEventListener {
      * Initialize {@link MetadataService} from {@link WritableMetadataService}'s extension
      */
     private void initMetadataService() {
+        // 在initialize调用过了，不知道再来一次的意义是什么
         startMetadataCenter();
+
+        // 进去
         this.metadataService = getDefaultExtension();
+        // 进去
         this.metadataServiceExporter = new ConfigurableMetadataServiceExporter(metadataService);
     }
 
@@ -892,7 +955,7 @@ public class DubboBootstrap extends GenericEventListener {
      * Initialize {@link EventListener}
      */
     private void initEventListener() {
-        // Add current instance into listeners
+        // Add current instance into listeners 进去
         addEventListener(this);
     }
 
@@ -902,25 +965,33 @@ public class DubboBootstrap extends GenericEventListener {
     public DubboBootstrap start() {
         if (started.compareAndSet(false, true)) {
             ready.set(false);
+            // 进去
             initialize();
             if (logger.isInfoEnabled()) {
+                // DubboBootstrap is starting...
                 logger.info(NAME + " is starting...");
             }
-            // 1. export Dubbo Services
+            // 1. export Dubbo Services 进去
             exportServices();
 
             // Not only provider register
+            // 不是仅注册Provider信息或者有其他要暴露的服务（两个都进去）
             if (!isOnlyRegisterProvider() || hasExportedServices()) {
                 // 2. export MetadataService
                 exportMetadataService();
-                //3. Register the local ServiceInstance if required
+                // 3. Register the local ServiceInstance if required
                 registerServiceInstance();
             }
 
+            // 引用服务（Consumer端走这个逻辑，Provider走上面的123逻辑）
             referServices();
+
+            // 下面是和异步暴露相关的（如果size>0说明是异步，即exportAsyn的值为true）
             if (asyncExportingFutures.size() > 0) {
+                // 启动一个线程阻塞，等待这些异步任务完成
                 new Thread(() -> {
                     try {
+                        // 进去
                         this.awaitFinish();
                     } catch (Exception e) {
                         logger.warn(NAME + " exportAsync occurred an exception.");
@@ -944,6 +1015,7 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private boolean hasExportedServices() {
+        // metadataService的赋值处注意下
         return !metadataService.getExportedURLs().isEmpty();
     }
 
@@ -954,14 +1026,19 @@ public class DubboBootstrap extends GenericEventListener {
      */
     public DubboBootstrap await() {
         // if has been waited, no need to wait again, return immediately
+        // 默认false
         if (!awaited.get()) {
+            // executorService 看下赋值处和调用处
             if (!executorService.isShutdown()) {
+                // executeMutually去看下， 很简单，加锁+run
                 executeMutually(() -> {
+                    // 循环检测（awaited置为true的点跟下）
                     while (!awaited.get()) {
                         if (logger.isInfoEnabled()) {
                             logger.info(NAME + " awaiting ...");
                         }
                         try {
+                            // 无限等待
                             condition.await();
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
@@ -975,10 +1052,14 @@ public class DubboBootstrap extends GenericEventListener {
 
     public DubboBootstrap awaitFinish() throws Exception {
         logger.info(NAME + " waiting services exporting / referring ...");
+        // 异步暴露，asyncExportingFutures的填充处取看下
         if (exportAsync && asyncExportingFutures.size() > 0) {
+            // allOf将所有的CompletableFuture变成一个
             CompletableFuture future = CompletableFuture.allOf(asyncExportingFutures.toArray(new CompletableFuture[0]));
+            // 阻塞
             future.get();
         }
+        // 异步引用，参考上面
         if (referAsync && asyncReferringFutures.size() > 0) {
             CompletableFuture future = CompletableFuture.allOf(asyncReferringFutures.toArray(new CompletableFuture[0]));
             future.get();
@@ -1039,20 +1120,31 @@ public class DubboBootstrap extends GenericEventListener {
         if (configCenter.isValid()) {
             if (!configCenter.checkOrUpdateInited()) {
                 return null;
+
             }
+            // configCenter.toUrl()，"-- >" 左右分别是toString和toUrl之后的结果
+            //  <dubbo:config-center address="zookeeper://127.0.0.1:2181" protocol="zookeeper" port="2181" timeout="3000"
+            //  group="dubbo" configFile="dubbo.properties" highestPriority="false" check="true" />
+            //   -- >    zookeeper://127.0.0.1:2181/ConfigCenterConfig?check=true&config-file=dubbo.properties&group=dubbo
+            //                                                                         &highest-priority=false&timeout=3000
+            // getDynamicConfiguration，进去
             DynamicConfiguration dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl());
+            // 如果上面的dynamicConfiguration是zkDynamicConfiguration，其getProperties最终是Curator进行ZNode节点的读取
+            // 根据key、group获取配置内容
             String configContent = dynamicConfiguration.getProperties(configCenter.getConfigFile(), configCenter.getGroup());
 
+            // 下面类似前面一行代码作用，获取appXX的配置内容
             String appGroup = getApplication().getName();
             String appConfigContent = null;
             if (isNotEmpty(appGroup)) {
-                appConfigContent = dynamicConfiguration.getProperties
-                        (isNotEmpty(configCenter.getAppConfigFile()) ? configCenter.getAppConfigFile() : configCenter.getConfigFile(),
-                                appGroup
-                        );
+                String key = isNotEmpty(configCenter.getAppConfigFile()) ? configCenter.getAppConfigFile() : configCenter.getConfigFile();
+                appConfigContent = dynamicConfiguration.getProperties(key, appGroup);
             }
             try {
+                // 更新environment的属性
+
                 environment.setConfigCenterFirst(configCenter.isHighestPriority());
+                // 进去
                 environment.updateExternalConfigurationMap(parseProperties(configContent));
                 environment.updateAppExternalConfigurationMap(parseProperties(appConfigContent));
             } catch (IOException e) {
@@ -1069,7 +1161,10 @@ public class DubboBootstrap extends GenericEventListener {
      * @param listener {@link EventListener}
      * @return {@link DubboBootstrap}
      */
+
     public DubboBootstrap addEventListener(EventListener<?> listener) {
+        // DubboBootStrap本身就是EventListener孙子类
+        // 进去
         eventDispatcher.addEventListener(listener);
         return this;
     }
@@ -1088,20 +1183,22 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private void exportServices() {
+        // 从configManager取出所有的ServiceConfig进行服务暴露
         configManager.getServices().forEach(sc -> {
-            // TODO, compatible with ServiceConfig.export()
             ServiceConfig serviceConfig = (ServiceConfig) sc;
             serviceConfig.setBootstrap(this);
-
-            if (exportAsync) {
+            // boolean类型值默认为false
+            if (exportAsync) { // 异步暴露
                 ExecutorService executor = executorRepository.getServiceExporterExecutor();
                 Future<?> future = executor.submit(() -> {
                     sc.export();
                     exportedServices.add(sc);
                 });
+                // 存到容器
                 asyncExportingFutures.add(future);
-            } else {
+            } else {// 同步暴露，进去
                 sc.export();
+                // 填充到exportedServices（前面异步暴力完成也是填充到该容器）
                 exportedServices.add(sc);
             }
         });
@@ -1110,14 +1207,17 @@ public class DubboBootstrap extends GenericEventListener {
     private void unexportServices() {
         exportedServices.forEach(sc -> {
             configManager.removeConfig(sc);
+            // 进去
             sc.unexport();
         });
 
         asyncExportingFutures.forEach(future -> {
             if (!future.isDone()) {
+                // 还有正在异步暴露还未完成的，直接取消
                 future.cancel(true);
             }
         });
+
         asyncExportingFutures.clear();
         exportedServices.clear();
     }
@@ -1260,6 +1360,7 @@ public class DubboBootstrap extends GenericEventListener {
         return this.serviceInstance;
     }
 
+    // gx 注册了DubboShutdownHook到jvm关闭钩子上，关闭的时候会挨个调用注册的回调，其中就有调用如下方法的
     public void destroy() {
         if (destroyLock.tryLock()) {
             try {
@@ -1268,6 +1369,8 @@ public class DubboBootstrap extends GenericEventListener {
 
                 if (started.compareAndSet(true, false)
                         && destroyed.compareAndSet(false, true)) {
+
+                    // 下面四个步骤和start()的前四个步骤对应，都进去
 
                     unregisterServiceInstance();
                     unexportMetadataService();
@@ -1279,7 +1382,9 @@ public class DubboBootstrap extends GenericEventListener {
                     destroyServiceDiscoveries();
 
                     clear();
+                    // 关闭线程池
                     shutdown();
+                    // 进去
                     release();
                 }
             } finally {
@@ -1323,12 +1428,15 @@ public class DubboBootstrap extends GenericEventListener {
                 if (logger.isInfoEnabled()) {
                     logger.info(NAME + " is about to shutdown...");
                 }
+                // 唤醒（对应的condition.await处看下）
                 condition.signalAll();
             }
         });
     }
 
+    // gx
     private void shutdown() {
+        // 这个线程池貌似没有用到
         if (!executorService.isShutdown()) {
             // Shutdown executorService
             executorService.shutdown();

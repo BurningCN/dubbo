@@ -30,10 +30,13 @@ import java.util.HashMap;
 
 import static org.apache.dubbo.rpc.Constants.MOCK_KEY;
 
+// OK
 public class MockInvokerTest {
 
     @Test
     public void testParseMockValue() throws Exception {
+        // 以下parseMockValue都进去
+
         Assertions.assertNull(MockInvoker.parseMockValue("null"));
         Assertions.assertNull(MockInvoker.parseMockValue("empty"));
 
@@ -46,8 +49,10 @@ public class MockInvokerTest {
         Assertions.assertEquals("foo", MockInvoker.parseMockValue("\'foo\'"));
 
         Assertions.assertEquals(
+                 // map
                 new HashMap<>(), MockInvoker.parseMockValue("{}"));
         Assertions.assertEquals(
+                // list
                 new ArrayList<>(), MockInvoker.parseMockValue("[]"));
         Assertions.assertEquals("foo",
                 MockInvoker.parseMockValue("foo", new Type[]{String.class}));
@@ -57,11 +62,13 @@ public class MockInvokerTest {
     public void testInvoke() {
         URL url = URL.valueOf("remote://1.2.3.4/" + String.class.getName());
         url = url.addParameter(MOCK_KEY, "return ");
+        // 进去
         MockInvoker mockInvoker = new MockInvoker(url, String.class);
 
         RpcInvocation invocation = new RpcInvocation();
         invocation.setMethodName("getSomething");
         Assertions.assertEquals(new HashMap<>(),
+                // 进去
                 mockInvoker.invoke(invocation).getObjectAttachments());
     }
 
@@ -71,6 +78,7 @@ public class MockInvokerTest {
         MockInvoker mockInvoker = new MockInvoker(url, null);
 
         Assertions.assertThrows(RpcException.class,
+                // 进去，内部mock值不能为null，否则抛异常
                 () -> mockInvoker.invoke(new RpcInvocation()));
     }
 
@@ -83,30 +91,35 @@ public class MockInvokerTest {
         RpcInvocation invocation = new RpcInvocation();
         invocation.setMethodName("getSomething");
         Assertions.assertThrows(RpcException.class,
+                // 进去，mock为fail的话，内部会标准化为default，并加载type.getName+"Mock"类（type就是传给MockInvoker的第二个参数），
+                // 加载不到就抛异常，String.getName()+"Mock"肯定是没这个类的
                 () -> mockInvoker.invoke(invocation));
     }
 
     @Test
     public void testInvokeThrowsRpcException3() {
         URL url = URL.valueOf("remote://1.2.3.4/" + String.class.getName());
-        url = url.addParameter(MOCK_KEY, "throw");
+        url = url.addParameter(MOCK_KEY, "throw"); // 注意
         MockInvoker mockInvoker = new MockInvoker(url, String.class);
 
         RpcInvocation invocation = new RpcInvocation();
         invocation.setMethodName("getSomething");
         Assertions.assertThrows(RpcException.class,
+                // 进去
                 () -> mockInvoker.invoke(invocation));
     }
 
     @Test
     public void testGetThrowable() {
         Assertions.assertThrows(RpcException.class,
+                // 进去，内部加载这个throwstr加载不到，抛异常
                 () -> MockInvoker.getThrowable("Exception.class"));
     }
 
     @Test
     public void testGetMockObject() {
         Assertions.assertEquals("",
+                // 进去
                 MockInvoker.getMockObject("java.lang.String", String.class));
 
         Assertions.assertThrows(IllegalStateException.class, () -> MockInvoker

@@ -19,22 +19,27 @@ package org.apache.dubbo.rpc.cluster.governance;
 import org.apache.dubbo.common.config.configcenter.ConfigurationListener;
 import org.apache.dubbo.common.config.configcenter.DynamicConfiguration;
 
+// OK
 public class DefaultGovernanceRuleRepositoryImpl implements GovernanceRuleRepository {
 
+    // 进去
     private DynamicConfiguration dynamicConfiguration = DynamicConfiguration.getDynamicConfiguration();
 
     @Override
     public void addListener(String key, String group, ConfigurationListener listener) {
+        // 进去 可以看zk的
         dynamicConfiguration.addListener(key, group, listener);
     }
 
     @Override
     public void removeListener(String key, String group, ConfigurationListener listener) {
+        // 进去 可以看zk的
         dynamicConfiguration.removeListener(key, group, listener);
     }
 
     @Override
     public String getRule(String key, String group, long timeout) throws IllegalStateException {
+        // 进去 可以看zk的
         return dynamicConfiguration.getConfig(key, group, timeout);
     }
 }

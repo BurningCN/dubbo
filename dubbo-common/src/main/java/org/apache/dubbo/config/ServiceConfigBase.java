@@ -149,6 +149,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     }
 
     public boolean shouldExport() {
+        // 进去
         Boolean export = getExport();
         // default value is true
         return export == null ? true : export;
@@ -156,16 +157,19 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
 
     @Override
     public Boolean getExport() {
+        // 从provider获取export属性的值，可能为null
         return (export == null && provider != null) ? provider.getExport() : export;
     }
 
     public boolean shouldDelay() {
+        // 进去
         Integer delay = getDelay();
         return delay != null && delay > 0;
     }
 
     @Override
     public Integer getDelay() {
+        // 从provider获取delay属性的值，可能为null
         return (delay == null && provider != null) ? provider.getDelay() : delay;
     }
 
@@ -203,14 +207,17 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
 
     public void checkProtocol() {
         if (CollectionUtils.isEmpty(protocols) && provider != null) {
+            // 当然provider.getProtocols()也能也为null
             setProtocols(provider.getProtocols());
         }
+        // 进去
         convertProtocolIdsToProtocols();
     }
 
-    public void completeCompoundConfigs() {
+    public void completeCompoundConfigs() { // 这里provider可能为null（也很正常），两部分代码都不会走，直接return
         super.completeCompoundConfigs(provider);
         if (provider != null) {
+            // provider内部可以有下面的属性，获取其属性值，填充到当前类对象属性中
             if (protocols == null) {
                 setProtocols(provider.getProtocols());
             }
@@ -227,29 +234,40 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     }
 
     private void convertProtocolIdsToProtocols() {
+        // 计算有效的ProtocolIds，进去
         computeValidProtocolIds();
         if (StringUtils.isEmpty(protocolIds)) {
             if (CollectionUtils.isEmpty(protocols)) {
+                // 两个都为空，那么就用从ConfigManager取出默认的ProtocolConfig，但是取出来的还可能为空
                 List<ProtocolConfig> protocolConfigs = ApplicationModel.getConfigManager().getDefaultProtocols();
                 if (protocolConfigs.isEmpty()) {
+                    // 如果为空（很正常，这个条件很容易满足的），手动创建
                     protocolConfigs = new ArrayList<>(1);
                     ProtocolConfig protocolConfig = new ProtocolConfig();
+                    // 设置为默认的
                     protocolConfig.setDefault(true);
+                    // refresh内部会把name设置为dubbo，进去看下
                     protocolConfig.refresh();
                     protocolConfigs.add(protocolConfig);
+                    // 添加到ConfigManager
                     ApplicationModel.getConfigManager().addProtocol(protocolConfig);
                 }
+                // 设置到自己的protocols属性
                 setProtocols(protocolConfigs);
             }
         } else {
+            // protocolIds不为空，根据逗号分隔
             String[] arr = COMMA_SPLIT_PATTERN.split(protocolIds);
             List<ProtocolConfig> tmpProtocols = new ArrayList<>();
             Arrays.stream(arr).forEach(id -> {
+                // noneMatch，确保一个id 仅对应一个 ProtocolConfig
                 if (tmpProtocols.stream().noneMatch(prot -> prot.getId().equals(id))) {
+                    // 先从ConfigManager根据id找到ProtocolConfig
                     Optional<ProtocolConfig> globalProtocol = ApplicationModel.getConfigManager().getProtocol(id);
                     if (globalProtocol.isPresent()) {
                         tmpProtocols.add(globalProtocol.get());
                     } else {
+                        // 前面ConfigManager根据id找不到ProtocolConfig的话，手动创建带有id的config
                         ProtocolConfig protocolConfig = new ProtocolConfig();
                         protocolConfig.setId(id);
                         protocolConfig.refresh();
@@ -257,14 +275,17 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
                     }
                 }
             });
+            // 抛异常（按道理最多 = ，不会 >）
             if (tmpProtocols.size() > arr.length) {
                 throw new IllegalStateException("Too much protocols found, the protocols comply to this service are :" + protocolIds + " but got " + protocols
                         .size() + " registries!");
             }
+            // 设置到自己的属性
             setProtocols(tmpProtocols);
         }
     }
 
+    // easy
     public Class<?> getInterfaceClass() {
         if (interfaceClass != null) {
             return interfaceClass;
@@ -337,6 +358,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     }
 
     public void setProvider(ProviderConfig provider) {
+        // 将provider对象添加到ConfigManager的configCache缓存中，进去
         ApplicationModel.getConfigManager().addProvider(provider);
         this.provider = provider;
     }
@@ -426,8 +448,8 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
 
     @Override
     protected void computeValidRegistryIds() {
-        super.computeValidRegistryIds();
-        if (StringUtils.isEmpty(getRegistryIds())) {
+        super.computeValidRegistryIds(); //
+        if(StringUtils.isEmpty(getRegistryIds())) {// 下面的步骤和上面方法super内部基本一样（一个是ApplicationConfig的RegistryIds，一个是ProviderConfig的），不管咋样都是为了获取RegistryIds然后调用setRegistryIds赋值给自己的属性
             if (getProvider() != null && StringUtils.isNotEmpty(getProvider().getRegistryIds())) {
                 setRegistryIds(getProvider().getRegistryIds());
             }

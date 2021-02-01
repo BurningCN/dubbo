@@ -34,6 +34,8 @@ import static org.apache.zookeeper.Watcher.Event.EventType.NodeDataChanged;
  *
  * @since 2.7.5
  */
+// OK
+// 实现 CuratorWatcher
 public class ZookeeperServiceDiscoveryChangeWatcher implements CuratorWatcher {
     private ServiceInstancesChangedListener listener;
 
@@ -41,6 +43,7 @@ public class ZookeeperServiceDiscoveryChangeWatcher implements CuratorWatcher {
 
     private final String serviceName;
 
+    // gx
     public ZookeeperServiceDiscoveryChangeWatcher(ZookeeperServiceDiscovery zookeeperServiceDiscovery,
                                                   String serviceName,
                                                   ServiceInstancesChangedListener listener) {
@@ -55,8 +58,11 @@ public class ZookeeperServiceDiscoveryChangeWatcher implements CuratorWatcher {
         Watcher.Event.EventType eventType = event.getType();
 
         if (NodeChildrenChanged.equals(eventType) || NodeDataChanged.equals(eventType)) {
+            // zookeeperServiceDiscovery.getInstances(serviceName) 获取该serviceName节点下的所有子节点
             listener.onEvent(new ServiceInstancesChangedEvent(serviceName, zookeeperServiceDiscovery.getInstances(serviceName)));
+            // watcher使用一次就没了，这里重复注册，进去
             zookeeperServiceDiscovery.registerServiceWatcher(serviceName, listener);
+            //
             zookeeperServiceDiscovery.dispatchServiceInstancesChangedEvent(serviceName);
         }
     }

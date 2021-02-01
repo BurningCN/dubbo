@@ -51,9 +51,14 @@ import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
  * For example: A invokes B, then B invokes C. On service B, RpcContext saves invocation info from A to B before B
  * starts invoking C, and saves invocation info from B to C after B invokes C.
  *
+ * 注意:RpcContext是一个临时状态容器。每次发送或接收请求时，RpcContext中的状态都会发生变化。
+ * 例如:A调用B，然后B调用C。对于服务B, RpcContext在B开始调用C之前将调用信息从A保存到B，在B调用C之后将调用信息从B保存到C。
+ *
  * @export
  * @see org.apache.dubbo.rpc.filter.ContextFilter
  */
+// 看上面注释
+// OK
 public class RpcContext {
 
     /**
@@ -141,6 +146,7 @@ public class RpcContext {
      * @return context
      */
     public static RpcContext getContext() {
+        // LOCAL看下，是有初始值的
         return LOCAL.get();
     }
 
@@ -585,6 +591,7 @@ public class RpcContext {
      * @param attachment
      * @return context
      */
+    // Experimental 实验性的
     @Experimental("Experiment api for supporting Object transmission")
     public RpcContext setObjectAttachments(Map<String, Object> attachment) {
         this.attachments.clear();
@@ -718,6 +725,8 @@ public class RpcContext {
     /**
      * Async invocation. Timeout will be handled even if <code>Future.get()</code> is not called.
      *
+     * 异步调用。即使<code>Future.get()</code>未被调用，Timeout也会被处理。
+     *
      * @param callable
      * @return get the return result from <code>future.get()</code>
      */
@@ -726,6 +735,7 @@ public class RpcContext {
         try {
             try {
                 setAttachment(ASYNC_KEY, Boolean.TRUE.toString());
+                // 这不还是同步阻塞调用吗？？？
                 final T o = callable.call();
                 //local invoke will return directly
                 if (o != null) {
@@ -737,11 +747,13 @@ public class RpcContext {
                     // The service has a normal sync method signature, should get future from RpcContext.
                 }
             } catch (Exception e) {
+                // 进去，e可能是空指针异常，作为cause
                 throw new RpcException(e);
             } finally {
                 removeAttachment(ASYNC_KEY);
             }
         } catch (final RpcException e) {
+            // 前面的throw new RpcException(e)异常会在这里捕获
             CompletableFuture<T> exceptionFuture = new CompletableFuture<>();
             exceptionFuture.completeExceptionally(e);
             return exceptionFuture;
@@ -774,8 +786,10 @@ public class RpcContext {
     public static AsyncContext startAsync() throws IllegalStateException {
         RpcContext currentContext = getContext();
         if (currentContext.asyncContext == null) {
+            // 进去
             currentContext.asyncContext = new AsyncContextImpl();
         }
+        // 进去
         currentContext.asyncContext.start();
         return currentContext.asyncContext;
     }

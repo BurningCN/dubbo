@@ -29,6 +29,7 @@ import java.util.concurrent.Executor;
  * @see DirectEventDispatcher
  * @since 2.7.5
  */
+// OK
 @SPI("direct")
 public interface EventDispatcher extends Listenable<EventListener<?>> {
 
@@ -61,6 +62,7 @@ public interface EventDispatcher extends Listenable<EventListener<?>> {
      * @return the default extension of {@link EventDispatcher}
      */
     static EventDispatcher getDefaultExtension() {
+        // 默认的为DirectEventDispatcher，去看其构造方法
         return ExtensionLoader.getExtensionLoader(EventDispatcher.class).getDefaultExtension();
     }
 }

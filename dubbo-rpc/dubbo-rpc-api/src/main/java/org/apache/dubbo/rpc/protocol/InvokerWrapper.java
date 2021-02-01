@@ -25,12 +25,14 @@ import org.apache.dubbo.rpc.RpcException;
 /**
  * InvokerWrapper
  */
+// OK
 public class InvokerWrapper<T> implements Invoker<T> {
 
     private final Invoker<T> invoker;
 
     private final URL url;
 
+    // gx
     public InvokerWrapper(Invoker<T> invoker, URL url) {
         this.invoker = invoker;
         this.url = url;

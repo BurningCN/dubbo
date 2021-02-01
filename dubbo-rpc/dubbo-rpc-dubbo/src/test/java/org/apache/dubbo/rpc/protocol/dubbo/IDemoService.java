@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.rpc.protocol.dubbo;
 
+// OK
 public interface IDemoService {
     String get();
 }

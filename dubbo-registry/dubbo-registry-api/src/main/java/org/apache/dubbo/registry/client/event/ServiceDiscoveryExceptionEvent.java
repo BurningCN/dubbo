@@ -25,10 +25,12 @@ import org.apache.dubbo.registry.client.ServiceDiscovery;
  * @see org.apache.dubbo.event.Event
  * @since 2.7.5
  */
+// OK
 public class ServiceDiscoveryExceptionEvent extends ServiceDiscoveryEvent {
 
     private final Throwable cause;
 
+    // gx
     public ServiceDiscoveryExceptionEvent(ServiceDiscovery source, ServiceDiscovery original, Throwable cause) {
         super(source, original);
         if (cause == null) {

@@ -28,19 +28,24 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 
+// OK
+// 可配置的属性可以看dubbo.xsd，全局搜<xsd:complexType name="protocolType">
 public class ProtocolConfigTest {
 
     @Test
     public void testName() throws Exception {
         ProtocolConfig protocol = new ProtocolConfig();
+        // 进去
         protocol.setName("name");
         Map<String, String> parameters = new HashMap<String, String>();
         ProtocolConfig.appendParameters(parameters, protocol);
         assertThat(protocol.getName(), equalTo("name"));
         assertThat(protocol.getId(), equalTo("name"));
         assertThat(parameters.isEmpty(), is(true));
+        System.out.println(protocol);
     }
 
+    // easy
     @Test
     public void testHost() throws Exception {
         ProtocolConfig protocol = new ProtocolConfig();
@@ -51,6 +56,7 @@ public class ProtocolConfigTest {
         assertThat(parameters.isEmpty(), is(true));
     }
 
+    // easy
     @Test
     public void testPort() throws Exception {
         ProtocolConfig protocol = new ProtocolConfig();
@@ -61,6 +67,7 @@ public class ProtocolConfigTest {
         assertThat(parameters.isEmpty(), is(true));
     }
 
+    // easy
     @Test
     public void testPath() throws Exception {
         ProtocolConfig protocol = new ProtocolConfig();
@@ -69,6 +76,7 @@ public class ProtocolConfigTest {
         ProtocolConfig.appendParameters(parameters, protocol);
         assertThat(protocol.getPath(), equalTo("context-path"));
         assertThat(protocol.getContextpath(), equalTo("context-path"));
+        // 下面这句话的意思，getContextpath上面的@Parameter(..excluded=true..)，所以不会填充到parameters
         assertThat(parameters.isEmpty(), is(true));
         protocol.setPath("path");
         assertThat(protocol.getPath(), equalTo("path"));

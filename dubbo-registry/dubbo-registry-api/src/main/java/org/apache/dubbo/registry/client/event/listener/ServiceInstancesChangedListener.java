@@ -55,6 +55,7 @@ import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataU
  * @see ServiceInstancesChangedEvent
  * @since 2.7.5
  */
+// OK
 public class ServiceInstancesChangedListener implements ConditionalEventListener<ServiceInstancesChangedEvent> {
 
     private static final Logger logger = LoggerFactory.getLogger(ServiceInstancesChangedListener.class);
@@ -70,6 +71,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
 
     private Map<String, MetadataInfo> revisionToMetadata;
 
+    // gx
     public ServiceInstancesChangedListener(Set<String> serviceNames, ServiceDiscovery serviceDiscovery) {
         this.serviceNames = serviceNames;
         this.serviceDiscovery = serviceDiscovery;
@@ -92,9 +94,11 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
         Map<String, List<ServiceInstance>> revisionToInstances = new HashMap<>();
         Map<String, Set<String>> localServiceToRevisions = new HashMap<>();
         Map<Set<String>, List<URL>> revisionsToUrls = new HashMap();
+
         for (Map.Entry<String, List<ServiceInstance>> entry : allInstances.entrySet()) {
             List<ServiceInstance> instances = entry.getValue();
             for (ServiceInstance instance : instances) {
+                // 进去
                 String revision = getExportedServicesRevision(instance);
                 if (DEFAULT_REVISION.equals(revision)) {
                     logger.info("Find instance without valid service metadata: " + instance.getAddress());

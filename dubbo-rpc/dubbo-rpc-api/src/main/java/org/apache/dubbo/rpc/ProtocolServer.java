@@ -22,7 +22,11 @@ import org.apache.dubbo.remoting.RemotingServer;
 /**
  * Distinct from {@link RemotingServer}, each protocol holds one or more ProtocolServers(the number usually decides by port numbers),
  * while each ProtocolServer holds zero or one RemotingServer.
+ *
+ * 不同于{@link RemotingServer}，每个协议拥有一个或多个协议服务器(数量通常由端口号决定)，
+ * 而每个ProtocolServer保存0或1个RemotingServer。
  */
+// OK
 public interface ProtocolServer {
 
     default RemotingServer getRemotingServer() {

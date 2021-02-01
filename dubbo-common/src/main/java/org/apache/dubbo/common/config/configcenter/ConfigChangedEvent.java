@@ -24,6 +24,8 @@ import java.util.Objects;
  *
  * @see ConfigChangeType
  */
+// OK
+// EventObject是rt包的，和EventListener配合使用的
 public class ConfigChangedEvent extends EventObject {
 
     private final String key;
@@ -32,13 +34,16 @@ public class ConfigChangedEvent extends EventObject {
 
     private final String content;
 
+    // 去看下
     private final ConfigChangeType changeType;
 
     public ConfigChangedEvent(String key, String group, String content) {
         this(key, group, content, ConfigChangeType.MODIFIED);
     }
 
+    // gx
     public ConfigChangedEvent(String key, String group, String content, ConfigChangeType changeType) {
+        // 进去，赋值给父类的source属性了
         super(key + "," + group);
         this.key = key;
         this.group = group;

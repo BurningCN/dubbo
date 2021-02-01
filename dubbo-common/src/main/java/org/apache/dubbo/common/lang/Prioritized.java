@@ -18,7 +18,6 @@ package org.apache.dubbo.common.lang;
 
 import java.util.Comparator;
 
-import static java.lang.Integer.compare;
 
 /**
  * {@code Prioritized} interface can be implemented by objects that
@@ -81,6 +80,6 @@ public interface Prioritized extends Comparable<Prioritized> {
     default int compareTo(Prioritized that) {
         // 因为优先级是int类型，直接调用Integer的compare。String类型也有对应的compareTo方法,str1.compareTo(str2)
         // 按照数字从小到大排序
-        return compare(this.getPriority(), that.getPriority());
+        return Integer.compare(this.getPriority(), that.getPriority());
     }
 }

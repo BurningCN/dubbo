@@ -34,6 +34,7 @@ import static org.apache.dubbo.config.Constants.REGISTRIES_SUFFIX;
  *
  * @export
  */
+// OK
 public class RegistryConfig extends AbstractConfig {
 
     public static final String NO_AVAILABLE = "N/A";
@@ -186,6 +187,7 @@ public class RegistryConfig extends AbstractConfig {
     }
 
     public RegistryConfig(String address) {
+        // 进去
         setAddress(address);
     }
 
@@ -214,26 +216,25 @@ public class RegistryConfig extends AbstractConfig {
     }
 
     public void setAddress(String address) {
+        // eg: zookeeper://127.0.0.1:2181
         this.address = address;
         if (address != null) {
             try {
+                // 构建url
                 URL url = URL.valueOf(address);
 
-                // Refactor since 2.7.8
+                // 更新当前类对象的四个属性，注意前两个参数分别是supplier和consumer
                 updatePropertyIfAbsent(this::getUsername, this::setUsername, url.getUsername());
                 updatePropertyIfAbsent(this::getPassword, this::setPassword, url.getPassword());
                 updatePropertyIfAbsent(this::getProtocol, this::setProtocol, url.getProtocol());
                 updatePropertyIfAbsent(this::getPort, this::setPort, url.getPort());
 
-//                setUsername(url.getUsername());
-//                setPassword(url.getPassword());
-//                updateIdIfAbsent(url.getProtocol());
-//                updateProtocolIfAbsent(url.getProtocol());
-//                updatePortIfAbsent(url.getPort());
+                // 获取url的所有参数（即url ?后面的，getParameters内部直接返回map，map的填充处在URL.valueOf解析的时候）
                 Map<String, String> params = url.getParameters();
                 if (CollectionUtils.isNotEmptyMap(params)) {
                     params.remove(BACKUP_KEY);
                 }
+                // 赋值给自己的属性，进去
                 updateParameters(params);
             } catch (Exception ignored) {
             }

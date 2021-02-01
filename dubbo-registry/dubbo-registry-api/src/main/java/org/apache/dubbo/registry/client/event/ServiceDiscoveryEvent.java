@@ -26,6 +26,7 @@ import org.apache.dubbo.registry.client.ServiceDiscovery;
  * @see ServiceDiscovery
  * @since 2.7.5
  */
+// OK
 public abstract class ServiceDiscoveryEvent extends Event {
 
     private final ServiceDiscovery original;
@@ -37,6 +38,7 @@ public abstract class ServiceDiscoveryEvent extends Event {
      * @param original The original {@link ServiceDiscovery}
      * @throws IllegalArgumentException if source is null.
      */
+    // 这两个参数名都是起源，不知道为何
     public ServiceDiscoveryEvent(ServiceDiscovery source, ServiceDiscovery original) {
         super(source);
         this.original = original;

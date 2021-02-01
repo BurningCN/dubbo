@@ -27,6 +27,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.sameInstance;
 
+// OK
 public class AbstractMethodConfigTest {
     @Test
     public void testTimeout() throws Exception {

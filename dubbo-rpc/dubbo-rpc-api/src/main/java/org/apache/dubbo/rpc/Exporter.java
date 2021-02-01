@@ -23,6 +23,10 @@ package org.apache.dubbo.rpc;
  * @see org.apache.dubbo.rpc.ExporterListener
  * @see org.apache.dubbo.rpc.protocol.AbstractExporter
  */
+// OK
+// 结合抽象子类和两个具体子类。明白这两个方法大概的实现过程是这样的：别处通过 new 具体实例 传入invoker、url、exporterMap，然后具体实例第一步调用
+// super(invoker)，这样invoker就保存到了AbstractExporter，getInvoker就取到值了。具体实例的unexport触发后，将自己从exporterMap移除
+// 并调用super()的unexport方法，内部调用invoket.destroy方法
 public interface Exporter<T> {
 
     /**
@@ -36,9 +40,10 @@ public interface Exporter<T> {
      * unexport.
      * <p>
      * <code>
-     * getInvoker().destroy();
+     * getInvoker().destroy(); < ---- 注意
      * </code>
      */
+    // 可以先进ListenerExporterWrapper，其是包装类
     void unexport();
 
 }

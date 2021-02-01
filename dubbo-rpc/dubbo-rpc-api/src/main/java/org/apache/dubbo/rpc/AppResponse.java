@@ -32,8 +32,11 @@ import java.util.function.Function;
  *     <li>AsyncRpcResult is the object that is actually passed in the call chain</li>
  *     <li>AppResponse only simply represents the business result</li>
  * </ul>
+ * AsyncRpcResult是在调用链中传递的对象
+ * AppResponse仅表示业务结果
  *
  *  The relationship between them can be described as follow, an abstraction of the definition of AsyncRpcResult:
+ *  它们之间的关系可以描述如下，AsyncRpcResult抽象的定义:
  *  <pre>
  *  {@code
  *   Public class AsyncRpcResult implements CompletionStage<AppResponse> {
@@ -43,8 +46,12 @@ import java.util.function.Function;
  * AsyncRpcResult is a future representing an unfinished RPC call, while AppResponse is the actual return type of this call.
  * In theory, AppResponse does'n have to implement the {@link Result} interface, this is done mainly for compatibility purpose.
  *
+ *  AsyncRpcResult是一个表示未完成RPC调用的future，而apsponse是这个调用的实际返回类型。
+ *  理论上，appsponse不需要实现{@link Result}接口，这样做主要是为了兼容。
+ *
  * @serial Do not change the class name and properties.
  */
+// OK
 public class AppResponse implements Result {
 
     private static final long serialVersionUID = -6925924956850004727L;
@@ -86,8 +93,10 @@ public class AppResponse implements Result {
             } catch (Exception e) {
                 // ignore
             }
+            // 注意
             throw exception;
         }
+        // 注意
         return result;
     }
 
@@ -119,6 +128,7 @@ public class AppResponse implements Result {
     @Override
     @Deprecated
     public Map<String, String> getAttachments() {
+        // 进去
         return new AttachmentsAdapter.ObjectToStringMap(attachments);
     }
 
@@ -240,6 +250,7 @@ public class AppResponse implements Result {
 
     @Override
     public String toString() {
+        // 两个重要属性。
         return "AppResponse [value=" + result + ", exception=" + exception + "]";
     }
 }

@@ -169,16 +169,19 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     // gx
     public void unexport() {
+        // 如果该服务还没有暴露过，直接给他返回。
         if (!exported) {
             return;
         }
+        // 如果之前已经unexported,肯定不需要重复unexport操作直接返回。
         if (unexported) {
             return;
         }
+        // 因为暴露服务(ServiceConfig)是多协议多注册中心的。且每暴露一个之后会以Exporter类型对象返回，存到exporters容器里面，所以挨个调用unexport
         if (!exporters.isEmpty()) {
             for (Exporter<?> exporter : exporters) {
                 try {
-                    // 挨个调用exporter.unexport()
+                    // 挨个调用exporter.unexport()，进去
                     exporter.unexport();
                 } catch (Throwable t) {
                     logger.warn("Unexpected error occured when unexport " + exporter, t);
@@ -187,9 +190,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             // 清空缓存
             exporters.clear();
         }
+        // 打标记。
         unexported = true;
 
         // dispatch a ServiceConfigUnExportedEvent since 2.7.4
+        // 和export方法最后一个步骤exported()内部类似，会产生ServiceConfigExportedEvent事件并进行dispatch。
         dispatch(new ServiceConfigUnexportedEvent(this));
     }
 
@@ -399,13 +404,13 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // providersWithoutGroup = {ConcurrentHashMap@2336}  size = 1
         //  "org.apache.dubbo.demo.DemoService:null" -> {ProviderModel@2369} ---->注意
 
-        // 加载注册中心链接，进去
-        //eg registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&registry=zookeeper&timestamp=1609849127050
+        // 加载注册中心链接(内部会将多个RegistryConfig转化为多个对应个URL)，进去
+        // eg registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&registry=zookeeper&timestamp=1609849127050
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
         // Dubbo 允许我们使用不同的协议导出服务，也允许我们向多个注册中心注册服务。Dubbo 在 doExportUrls 方法中对多协议，多注册中心进行了支持。
         // 遍历 protocols，并在每个协议下导出服务，并且在导出服务的过程中，将服务注册到注册中心
-        for (ProtocolConfig protocolConfig : protocols) {
+        for (ProtocolConfig protocolConfig : protocols) { // protocols的填充实际注意下（checkProtocol）
             String pathKey = URL.buildKey(getContextPath(protocolConfig) // buildKey进去
                     .map(p -> p + "/" + path)
                     .orElse(path), group, version);// eg org.apache.dubbo.demo.DemoService
@@ -432,23 +437,27 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         AbstractConfig.appendParameters(map, provider);
         AbstractConfig.appendParameters(map, protocolConfig);
         AbstractConfig.appendParameters(map, this);
+        // 进去
         MetadataReportConfig metadataReportConfig = getMetadataReportConfig();
         if (metadataReportConfig != null && metadataReportConfig.isValid()) {
             map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);// "metadata-type" -> "remote"
         }
+        // 前面也有这个填充map的类似过程，即loadRegistries的时候
+
         // 此时map如下：
         //"side" -> "provider"
-        //"default" -> "true"
+        //"release" -> ""   -------------------appendRuntimeParameters
+        //"dubbo" -> "2.0.2"------------------- ........
+        //"pid" -> "9072"------------------- ..........
+        //"timestamp" -> "1609903950153" ------appendRuntimeParameters
+        //"application" -> "dubbo-demo-api-provider" ------ getApplication
+        //"dynamic" -> "true"           --------   provider（这个属性的默认值就是true）
+        //"deprecated" -> "false"       --------   provider（这个属性的默认值就是false）
+        //"default" -> "true"            -------- protocolConfig（convertProtocolIdsToProtocols内部创建protocolConfig的时候setDefault(true) ）
+        //"generic" -> "false"          ------- this（checkAndUpdateSubConfigs 内部会检查，并给generic赋值）
+        //"interface" -> "org.apache.dubbo.demo.DemoService" ---- this(比如demo-api-provider调用了setInterface)
         //"metadata-type" -> "remote"
-        //"application" -> "dubbo-demo-api-provider"
-        //"release" -> ""
-        //"deprecated" -> "false"
-        //"dubbo" -> "2.0.2"
-        //"pid" -> "9072"
-        //"dynamic" -> "true"
-        //"interface" -> "org.apache.dubbo.demo.DemoService"
-        //"generic" -> "false"
-        //"timestamp" -> "1609903950153"
+
 // -----------------------------------✨✨分割线✨✨---------------------------------------------------------------------
         if (CollectionUtils.isNotEmpty(getMethods())) {
             for (MethodConfig method : getMethods()) {
@@ -515,7 +524,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 map.put(REVISION_KEY, revision);
             }
 
-            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames(); // org.apache.dubbo.demo.DemoService ->  0 = "sayHelloAsync" 1 = "sayHello"
+            // 进去（生成的Wrapper0.class见：wrapper-doExportUrlsFor1Protocol-interfaceClass/Wrapper0.class）
+            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
+            // eg : interfaceClass = org.apache.dubbo.demo.DemoService, methods = ["sayHelloAsync" ,"sayHello]
             if (methods.length == 0) {
                 logger.warn("No method found in service interface " + interfaceClass.getName());
                 map.put(METHODS_KEY, ANY_VALUE);
@@ -538,15 +549,15 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 map.put(TOKEN_KEY, token);
             }
         }
-        //init serviceMetadata attachments
+        // init serviceMetadata attachments
         serviceMetadata.getAttachments().putAll(map);
-// -----------------------------------✨✨分割线✨✨---------------------------------------------------------------------
         // export service
-        // 获取当前配置的主机所在ip，eg: 30.25.58.102，进去
+        // 获取当前配置的主机所在ip，eg: 30.25.58.102，内部给map填充 anyhost -> true、bind.port -> 20880 ， 进去
         String host = findConfigedHosts(protocolConfig, registryURLs, map);
-        // 获取当前配置的主机所在port，eg:20880 ，进去
+        // 获取当前配置的主机所在port，eg:20880 ，内部给map填充bind.port -> 20880，进去
         Integer port = findConfigedPorts(protocolConfig, name, map);
-
+        // -----------------------------------✨✨分割线✨✨---------------------------------------------------------------------
+        // map全部填充完毕，根据其以及其他一些参数构建url
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
         // url eg:dubbo://30.25.58.102:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=30.25.58.102&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=9682&release=&side=provider&timestamp=1609906152829
         // You can customize Configurator to append extra parameters
@@ -555,33 +566,42 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                     .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
         }
+
+
+        // 可以对比下Registry生成的url 和 Protocol+provider+service...复合多个对象生成的url 案例，如下：
+        //    registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&registry=zookeeper&timestamp=1609849127050
+        //       dubbo://30.25.58.102:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=30.25.58.102&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=9682&release=&side=provider&timestamp=1609906152829
+        // url生成了，就开始暴露服务了，接着往下看
 // -----------------------------------✨✨分割线✨✨---------------------------------------------------------------------
-        String scope = url.getParameter(SCOPE_KEY);
+        String scope = url.getParameter(SCOPE_KEY); // SCOPE_KEY = "scope"
         // don't export when none is configured
-        if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
+        if (!SCOPE_NONE.equalsIgnoreCase(scope)) { // SCOPE_NONE = "none"
 
             // export to local if the config is not remote (export to remote only when config is remote)
             if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
-                // scope可能为null从而进这个分支，exportLocal进去
+                // scope为null或者值不是"remote"进这个分支，exportLocal进去
                 exportLocal(url);
             }
             // export to remote if the config is not local (export to local only when config is local)
-            if (!SCOPE_LOCAL.equalsIgnoreCase(scope)) {// scope可能为null从而还会进这个分支
+            if (!SCOPE_LOCAL.equalsIgnoreCase(scope)) {
+                // scope为null或者值不是"local"，进这个分支
                 if (CollectionUtils.isNotEmpty(registryURLs)) {
                     // 遍历所有的注册中心，向每个注册中心进行注册，如果scope为null的话，那么前面也会exportLocal，eg: registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=11176&registry=zookeeper&timestamp=1609916478949
                     for (URL registryURL : registryURLs) {
                         //if protocol is only injvm ,not register, 跳过injvm://的
                         if (LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
-
                             continue;
                         }
+                        // 填充registryURL的dynamic参数到url
                         url = url.addParameterIfAbsent(DYNAMIC_KEY, registryURL.getParameter(DYNAMIC_KEY));
                         URL monitorUrl = ConfigValidationUtils.loadMonitor(this, registryURL);
                         if (monitorUrl != null) {
+                            // 填充registryURL的monitor参数到url
                             url = url.addParameterAndEncoded(MONITOR_KEY, monitorUrl.toFullString());
                         }
                         if (logger.isInfoEnabled()) {
                             if (url.getParameter(REGISTER_KEY, true)) {
+                                // 日志注意下
                                 logger.info("Register dubbo service " + interfaceClass.getName() + " url " + url + " to registry " + registryURL);
                             } else {
                                 logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
@@ -589,13 +609,17 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         }
 
                         // For providers, this is used to enable custom proxy to generate invoker
+                        // 对于providers，这用于启用自定义代理来生成调用程序
                         String proxy = url.getParameter(PROXY_KEY);
                         if (StringUtils.isNotEmpty(proxy)) {
+                            // 填充url的proxy参数到registryURL
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
                         }
                         // 获取invoker（ref是实现类，比如DemoServiceImpl），内部就是利用Javassist生成了一个Wrapper0（内部含有ref的
-                        // 调用逻辑，相当于代理模式），然后用AbstractProxyInvoker包装了下
-                        Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
+                        // 调用逻辑），然后用AbstractProxyInvoker包装了下
+                        Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass,
+                                // 关键点：将url以"参数对"(key为export)添加到registryURL，进去（去看下文件:url以参数对添加到registryURL的结果.md）  ****
+                                registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         // 使用DelegateProviderMetaDataInvoker包装下，进去
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
                         // 去看 Protocol$Adaptive.export 方法，内部会调用wrapperInvoker.getUrl(可以进去看下)，这个url是一般是
@@ -604,6 +628,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         exporters.add(exporter);
                     }
                 } else {
+                    // registryURLs 为空，进这个分支。该分支步骤和前面分支后几行代码基本一致，最大区别就在getInvoker传入的第三个url参数不同
+
                     if (logger.isInfoEnabled()) {
                         logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
                     }
@@ -621,9 +647,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     }
 
 
-    // 下面方法egbuild之前是dubbo://xxx和之后是injvm:// ---> dubbo://30.25.58.102:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=30.25.58.102&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=9682&release=&side=provider&timestamp=1609906152829
-
-    // injvm://30.25.58.102:20880/org.apache.dubbo.demo.DemoService
+    // 下面方法eg build之前是dubbo://xxx和之后是injvm:// ---> dubbo://30.25.58.102:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=30.25.58.102&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=9682&release=&side=provider&timestamp=1609906152829
+    //
+    // injvm://127.0.0.1//org.apache.dubbo.demo.DemoService
     // ?anyhost=true
     // &application=dubbo-demo-api-provider
     // &bind.ip=30.25.58.102
@@ -655,13 +681,15 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // 创建 Invoker，并导出服务，这里的 protocol 会在运行时调用 InjvmProtocol 的 export 方法
 
         // 全局搜一下 Protocol$Adaptive 、 ProxyFactory$Adaptive，分别看他们的export和getInvoker，从url取得key是什么（并和上面的
-        // url值做对比）从而确定用的是什么扩展类实例。前面setProtocol(LOCAL_PROTOCOL)，而 Protocol$Adaptive export方法内部有
+        // url值做对比）从而确定用的是什么扩展类实例。（1）前面setProtocol(LOCAL_PROTOCOL)，而 Protocol$Adaptive export方法内部有
         // String extName = ( url.getProtocol() == null ? "dubbo" : url.getProtocol() ) 所以取出的扩展实例是InjvmProtocol（不
-        // 过需要注意被多个Wrapper包装了），再比如 ProxyFactory$Adaptive getInvoker方法内部有
+        // 过需要注意被多个Wrapper包装了）。（2）再比如 ProxyFactory$Adaptive getInvoker方法内部有
         // String extName = url.getParameter("proxy", "javassist")，所以取出的扩展实例是 JavassistProxyFactory（也注意其被StubProxyFactoryWrapper包装了）
         Exporter<?> exporter = PROTOCOL.export(
+                // 这里的local只是前面protocol+provider+service...复合多个对象（代表provider信息）生成的url，没有和Registry的url结合！而前面向注册中心暴露的时候会融合这两个url（上面 ****）
                 PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, local));
-        exporters.add(exporter);
+        exporters.add(exporter); // exporter是ListenerExporterWrapper实例
+        // 日志注意下
         logger.info("Export dubbo service " + interfaceClass.getName() + " to local registry url : " + local);
         // exportLocal 方法比较简单，首先根据 URL 协议头决定是否导出服务。若需导出，则创建一个新的 URL 并将协议头、主机名以及端口设置成新的值。
         // 然后创建 Invoker，并调用 InjvmProtocol 的 export 方法导出服务。下面我们来看一下 InjvmProtocol 的 export 方法都做了哪些事情

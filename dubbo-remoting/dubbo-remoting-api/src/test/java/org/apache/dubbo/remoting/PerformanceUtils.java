@@ -26,6 +26,7 @@ import java.util.List;
 /**
  * PerformanceUtils
  */
+@Deprecated
 public class PerformanceUtils {
 
     private static final int WIDTH = 64;

@@ -40,8 +40,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_K
  * @see org.apache.dubbo.rpc.Filter
  * @see RpcContext
  */
+// OK
 @Activate(group = CONSUMER, order = -10000)
-public class ConsumerContextFilter implements Filter {
+class ConsumerContextFilter implements Filter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {

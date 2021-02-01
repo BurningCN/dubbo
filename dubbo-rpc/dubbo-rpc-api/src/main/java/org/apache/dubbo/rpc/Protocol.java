@@ -26,6 +26,7 @@ import java.util.List;
 /**
  * Protocol. (API/SPI, Singleton, ThreadSafe)
  */
+// OK
 @SPI("dubbo")
 public interface Protocol {
 
@@ -44,10 +45,15 @@ public interface Protocol {
      * export the same URL<br>
      * 3. Invoker instance is passed in by the framework, protocol needs not to care <br>
      *
+     * 用于远程调用的导出服务:
+     * 1. 协议应该在收到请求后记录请求的源地址:
+     * 2. export()必须是幂等的，也就是说，在导出相同的URL时，调用一次和调用两次没有区别
+     * 3. invoker实例是由框架传入的，协议不需要关心
+     *
      * @param <T>     Service type
      * @param invoker Service invoker
-     * @return exporter reference for exported service, useful for unexport the service later
-     * @throws RpcException thrown when error occurs during export the service, for example: port is occupied
+     * @return exporter reference for exported service, useful for unexport the service later 导出服务的导出器引用，用于稍后取消导出服务
+     * @throws RpcException thrown when error occurs during export the service, for example: port is occupied 在导出服务时发生错误时抛出，例如:端口被占用
      */
     @Adaptive
     <T> Exporter<T> export(Invoker<T> invoker) throws RpcException;
@@ -60,6 +66,11 @@ public interface Protocol {
      * protocol sends remote request in the `Invoker` implementation. <br>
      * 3. When there's check=false set in URL, the implementation must not throw exception but try to recover when
      * connection fails.
+     *
+     * 引用远程服务：<br>
+     * 1. 当用户调用refer()所返回的Invoker对象的invoke()方法时，协议需相应执行同URL远端export()传入的Invoker对象的invoke()方法。<br>
+     * 2. refer()返回的Invoker由协议实现，协议通常需要在此Invoker中发送远程请求。<br>
+     * 3. 当url中有设置check=false时，连接失败不能抛出异常，需内部自动恢复。<br>
      *
      * @param <T>  Service type
      * @param type Service class
@@ -75,6 +86,9 @@ public interface Protocol {
      * 1. Cancel all services this protocol exports and refers <br>
      * 2. Release all occupied resources, for example: connection, port, etc. <br>
      * 3. Protocol can continue to export and refer new service even after it's destroyed.
+     * 1. 取消该协议导出和引用的所有服务
+     * 2. 释放所有被占用的资源，例如:连接、端口等。
+     * 3. 协议可以继续导出和引用新的服务，即使它被销毁。
      */
     void destroy();
 

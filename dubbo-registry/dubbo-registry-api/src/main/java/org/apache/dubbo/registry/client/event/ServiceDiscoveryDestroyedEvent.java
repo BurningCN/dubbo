@@ -24,8 +24,10 @@ import org.apache.dubbo.registry.client.ServiceDiscovery;
  * @see ServiceDiscovery#destroy()
  * @since 2.7.5
  */
+// OK
 public class ServiceDiscoveryDestroyedEvent extends ServiceDiscoveryEvent {
 
+    // gx
     public ServiceDiscoveryDestroyedEvent(ServiceDiscovery source, ServiceDiscovery original) {
         super(source, original);
     }

@@ -24,6 +24,8 @@ import org.apache.dubbo.rpc.cluster.ConfiguratorFactory;
  * AbsentConfiguratorFactory
  *
  */
+// OK
+// 标准的抽象工厂模式
 public class AbsentConfiguratorFactory implements ConfiguratorFactory {
 
     @Override

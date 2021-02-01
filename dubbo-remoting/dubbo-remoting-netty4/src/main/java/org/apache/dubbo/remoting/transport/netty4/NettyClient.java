@@ -26,6 +26,7 @@ import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.Constants;
 import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.transport.AbstractClient;
+import org.apache.dubbo.remoting.transport.dispatcher.ChannelHandlers;
 import org.apache.dubbo.remoting.utils.UrlUtils;
 
 import io.netty.bootstrap.Bootstrap;
@@ -40,6 +41,7 @@ import io.netty.handler.proxy.Socks5ProxyHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 
 import java.net.InetSocketAddress;
+import java.util.Date;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.apache.dubbo.common.constants.CommonConstants.SSL_ENABLED_KEY;
@@ -49,12 +51,14 @@ import static org.apache.dubbo.remoting.transport.netty4.NettyEventLoopFactory.s
 /**
  * NettyClient.
  */
+// OK
 public class NettyClient extends AbstractClient {
 
     private static final Logger logger = LoggerFactory.getLogger(NettyClient.class);
     /**
      * netty client bootstrap
      */
+    // client一个EventLoopGroup即可，这个是workerGroup
     private static final EventLoopGroup NIO_EVENT_LOOP_GROUP = eventLoopGroup(Constants.DEFAULT_IO_THREADS, "NettyClientWorker");
 
     private static final String SOCKS_PROXY_HOST = "socksProxyHost";
@@ -70,6 +74,8 @@ public class NettyClient extends AbstractClient {
      * replace this with new channel and close old channel.
      * <b>volatile, please copy reference to use.</b>
      */
+    // 上面解释了volatile的原因，因为doConnect是别的线程触发的（EventLoopGroup回调NettyClientHandler）然后更新channel，
+    // 而别的线程，比如业务线程需要channel拿来发消息，这里利用volatile保证多线程的可见性
     private volatile Channel channel;
 
     /**
@@ -79,7 +85,9 @@ public class NettyClient extends AbstractClient {
     public NettyClient(final URL url, final ChannelHandler handler) throws RemotingException {
     	// you can customize name and type of client thread pool by THREAD_NAME_KEY and THREADPOOL_KEY in CommonConstants.
     	// the handler will be wrapped: MultiMessageHandler->HeartbeatHandler->handler
-    	super(url, wrapChannelHandler(url, handler));
+       // 原来是这样super(url, wrapChannelHandler(url, handler)); 为了和NettyServer统一 我改成了如下
+    	super(url,  ChannelHandlers.wrap(handler, url));
+
     }
 
     /**
@@ -89,10 +97,11 @@ public class NettyClient extends AbstractClient {
      */
     @Override
     protected void doOpen() throws Throwable {
+        // 进去
         final NettyClientHandler nettyClientHandler = new NettyClientHandler(getUrl(), this);
         bootstrap = new Bootstrap();
         bootstrap.group(NIO_EVENT_LOOP_GROUP)
-                .option(ChannelOption.SO_KEEPALIVE, true)
+                .option(ChannelOption.SO_KEEPALIVE, true) // 一般是客户端指定长链接
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 //.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getTimeout())
@@ -103,8 +112,9 @@ public class NettyClient extends AbstractClient {
 
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
+                // 进去
                 int heartbeatInterval = UrlUtils.getHeartbeat(getUrl());
-
+                System.out.println(heartbeatInterval+"客户端读写空闲最大时间");
                 if (getUrl().getParameter(SSL_ENABLED_KEY, false)) {
                     ch.pipeline().addLast("negotiation", SslHandlerInitializer.sslClientHandler(getUrl(), nettyClientHandler));
                 }
@@ -113,6 +123,12 @@ public class NettyClient extends AbstractClient {
                 ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
                         .addLast("decoder", adapter.getDecoder())
                         .addLast("encoder", adapter.getEncoder())
+                        // 读空闲（服务端是读写空闲）且客户端直接使用url的heartbeat参数值（没有的话默认60s），而服务端则是调用getIdleTimeout方法（如果url配置heartbeat参数的话，默认是3倍）
+
+                        // 那么这1s内如果没有从服务器读取数据的话，就会触发NettyClient的userEventTrigger方法，内部判断如果是空闲超时时间，
+                        // 则会channel.send 发数据。s端会给自己的IdleStateHandler配置**读写空闲的**最大时间，到达最大空闲时间前收到这个
+                        // 数据的话，则会重置，如果一直没有收到，NettyServerHandler内部则会channel.close关闭和客户端的连接。之所以c端仅
+                        // 配置读空闲，是因为本身正常send数据的话，s端收到也会重置
                         .addLast("client-idle-handler", new IdleStateHandler(heartbeatInterval, 0, 0, MILLISECONDS))
                         .addLast("handler", nettyClientHandler);
 
@@ -129,11 +145,13 @@ public class NettyClient extends AbstractClient {
     @Override
     protected void doConnect() throws Throwable {
         long start = System.currentTimeMillis();
-        ChannelFuture future = bootstrap.connect(getConnectAddress());
+        ChannelFuture future = bootstrap.connect(getConnectAddress()); // getConnectAddress 进去
         try {
+            // 等待连接超时(server是直接 syncUninterruptibly)
             boolean ret = future.awaitUninterruptibly(getConnectTimeout(), MILLISECONDS);
 
             if (ret && future.isSuccess()) {
+                System.out.println(new Date()+"客户端连接成功");
                 Channel newChannel = future.channel();
                 try {
                     // Close old channel
@@ -164,10 +182,12 @@ public class NettyClient extends AbstractClient {
                         NettyClient.this.channel = newChannel;
                     }
                 }
+                // 连接出现异常
             } else if (future.cause() != null) {
                 throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
                         + getRemoteAddress() + ", error message is:" + future.cause().getMessage(), future.cause());
             } else {
+                // 连接超时
                 throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
                         + getRemoteAddress() + " client-side timeout "
                         + getConnectTimeout() + "ms (elapsed: " + (System.currentTimeMillis() - start) + "ms) from netty client "

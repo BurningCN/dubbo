@@ -30,6 +30,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
+// OK
 public class FastJsonSerializationTest {
     private FastJsonSerialization fastJsonSerialization;
 

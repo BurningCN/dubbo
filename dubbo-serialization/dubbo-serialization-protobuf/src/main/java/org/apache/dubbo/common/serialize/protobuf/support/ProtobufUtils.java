@@ -16,9 +16,6 @@
  */
 package org.apache.dubbo.common.serialize.protobuf.support;
 
-import org.apache.dubbo.common.serialize.protobuf.support.wrapper.MapValue;
-import org.apache.dubbo.common.serialize.protobuf.support.wrapper.ThrowablePB.StackTraceElementProto;
-import org.apache.dubbo.common.serialize.protobuf.support.wrapper.ThrowablePB.ThrowableProto;
 
 import com.google.common.base.Strings;
 import com.google.protobuf.BoolValue;

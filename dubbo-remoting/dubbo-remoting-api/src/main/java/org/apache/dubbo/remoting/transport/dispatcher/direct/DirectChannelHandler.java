@@ -28,15 +28,18 @@ import org.apache.dubbo.remoting.transport.dispatcher.WrappedChannelHandler;
 
 import java.util.concurrent.ExecutorService;
 
+// OK
 public class DirectChannelHandler extends WrappedChannelHandler {
 
     public DirectChannelHandler(ChannelHandler handler, URL url) {
         super(handler, url);
     }
 
+    // 除了received方法使用线程池，其他都是用父类的方法，即直接在当前线程调用handler.xx方法，而不是使用线程池的方式
+
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
-        ExecutorService executor = getPreferredExecutorService(message);
+        ExecutorService executor = getPreferredExecutorService(message);// 进去
         if (executor instanceof ThreadlessExecutor) {
             try {
                 executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.RECEIVED, message));

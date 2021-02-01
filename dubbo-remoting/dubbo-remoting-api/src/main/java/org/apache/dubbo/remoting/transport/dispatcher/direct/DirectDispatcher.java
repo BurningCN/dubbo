@@ -17,12 +17,14 @@
 package org.apache.dubbo.remoting.transport.dispatcher.direct;
 
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.Dispatcher;
 
 /**
  * Direct dispatcher
  */
+// OK
 public class DirectDispatcher implements Dispatcher {
 
     public static final String NAME = "direct";

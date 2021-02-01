@@ -24,12 +24,14 @@ import org.apache.dubbo.remoting.Channel;
 /**
  * CloseTimerTask
  */
+// OK
 public class CloseTimerTask extends AbstractTimerTask {
 
     private static final Logger logger = LoggerFactory.getLogger(CloseTimerTask.class);
 
     private final int idleTimeout;
 
+    // gx
     public CloseTimerTask(ChannelProvider channelProvider, Long heartbeatTimeoutTick, int idleTimeout) {
         super(channelProvider, heartbeatTimeoutTick);
         this.idleTimeout = idleTimeout;
@@ -38,8 +40,8 @@ public class CloseTimerTask extends AbstractTimerTask {
     @Override
     protected void doTask(Channel channel) {
         try {
-            Long lastRead = lastRead(channel);
-            Long lastWrite = lastWrite(channel);
+            Long lastRead = lastRead(channel);// 进去
+            Long lastWrite = lastWrite(channel);// 进去
             Long now = now();
             // check ping & pong at server
             if ((lastRead != null && now - lastRead > idleTimeout)

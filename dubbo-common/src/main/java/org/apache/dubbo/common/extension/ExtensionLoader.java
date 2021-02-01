@@ -260,6 +260,7 @@ public class ExtensionLoader<T> {
      */
     // 在所有的激活中，要使用key 指定的扩展
     public List<T> getActivateExtension(URL url, String key) {
+        // 进去
         return getActivateExtension(url, key, null);
     }
 
@@ -287,7 +288,9 @@ public class ExtensionLoader<T> {
      */
     // 在所有的激活中，要指定的group 外加 使用key 指定的扩展
     public List<T> getActivateExtension(URL url, String key, String group) {
+        // 从url获取参数值（扩展名，比如?ext=ext=order1,default）
         String value = url.getParameter(key);
+        // 进去（value不为空的话，根据逗号分隔填充到数组，数组里是多个扩展名，即要/激活这些扩展名实例）
         return getActivateExtension(url, StringUtils.isEmpty(value) ? null : COMMA_SPLIT_PATTERN.split(value), group);
     }
 
@@ -301,7 +304,7 @@ public class ExtensionLoader<T> {
      * @see org.apache.dubbo.common.extension.Activate
      */
 
-    // 其他的getActivateExtension最后其实都有下面方法实现
+    // 其他的getActivateExtension最后其实都由下面方法实现
     public List<T> getActivateExtension(URL url, String[] values, String group) {
         List<T> activateExtensions = new ArrayList<>();
         List<String> names = values == null ? new ArrayList<>(0) : asList(values);
@@ -1317,6 +1320,7 @@ public class ExtensionLoader<T> {
         // 编译，方法返回Class。进去（AdaptiveCompile的compile）
         return compiler.compile(code, classLoader);
     }
+
 
     @Override
     public String toString() {

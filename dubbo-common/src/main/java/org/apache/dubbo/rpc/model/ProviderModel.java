@@ -32,6 +32,7 @@ import java.util.Set;
 /**
  * ProviderModel is about published services
  */
+// OK
 public class ProviderModel {
     private String serviceKey;
     private final Object serviceInstance;
@@ -130,13 +131,15 @@ public class ProviderModel {
     private ServiceMetadata serviceMetadata;
     private final Map<String, List<ProviderMethodModel>> methods = new HashMap<String, List<ProviderMethodModel>>();
 
+    // gx
     public ProviderModel(String serviceKey,
                          Object serviceInstance,
                          ServiceDescriptor serviceModel,
                          ServiceConfigBase<?> serviceConfig,
                          ServiceMetadata serviceMetadata) {
+        // 进去
         this(serviceKey, serviceInstance, serviceModel, serviceConfig);
-
+        // 上面几个属性是原来的，下两个新增加的
         this.serviceMetadata = serviceMetadata;
         initMethod(serviceModel.getServiceInterfaceClass());
     }

@@ -24,10 +24,12 @@ import org.apache.dubbo.registry.support.FailbackRegistry;
 /**
  * FailedUnregisteredTask
  */
+// OK
 public final class FailedUnregisteredTask extends AbstractRetryTask {
 
     private static final String NAME = "retry unregister";
 
+    // gx
     public FailedUnregisteredTask(URL url, FailbackRegistry registry) {
         super(url, registry, NAME);
     }
@@ -35,6 +37,7 @@ public final class FailedUnregisteredTask extends AbstractRetryTask {
     @Override
     protected void doRetry(URL url, FailbackRegistry registry, Timeout timeout) {
         registry.doUnregister(url);
+        // jinqu
         registry.removeFailedUnregisteredTask(url);
     }
 }

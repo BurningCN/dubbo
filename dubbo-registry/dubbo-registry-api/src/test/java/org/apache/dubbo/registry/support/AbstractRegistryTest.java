@@ -39,6 +39,7 @@ import static org.apache.dubbo.common.constants.RegistryConstants.EMPTY_PROTOCOL
 /**
  * AbstractRegistryTest
  */
+// OK
 public class AbstractRegistryTest {
 
     private URL testUrl;
@@ -51,7 +52,7 @@ public class AbstractRegistryTest {
     @BeforeEach
     public void init() {
         URL url = URL.valueOf("dubbo://192.168.0.2:2233");
-        //sync update cache file
+        // sync update cache file
         url = url.addParameter("save.file", true);
         testUrl = URL.valueOf("http://192.168.0.3:9090/registry?check=false&file=N/A&interface=com.test");
         mockUrl = new URL("dubbo", "192.168.0.1", 2200);
@@ -67,6 +68,7 @@ public class AbstractRegistryTest {
         parametersConsumer.put("side", "consumer");
         parametersConsumer.put("timestamp", String.valueOf(System.currentTimeMillis()));
 
+        // 进去
         // init the object
         abstractRegistry = new AbstractRegistry(url) {
             @Override
@@ -91,12 +93,13 @@ public class AbstractRegistryTest {
      *
      * @throws Exception
      */
+    // easy
     @Test
     public void testRegister() throws Exception {
-        //test one url
+        // test one url
         abstractRegistry.register(mockUrl);
         assert abstractRegistry.getRegistered().contains(mockUrl);
-        //test multiple urls
+        // test multiple urls
         for (URL url : abstractRegistry.getRegistered()) {
             abstractRegistry.unregister(url);
         }
@@ -107,6 +110,7 @@ public class AbstractRegistryTest {
         MatcherAssert.assertThat(abstractRegistry.getRegistered().size(), Matchers.equalTo(urlList.size()));
     }
 
+    // easy
     @Test
     public void testRegisterIfURLNULL() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
@@ -121,6 +125,7 @@ public class AbstractRegistryTest {
      *
      * @throws Exception
      */
+    // easy
     @Test
     public void testUnregister() throws Exception {
         //test one unregister
@@ -142,6 +147,7 @@ public class AbstractRegistryTest {
         MatcherAssert.assertThat(0, Matchers.equalTo(abstractRegistry.getRegistered().size()));
     }
 
+    // easy
     @Test
     public void testUnregisterIfUrlNull() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
@@ -153,16 +159,20 @@ public class AbstractRegistryTest {
     /**
      * test subscribe and unsubscribe
      */
+    // easy
     @Test
     public void testSubscribeAndUnsubscribe() throws Exception {
-        //test subscribe
+        // test subscribe
         final AtomicReference<Boolean> notified = new AtomicReference<Boolean>(false);
+        // 定义一个NotifyListener，这里直接lambda
         NotifyListener listener = urls -> notified.set(Boolean.TRUE);
         URL url = new URL("dubbo", "192.168.0.1", 2200);
+        // 进去
         abstractRegistry.subscribe(url, listener);
+        // 一个url有多个NotifyListener
         Set<NotifyListener> subscribeListeners = abstractRegistry.getSubscribed().get(url);
         MatcherAssert.assertThat(true, Matchers.equalTo(subscribeListeners.contains(listener)));
-        //test unsubscribe
+        // test unsubscribe
         abstractRegistry.unsubscribe(url, listener);
         Set<NotifyListener> unsubscribeListeners = abstractRegistry.getSubscribed().get(url);
         MatcherAssert.assertThat(false, Matchers.equalTo(unsubscribeListeners.contains(listener)));
@@ -179,6 +189,7 @@ public class AbstractRegistryTest {
         });
     }
 
+    // easy
     @Test
     public void testSubscribeIfListenerNull() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
@@ -190,6 +201,7 @@ public class AbstractRegistryTest {
         });
     }
 
+    // easy
     @Test
     public void testUnsubscribeIfUrlNull() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
@@ -200,6 +212,7 @@ public class AbstractRegistryTest {
         });
     }
 
+    // easy
     @Test
     public void testUnsubscribeIfNotifyNull() throws Exception {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
@@ -216,6 +229,7 @@ public class AbstractRegistryTest {
      *
      * @throws Exception
      */
+    //easy
     @Test
     public void testSubscribe() throws Exception {
         // check parameters
@@ -245,6 +259,7 @@ public class AbstractRegistryTest {
      *
      * @throws Exception
      */
+    // easy
     @Test
     public void testUnsubscribe() throws Exception {
         // check parameters
@@ -285,6 +300,11 @@ public class AbstractRegistryTest {
         // test recover
         abstractRegistry.register(testUrl);
         abstractRegistry.subscribe(testUrl, listener);
+        Assertions.assertTrue(abstractRegistry.getRegistered().contains(testUrl));
+        Assertions.assertNotNull(abstractRegistry.getSubscribed().get(testUrl));
+        Assertions.assertTrue(abstractRegistry.getSubscribed().get(testUrl).contains(listener));
+
+        // 进去
         abstractRegistry.recover();
         // check if recover successfully
         Assertions.assertTrue(abstractRegistry.getRegistered().contains(testUrl));
@@ -293,6 +313,7 @@ public class AbstractRegistryTest {
 
     }
 
+    // easy
     @Test
     public void testRecover2() throws Exception {
         List<URL> list = getList();
@@ -313,21 +334,30 @@ public class AbstractRegistryTest {
     @Test
     public void testNotify() throws Exception {
         final AtomicReference<Boolean> notified = new AtomicReference<Boolean>(false);
+
         NotifyListener listener1 = urls -> notified.set(Boolean.TRUE);
         URL url1 = new URL("dubbo", "192.168.0.1", 2200, parametersConsumer);
         abstractRegistry.subscribe(url1, listener1);
+
         NotifyListener listener2 = urls -> notified.set(Boolean.TRUE);
         URL url2 = new URL("dubbo", "192.168.0.2", 2201, parametersConsumer);
         abstractRegistry.subscribe(url2, listener2);
+
         NotifyListener listener3 = urls -> notified.set(Boolean.TRUE);
         URL url3 = new URL("dubbo", "192.168.0.3", 2202, parametersConsumer);
         abstractRegistry.subscribe(url3, listener3);
+
+
         List<URL> urls = new ArrayList<>();
         urls.add(url1);
         urls.add(url2);
         urls.add(url3);
+
+        // 进去，
         abstractRegistry.notify(url1, listener1, urls);
+        // 进去
         Map<URL, Map<String, List<URL>>> map = abstractRegistry.getNotified();
+        // 只有url1有
         MatcherAssert.assertThat(true, Matchers.equalTo(map.containsKey(url1)));
         MatcherAssert.assertThat(false, Matchers.equalTo(map.containsKey(url2)));
         MatcherAssert.assertThat(false, Matchers.equalTo(map.containsKey(url3)));
@@ -342,17 +372,22 @@ public class AbstractRegistryTest {
         NotifyListener listener1 = urls -> notified.set(Boolean.TRUE);
         URL url1 = new URL("dubbo", "192.168.0.1", 2200, parametersConsumer);
         abstractRegistry.subscribe(url1, listener1);
+
         NotifyListener listener2 = urls -> notified.set(Boolean.TRUE);
         URL url2 = new URL("dubbo", "192.168.0.2", 2201, parametersConsumer);
         abstractRegistry.subscribe(url2, listener2);
+
         NotifyListener listener3 = urls -> notified.set(Boolean.TRUE);
         URL url3 = new URL("dubbo", "192.168.0.3", 2202, parametersConsumer);
         abstractRegistry.subscribe(url3, listener3);
+
         List<URL> urls = new ArrayList<>();
         urls.add(url1);
         urls.add(url2);
         urls.add(url3);
+        // 进去
         abstractRegistry.notify(urls);
+
         Map<URL, Map<String, List<URL>>> map = abstractRegistry.getNotified();
         MatcherAssert.assertThat(true, Matchers.equalTo(map.containsKey(url1)));
         MatcherAssert.assertThat(true, Matchers.equalTo(map.containsKey(url2)));
@@ -366,16 +401,20 @@ public class AbstractRegistryTest {
             NotifyListener listener1 = urls -> notified.set(Boolean.TRUE);
             URL url1 = new URL("dubbo", "192.168.0.1", 2200, parametersConsumer);
             abstractRegistry.subscribe(url1, listener1);
+
             NotifyListener listener2 = urls -> notified.set(Boolean.TRUE);
             URL url2 = new URL("dubbo", "192.168.0.2", 2201, parametersConsumer);
             abstractRegistry.subscribe(url2, listener2);
+
             NotifyListener listener3 = urls -> notified.set(Boolean.TRUE);
             URL url3 = new URL("dubbo", "192.168.0.3", 2202, parametersConsumer);
             abstractRegistry.subscribe(url3, listener3);
+
             List<URL> urls = new ArrayList<>();
             urls.add(url1);
             urls.add(url2);
             urls.add(url3);
+            // 抛异常
             abstractRegistry.notify(null, listener1, urls);
             Assertions.fail("notify url == null");
         });
@@ -388,16 +427,20 @@ public class AbstractRegistryTest {
             NotifyListener listener1 = urls -> notified.set(Boolean.TRUE);
             URL url1 = new URL("dubbo", "192.168.0.1", 2200, parametersConsumer);
             abstractRegistry.subscribe(url1, listener1);
+
             NotifyListener listener2 = urls -> notified.set(Boolean.TRUE);
             URL url2 = new URL("dubbo", "192.168.0.2", 2201, parametersConsumer);
             abstractRegistry.subscribe(url2, listener2);
+
             NotifyListener listener3 = urls -> notified.set(Boolean.TRUE);
             URL url3 = new URL("dubbo", "192.168.0.3", 2202, parametersConsumer);
             abstractRegistry.subscribe(url3, listener3);
+
             List<URL> urls = new ArrayList<>();
             urls.add(url1);
             urls.add(url2);
             urls.add(url3);
+            // 抛异常
             abstractRegistry.notify(url1, null, urls);
             Assertions.fail("notify listener == null");
         });
@@ -549,6 +592,7 @@ public class AbstractRegistryTest {
         Assertions.assertFalse(notifySuccess);
         abstractRegistry.notify(testUrl, listener, urls);
         Assertions.assertTrue(notifySuccess);
+        // 进去
         List<URL> cacheUrl = abstractRegistry.getCacheUrls(testUrl);
         Assertions.assertEquals(1,cacheUrl.size());
         URL nullUrl = URL.valueOf("http://1.2.3.4:9090/registry?check=false&file=N/A&interface=com.testa");

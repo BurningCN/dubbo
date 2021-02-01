@@ -47,6 +47,7 @@ import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
 import static org.apache.dubbo.rpc.Constants.RETURN_PREFIX;
 import static org.apache.dubbo.rpc.Constants.THROW_PREFIX;
 
+// OK
 final public class MockInvoker<T> implements Invoker<T> {
     private final static ProxyFactory PROXY_FACTORY = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
     private final static Map<String, Invoker<?>> MOCK_MAP = new ConcurrentHashMap<String, Invoker<?>>();
@@ -57,10 +58,11 @@ final public class MockInvoker<T> implements Invoker<T> {
 
     public MockInvoker(URL url, Class<T> type) {
         this.url = url;
-        this.type = type;
+        this.type = type; // 一般是 接口.class ，接口和上面url的path一致
     }
 
     public static Object parseMockValue(String mock) throws Exception {
+        // 进去
         return parseMockValue(mock, null);
     }
 
@@ -74,18 +76,22 @@ final public class MockInvoker<T> implements Invoker<T> {
             value = true;
         } else if ("false".equals(mock)) {
             value = false;
+
+            // "\"xx\""、 "\'xx\'"转化为xx
         } else if (mock.length() >= 2 && (mock.startsWith("\"") && mock.endsWith("\"")
                 || mock.startsWith("\'") && mock.endsWith("\'"))) {
             value = mock.subSequence(1, mock.length() - 1);
         } else if (returnTypes != null && returnTypes.length > 0 && returnTypes[0] == String.class) {
             value = mock;
+
+            // 进去 判断是否是数字
         } else if (StringUtils.isNumeric(mock, false)) {
             value = JSON.parse(mock);
-            // 识别为json，转化为 map
         } else if (mock.startsWith("{")) {
+            // 识别为json，转化为 map
             value = JSON.parseObject(mock, Map.class);
-            // 识别为json，转化为 list
         } else if (mock.startsWith("[")) {
+            // 识别为json，转化为 list
             value = JSON.parseObject(mock, List.class);
         } else {
             value = mock;
@@ -102,27 +108,40 @@ final public class MockInvoker<T> implements Invoker<T> {
             ((RpcInvocation) invocation).setInvoker(this);
         }
         String mock = null;
+        // url?test.async=true，test就是方法，url.valueOf会保存在parameterMethod map 中:test:{async:true}},{},{}
         if (getUrl().hasMethodParameter(invocation.getMethodName())) {
+            // 取值，上面的例子就是返回true  ---- 取值处1
             mock = getUrl().getParameter(invocation.getMethodName() + "." + MOCK_KEY);
         }
         if (StringUtils.isBlank(mock)) {
+            // eg ?mock=return ，返回的就是return  ---- 取值处2
             mock = getUrl().getParameter(MOCK_KEY);
         }
 
         if (StringUtils.isBlank(mock)) {
+            // 日志
             throw new RpcException(new IllegalAccessException("mock can not be null. url :" + url));
         }
+        // 规范化mock值，上面的例子 return - > return null（更多例子看testNormalizeMock），进去
         mock = normalizeMock(URL.decode(mock));
+
+        // mock值三种情况: return xx 、 throw xx 、接口impl全限定名
+
         if (mock.startsWith(RETURN_PREFIX)) {
+            // 截取return后面的部分
             mock = mock.substring(RETURN_PREFIX.length()).trim();
             try {
+                // 进去
                 Type[] returnTypes = RpcUtils.getReturnTypes(invocation);
+                // 进去
                 Object value = parseMockValue(mock, returnTypes);
+                // 进去
                 return AsyncRpcResult.newDefaultAsyncResult(value, invocation);
             } catch (Exception ew) {
                 throw new RpcException("mock return invoke error. method :" + invocation.getMethodName()
                         + ", mock:" + mock + ", url: " + url, ew);
             }
+            // throw xxx
         } else if (mock.startsWith(THROW_PREFIX)) {
             mock = mock.substring(THROW_PREFIX.length()).trim();
             if (StringUtils.isBlank(mock)) {
@@ -131,8 +150,9 @@ final public class MockInvoker<T> implements Invoker<T> {
                 Throwable t = getThrowable(mock);
                 throw new RpcException(RpcException.BIZ_EXCEPTION, t);
             }
-        } else { //impl mock
+        } else { //impl mock  （此时mock是接口实现类的全限定名）
             try {
+                // 进去
                 Invoker<T> invoker = getInvoker(mock);
                 return invoker.invoke(invocation);
             } catch (Throwable t) {
@@ -149,6 +169,7 @@ final public class MockInvoker<T> implements Invoker<T> {
 
         try {
             Throwable t;
+            // 加载异常类
             Class<?> bizException = ReflectUtils.forName(throwstr);
             Constructor<?> constructor;
             constructor = ReflectUtils.findConstructor(bizException, String.class);
@@ -170,7 +191,9 @@ final public class MockInvoker<T> implements Invoker<T> {
         }
 
         Class<T> serviceType = (Class<T>) ReflectUtils.forName(url.getServiceInterface());
+        // 创建mockService实例，进去（serviceType是接口、mockService是接口实现类）
         T mockObject = (T) getMockObject(mockService, serviceType);
+        // 进去
         invoker = PROXY_FACTORY.getInvoker(mockObject, serviceType, url);
         if (MOCK_MAP.size() < 10000) {
             MOCK_MAP.put(mockService, invoker);

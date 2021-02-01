@@ -39,6 +39,7 @@ import static org.apache.dubbo.remoting.Constants.DEFAULT_CHARSET;
 /**
  * TelnetCodec
  */
+// OK
 public class TelnetCodec extends TransportCodec {
 
     private static final Logger logger = LoggerFactory.getLogger(TelnetCodec.class);
@@ -62,9 +63,11 @@ public class TelnetCodec extends TransportCodec {
 
     private static Charset getCharset(Channel channel) {
         if (channel != null) {
+            // 从channel的属性中取CHARSET_KEY的值
             Object attribute = channel.getAttribute(CHARSET_KEY);
             if (attribute instanceof String) {
                 try {
+                    // 获取字符集实例
                     return Charset.forName((String) attribute);
                 } catch (Throwable t) {
                     logger.warn(t.getMessage(), t);
@@ -74,6 +77,7 @@ public class TelnetCodec extends TransportCodec {
             }
             URL url = channel.getUrl();
             if (url != null) {
+                // 从url的参数中取CHARSET_KEY的值
                 String parameter = url.getParameter(CHARSET_KEY);
                 if (StringUtils.isNotEmpty(parameter)) {
                     try {
@@ -93,6 +97,7 @@ public class TelnetCodec extends TransportCodec {
     }
 
     private static String toString(byte[] message, Charset charset) throws UnsupportedEncodingException {
+        // 准备临时容器
         byte[] copy = new byte[message.length];
         int index = 0;
         for (int i = 0; i < message.length; i++) {
@@ -118,15 +123,18 @@ public class TelnetCodec extends TransportCodec {
                     && (message[i + 1] == -3 || message[i + 1] == -5)) { // handshake
                 i = i + 2;
             } else {
+                // 主要走这个逻辑
                 copy[index++] = message[i];
             }
         }
         if (index == 0) {
             return "";
         }
+        // 变字符串，指定字符编码方式的名称
         return new String(copy, 0, index, charset.name()).trim();
     }
 
+    // 判断两个字节数组完全相等
     private static boolean isEquals(byte[] message, byte[] command) throws IOException {
         return message.length == command.length && endsWith(message, command);
     }
@@ -135,7 +143,9 @@ public class TelnetCodec extends TransportCodec {
         if (message.length < command.length) {
             return false;
         }
+        // 计算offset，避免不必要的字节匹配
         int offset = message.length - command.length;
+        // 从后往前匹配
         for (int i = command.length - 1; i >= 0; i--) {
             if (message[offset + i] != command[i]) {
                 return false;
@@ -157,27 +167,37 @@ public class TelnetCodec extends TransportCodec {
         }
     }
 
+    // 重写了父类TransportCodec的decode方法
     @Override
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
+        // buffer的数据拷贝到一个临时的字节数组message
         int readable = buffer.readableBytes();
         byte[] message = new byte[readable];
         buffer.readBytes(message);
+        // 进去
         return decode(channel, buffer, readable, message);
     }
 
+    // buffer参数没有用到
     @SuppressWarnings("unchecked")
     protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byte[] message) throws IOException {
+        // 进去
         if (isClientSide(channel)) {
+            // getCharset、toString 进去
             return toString(message, getCharset(channel));
         }
         checkPayload(channel, readable);
         if (message == null || message.length == 0) {
+            // msg为空，表明没有输入，还解码个der
             return DecodeResult.NEED_MORE_INPUT;
         }
 
+        // 最后一个字节是'\b'
         if (message[message.length - 1] == '\b') { // Windows backspace echo
             try {
                 boolean doublechar = message.length >= 3 && message[message.length - 3] < 0; // double byte char
+                // new String(new byte[]{32, 32, 8, 8})是"\b\b"，new byte[]{32, 8}是 "\b"
+                // 可以看下AbstractMockChannel的send方法和getReceivedMessage
                 channel.send(new String(doublechar ? new byte[]{32, 32, 8, 8} : new byte[]{32, 8}, getCharset(channel).name()));
             } catch (RemotingException e) {
                 throw new IOException(StringUtils.toString(e));
@@ -186,22 +206,28 @@ public class TelnetCodec extends TransportCodec {
         }
 
         for (Object command : EXIT) {
+            // 传入Telnet的decode方法的msg消息字节数组比如位new byte[]{3}，和EXIT的其一是匹配的，表示要关闭channel，进去
             if (isEquals(message, (byte[]) command)) {
                 if (logger.isInfoEnabled()) {
+                    // 日志
                     logger.info(new Exception("Close channel " + channel + " on exit command: " + Arrays.toString((byte[]) command)));
                 }
+                // 关闭通道
                 channel.close();
                 return null;
             }
         }
 
+        // UP、DOWN表示channel的history的上、下一条消息
         boolean up = endsWith(message, UP);
         boolean down = endsWith(message, DOWN);
         if (up || down) {
+            // 获取list
             LinkedList<String> history = (LinkedList<String>) channel.getAttribute(HISTORY_LIST_KEY);
             if (CollectionUtils.isEmpty(history)) {
                 return DecodeResult.NEED_MORE_INPUT;
             }
+            // 获取记录的索引值
             Integer index = (Integer) channel.getAttribute(HISTORY_INDEX_KEY);
             Integer old = index;
             if (index == null) {
@@ -220,7 +246,9 @@ public class TelnetCodec extends TransportCodec {
                 }
             }
             if (old == null || !old.equals(index)) {
+                // 更新索引值
                 channel.setAttribute(HISTORY_INDEX_KEY, index);
+                // 取
                 String value = history.get(index);
                 if (old != null && old >= 0 && old < history.size()) {
                     String ov = history.get(old);
@@ -237,6 +265,7 @@ public class TelnetCodec extends TransportCodec {
                     value = buf.toString() + value;
                 }
                 try {
+                    // 发送到channel
                     channel.send(value);
                 } catch (RemotingException e) {
                     throw new IOException(StringUtils.toString(e));
@@ -245,6 +274,7 @@ public class TelnetCodec extends TransportCodec {
             return DecodeResult.NEED_MORE_INPUT;
         }
         for (Object command : EXIT) {
+            // 完全匹配，表示退出，即关闭channel
             if (isEquals(message, (byte[]) command)) {
                 if (logger.isInfoEnabled()) {
                     logger.info(new Exception("Close channel " + channel + " on exit command " + command));
@@ -255,20 +285,28 @@ public class TelnetCodec extends TransportCodec {
         }
         byte[] enter = null;
         for (Object command : ENTER) {
+            // 是否以ENTER换行符结尾，如果是服务端的数据，那么一定得换行符结尾，比如/n结尾，具体参考ENTER，否则表示未输入完，NEED_MORE_INPUT
+            // 进去
             if (endsWith(message, (byte[]) command)) {
                 enter = (byte[]) command;
                 break;
             }
         }
         if (enter == null) {
+            // 如果是服务端的数据，那么一定得换行符结尾，比如/n结尾，具体参考ENTER，否则表示未输入完，NEED_MORE_INPUT
             return DecodeResult.NEED_MORE_INPUT;
         }
+
+        // decode后的消息存到channel的属性（history）中。用以下次发送UP、DOWN命令的时候取出来
+
         LinkedList<String> history = (LinkedList<String>) channel.getAttribute(HISTORY_LIST_KEY);
         Integer index = (Integer) channel.getAttribute(HISTORY_INDEX_KEY);
         channel.removeAttribute(HISTORY_INDEX_KEY);
         if (CollectionUtils.isNotEmpty(history) && index != null && index >= 0 && index < history.size()) {
             String value = history.get(index);
             if (value != null) {
+                // 开辟空间存放原index位置的值和msg
+
                 byte[] b1 = value.getBytes();
                 byte[] b2 = new byte[b1.length + message.length];
                 System.arraycopy(b1, 0, b2, 0, b1.length);
@@ -292,6 +330,7 @@ public class TelnetCodec extends TransportCodec {
                 }
             }
         }
+        // 返回解码后的数据
         return result;
     }
 

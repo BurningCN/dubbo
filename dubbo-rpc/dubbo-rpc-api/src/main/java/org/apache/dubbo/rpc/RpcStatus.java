@@ -75,9 +75,12 @@ public class RpcStatus {
      * @return status
      */
     public static RpcStatus getStatus(URL url, String methodName) {
+        // 进去（截取?之前的）
         String uri = url.toIdentityString();
         ConcurrentMap<String, RpcStatus> map = METHOD_STATISTICS.computeIfAbsent(uri, k -> new ConcurrentHashMap<>());
         return map.computeIfAbsent(methodName, k -> new RpcStatus());
+        // METHOD_STATISTICS : [ { uri : { methodName : rpcStatus}},{},{} ]
+        // SERVICE_STATISTICS : [ { uri :  rpcStatus},{},{} ]
     }
 
     /**
@@ -99,26 +102,30 @@ public class RpcStatus {
      * @param url
      */
     public static boolean beginCount(URL url, String methodName, int max) {
-        max = (max <= 0) ? Integer.MAX_VALUE : max;
-        RpcStatus appStatus = getStatus(url);
-        RpcStatus methodStatus = getStatus(url, methodName);
+        max = (max <= 0) ? Integer.MAX_VALUE : max;// 注意max=0也是取MAX_VALUE，表示基本可以无限次调用
+        RpcStatus appStatus = getStatus(url);// 进去
+        RpcStatus methodStatus = getStatus(url, methodName);// 进去
         if (methodStatus.active.get() == Integer.MAX_VALUE) {
             return false;
         }
+        // 乐观锁常用手段：循环+后面的cas
         for (int i; ; ) {
+            // active 是 AtomicInteger结构
             i = methodStatus.active.get();
 
+            // 如果超过最大调用次数，返回false
             if (i == Integer.MAX_VALUE || i + 1 > max) {
                 return false;
             }
 
+            // 次数+1
             if (methodStatus.active.compareAndSet(i, i + 1)) {
                 break;
             }
         }
 
+        // app/service ++
         appStatus.active.incrementAndGet();
-
         return true;
     }
 
@@ -129,10 +136,12 @@ public class RpcStatus {
      */
     public static void endCount(URL url, String methodName, long elapsed, boolean succeeded) {
         endCount(getStatus(url), elapsed, succeeded);
+        // 进去
         endCount(getStatus(url, methodName), elapsed, succeeded);
     }
 
     private static void endCount(RpcStatus status, long elapsed, boolean succeeded) {
+        // -- 和前面beginCount 方法内部 ++ 相反
         status.active.decrementAndGet();
         status.total.incrementAndGet();
         status.totalElapsed.addAndGet(elapsed);
@@ -141,11 +150,13 @@ public class RpcStatus {
             status.maxElapsed.set(elapsed);
         }
 
+        // 成功
         if (succeeded) {
             if (status.succeededMaxElapsed.get() < elapsed) {
                 status.succeededMaxElapsed.set(elapsed);
             }
 
+        // 失败
         } else {
             status.failed.incrementAndGet();
             status.failedElapsed.addAndGet(elapsed);

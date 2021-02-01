@@ -44,14 +44,17 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
     private int connectTimeout;
 
     public AbstractEndpoint(URL url, ChannelHandler handler) {
+        // 进去
         super(url, handler);
-        this.codec = getChannelCodec(url);
+        // 进去
+        this.codec = getChannelCodec(url);// DubboExchangeCodec、TelnetCodec
         this.timeout = url.getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
         this.connectTimeout = url.getPositiveParameter(Constants.CONNECT_TIMEOUT_KEY, Constants.DEFAULT_CONNECT_TIMEOUT);
     }
 
     protected static Codec2 getChannelCodec(URL url) {
-        String codecName = url.getProtocol(); // codec extension name must stay the same with protocol name
+        // codec extension name must stay the same with protocol name （ eg DubboExchangeCodec、TelnetCodec，取决于协议 telnet://xx 、dubbo://xx ）
+        String codecName = url.getProtocol();
         if (ExtensionLoader.getExtensionLoader(Codec2.class).hasExtension(codecName)) {
             return ExtensionLoader.getExtensionLoader(Codec2.class).getExtension(codecName);
         } else {

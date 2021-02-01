@@ -24,6 +24,7 @@ import org.apache.dubbo.remoting.transport.dispatcher.all.AllDispatcher;
 /**
  * ChannelHandlerWrapper (SPI, Singleton, ThreadSafe)
  */
+// OK
 @SPI(AllDispatcher.NAME)
 public interface Dispatcher {
 
@@ -35,7 +36,7 @@ public interface Dispatcher {
      * @return channel handler
      */
     @Adaptive({Constants.DISPATCHER_KEY, "dispather", "channel.handler"})
-    // The last two parameters are reserved for compatibility with the old configuration
+    // The last two parameters are reserved for compatibility with the old configuration 保留最后两个参数是为了与旧的配置兼容
     ChannelHandler dispatch(ChannelHandler handler, URL url);
 
 }

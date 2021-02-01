@@ -31,6 +31,8 @@ import java.util.List;
 /**
  * ListenerInvoker
  */
+// OK
+// 参考ListenerExporterWrapper
 public class ListenerInvokerWrapper<T> implements Invoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ListenerInvokerWrapper.class);
@@ -39,6 +41,7 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
 
     private final List<InvokerListener> listeners;
 
+    // gx
     public ListenerInvokerWrapper(Invoker<T> invoker, List<InvokerListener> listeners) {
         if (invoker == null) {
             throw new IllegalArgumentException("invoker == null");

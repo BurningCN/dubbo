@@ -23,6 +23,7 @@ import org.apache.dubbo.remoting.Client;
  *
  *
  */
+// OK
 public interface ExchangeClient extends Client, ExchangeChannel {
 
 }

@@ -31,6 +31,7 @@ import java.util.concurrent.CountDownLatch;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+// OK
 public class NettyTransporterTest {
     @Test
     public void shouldAbleToBindNetty4() throws Exception {
@@ -39,7 +40,7 @@ public class NettyTransporterTest {
                 new String[]{Constants.BIND_PORT_KEY, String.valueOf(port)});
 
         RemotingServer server = new NettyTransporter().bind(url, new ChannelHandlerAdapter());
-
+        // 进去
         assertThat(server.isBound(), is(true));
     }
 
@@ -55,6 +56,7 @@ public class NettyTransporterTest {
 
             @Override
             public void connected(Channel channel) {
+                // 这里打断点测试
                 lock.countDown();
             }
         });

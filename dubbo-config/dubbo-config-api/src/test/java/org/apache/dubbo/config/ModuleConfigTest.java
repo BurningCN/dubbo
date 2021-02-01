@@ -31,6 +31,7 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 
+// OK
 public class ModuleConfigTest {
 
     @Test

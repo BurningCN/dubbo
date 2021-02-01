@@ -224,7 +224,9 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
      */
     static DynamicConfiguration getDynamicConfiguration(URL connectionURL) {
         String protocol = connectionURL.getProtocol();
+        // protocol比如为Zookeeper，返回的就是ZookeeperDynamicConfigurationFactory，getDynamicConfigurationFactory 进去
         DynamicConfigurationFactory factory = getDynamicConfigurationFactory(protocol);
+        // 进去，内部会创建ZookeeperDynamicConfiguration，且会connect zk
         return factory.getDynamicConfiguration(connectionURL);
     }
 

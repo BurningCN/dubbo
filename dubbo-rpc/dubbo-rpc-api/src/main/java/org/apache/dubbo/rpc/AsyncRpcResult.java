@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.rpc;
 
+import com.sun.xml.internal.ws.util.CompletedFuture;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.threadpool.ThreadlessExecutor;
@@ -45,13 +46,30 @@ import static org.apache.dubbo.common.utils.ReflectUtils.defaultReturn;
  * AsyncRpcResult does not contain any concrete value (except the underlying value bring by CompletableFuture), consider it as a status transfer node.
  * {@link #getValue()} and {@link #getException()} are all inherited from {@link Result} interface, implementing them are mainly
  * for compatibility consideration. Because many legacy {@link Filter} implementation are most possibly to call getValue directly.
+ *
+ * 这个类代表一个未完成的RPC调用，它将为这个调用保留一些上下文信息，例如RpcContext和Invocation，当
+ * 这样，调用结束并返回结果时，就可以保证在任何回调调用之前恢复的所有上下文与调用时一样
+ * < p >
+ * 如果保持对调用的引用是合理的，甚至是正确的，那么应该做什么呢?
+ * < p >
+ * 由于{@link Result}实现了CompletionStage， {@link AsyncRpcResult}允许你轻松地构建一个状态为的异步过滤链
+ * 完全由底层RPC调用的状态驱动。
+ * < p >
+ * AsyncRpcResult不包含任何具体的值(除了CompletableFuture带来的底层值)，将其视为状态转移节点。
+ * {@link #getValue()}和{@link #getException()}都继承自{@link Result}接口，它们的实现主要是
+ * 为了兼容性的考虑。因为许多遗留的{@link Filter}实现最有可能直接调用getValue。
+ * /
  */
+// OK
 public class AsyncRpcResult implements Result {
     private static final Logger logger = LoggerFactory.getLogger(AsyncRpcResult.class);
 
     /**
      * RpcContext may already have been changed when callback happens, it happens when the same thread is used to execute another RPC call.
      * So we should keep the reference of current RpcContext instance and restore it before callback being executed.
+     *
+     * 当回调发生时，RpcContext可能已经被改变，它发生在同一个线程被用来执行另一个RPC调用。
+     * 因此，我们应该保留当前RpcContext实例的引用，并在回调执行之前恢复它。
      */
     private RpcContext storedContext;
     private RpcContext storedServerContext;
@@ -86,11 +104,19 @@ public class AsyncRpcResult implements Result {
      * because the background thread watching the real result will also change the status of this CompletableFuture.
      * The result is you may lose the value you expected to set.
      *
+     * CompletableFuture只能完成一次，所以尝试更新一个completed CompletableFuture will的结果
+     * 没有效果。为了避免这个问题，我们在更新它的值之前检查这个future的完整状态。
+     *
+     * 但是请注意，尝试给一个未完成的CompletableFuture一个新的指定值可能会面临一个竞争条件，
+     * 因为后台线程观看真实的结果也会改变这个完整的未来的状态。
+     * 结果是您可能会失去期望设置的值。
      * @param value
      */
     @Override
     public void setValue(Object value) {
         try {
+            // 下两个分支对应上面两段话
+
             if (responseFuture.isDone()) {
                 responseFuture.get().setValue(value);
             } else {
@@ -110,6 +136,7 @@ public class AsyncRpcResult implements Result {
         return getAppResponse().getException();
     }
 
+    // 参考前面setValue
     @Override
     public void setException(Throwable t) {
         try {
@@ -144,6 +171,7 @@ public class AsyncRpcResult implements Result {
         try {
             // easy
             if (responseFuture.isDone()) {
+                // 返回AppResponse
                 return responseFuture.get();
             }
         } catch (Exception e) {
@@ -152,6 +180,7 @@ public class AsyncRpcResult implements Result {
             throw new RpcException(e);
         }
 
+        // 进去
         return createDefaultValue(invocation);
     }
 
@@ -159,6 +188,9 @@ public class AsyncRpcResult implements Result {
      * This method will always return after a maximum 'timeout' waiting:
      * 1. if value returns before timeout, return normally.
      * 2. if no value returns after timeout, throw TimeoutException.
+     * 此方法将始终在最大'timeout'等待之后返回:
+     * 1. 如果value在超时前返回，则正常返回。
+     * 2. 如果timeout之后没有返回值，则抛出TimeoutException。
      *
      * @return
      * @throws InterruptedException
@@ -168,6 +200,7 @@ public class AsyncRpcResult implements Result {
     public Result get() throws InterruptedException, ExecutionException {
         if (executor != null && executor instanceof ThreadlessExecutor) {
             ThreadlessExecutor threadlessExecutor = (ThreadlessExecutor) executor;
+            // 进去
             threadlessExecutor.waitAndDrain();
         }
         return responseFuture.get();
@@ -196,13 +229,16 @@ public class AsyncRpcResult implements Result {
     }
 
     public Result whenCompleteWithContext(BiConsumer<Result, Throwable> fn) {
+        // whenComplete阻塞直到完成（v是responseFuture的值，去看下
         this.responseFuture = this.responseFuture.whenComplete((v, t) -> {
+            // 去看下beforeContext、afterContext
             beforeContext.accept(v, t);
             fn.accept(v, t);
             afterContext.accept(v, t);
         });
         return this;
     }
+
 
     @Override
     public <U> CompletableFuture<U> thenApply(Function<Result, ? extends U> fn) {
@@ -288,16 +324,19 @@ public class AsyncRpcResult implements Result {
      * tmp context to use when the thread switch to Dubbo thread.
      */
     private RpcContext tmpContext;
-
     private RpcContext tmpServerContext;
+
     private BiConsumer<Result, Throwable> beforeContext = (appResponse, t) -> {
+        // 取出来保存到临时变量
         tmpContext = RpcContext.getContext();
         tmpServerContext = RpcContext.getServerContext();
+        // 设置新的
         RpcContext.restoreContext(storedContext);
         RpcContext.restoreServerContext(storedServerContext);
     };
 
     private BiConsumer<Result, Throwable> afterContext = (appResponse, t) -> {
+        // 还原
         RpcContext.restoreContext(tmpContext);
         RpcContext.restoreServerContext(tmpServerContext);
     };
@@ -314,6 +353,7 @@ public class AsyncRpcResult implements Result {
     }
 
     public static AsyncRpcResult newDefaultAsyncResult(Object value, Invocation invocation) {
+        // 进去
         return newDefaultAsyncResult(value, null, invocation);
     }
 
@@ -330,6 +370,7 @@ public class AsyncRpcResult implements Result {
             result.setValue(value);
         }
         future.complete(result);
+        // 一定要注意这里，AsyncRpcResult 包装了 AppResponse（通过CompletableFuture的方式）
         return new AsyncRpcResult(future, invocation);
     }
 

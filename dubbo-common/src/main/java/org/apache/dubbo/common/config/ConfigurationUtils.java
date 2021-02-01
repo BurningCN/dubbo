@@ -110,6 +110,7 @@ public class ConfigurationUtils {
     public static Map<String, String> parseProperties(String content) throws IOException {
         Map<String, String> map = new HashMap<>();
         if (StringUtils.isEmpty(content)) {
+            // 注意日志 ，但是里面连一个配置项都没有。
             logger.warn("You specified the config center, but there's not even one single config item in it.");
         } else {
             Properties properties = new Properties();

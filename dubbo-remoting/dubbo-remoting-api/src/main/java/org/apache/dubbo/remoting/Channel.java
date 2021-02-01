@@ -25,6 +25,7 @@ import java.net.InetSocketAddress;
  * @see RemotingServer#getChannels()
  * @see RemotingServer#getChannel(InetSocketAddress)
  */
+// OK
 public interface Channel extends Endpoint {
 
     /**

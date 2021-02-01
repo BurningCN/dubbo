@@ -76,6 +76,7 @@ public class ApplicationModel {
     }
 
     public static ProviderModel getProviderModel(String serviceKey) {
+        // 从ServiceRepository中根据serviceKey寻找ProviderModel，进去
         return getServiceRepository().lookupExportedService(serviceKey);
     }
 

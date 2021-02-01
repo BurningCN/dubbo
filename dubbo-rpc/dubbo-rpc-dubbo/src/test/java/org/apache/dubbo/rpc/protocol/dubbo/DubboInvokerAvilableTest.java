@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Check available status for dubboInvoker
  */
+// OK
 public class DubboInvokerAvilableTest {
     private static DubboProtocol protocol;
     private static ProxyFactory proxy = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();

@@ -30,6 +30,7 @@ import java.util.stream.Stream;
  */
 // OK
 // 作为Invoker的invoke方法的入参
+// RpcInvocation + DecodeableRpcInvocation 两个直接子类
 public interface Invocation {
 
     String getTargetServiceUniqueName();

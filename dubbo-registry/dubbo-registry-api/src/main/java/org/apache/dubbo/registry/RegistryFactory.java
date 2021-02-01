@@ -25,6 +25,7 @@ import org.apache.dubbo.common.extension.SPI;
  *
  * @see org.apache.dubbo.registry.support.AbstractRegistryFactory
  */
+// OK
 @SPI("dubbo")
 public interface RegistryFactory {
 

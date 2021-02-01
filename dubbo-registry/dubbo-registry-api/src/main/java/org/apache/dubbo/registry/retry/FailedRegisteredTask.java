@@ -24,17 +24,22 @@ import org.apache.dubbo.registry.support.FailbackRegistry;
 /**
  * FailedRegisteredTask
  */
+// OK
 public final class FailedRegisteredTask extends AbstractRetryTask {
 
     private static final String NAME = "retry register";
 
+    // gx
     public FailedRegisteredTask(URL url, FailbackRegistry registry) {
         super(url, registry, NAME);
     }
 
+    // 模板方法，被父类的run方法调用
     @Override
     protected void doRetry(URL url, FailbackRegistry registry, Timeout timeout) {
+        // 再次/重试注册
         registry.doRegister(url);
+        // 进去
         registry.removeFailedRegisteredTask(url);
     }
 }

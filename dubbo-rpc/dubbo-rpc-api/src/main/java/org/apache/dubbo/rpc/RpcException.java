@@ -26,6 +26,9 @@ import javax.naming.LimitExceededException;
  * @see org.apache.dubbo.rpc.Invoker#invoke(Invocation)
  * @since 1.0
  */
+// OK
+// JQD:本身继承runtimeException，可以传入code、message、cause，code代表不同场景下的异常，也提供了isXX是否是某种异常，
+//      注意在isLimitExceed方法里面的这个api记下：getCause() instanceof LimitExceededException;
 public /**final**/ class RpcException extends RuntimeException {
 
     public static final int UNKNOWN_EXCEPTION = 0;
@@ -47,7 +50,9 @@ public /**final**/ class RpcException extends RuntimeException {
         super();
     }
 
+
     public RpcException(String message, Throwable cause) {
+        // 两个参数的 记下
         super(message, cause);
     }
 
@@ -64,6 +69,7 @@ public /**final**/ class RpcException extends RuntimeException {
         this.code = code;
     }
 
+    // 最全的构造
     public RpcException(int code, String message, Throwable cause) {
         super(message, cause);
         this.code = code;
@@ -112,6 +118,7 @@ public /**final**/ class RpcException extends RuntimeException {
     }
 
     public boolean isLimitExceed() {
+        // || 后面的记下
         return code == LIMIT_EXCEEDED_EXCEPTION || getCause() instanceof LimitExceededException;
     }
 }

@@ -29,6 +29,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.REVISION_KEY;
  *
  * @since 2.7.5
  */
+// OK
 public class DefaultServiceInstance implements ServiceInstance {
 
     private static final long serialVersionUID = 1149677083747278100L;
@@ -163,6 +164,7 @@ public class DefaultServiceInstance implements ServiceInstance {
         return serviceMetadata;
     }
 
+    // gx
     public void setServiceMetadata(MetadataInfo serviceMetadata) {
         this.serviceMetadata = serviceMetadata;
     }

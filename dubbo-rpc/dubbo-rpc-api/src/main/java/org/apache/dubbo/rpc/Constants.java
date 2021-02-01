@@ -17,7 +17,10 @@
 
 package org.apache.dubbo.rpc;
 
+// OK
 public interface Constants {
+    // 接口的属性、方法不需要public、static前缀，因为自动会加上
+
     String LOCAL_KEY = "local";
 
     String STUB_KEY = "stub";

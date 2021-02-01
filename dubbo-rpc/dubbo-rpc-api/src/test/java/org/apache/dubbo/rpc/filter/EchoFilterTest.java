@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+// OK
 public class EchoFilterTest {
 
     Filter echoFilter = new EchoFilter();
@@ -48,17 +49,23 @@ public class EchoFilterTest {
         given(invoker.getInterface()).willReturn(DemoService.class);
         AppResponse result = new AppResponse();
         result.setValue("High");
+        // 很多given(x.y).willReturn(z)的操作的意思就是在发起对x.y的方法调用的时候返回z（下面的echoFilter.invoke内部就有这个x.y调用）
         given(invoker.invoke(invocation)).willReturn(result);
         URL url = URL.valueOf("test://test:11/test?group=dubbo&version=1.1");
         given(invoker.getUrl()).willReturn(url);
 
+        // 进去
         Result filterResult = echoFilter.invoke(invoker, invocation);
+        // 输出hello，而不是前面的High，这是因为echoFilter.invoke走得是if那个分支，如果走得if之后的逻辑，即return invoker.invoke(inv);
+        // 肯定返回High了，getValue进去
         assertEquals("hello", filterResult.getValue());
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testNonEcho() {
+        // EchoFilter只识别$echo方法
+
         Invocation invocation = mock(Invocation.class);
         given(invocation.getMethodName()).willReturn("echo");
         given(invocation.getParameterTypes()).willReturn(new Class<?>[]{Enum.class});
@@ -75,6 +82,7 @@ public class EchoFilterTest {
         given(invoker.getUrl()).willReturn(url);
 
         Result filterResult = echoFilter.invoke(invoker, invocation);
+        // 输出的High，而不是hello，因为 echoFilter.invoke(走得是if外的逻辑
         assertEquals("High", filterResult.getValue());
     }
 }

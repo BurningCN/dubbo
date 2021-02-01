@@ -36,6 +36,7 @@ public interface ServiceNameMapping {
 
     /**
      * Map the specified Dubbo service interface, group, version and protocol to current Dubbo service name
+     * 将指定的Dubbo服务接口、组、版本和协议映射到当前的Dubbo服务名称
      */
     void map(URL url);
 

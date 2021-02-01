@@ -36,6 +36,7 @@ import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_TIMES_KEY;
 /**
  * AbstractRetryTask
  */
+// OK
 public abstract class AbstractRetryTask implements TimerTask {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -67,7 +68,7 @@ public abstract class AbstractRetryTask implements TimerTask {
 
     /**
      * times of retry.
-     * retry task is execute in single thread so that the times is not need volatile.
+     * retry task is execute in single thread so that the times is not need volatile. <-注意
      */
     private int times = 1;
 
@@ -81,7 +82,9 @@ public abstract class AbstractRetryTask implements TimerTask {
         this.registry = registry;
         this.taskName = taskName;
         cancel = false;
+        // "retry.times" ,5 * 1000
         this.retryPeriod = url.getParameter(REGISTRY_RETRY_PERIOD_KEY, DEFAULT_REGISTRY_RETRY_PERIOD);
+        // ""retry.period"", 3
         this.retryTimes = url.getParameter(REGISTRY_RETRY_TIMES_KEY, DEFAULT_REGISTRY_RETRY_TIMES);
     }
 
@@ -103,13 +106,15 @@ public abstract class AbstractRetryTask implements TimerTask {
             return;
         }
         times++;
+        // tick是延迟时间
         timer.newTimeout(timeout.task(), tick, TimeUnit.MILLISECONDS);
     }
 
+    // gx  run是模板方法 做一些公共检查、日志操作，最后调用doRetry抽象方法，子类给出自己实现
     @Override
     public void run(Timeout timeout) throws Exception {
         if (timeout.isCancelled() || timeout.timer().isStop() || isCancel()) {
-            // other thread cancel this timeout or stop the timer.
+            // other thread cancel this timeout or stop the timer. <- 注意
             return;
         }
         if (times > retryTimes) {
@@ -121,10 +126,11 @@ public abstract class AbstractRetryTask implements TimerTask {
             logger.info(taskName + " : " + url);
         }
         try {
+            // 子类去实现
             doRetry(url, registry, timeout);
         } catch (Throwable t) { // Ignore all the exceptions and wait for the next retry
             logger.warn("Failed to execute task " + taskName + ", url: " + url + ", waiting for again, cause:" + t.getMessage(), t);
-            // reput this task when catch exception.
+            // reput this task when catch exception. 进去
             reput(timeout, retryPeriod);
         }
     }

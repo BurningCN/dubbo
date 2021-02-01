@@ -36,6 +36,7 @@ import static java.util.Collections.emptyList;
  *
  * @since 2.7.5
  */
+// OK
 public class InMemoryServiceDiscovery implements ServiceDiscovery {
 
     private final EventDispatcher dispatcher = EventDispatcher.getDefaultExtension();

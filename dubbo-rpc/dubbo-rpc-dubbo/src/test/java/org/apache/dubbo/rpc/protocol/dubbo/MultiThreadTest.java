@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+// OK
 public class MultiThreadTest {
 
     private Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
@@ -60,6 +61,7 @@ public class MultiThreadTest {
         final StringBuffer sb = new StringBuffer();
         for (int i = 0; i < 1024 * 64 + 32; i++)
             sb.append('A');
+        // rpc
         Assertions.assertEquals(sb.toString(), service.echo(sb.toString()));
 
         ExecutorService exec = Executors.newFixedThreadPool(10);
@@ -68,6 +70,7 @@ public class MultiThreadTest {
             exec.execute(new Runnable() {
                 public void run() {
                     for (int i = 0; i < 30; i++) {
+                        // rpc
                         System.out.println(fi + ":" + counter.getAndIncrement());
                         Assertions.assertEquals(service.echo(sb.toString()), sb.toString());
                     }

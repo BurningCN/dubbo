@@ -29,11 +29,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+// OK
 public class HeaderExchangeChannelTest {
 
     private HeaderExchangeChannel header;
@@ -56,6 +58,7 @@ public class HeaderExchangeChannelTest {
     @Test
     public void getOrAddChannelTest00() {
         channel.setAttribute("CHANNEL_KEY", "attribute");
+        // 进去
         HeaderExchangeChannel ret = HeaderExchangeChannel.getOrAddChannel(channel);
         Assertions.assertNotNull(ret);
     }
@@ -74,6 +77,8 @@ public class HeaderExchangeChannelTest {
             }
 
         };
+        // easy
+
         Assertions.assertNull(channel.getAttribute(CHANNEL_KEY));
         HeaderExchangeChannel ret = HeaderExchangeChannel.getOrAddChannel(channel);
         Assertions.assertNotNull(ret);
@@ -84,6 +89,7 @@ public class HeaderExchangeChannelTest {
     @Test
     public void getOrAddChannelTest02() {
         channel = null;
+        // 进去
         HeaderExchangeChannel ret = HeaderExchangeChannel.getOrAddChannel(channel);
         Assertions.assertNull(ret);
     }
@@ -93,7 +99,9 @@ public class HeaderExchangeChannelTest {
     public void removeChannelIfDisconnectedTest() {
         Assertions.assertNull(channel.getAttribute(CHANNEL_KEY));
         channel.setAttribute(CHANNEL_KEY, header);
+        // 进去
         channel.close();
+        // 进去
         HeaderExchangeChannel.removeChannelIfDisconnected(channel);
         Assertions.assertNull(channel.getAttribute(CHANNEL_KEY));
     }
@@ -103,9 +111,10 @@ public class HeaderExchangeChannelTest {
         boolean sent = true;
         String message = "this is a test message";
         try {
-            header.close(1);
-            header.send(message, sent);
+            header.close(1);// 进去
+            header.send(message, sent);// 进去
         } catch (Exception e) {
+            // send内部会抛异常异常，走到这里
             Assertions.assertTrue(e instanceof RemotingException);
         }
     }
@@ -114,7 +123,7 @@ public class HeaderExchangeChannelTest {
     public void sendTest01() throws RemotingException {
         boolean sent = true;
         String message = "this is a test message";
-        header.send(message, sent);
+        header.send(message, sent);// 进去
         List<Object> objects = channel.getSentObjects();
         Assertions.assertEquals(objects.get(0), "this is a test message");
     }
@@ -123,7 +132,7 @@ public class HeaderExchangeChannelTest {
     public void sendTest02() throws RemotingException {
         boolean sent = true;
         int message = 1;
-        header.send(message, sent);
+        header.send(message, sent);// 进去，内部会被封装成Request对象
         List<Object> objects = channel.getSentObjects();
         Assertions.assertEquals(objects.get(0).getClass(), Request.class);
         Request request = (Request) objects.get(0);
@@ -143,6 +152,7 @@ public class HeaderExchangeChannelTest {
         Assertions.assertThrows(RemotingException.class, () -> {
             header.close(1000);
             Object requestob = new Object();
+            // 进去 close后再进行request肯定抛异常
             header.request(requestob);
         });
     }
@@ -153,7 +163,7 @@ public class HeaderExchangeChannelTest {
         header = new HeaderExchangeChannel(channel);
         when(channel.getUrl()).thenReturn(url);
         Object requestob = new Object();
-        header.request(requestob);
+        CompletableFuture<Object> request = header.request(requestob);// 进去
         ArgumentCaptor<Request> argumentCaptor = ArgumentCaptor.forClass(Request.class);
         verify(channel, times(1)).send(argumentCaptor.capture());
         Assertions.assertEquals(argumentCaptor.getValue().getData(), requestob);
@@ -170,13 +180,13 @@ public class HeaderExchangeChannelTest {
             };
             header = new HeaderExchangeChannel(channel);
             Object requestob = new Object();
-            header.request(requestob, 1000);
+            header.request(requestob, 1000); // request内部最后会调用上面的send
         });
     }
 
     @Test
     public void isClosedTest() {
-        Assertions.assertFalse(header.isClosed());
+        Assertions.assertFalse(header.isClosed());// 默认false
     }
 
     @Test
@@ -200,10 +210,10 @@ public class HeaderExchangeChannelTest {
 
     @Test
     public void startCloseTest() {
-        try {
+        try {// 进去
             boolean isClosing = channel.isClosing();
             Assertions.assertFalse(isClosing);
-            header.startClose();
+            header.startClose();// 进去
             isClosing = channel.isClosing();
             Assertions.assertTrue(isClosing);
         } catch (Exception e) {
@@ -242,6 +252,7 @@ public class HeaderExchangeChannelTest {
         Assertions.assertNull(header.getExchangeHandler());
     }
 
+// 下面的就不看了
 
     @Test
     public void getAttributeAndSetAttributeTest() {

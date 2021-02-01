@@ -22,20 +22,19 @@ import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.SerializeWriter;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Writer;
+import java.io.*;
 
 /**
  * FastJson object output implementation
  */
+// OK
 public class FastJsonObjectOutput implements ObjectOutput {
 
     private final PrintWriter writer;
 
+    // 传过来的一般是ByteArrayOutputStream，流连接到的目的里面是没值的，需要往里面灌入
     public FastJsonObjectOutput(OutputStream out) {
+        // 进去
         this(new OutputStreamWriter(out));
     }
 
@@ -43,6 +42,8 @@ public class FastJsonObjectOutput implements ObjectOutput {
         this.writer = new PrintWriter(writer);
     }
 
+
+    // 下面各种基本数据类型，统一进 writeObject(Object obj)方法
     @Override
     public void writeBool(boolean v) throws IOException {
         writeObject(v);
@@ -85,6 +86,7 @@ public class FastJsonObjectOutput implements ObjectOutput {
 
     @Override
     public void writeBytes(byte[] b) throws IOException {
+        // PrintWriter的api学习下，相当于除了字节数组，直接利用PrintWriter写入，其他的数据类型都进writeObject方法
         writer.println(new String(b));
     }
 
@@ -95,12 +97,15 @@ public class FastJsonObjectOutput implements ObjectOutput {
 
     @Override
     public void writeObject(Object obj) throws IOException {
+        // fastJson相关api
         SerializeWriter out = new SerializeWriter();
         JSONSerializer serializer = new JSONSerializer(out);
         serializer.config(SerializerFeature.WriteEnumUsingToString, true);
         serializer.write(obj);
+        // 输出到writer
         out.writeTo(writer);
         out.close(); // for reuse SerializeWriter buf
+        // 空行+flush
         writer.println();
         writer.flush();
     }

@@ -25,33 +25,41 @@ import org.apache.dubbo.remoting.Client;
 /**
  * ReconnectTimerTask
  */
+// OK
 public class ReconnectTimerTask extends AbstractTimerTask {
 
     private static final Logger logger = LoggerFactory.getLogger(ReconnectTimerTask.class);
 
     private final int idleTimeout;
 
+    // gx
     public ReconnectTimerTask(ChannelProvider channelProvider, Long heartbeatTimeoutTick, int idleTimeout) {
+        // 进去，channelProvider 里面含有HeaderExchangeClient实例
         super(channelProvider, heartbeatTimeoutTick);
         this.idleTimeout = idleTimeout;
     }
 
+    // gx 模板方法，被父类调用。这里的channel就是上面构造函数的channelProvider里的内容，即HeaderExchangeClient实例
     @Override
     protected void doTask(Channel channel) {
         try {
-            Long lastRead = lastRead(channel);
-            Long now = now();
+            Long lastRead = lastRead(channel);// 进去
+            Long now = now();// 进去
 
             // Rely on reconnect timer to reconnect when AbstractClient.doConnect fails to init the connection
+            // 当AbstractClient.doConnect 初始化连接失败 依赖重新连接计时器进行重连
             if (!channel.isConnected()) {
                 try {
                     logger.info("Initial connection to " + channel);
+                    // 核心！进去
                     ((Client) channel).reconnect();
                 } catch (Exception e) {
                     logger.error("Fail to connect to " + channel, e);
                 }
             // check pong at client
             } else if (lastRead != null && now - lastRead > idleTimeout) {
+                // 上面的idleTimeout就是NettyClient的IdleStateHandler的读空闲最大时间，这里不是因为连接失败而重连。是已经连接了，但是为了
+                // 防止客户端读空闲超时被服务端关闭，所以发起重连。看如下日志
                 logger.warn("Reconnect to channel " + channel + ", because heartbeat read idle time out: "
                         + idleTimeout + "ms");
                 try {

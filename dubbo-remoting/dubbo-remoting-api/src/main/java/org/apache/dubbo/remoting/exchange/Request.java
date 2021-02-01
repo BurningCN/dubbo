@@ -18,6 +18,7 @@ package org.apache.dubbo.remoting.exchange;
 
 import org.apache.dubbo.common.utils.StringUtils;
 
+import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
@@ -25,12 +26,15 @@ import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 /**
  * Request.
  */
-public class Request {
-
+// OK
+public class Request implements Serializable {
+    // 类所有实例共享，用于给每个Request实例生成mId
     private static final AtomicLong INVOKE_ID = new AtomicLong(0);
 
+    // m开头应该表示消息msg的意思
     private final long mId;
 
+    // dubbo的版本， Version.getProtocolVersion() = DEFAULT_DUBBO_PROTOCOL_VERSION = "2.0.2"
     private String mVersion;
 
     private boolean mTwoWay = true;
@@ -67,6 +71,8 @@ public class Request {
         }
         return dataStr;
     }
+
+    // 以下几个跟下在ExchangeCodec的调用
 
     public long getId() {
         return mId;
@@ -118,6 +124,7 @@ public class Request {
     }
 
     public boolean isHeartbeat() {
+        // 一般如果只有header，且有event标记，那么就是心跳
         return mEvent && HEARTBEAT_EVENT == mData;
     }
 

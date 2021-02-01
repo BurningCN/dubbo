@@ -25,14 +25,17 @@ import org.apache.dubbo.remoting.utils.PayloadDropper;
 /**
  * AbstractChannel
  */
+// OK
 public abstract class AbstractChannel extends AbstractPeer implements Channel {
 
     public AbstractChannel(URL url, ChannelHandler handler) {
         super(url, handler);
     }
 
+    // 所有子类都会super.send(x,x)调用，进行如下前置检查，主要注意NettyChannel实现类
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
+        // AbstractPeer的方法
         if (isClosed()) {
             throw new RemotingException(this, "Failed to send message "
                     + (message == null ? "" : message.getClass().getName()) + ":" + PayloadDropper.getRequestWithoutData(message)
@@ -40,6 +43,7 @@ public abstract class AbstractChannel extends AbstractPeer implements Channel {
         }
     }
 
+    // 连接一般都要这两个信息
     @Override
     public String toString() {
         return getLocalAddress() + " -> " + getRemoteAddress();

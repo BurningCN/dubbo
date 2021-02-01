@@ -30,6 +30,7 @@ import java.util.function.Function;
  * @see CuratorFramework
  * @since 2.7.5
  */
+// OK
 public enum CuratorFrameworkParams {
 
     /**
@@ -83,6 +84,7 @@ public enum CuratorFrameworkParams {
     <T> CuratorFrameworkParams(String name, T defaultValue, Function<String, T> converter) {
         this.name = name;
         this.defaultValue = defaultValue;
+        // 注意下
         this.converter = (Function<String, Object>) converter;
     }
 
@@ -93,6 +95,7 @@ public enum CuratorFrameworkParams {
      * @param <T> the type of value
      * @return the parameter value if present, or return <code>null</code>
      */
+    // gx
     public <T> T getParameterValue(URL url) {
         String param = url.getParameter(name);
         Object value = param != null ? converter.apply(param) : defaultValue;

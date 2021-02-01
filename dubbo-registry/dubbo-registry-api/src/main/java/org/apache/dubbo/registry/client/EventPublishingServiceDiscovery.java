@@ -268,6 +268,7 @@ final class EventPublishingServiceDiscovery implements ServiceDiscovery {
         }
 
         executeWithEvents(
+                // source和origin，两个都是ServiceDiscovery子类
                 of(new ServiceDiscoveryDestroyingEvent(this, serviceDiscovery)),
                 serviceDiscovery::destroy,
                 of(new ServiceDiscoveryDestroyedEvent(this, serviceDiscovery))

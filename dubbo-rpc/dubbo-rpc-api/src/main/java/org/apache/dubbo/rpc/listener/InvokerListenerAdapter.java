@@ -23,6 +23,7 @@ import org.apache.dubbo.rpc.RpcException;
 /**
  * InvokerListenerAdapter
  */
+// OK
 public abstract class InvokerListenerAdapter implements InvokerListener {
 
     @Override

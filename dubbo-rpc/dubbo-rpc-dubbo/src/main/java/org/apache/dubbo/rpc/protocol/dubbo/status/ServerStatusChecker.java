@@ -28,6 +28,7 @@ import java.util.List;
 /**
  * ServerStatusChecker
  */
+// OK
 @Activate
 public class ServerStatusChecker implements StatusChecker {
 
@@ -42,6 +43,7 @@ public class ServerStatusChecker implements StatusChecker {
         for (ProtocolServer protocolServer : servers) {
             RemotingServer server = protocolServer.getRemotingServer();
             if (!server.isBound()) {
+                // 有一个服务不是isBound(绑定的、可以理解为存活的)，就level置为error，sb清空，记录server的地址，break
                 level = Status.Level.ERROR;
                 buf.setLength(0);
                 buf.append(server.getLocalAddress());
@@ -55,6 +57,7 @@ public class ServerStatusChecker implements StatusChecker {
             buf.append(server.getChannels().size());
             buf.append(")");
         }
+        // 进去
         return new Status(level, buf.toString());
     }
 

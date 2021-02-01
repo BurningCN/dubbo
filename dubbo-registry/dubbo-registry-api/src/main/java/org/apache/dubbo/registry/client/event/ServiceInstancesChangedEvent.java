@@ -30,6 +30,7 @@ import static java.util.Collections.unmodifiableList;
  * @see ServiceInstancesChangedListener
  * @since 2.7.5
  */
+// OK
 public class ServiceInstancesChangedEvent extends Event {
 
     private final String serviceName;
@@ -41,6 +42,7 @@ public class ServiceInstancesChangedEvent extends Event {
      * @param serviceInstances all {@link ServiceInstance service instances}
      * @throws IllegalArgumentException if source is null.
      */
+    // gx
     public ServiceInstancesChangedEvent(String serviceName, List<ServiceInstance> serviceInstances) {
         super(serviceName);
         this.serviceName = serviceName;

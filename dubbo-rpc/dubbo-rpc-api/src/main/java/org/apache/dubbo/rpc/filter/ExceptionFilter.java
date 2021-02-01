@@ -42,7 +42,10 @@ import java.lang.reflect.Method;
  * exception not declared on the interface</li>
  * <li>Wrap the exception not introduced in API package into RuntimeException. Framework will serialize the outer exception but stringnize its cause in order to avoid of possible serialization problem on client side</li>
  * </ol>
+ * 在provider端，意外异常将被记录为错误级别的日志。意外异常是接口上未声明的未检查异常
+ * 将API包中没有引入的异常包装到RuntimeException中。框架将序列化外部异常，但将其原因string化，以避免客户端可能出现的序列化问题
  */
+// OK
 @Activate(group = CommonConstants.PROVIDER)
 public class ExceptionFilter implements Filter, Filter.Listener {
     private Logger logger = LoggerFactory.getLogger(ExceptionFilter.class);
@@ -79,6 +82,7 @@ public class ExceptionFilter implements Filter, Filter.Listener {
                 logger.error("Got unchecked and undeclared exception which called by " + RpcContext.getContext().getRemoteHost() + ". service: " + invoker.getInterface().getName() + ", method: " + invocation.getMethodName() + ", exception: " + exception.getClass().getName() + ": " + exception.getMessage(), exception);
 
                 // directly throw if exception class and interface class are in the same jar file.
+                // 异常类和接口类在同一个jar文件中 直接抛出
                 String serviceFile = ReflectUtils.getCodeBase(invoker.getInterface());
                 String exceptionFile = ReflectUtils.getCodeBase(exception.getClass());
                 if (serviceFile == null || exceptionFile == null || serviceFile.equals(exceptionFile)) {

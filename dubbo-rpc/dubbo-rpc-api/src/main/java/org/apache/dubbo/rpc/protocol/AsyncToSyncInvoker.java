@@ -32,12 +32,15 @@ import java.util.concurrent.TimeUnit;
 /**
  * This class will work as a wrapper wrapping outside of each protocol invoker.
  *
+ * 该类将作为包装在每个协议调用程序外部的包装器。
  * @param <T>
  */
+// OK
 public class AsyncToSyncInvoker<T> implements Invoker<T> {
 
     private Invoker<T> invoker;
 
+    // gx 结合类上面注释
     public AsyncToSyncInvoker(Invoker<T> invoker) {
         this.invoker = invoker;
     }
@@ -49,15 +52,18 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
 
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
-        Result asyncResult = invoker.invoke(invocation);
+        Result asyncResult = invoker.invoke(invocation); // invoker比如为DubboInvoker，invoke方法是 AbstractInvoker 的方法 进去
 
         try {
+            // 如果是同步调用，get阻塞获取结果后再返回，也就说明默认用的都是Async，Result肯定也是AsyncRpcResult实例
             if (InvokeMode.SYNC == ((RpcInvocation) invocation).getInvokeMode()) {
                 /**
                  * NOTICE!
                  * must call {@link java.util.concurrent.CompletableFuture#get(long, TimeUnit)} because
                  * {@link java.util.concurrent.CompletableFuture#get()} was proved to have serious performance drop.
+                 * 必须使用CompletableFuture#get(long, TimeUnit)}，因为CompletableFuture#get()被证明有严重的性能下降
                  */
+                // get 进去，看AsyncRPCResult的
                 asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
             }
         } catch (InterruptedException e) {
@@ -66,6 +72,7 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
         } catch (ExecutionException e) {
             Throwable t = e.getCause();
             if (t instanceof TimeoutException) {
+                // 三个参数code 、 msg、 cause
                 throw new RpcException(RpcException.TIMEOUT_EXCEPTION, "Invoke remote method timeout. method: " +
                         invocation.getMethodName() + ", provider: " + getUrl() + ", cause: " + e.getMessage(), e);
             } else if (t instanceof RemotingException) {

@@ -40,6 +40,7 @@ import static org.apache.dubbo.remoting.Constants.CONNECT_QUEUE_CAPACITY;
 import static org.apache.dubbo.remoting.Constants.CONNECT_QUEUE_WARNING_SIZE;
 import static org.apache.dubbo.remoting.Constants.DEFAULT_CONNECT_QUEUE_WARNING_SIZE;
 
+// OK
 public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
 
     protected final ThreadPoolExecutor connectionExecutor;
@@ -47,7 +48,10 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
 
     public ConnectionOrderedChannelHandler(ChannelHandler handler, URL url) {
         super(handler, url);
+        // 其他WrappedChannelHandler子类的构造方法内部都是直接如上，下面的该类特有的。
+
         String threadName = url.getParameter(THREAD_NAME_KEY, DEFAULT_THREAD_NAME);
+        // connectionExecutor专门处理connected、disConnected事件
         connectionExecutor = new ThreadPoolExecutor(1, 1,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>(url.getPositiveParameter(CONNECT_QUEUE_CAPACITY, Integer.MAX_VALUE)),
@@ -59,7 +63,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
 
     @Override
     public void connected(Channel channel) throws RemotingException {
-        try {
+        try {// 进去
             checkQueueLength();
             connectionExecutor.execute(new ChannelEventRunnable(channel, handler, ChannelState.CONNECTED));
         } catch (Throwable t) {
@@ -77,6 +81,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
         }
     }
 
+    // 如下这部分和AllDispatcher的received方法一模一样
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         ExecutorService executor = getPreferredExecutorService(message);
@@ -103,6 +108,7 @@ public class ConnectionOrderedChannelHandler extends WrappedChannelHandler {
 
     private void checkQueueLength() {
         if (connectionExecutor.getQueue().size() > queuewarninglimit) {
+            // 日志
             logger.warn(new IllegalThreadStateException("connectionordered channel handler `queue size: " + connectionExecutor.getQueue().size() + " exceed the warning limit number :" + queuewarninglimit));
         }
     }

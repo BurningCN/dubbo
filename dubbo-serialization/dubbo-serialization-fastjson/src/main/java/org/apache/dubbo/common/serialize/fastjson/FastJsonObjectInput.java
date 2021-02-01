@@ -31,11 +31,15 @@ import java.lang.reflect.Type;
 /**
  * FastJson object input implementation
  */
+// OK
 public class FastJsonObjectInput implements ObjectInput {
 
+    // FastJsonObjectOutput用的是PrintWriter，没用BufferedWriter（PrintWriter能包装BufferedWriter）
     private final BufferedReader reader;
 
+    // 传过来的一般是ByteArrayInputStream，流连接到的源里面是有值的
     public FastJsonObjectInput(InputStream in) {
+        // 进去
         this(new InputStreamReader(in));
     }
 
@@ -43,6 +47,7 @@ public class FastJsonObjectInput implements ObjectInput {
         this.reader = new BufferedReader(reader);
     }
 
+    // 下面各种基本数据类型，统一进 read(Class)方法
     @Override
     public boolean readBool() throws IOException {
         return read(boolean.class);
@@ -99,6 +104,7 @@ public class FastJsonObjectInput implements ObjectInput {
         return read(cls);
     }
 
+    // 这个方法注意下，gx
     @Override
     @SuppressWarnings("unchecked")
     public <T> T readObject(Class<T> cls, Type type) throws IOException, ClassNotFoundException {
@@ -106,6 +112,7 @@ public class FastJsonObjectInput implements ObjectInput {
         return (T) JSON.parseObject(json, type);
     }
 
+    // 核心方法，不管是读什么（boolean、int、Object等） 都是读一行
     private String readLine() throws IOException, EOFException {
         String line = reader.readLine();
         if (line == null || line.trim().length() == 0) {

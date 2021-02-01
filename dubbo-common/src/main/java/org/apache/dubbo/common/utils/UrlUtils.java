@@ -171,7 +171,7 @@ public class UrlUtils {
         }
         List<URL> registries = new ArrayList<URL>();
         for (String addr : addresses) {
-            registries.add(parseURL(addr, defaults));
+            registries.add(parseURL(addr, defaults)); // 进去，较复杂可以不看
         }
         return registries;
     }
@@ -489,7 +489,7 @@ public class UrlUtils {
                 PROVIDERS_CATEGORY.equals(url.getParameter(CATEGORY_KEY, PROVIDERS_CATEGORY));
     }
 
-    public static boolean isRegistry(URL url) {
+    public static boolean isRegistry(URL url) { // 就是看url的 xx://的xx部分(xx比如dubbo、injvm、registry...)是不是registry或者service-discovery-registry
         return REGISTRY_PROTOCOL.equals(url.getProtocol()) || SERVICE_REGISTRY_PROTOCOL.equalsIgnoreCase(url.getProtocol());
     }
 
@@ -501,6 +501,7 @@ public class UrlUtils {
      * @since 2.7.5
      */
     public static boolean isServiceDiscoveryRegistryType(URL url) {
+        // 进去
         return isServiceDiscoveryRegistryType(url == null ? emptyMap() : url.getParameters());
     }
 
@@ -515,6 +516,7 @@ public class UrlUtils {
         if (parameters == null || parameters.isEmpty()) {
             return false;
         }
+        // 获取map中key为registry-type（key可能为null）的值是否为service，如果equals为false，表示不是ServiceDiscovery Registry Type
         return SERVICE_REGISTRY_TYPE.equals(parameters.get(REGISTRY_TYPE_KEY));
     }
 

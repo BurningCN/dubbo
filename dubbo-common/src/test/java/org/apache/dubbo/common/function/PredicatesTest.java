@@ -18,8 +18,13 @@ package org.apache.dubbo.common.function;
 
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.List;
 import java.util.OptionalInt;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import static org.apache.dubbo.common.function.Predicates.alwaysFalse;
@@ -71,16 +76,72 @@ public class PredicatesTest {
         int[] ints = {1, 2, 3, 4, 5};
         int sum = Arrays.stream(ints).reduce(0, (a, b) -> a + b);
         int sum1 = Arrays.stream(ints).reduce(0, Integer::sum);
-        assertEquals(sum,sum1);
+        assertEquals(sum, sum1);
 
-        OptionalInt optionalInt = Arrays.stream(ints).reduce((a, b) -> a>b?a:b);
+        OptionalInt optionalInt = Arrays.stream(ints).reduce((a, b) -> a > b ? a : b);
         OptionalInt optionalInt1 = Arrays.stream(ints).reduce(Integer::max);
         OptionalInt optionalInt2 = Arrays.stream(ints).reduce(Integer::min);
-        assertEquals(optionalInt.orElse(-1),optionalInt1.orElse(-1));
+        assertEquals(optionalInt.orElse(-1), optionalInt1.orElse(-1));
 
         int count = Arrays.stream(ints).map(i -> 1).reduce(0, (a, b) -> a + b);
         long count1 = Arrays.stream(ints).count();
         assertTrue(count == count1);
-
     }
+
+    @Test
+    public void testParallelStreamIncorrect() {
+        //错误使用并行流示例
+        System.out.println("SideEffect parallel sum done in :" + measureSumPerf(PredicatesTest::sideEffectParallelSum, 1_000_000_0) + "mesecs");
+        System.out.println("=================");
+        //正确应该这样的
+        System.out.println("SideEffect  sum done in :" + measureSumPerf(PredicatesTest::sideEffectSum, 1_000_000_0) + "mesecs");
+    }
+
+    @Test
+    public void testNumberStream(){
+        List<Integer> integers = Arrays.asList(new Integer[]{1, 2, 3});
+        integers.stream().mapToInt(i -> i);
+    }
+
+
+    static class Accumlator {
+        public long total = 0;
+
+        public void add(long value) {
+            total += value;
+        }
+    }
+
+    //错误使用并行流
+    public static long sideEffectParallelSum(long n) {
+        Accumlator accumlator = new Accumlator();
+        LongStream.rangeClosed(1, n).parallel().forEach(accumlator::add);
+        return accumlator.total;
+    }
+
+    //正确使用流
+    public static long sideEffectSum(long n) {
+        Accumlator accumlator = new Accumlator();
+        LongStream.rangeClosed(1, n).forEach(accumlator::add);
+        return accumlator.total;
+    }
+
+    //定义测试函数
+    public static long measureSumPerf(Function<Long, Long> adder, long n) {
+        long fastest = Long.MAX_VALUE;
+        //迭代10次
+        for (int i = 0; i < 2; i++) {
+            long start = System.nanoTime();
+            long sum = adder.apply(n);
+            long duration = (System.nanoTime() - start) / 1_000_000;
+            System.out.println("Result: " + sum);
+            //取最小值
+            if (duration < fastest) {
+                fastest = duration;
+            }
+        }
+        return fastest;
+    }
+
+
 }

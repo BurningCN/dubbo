@@ -26,15 +26,18 @@ import java.util.concurrent.ConcurrentMap;
  * If you do not want to share Listener instance between RPC calls. You can use ListenableFilter
  * to keep a 'one Listener each RPC call' model.
  */
+// OK 其实都没有子类
 public abstract class ListenableFilter implements Filter {
 
     protected Listener listener = null;
     protected final ConcurrentMap<Invocation, Listener> listeners = new ConcurrentHashMap<>();
 
+    // 无调用
     public Listener listener() {
         return listener;
     }
 
+    // gx
     public Listener listener(Invocation invocation) {
         Listener invListener = listeners.get(invocation);
         if (invListener == null) {
@@ -43,10 +46,12 @@ public abstract class ListenableFilter implements Filter {
         return invListener;
     }
 
+    // 无调用
     public void addListener(Invocation invocation, Listener listener) {
         listeners.putIfAbsent(invocation, listener);
     }
 
+    // gx
     public void removeListener(Invocation invocation) {
         listeners.remove(invocation);
     }

@@ -27,7 +27,14 @@ import java.util.concurrent.CompletableFuture;
  * <p>
  * Remember to save the Future reference before making another call using the same thread, otherwise,
  * the current Future will be override by the new one, which means you will lose the chance get the return value.
+ *
+ * 用于异步调用场景。但是如果你正在调用的方法有{@link CompletableFuture<?>}签名
+ * 您不需要使用这个类，因为您将直接获得将来的响应。
+ * < p >
+ * 记住在使用同一个线程进行另一次调用之前保存Future引用，否则，
+ * 当前的Future将被新的Future覆盖，这意味着您将失去获得返回值的机会。
  */
+// OK
 public class FutureContext {
 
     private static InternalThreadLocal<FutureContext> futureTL = new InternalThreadLocal<FutureContext>() {
@@ -37,6 +44,7 @@ public class FutureContext {
         }
     };
 
+    // gx 主要被RpcContext调用
     public static FutureContext getContext() {
         return futureTL.get();
     }

@@ -64,7 +64,7 @@ public class ReferenceConfigCache {
         }
         return ret.toString();
     };
-
+    // value就是类实例，这个是静态的，属于类的，所有实例共享
     static final ConcurrentMap<String, ReferenceConfigCache> CACHE_HOLDER = new ConcurrentHashMap<String, ReferenceConfigCache>();
     private final String name;
     private final KeyGenerator generator;
@@ -83,7 +83,7 @@ public class ReferenceConfigCache {
      * Create cache if not existed yet.
      */
     public static ReferenceConfigCache getCache() {
-        return getCache(DEFAULT_NAME);
+        return getCache(DEFAULT_NAME); // 进去
     }
 
     /**
@@ -91,7 +91,7 @@ public class ReferenceConfigCache {
      * Create cache if not existed yet.
      */
     public static ReferenceConfigCache getCache(String name) {
-        return getCache(name, DEFAULT_KEY_GENERATOR);
+        return getCache(name, DEFAULT_KEY_GENERATOR);// 进去
     }
 
     /**

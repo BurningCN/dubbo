@@ -28,6 +28,7 @@ import java.util.Collection;
  * RegistryStatusChecker
  *
  */
+// OK
 @Activate
 public class RegistryStatusChecker implements StatusChecker {
 
@@ -39,11 +40,13 @@ public class RegistryStatusChecker implements StatusChecker {
         }
         Status.Level level = Status.Level.OK;
         StringBuilder buf = new StringBuilder();
+        // 遍历
         for (Registry registry : registries) {
             if (buf.length() > 0) {
                 buf.append(",");
             }
             buf.append(registry.getUrl().getAddress());
+            // 是否可用，进去
             if (!registry.isAvailable()) {
                 level = Status.Level.ERROR;
                 buf.append("(disconnected)");

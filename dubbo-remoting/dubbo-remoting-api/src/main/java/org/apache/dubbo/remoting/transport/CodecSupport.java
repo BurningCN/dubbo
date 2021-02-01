@@ -35,6 +35,7 @@ import static org.apache.dubbo.common.serialize.Constants.COMPACTED_JAVA_SERIALI
 import static org.apache.dubbo.common.serialize.Constants.JAVA_SERIALIZATION_ID;
 import static org.apache.dubbo.common.serialize.Constants.NATIVE_JAVA_SERIALIZATION_ID;
 
+// OK
 public class CodecSupport {
 
     private static final Logger logger = LoggerFactory.getLogger(CodecSupport.class);
@@ -42,6 +43,7 @@ public class CodecSupport {
     private static Map<Byte, String> ID_SERIALIZATIONNAME_MAP = new HashMap<Byte, String>();
     private static Map<String, Byte> SERIALIZATIONNAME_ID_MAP = new HashMap<String, Byte>();
 
+    // 上来就缓存了所有的序列化实例
     static {
         Set<String> supportedExtensions = ExtensionLoader.getExtensionLoader(Serialization.class).getSupportedExtensions();
         for (String name : supportedExtensions) {
@@ -54,7 +56,9 @@ public class CodecSupport {
                         + ", ignore this Serialization extension");
                 continue;
             }
+            // 填充容器
             ID_SERIALIZATION_MAP.put(idByte, serialization);
+            // 一对，方便双向查找
             ID_SERIALIZATIONNAME_MAP.put(idByte, name);
             SERIALIZATIONNAME_ID_MAP.put(name, idByte);
         }
@@ -72,6 +76,7 @@ public class CodecSupport {
     }
 
     public static Serialization getSerialization(URL url) {
+        // 默认hession2
         return ExtensionLoader.getExtensionLoader(Serialization.class).getExtension(
                 url.getParameter(Constants.SERIALIZATION_KEY, Constants.DEFAULT_REMOTING_SERIALIZATION));
     }
@@ -82,6 +87,7 @@ public class CodecSupport {
         // Check if "serialization id" passed from network matches the id on this side(only take effect for JDK serialization), for security purpose.
         if (serialization == null
                 || ((id == JAVA_SERIALIZATION_ID || id == NATIVE_JAVA_SERIALIZATION_ID || id == COMPACTED_JAVA_SERIALIZATION_ID)
+                // url指定的序列化名称和根据id取出来的是否一致，不一致抛异常
                 && !(serializationName.equals(ID_SERIALIZATIONNAME_MAP.get(id))))) {
             throw new IOException("Unexpected serialization id:" + id + " received from network, please check if the peer send the right id.");
         }

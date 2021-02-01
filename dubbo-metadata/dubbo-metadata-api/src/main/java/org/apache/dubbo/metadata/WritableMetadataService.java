@@ -82,6 +82,7 @@ public interface WritableMetadataService extends MetadataService {
      * @return non-null
      */
     static WritableMetadataService getDefaultExtension() {
+        // 默认的就是 InMemoryWritableMetadataService
         return getExtensionLoader(WritableMetadataService.class).getDefaultExtension();
     }
 }

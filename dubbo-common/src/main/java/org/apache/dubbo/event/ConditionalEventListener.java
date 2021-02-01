@@ -23,6 +23,7 @@ package org.apache.dubbo.event;
  * @see EventListener
  * @since 2.7.5
  */
+// OK
 public interface ConditionalEventListener<E extends Event> extends EventListener<E> {
 
     /**

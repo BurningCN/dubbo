@@ -20,12 +20,16 @@ package org.apache.dubbo.remoting.utils;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.remoting.Constants;
 
+// OK
 public class UrlUtils {
     public static int getIdleTimeout(URL url) {
+        // 进去（注意一个是HEARTBEAT_KEY，一个是HEARTBEAT_TIMEOUT_KEY）
         int heartBeat = getHeartbeat(url);
-        // idleTimeout should be at least more than twice heartBeat because possible retries of client.
+        //  idleTimeout should be at least more than twice heartBeat because possible retries of client.
+        // idleTimeout应该至少是心跳的两倍，因为客户机可能会重试。
         int idleTimeout = url.getParameter(Constants.HEARTBEAT_TIMEOUT_KEY, heartBeat * 3);
         if (idleTimeout < heartBeat * 2) {
+            //
             throw new IllegalStateException("idleTimeout < heartbeatInterval * 2");
         }
         return idleTimeout;

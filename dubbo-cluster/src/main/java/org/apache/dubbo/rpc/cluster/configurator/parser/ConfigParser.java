@@ -44,7 +44,9 @@ public class ConfigParser {
 
     public static List<URL> parseConfigurators(String rawConfig) {
         // compatible url JsonArray, such as [ "override://xxx", "override://xxx" ]
+        // 进去
         if (isJsonArray(rawConfig)) {
+            //进去
             return parseJsonArray(rawConfig);
         }
 
@@ -65,8 +67,10 @@ public class ConfigParser {
 
     private static List<URL> parseJsonArray(String rawConfig) {
         List<URL> urls = new ArrayList<>();
+        // fastJson api
         List<String> list = JSON.parseArray(rawConfig, String.class);
         if (!CollectionUtils.isEmpty(list)) {
+            // String - > URL
             list.forEach(u -> urls.add(URL.valueOf(u)));
         }
         return urls;
@@ -219,6 +223,7 @@ public class ConfigParser {
 
     private static boolean isJsonArray(String rawConfig) {
         try {
+            // fastjson api
             JSONValidator validator = JSONValidator.from(rawConfig);
             return validator.validate() && validator.getType() == JSONValidator.Type.Array;
         } catch (Exception e) {

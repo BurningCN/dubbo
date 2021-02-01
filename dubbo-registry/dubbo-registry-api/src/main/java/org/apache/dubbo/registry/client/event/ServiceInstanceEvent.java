@@ -24,6 +24,7 @@ import org.apache.dubbo.registry.client.ServiceInstance;
  *
  * @since 2.7.5
  */
+// OK
 public abstract class ServiceInstanceEvent extends Event {
 
     private final ServiceInstance serviceInstance;

@@ -31,6 +31,7 @@ import org.apache.dubbo.common.Node;
 // 也可能是一个远程的实现，也可能一个集群实现。
 // 既然 Invoker 如此重要，那么我们很有必要搞清楚 Invoker 的用途。Invoker 是由 ProxyFactory 创建而来，Dubbo 默认的 ProxyFactory 实现类是
 // JavassistProxyFactory。下面我们到 JavassistProxyFactory 代码中，探索 Invoker 的创建过程。具体见JavassistProxyFactory.getInvoker
+// OK
 public interface Invoker<T> extends Node {
 
     /**

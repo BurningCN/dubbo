@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 /**
  * ExchangeChannel. (API/SPI, Prototype, ThreadSafe)
  */
+// OK
 public interface ExchangeChannel extends Channel {
 
     /**

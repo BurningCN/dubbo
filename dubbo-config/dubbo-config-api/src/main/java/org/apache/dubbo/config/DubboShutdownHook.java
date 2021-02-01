@@ -106,7 +106,7 @@ public class DubboShutdownHook extends Thread {
             DubboShutdownHook dubboShutdownHook = getDubboShutdownHook();
             // 添加dubboShutdownHook，addShutdownHook本身就需要一个线程对象，然后再jvm关闭的时候会调用其run方法。去看run
             Runtime.getRuntime().addShutdownHook(dubboShutdownHook);
-            // 派遣、发送"DubboShutdownHook Registered Event"事件
+            // 派遣、发送"DubboShutdownHook Registered Event"事件，进去
             dispatch(new DubboShutdownHookRegisteredEvent(dubboShutdownHook));
         }
     }
@@ -132,6 +132,7 @@ public class DubboShutdownHook extends Thread {
     }
 
     private void dispatch(Event event) {
+        // eventDispatcher是DirectEventDispatcher类实例，dispatch进去
         eventDispatcher.dispatch(event);
     }
 
@@ -141,6 +142,8 @@ public class DubboShutdownHook extends Thread {
 
     public static void destroyAll() {
         if (destroyed.compareAndSet(false, true)) {
+            // 两个都进去看下
+
             AbstractRegistryFactory.destroyAll();
             destroyProtocols();
         }

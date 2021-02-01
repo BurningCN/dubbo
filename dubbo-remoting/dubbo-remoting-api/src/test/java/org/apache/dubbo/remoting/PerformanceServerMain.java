@@ -19,9 +19,12 @@ package org.apache.dubbo.remoting;
 /**
  * PerformanceServerMain
  */
+// OK
+@Deprecated
 public class PerformanceServerMain {
 
     public static void main(String[] args) throws Exception {
+        // 进去
         new PerformanceServerTest().testServer();
     }
 

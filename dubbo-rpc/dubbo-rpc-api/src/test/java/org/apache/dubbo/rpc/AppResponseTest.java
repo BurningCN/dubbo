@@ -22,12 +22,14 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 
+// OK
 public class AppResponseTest {
     @Test
     public void testAppResponseWithNormalException() {
         NullPointerException npe = new NullPointerException();
+        // 进去
         AppResponse appResponse = new AppResponse(npe);
-
+        // api
         StackTraceElement[] stackTrace = appResponse.getException().getStackTrace();
         Assertions.assertNotNull(stackTrace);
         Assertions.assertTrue(stackTrace.length > 1);
@@ -38,6 +40,7 @@ public class AppResponseTest {
      */
     @Test
     public void testAppResponseWithEmptyStackTraceException() {
+        // 进去
         Throwable throwable = buildEmptyStackTraceException();
         if (throwable == null) {
             return;
@@ -53,6 +56,7 @@ public class AppResponseTest {
     public void testSetExceptionWithNormalException() {
         NullPointerException npe = new NullPointerException();
         AppResponse appResponse = new AppResponse();
+        // 进去
         appResponse.setException(npe);
 
         StackTraceElement[] stackTrace = appResponse.getException().getStackTrace();
@@ -107,11 +111,14 @@ public class AppResponseTest {
     public void testObjectAttachment() {
         AppResponse response = new AppResponse();
 
+        // 进去
         response.setAttachment("objectKey1", "value1");
         response.setAttachment("objectKey2", "value2");
         response.setAttachment("objectKey3", 1); // object
 
+        // 进去
         Assertions.assertEquals("value1", response.getObjectAttachment("objectKey1"));
+        // 进去
         Assertions.assertEquals("value2", response.getAttachment("objectKey2"));
         Assertions.assertNull(response.getAttachment("objectKey3"));
         Assertions.assertEquals(1, response.getObjectAttachment("objectKey3"));

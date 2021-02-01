@@ -19,6 +19,8 @@ package org.apache.dubbo.rpc;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+// OK
+// 主要是为RpcContext服务的
 public class AsyncContextImpl implements AsyncContext {
 
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -29,14 +31,18 @@ public class AsyncContextImpl implements AsyncContext {
     private RpcContext storedContext;
     private RpcContext storedServerContext;
 
+    // gx
     public AsyncContextImpl() {
         this.storedContext = RpcContext.getContext();
         this.storedServerContext = RpcContext.getServerContext();
     }
 
+    // gx
     @Override
     public void write(Object value) {
+        // 如果异步开始了，stop进去将stopped修改为true，表示完成
         if (isAsyncStarted() && stop()) {
+            // 把值写到future（其实在start方法得到构建的）
             if (value instanceof Throwable) {
                 Throwable bizExe = (Throwable) value;
                 future.completeExceptionally(bizExe);
@@ -48,16 +54,19 @@ public class AsyncContextImpl implements AsyncContext {
         }
     }
 
+    // gx
     @Override
     public boolean isAsyncStarted() {
         return started.get();
     }
 
+    // gx
     @Override
     public boolean stop() {
         return stopped.compareAndSet(false, true);
     }
 
+    // gx
     @Override
     public void start() {
         if (this.started.compareAndSet(false, true)) {
@@ -72,6 +81,7 @@ public class AsyncContextImpl implements AsyncContext {
         // Restore any other contexts in here if necessary.
     }
 
+    // gx
     public CompletableFuture<Object> getInternalFuture() {
         return future;
     }

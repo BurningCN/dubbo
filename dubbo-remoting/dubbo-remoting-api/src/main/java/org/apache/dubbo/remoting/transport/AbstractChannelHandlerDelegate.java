@@ -21,9 +21,10 @@ import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.ChannelHandler;
 import org.apache.dubbo.remoting.RemotingException;
 
+// OK
 public abstract class AbstractChannelHandlerDelegate implements ChannelHandlerDelegate {
 
-    protected ChannelHandler handler;
+    protected ChannelHandler handler; // protected 方便子类直接访问
 
     protected AbstractChannelHandlerDelegate(ChannelHandler handler) {
         Assert.notNull(handler, "handler == null");
@@ -32,6 +33,7 @@ public abstract class AbstractChannelHandlerDelegate implements ChannelHandlerDe
 
     @Override
     public ChannelHandler getHandler() {
+        // 如果拥有的handler依然是委托类型的，那么调用其getHandler，直到找到目标Handler，深层委托！
         if (handler instanceof ChannelHandlerDelegate) {
             return ((ChannelHandlerDelegate) handler).getHandler();
         }
@@ -40,17 +42,17 @@ public abstract class AbstractChannelHandlerDelegate implements ChannelHandlerDe
 
     @Override
     public void connected(Channel channel) throws RemotingException {
-        handler.connected(channel);
+        handler.connected(channel); // HeaderExchangerHandler 进去
     }
 
     @Override
     public void disconnected(Channel channel) throws RemotingException {
-        handler.disconnected(channel);
+        handler.disconnected(channel);// HeaderExchangerHandler 进去
     }
 
     @Override
     public void sent(Channel channel, Object message) throws RemotingException {
-        handler.sent(channel, message);
+        handler.sent(channel, message);// 进去
     }
 
     @Override

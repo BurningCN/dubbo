@@ -30,30 +30,35 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeHandler.class);
 
+    // 传进来 HeaderExchangeHandler
     public DecodeHandler(ChannelHandler handler) {
         super(handler);
     }
 
+    // gx 在ChannelEventRunnable得到触发
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         if (message instanceof Decodeable) {
-            decode(message);
+            decode(message);// 对 Decodeable 接口实现类对象进行解码
         }
 
         if (message instanceof Request) {
-            decode(((Request) message).getData());
+            decode(((Request) message).getData());// 对 Request 的 data 字段进行解码 // 进去
         }
 
         if (message instanceof Response) {
-            decode(((Response) message).getResult());
+            decode(((Response) message).getResult());   // 对 Request 的 result 字段进行解码
         }
-
+        // handler为HeaderExchangerHandler，进去
         handler.received(channel, message);
     }
 
     private void decode(Object message) {
+        // Decodeable 接口目前有两个实现类，
+        // 分别为 DecodeableRpcInvocation 和 DecodeableRpcResult
         if (message instanceof Decodeable) {
             try {
+                // 执行解码逻辑 （进DecodeableRPCInvocation的的decode方法）
                 ((Decodeable) message).decode();
                 if (log.isDebugEnabled()) {
                     log.debug("Decode decodeable message " + message.getClass().getName());
@@ -65,5 +70,8 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
             } // ~ end of catch
         } // ~ end of if
     } // ~ end of method decode
+
+    // DecodeHandler 主要是包含了一些解码逻辑。2.2.1 节分析请求解码时说过，请求解码可在 IO 线程上执行，也可在线程池中执行，这个取决于运行时配置。
+    // DecodeHandler 存在的意义就是保证请求或响应对象可在线程池中被解码。解码完毕后，完全解码后的 Request 对象会继续向后传递，下一站是 HeaderExchangeHandler。
 
 }

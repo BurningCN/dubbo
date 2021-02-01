@@ -47,6 +47,7 @@ import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
 /**
  * RpcUtils
  */
+// OK
 public class RpcUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(RpcUtils.class);
@@ -58,8 +59,10 @@ public class RpcUtils {
                     && invocation.getInvoker().getUrl() != null
                     && invocation.getInvoker().getInterface() != GenericService.class
                     && !invocation.getMethodName().startsWith("$")) {
+                // getServiceInterface进去
                 String service = invocation.getInvoker().getUrl().getServiceInterface();
                 if (StringUtils.isNotEmpty(service)) {
+                    // 进去
                     Method method = getMethodByService(invocation, service);
                     return method.getReturnType();
                 }
@@ -70,6 +73,11 @@ public class RpcUtils {
         return null;
     }
 
+    // 这个方法主要是这样的，获取方法返回类型以及带泛型的返回类型。以及如果返回类型是CompletableFuture<x>修饰的，去掉外层的CompletableFuture，
+    // 返回x以及具体带泛型的返回类型
+    // 比如方法的返回类型是CompletableFuture<List<String>> 返回[List ,List<String>]
+    // 比如方法的返回类型是List<String> ，返回[List,List<String>]
+    // 比如方法的返回类型是String，返回[String,String]
     public static Type[] getReturnTypes(Invocation invocation) {
         try {
             if (invocation != null && invocation.getInvoker() != null
@@ -79,6 +87,9 @@ public class RpcUtils {
                 String service = invocation.getInvoker().getUrl().getServiceInterface();
                 if (StringUtils.isNotEmpty(service)) {
                     Method method = getMethodByService(invocation, service);
+                    // 上面逻辑和前面的getReturnType一致
+
+                    // 进去
                     return ReflectUtils.getReturnTypes(method);
                 }
             }
@@ -95,20 +106,25 @@ public class RpcUtils {
 
     /**
      * Idempotent operation: invocation id will be added in async operation by default
+     * 幂等操作:默认情况下，将在异步操作中添加调用id
      *
      * @param url
      * @param inv
      */
     public static void attachInvocationIdIfAsync(URL url, Invocation inv) {
+        // 两个都进去
         if (isAttachInvocationId(url, inv) && getInvocationId(inv) == null && inv instanceof RpcInvocation) {
+            // 添加到inv，id是自增的
             inv.setAttachment(ID_KEY, String.valueOf(INVOKE_ID.getAndIncrement()));
         }
     }
 
     private static boolean isAttachInvocationId(URL url, Invocation invocation) {
+        // 进去
         String value = url.getMethodParameter(invocation.getMethodName(), AUTO_ATTACH_INVOCATIONID_KEY);
         if (value == null) {
             // add invocationid in async operation by default
+            // 进去
             return isAsync(url, invocation);
         } else if (Boolean.TRUE.toString().equalsIgnoreCase(value)) {
             return true;
@@ -117,10 +133,16 @@ public class RpcUtils {
         }
     }
 
+    // 下三个方法是一起的，围绕$invoke
+
     public static String getMethodName(Invocation invocation) {
         if ($INVOKE.equals(invocation.getMethodName())
                 && invocation.getArguments() != null
                 && invocation.getArguments().length > 0
+                // getArguments()[0]是方法名称:String
+                // getArguments()[1]是传给方法的参数类型数组:String[]
+                // getArguments()[2]是传给方法的参数值数组:Object[]
+                // 这里取方法名，肯定是String类型
                 && invocation.getArguments()[0] instanceof String) {
             return (String) invocation.getArguments()[0];
         }
@@ -131,6 +153,10 @@ public class RpcUtils {
         if ($INVOKE.equals(invocation.getMethodName())
                 && invocation.getArguments() != null
                 && invocation.getArguments().length > 2
+                // getArguments()[0]是方法名称:String
+                // getArguments()[1]是传给方法的参数类型数组:String[]
+                // getArguments()[2]是传给方法的参数值数组:Object[]
+                // 这里取传给方法的参数值
                 && invocation.getArguments()[2] instanceof Object[]) {
             return (Object[]) invocation.getArguments()[2];
         }
@@ -141,6 +167,10 @@ public class RpcUtils {
         if ($INVOKE.equals(invocation.getMethodName())
                 && invocation.getArguments() != null
                 && invocation.getArguments().length > 1
+                // getArguments()[0]是方法名称:String
+                // getArguments()[1]是传给方法的参数类型数组:String[]
+                // getArguments()[2]是传给方法的参数值数组:Object[]
+                // 这里取方法的参数类型
                 && invocation.getArguments()[1] instanceof String[]) {
             String[] types = (String[]) invocation.getArguments()[1];
             if (types == null) {
@@ -148,6 +178,7 @@ public class RpcUtils {
             }
             Class<?>[] parameterTypes = new Class<?>[types.length];
             for (int i = 0; i < types.length; i++) {
+                // 获取参数类型
                 parameterTypes[i] = ReflectUtils.forName(types[0]);
             }
             return parameterTypes;
@@ -161,13 +192,16 @@ public class RpcUtils {
         if (inv instanceof RpcInvocation) {
             RpcInvocation rpcInvocation = (RpcInvocation) inv;
             if (rpcInvocation.getInvokeMode() != null) {
+                // 1
                 return rpcInvocation.getInvokeMode() == InvokeMode.ASYNC;
             }
         }
 
+        // 2
         if (Boolean.TRUE.toString().equals(inv.getAttachment(ASYNC_KEY))) {
             isAsync = true;
         } else {
+            // 3 进去
             isAsync = url.getMethodParameter(getMethodName(inv), ASYNC_KEY, false);
         }
         return isAsync;
@@ -205,8 +239,11 @@ public class RpcUtils {
             }
         }
 
+        // 三种调用模式
+        // 进去
         if (isReturnTypeFuture(inv)) {
             return InvokeMode.FUTURE;
+            // 进去
         } else if (isAsync(url, inv)) {
             return InvokeMode.ASYNC;
         } else {
@@ -215,15 +252,18 @@ public class RpcUtils {
     }
 
     public static boolean isOneway(URL url, Invocation inv) {
+        // 方法的返回值为void那么就是oneWay
         boolean isOneway;
         if (Boolean.FALSE.toString().equals(inv.getAttachment(RETURN_KEY))) {
             isOneway = true;
         } else {
+            // eg ?test.return=false
             isOneway = !url.getMethodParameter(getMethodName(inv), RETURN_KEY, true);
         }
         return isOneway;
     }
 
+    // 很easy不说了
     private static Method getMethodByService(Invocation invocation, String service) throws NoSuchMethodException {
         Class<?> invokerInterface = invocation.getInvoker().getInterface();
         Class<?> cls = invokerInterface != null ? ReflectUtils.forName(invokerInterface.getClassLoader(), service)
@@ -237,8 +277,10 @@ public class RpcUtils {
 
     public static long getTimeout(Invocation invocation, long defaultTimeout) {
         long timeout = defaultTimeout;
+        // 进去，看RpcInvocation的实现方法
         Object genericTimeout = invocation.getObjectAttachment(TIMEOUT_ATTACHMENT_KEY);
         if (genericTimeout != null) {
+            // 进去
             timeout = convertToNumber(genericTimeout, defaultTimeout);
         }
         return timeout;
@@ -246,10 +288,12 @@ public class RpcUtils {
 
     public static long getTimeout(URL url, String methodName, RpcContext context, long defaultTimeout) {
         long timeout = defaultTimeout;
+        // 从attachments容器获取，进去
         Object genericTimeout = context.getObjectAttachment(TIMEOUT_KEY);
         if (genericTimeout != null) {
             timeout = convertToNumber(genericTimeout, defaultTimeout);
         } else if (url != null) {
+            // 从url获取方法的超时时间，进去
             timeout = url.getMethodPositiveParameter(methodName, TIMEOUT_KEY, defaultTimeout);
         }
         return timeout;

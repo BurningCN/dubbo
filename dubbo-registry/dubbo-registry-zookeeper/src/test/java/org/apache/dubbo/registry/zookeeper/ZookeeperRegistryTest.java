@@ -42,6 +42,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
+// OK
 public class ZookeeperRegistryTest {
     private TestingServer zkServer;
     private ZookeeperRegistry zookeeperRegistry;
@@ -55,12 +56,14 @@ public class ZookeeperRegistryTest {
     public void setUp() throws Exception {
         // 进去
         int zkServerPort = NetUtils.getAvailablePort();
-        this.zkServer = new TestingServer(zkServerPort, true);
-        this.zkServer.start();
+//        this.zkServer = new TestingServer(zkServerPort, true);
+//        this.zkServer.start();
+        zkServerPort = 2181;
 
         this.registryUrl = URL.valueOf("zookeeper://localhost:" + zkServerPort);
         zookeeperRegistryFactory = new ZookeeperRegistryFactory();
         zookeeperRegistryFactory.setZookeeperTransporter(new CuratorZookeeperTransporter());
+        // 进去
         this.zookeeperRegistry = (ZookeeperRegistry) zookeeperRegistryFactory.createRegistry(registryUrl);
     }
 
@@ -73,6 +76,7 @@ public class ZookeeperRegistryTest {
     public void testAnyHost() {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             URL errorUrl = URL.valueOf("multicast://0.0.0.0/");
+            // 进去
             new ZookeeperRegistryFactory().createRegistry(errorUrl);
         });
     }
@@ -82,7 +86,9 @@ public class ZookeeperRegistryTest {
         Set<URL> registered;
 
         for (int i = 0; i < 2; i++) {
+            // 进去
             zookeeperRegistry.register(serviceUrl);
+            // 进去
             registered = zookeeperRegistry.getRegistered();
             assertThat(registered.contains(serviceUrl), is(true));
         }
@@ -94,6 +100,7 @@ public class ZookeeperRegistryTest {
     @Test
     public void testSubscribe() {
         NotifyListener listener = mock(NotifyListener.class);
+        // 进去
         zookeeperRegistry.subscribe(serviceUrl, listener);
 
         Map<URL, Set<NotifyListener>> subscribed = zookeeperRegistry.getSubscribed();

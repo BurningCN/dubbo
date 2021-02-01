@@ -23,14 +23,17 @@ import org.apache.dubbo.rpc.cluster.configurator.AbstractConfigurator;
  * OverrideConfigurator
  *
  */
+// OK
 public class OverrideConfigurator extends AbstractConfigurator {
 
+    // gx
     public OverrideConfigurator(URL url) {
         super(url);
     }
 
     @Override
     public URL doConfigure(URL currentUrl, URL configUrl) {
+        // 这个就是直接覆盖(区别于AbsentConfigurator)，如果两个url都有相同的参数xxx，那么后者的会覆盖前者xxx的值
         return currentUrl.addParameters(configUrl.getParameters());
     }
 

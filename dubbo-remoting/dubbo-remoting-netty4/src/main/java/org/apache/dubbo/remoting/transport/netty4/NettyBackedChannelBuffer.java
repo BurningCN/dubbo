@@ -28,10 +28,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+// OK
+// backed 支持的、支撑的，意思就是专门为netty服务的。这个类的产生背景是Codec的编解码方法是需要ChannelBuffer的，所以有这个了
 public class NettyBackedChannelBuffer implements ChannelBuffer {
 
     private ByteBuf buffer;
 
+    // gx
     public NettyBackedChannelBuffer(ByteBuf buffer) {
         Assert.notNull(buffer, "buffer == null");
         this.buffer = buffer;

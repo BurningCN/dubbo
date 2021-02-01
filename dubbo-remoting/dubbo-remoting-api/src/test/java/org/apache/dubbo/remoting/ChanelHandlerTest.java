@@ -32,6 +32,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
  * <p>
  * mvn clean test -Dtest=*PerformanceClientTest -Dserver=10.20.153.187:9911
  */
+@Deprecated
+// OK
+// 上面的mvn命令记下，可以指定系统属性
 public class ChanelHandlerTest  {
 
     private static final Logger logger = LoggerFactory.getLogger(ChanelHandlerTest.class);
@@ -39,12 +42,14 @@ public class ChanelHandlerTest  {
     public static ExchangeClient initClient(String url) {
         // Create client and build connection
         ExchangeClient exchangeClient = null;
+        // 进去  （Peformance : 性能；绩效；表演；执行）
         PeformanceTestHandler handler = new PeformanceTestHandler(url);
         boolean run = true;
         while (run) {
             try {
                 exchangeClient = Exchangers.connect(url, handler);
             } catch (Throwable t) {
+                // 进catch块，原因是没有NettyTransporter(因为当前处于api模块)
 
                 if (t != null && t.getCause() != null && t.getCause().getClass() != null && (t.getCause().getClass() == java.net.ConnectException.class
                         || t.getCause().getClass() == java.net.ConnectException.class)) {
@@ -54,6 +59,7 @@ public class ChanelHandlerTest  {
                 }
 
                 try {
+                    // 睡眠50ms再次重试
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -75,6 +81,7 @@ public class ChanelHandlerTest  {
     @Test
     public void testClient() throws Throwable {
         // read server info from property
+        System.setProperty("server","127.0.0.1:9911");
         if (PerformanceUtils.getProperty("server", null) == null) {
             logger.warn("Please set -Dserver=127.0.0.1:9911");
             return;
@@ -85,12 +92,17 @@ public class ChanelHandlerTest  {
         final int timeout = PerformanceUtils.getIntProperty(TIMEOUT_KEY, DEFAULT_TIMEOUT);
         int sleep = PerformanceUtils.getIntProperty("sleep", 60 * 1000 * 60);
 
+        // exchange://127.0.0.1:9911?transporter=netty&serialization=hessian2&timeout=1000
         final String url = "exchange://" + server + "?transporter=" + transporter + "&serialization=" + serialization + "&timeout=" + timeout;
         ExchangeClient exchangeClient = initClient(url);
         Thread.sleep(sleep);
         closeClient(exchangeClient);
     }
 
+
+    // 一般业务的最终Handler就是 ExchangeHandler 实例，不过一般是通过 ExchangeHandlerAdapter 实现，用以传给Exchanges.connect/bind
+    // 比如 DubboProtocol的ExchangeHandler requestHandler = new ExchangeHandlerAdapter()、
+    // 比如 HeartbeatTest的TestHeartbeatHandler，这个是直接实现ExchangeHandler接口的
     static class PeformanceTestHandler extends ExchangeHandlerAdapter {
         String url = "";
 

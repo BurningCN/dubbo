@@ -23,12 +23,14 @@ import org.apache.dubbo.registry.support.FailbackRegistry;
 /**
  *
  */
+// OK
 public class ReExportTask extends AbstractRetryTask {
 
     private static final String NAME = "retry re-export";
 
     private Runnable runnable;
 
+    // gx
     public ReExportTask(Runnable runnable, URL oldUrl, FailbackRegistry registry) {
         super(oldUrl, registry, NAME);
         this.runnable = runnable;

@@ -30,6 +30,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.STUB_EVENT_KEY;
  * @export
  * @see ReferenceConfigBase
  */
+// OK
 public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
 
     private static final long serialVersionUID = -2786526984373031126L;
@@ -107,6 +108,7 @@ public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
     @Deprecated
     @Parameter(excluded = true)
     public Boolean isGeneric() {
+        // 进去
         return this.generic != null ? ProtocolUtils.isGeneric(generic) : null;
     }
 
@@ -125,6 +127,7 @@ public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
         if (StringUtils.isEmpty(generic)) {
             return;
         }
+        // 进去
         if (ProtocolUtils.isValidGenericValue(generic)) {
             this.generic = generic;
         } else {

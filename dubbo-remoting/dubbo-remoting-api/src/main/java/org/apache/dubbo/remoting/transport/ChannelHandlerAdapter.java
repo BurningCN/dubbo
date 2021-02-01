@@ -23,6 +23,8 @@ import org.apache.dubbo.remoting.RemotingException;
 /**
  * ChannelHandlerAdapter.
  */
+// OK
+// 就是把ChannelHandler的所有方法给了空实现
 public class ChannelHandlerAdapter implements ChannelHandler {
 
     @Override

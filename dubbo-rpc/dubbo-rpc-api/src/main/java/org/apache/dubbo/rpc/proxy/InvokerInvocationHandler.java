@@ -59,6 +59,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
     // 第一个参数就是代理类对象
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 拦截定义在 Object 类中的方法（未被子类重写），比如 wait/notify
         if (method.getDeclaringClass() == Object.class) {
             // 如果是Object方法直接调用即可
             return method.invoke(invoker, args);
@@ -83,12 +84,12 @@ public class InvokerInvocationHandler implements InvocationHandler {
         }
         // 构建RpcInvocation
         RpcInvocation rpcInvocation = new RpcInvocation(method,
-                invoker.getInterface().getName(), protocolServiceKey, args);
+                invoker.getInterface().getName(), protocolServiceKey, args); // 这里没有设置Invoker实例（比如DubboInvoker），在AbstractInvoker里面设置了
         // {group}/{interfaceName}:{version}
         String serviceKey = invoker.getUrl().getServiceKey();
         // 设置目标service的唯一名称的值为serviceKey
         rpcInvocation.setTargetServiceUniqueName(serviceKey);
-        // invoker.getUrl() returns consumer url.
+        // invoker.getUrl() returns consumer url. // 进去
         RpcContext.setRpcContext(invoker.getUrl());
 
         if (consumerModel != null) {
@@ -99,6 +100,8 @@ public class InvokerInvocationHandler implements InvocationHandler {
         // 调用目标方法
         // 以往我们的写法都是method.invoke(invoker,args);下面是纯目标对象.方法的调用，而且只是invoke方法
         // invoke方法返回AsyncRpcResult，调用其recreate 进去
-        return invoker.invoke(rpcInvocation).recreate();
+
+        // InvokerInvocationHandler 中的 invoker 成员变量类型为 MockClusterInvoker，MockClusterInvoker 内部封装了服务降级逻辑。下面简单看一下
+        return invoker.invoke(rpcInvocation).recreate(); // dubbo-rpc模块的测试类的话，此时invoker为 AsyncToSyncInvoker，进去
     }
 }

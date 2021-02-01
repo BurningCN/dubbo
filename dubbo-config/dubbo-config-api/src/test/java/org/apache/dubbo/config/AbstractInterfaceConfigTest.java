@@ -37,6 +37,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Collections;
 
+// OK
 public class AbstractInterfaceConfigTest {
     private static File dubboProperties;
 
@@ -63,7 +64,9 @@ public class AbstractInterfaceConfigTest {
         System.setProperty("dubbo.registry.address", "addr1");
         try {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
+            // 进去
             interfaceConfig.setApplication(new ApplicationConfig("testCheckRegistry1"));
+            // 进去
             interfaceConfig.checkRegistry();
             Assertions.assertEquals(1, interfaceConfig.getRegistries().size());
             Assertions.assertEquals("addr1", interfaceConfig.getRegistries().get(0).getAddress());
@@ -74,8 +77,10 @@ public class AbstractInterfaceConfigTest {
 
     @Test
     public void testCheckRegistry2() {
+
         Assertions.assertThrows(IllegalStateException.class, () -> {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
+            // 进去 抛异常点注意下，即interfaceConfig必须得有ApplicationConfig对象
             interfaceConfig.checkRegistry();
         });
     }
@@ -84,6 +89,7 @@ public class AbstractInterfaceConfigTest {
     public void checkInterfaceAndMethods1() {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
+            // 进去
             interfaceConfig.checkInterfaceAndMethods(null, null);
         });
     }
@@ -92,6 +98,7 @@ public class AbstractInterfaceConfigTest {
     public void checkInterfaceAndMethods2() {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
+            // 进去
             interfaceConfig.checkInterfaceAndMethods(AbstractInterfaceConfigTest.class, null);
         });
     }
@@ -101,6 +108,7 @@ public class AbstractInterfaceConfigTest {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             MethodConfig methodConfig = new MethodConfig();
             InterfaceConfig interfaceConfig = new InterfaceConfig();
+            // 传入接口和MethodConfig，进去
             interfaceConfig.checkInterfaceAndMethods(Greeting.class, Collections.singletonList(methodConfig));
         });
     }
@@ -111,6 +119,7 @@ public class AbstractInterfaceConfigTest {
             MethodConfig methodConfig = new MethodConfig();
             methodConfig.setName("nihao");
             InterfaceConfig interfaceConfig = new InterfaceConfig();
+            // 进去，接口里面没有nihao方法，会抛异常
             interfaceConfig.checkInterfaceAndMethods(Greeting.class, Collections.singletonList(methodConfig));
         });
     }
@@ -120,6 +129,7 @@ public class AbstractInterfaceConfigTest {
         MethodConfig methodConfig = new MethodConfig();
         methodConfig.setName("hello");
         InterfaceConfig interfaceConfig = new InterfaceConfig();
+        // 进去，接口里面有hello方法
         interfaceConfig.checkInterfaceAndMethods(Greeting.class, Collections.singletonList(methodConfig));
     }
 
@@ -127,8 +137,11 @@ public class AbstractInterfaceConfigTest {
     public void checkStubAndMock1() {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
+            // 进去
             interfaceConfig.setLocal(GreetingLocal1.class.getName());
+            // 进去
             interfaceConfig.checkStubAndLocal(Greeting.class);
+            // 代码不会运行到这里，因为上面方法内部就抛异常了
             ConfigValidationUtils.checkMock(Greeting.class, interfaceConfig);
         });
     }
@@ -138,6 +151,7 @@ public class AbstractInterfaceConfigTest {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
             interfaceConfig.setLocal(GreetingLocal2.class.getName());
+            // 内部检查第一步肯定通过，即Local-GreetingLocal2是Greeting的子类，但是没有含有Greeting类型参数的构造器，还是会抛异常
             interfaceConfig.checkStubAndLocal(Greeting.class);
             ConfigValidationUtils.checkMock(Greeting.class, interfaceConfig);
         });
@@ -147,10 +161,12 @@ public class AbstractInterfaceConfigTest {
     public void checkStubAndMock3() {
         InterfaceConfig interfaceConfig = new InterfaceConfig();
         interfaceConfig.setLocal(GreetingLocal3.class.getName());
+        // 这次内部校验肯定通过
         interfaceConfig.checkStubAndLocal(Greeting.class);
         ConfigValidationUtils.checkMock(Greeting.class, interfaceConfig);
     }
 
+    // 下三个主要是stub的和前面local没差
     @Test
     public void checkStubAndMock4() {
         Assertions.assertThrows(IllegalStateException.class, () -> {
@@ -183,8 +199,11 @@ public class AbstractInterfaceConfigTest {
     public void checkStubAndMock7() {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
+            // AbstractMethodConfig的mock属性，进去
             interfaceConfig.setMock("return {a, b}");
+            // 内部不会抛异常，判断local和stub为空直接return
             interfaceConfig.checkStubAndLocal(Greeting.class);
+            // 内部在转json的时候抛异常，进去
             ConfigValidationUtils.checkMock(Greeting.class, interfaceConfig);
         });
     }
@@ -193,8 +212,11 @@ public class AbstractInterfaceConfigTest {
     public void checkStubAndMock8() {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
+            // 注意，这时候传入的是一个类的全限定名
             interfaceConfig.setMock(GreetingMock1.class.getName());
+            // 内部不会抛异常，判断local和stub为空直接return
             interfaceConfig.checkStubAndLocal(Greeting.class);
+            // 进去，内部会判断出GreetingMock1不是Greeting实现类而抛异常
             ConfigValidationUtils.checkMock(Greeting.class, interfaceConfig);
         });
     }
@@ -205,10 +227,12 @@ public class AbstractInterfaceConfigTest {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
             interfaceConfig.setMock(GreetingMock2.class.getName());
             interfaceConfig.checkStubAndLocal(Greeting.class);
+            // 内部会在mockService.newInstance抛异常，因为GreetingMock2没有public修饰的空参数构造器
             ConfigValidationUtils.checkMock(Greeting.class, interfaceConfig);
         });
     }
 
+    // easy
     @Test
     public void testLocal() {
         InterfaceConfig interfaceConfig = new InterfaceConfig();
@@ -220,9 +244,11 @@ public class AbstractInterfaceConfigTest {
         Assertions.assertEquals("GreetingMock", interfaceConfig.getLocal());
     }
 
+    // easy
     @Test
     public void testStub() {
         InterfaceConfig interfaceConfig = new InterfaceConfig();
+        // null还可以强转了
         interfaceConfig.setStub((Boolean) null);
         Assertions.assertNull(interfaceConfig.getStub());
         interfaceConfig.setStub(true);
@@ -231,6 +257,52 @@ public class AbstractInterfaceConfigTest {
         Assertions.assertEquals("GreetingMock", interfaceConfig.getStub());
     }
 
+    @Test
+    public void testApplication() {
+        InterfaceConfig interfaceConfig = new InterfaceConfig();
+        ApplicationConfig applicationConfig = new ApplicationConfig();
+        // 进去
+        interfaceConfig.setApplication(applicationConfig);
+        Assertions.assertSame(applicationConfig, interfaceConfig.getApplication());
+    }
+
+    @Test
+    public void testModule() {
+        InterfaceConfig interfaceConfig = new InterfaceConfig();
+        ModuleConfig moduleConfig = new ModuleConfig();
+        // 进去
+        interfaceConfig.setModule(moduleConfig);
+        Assertions.assertSame(moduleConfig, interfaceConfig.getModule());
+    }
+
+    @Test
+    public void testRegistry() {
+        InterfaceConfig interfaceConfig = new InterfaceConfig();
+        RegistryConfig registryConfig = new RegistryConfig();
+        // 进去
+        interfaceConfig.setRegistry(registryConfig);
+        Assertions.assertSame(registryConfig, interfaceConfig.getRegistry());
+    }
+
+    @Test
+    public void testRegistries() {
+        InterfaceConfig interfaceConfig = new InterfaceConfig();
+        RegistryConfig registryConfig = new RegistryConfig();
+        // 进去
+        interfaceConfig.setRegistries(Collections.singletonList(registryConfig));
+        Assertions.assertEquals(1, interfaceConfig.getRegistries().size());
+        Assertions.assertSame(registryConfig, interfaceConfig.getRegistries().get(0));
+    }
+
+    @Test
+    public void testMonitor() {
+        InterfaceConfig interfaceConfig = new InterfaceConfig();
+        interfaceConfig.setMonitor("monitor-addr");
+        Assertions.assertEquals("monitor-addr", interfaceConfig.getMonitor().getAddress());
+        MonitorConfig monitorConfig = new MonitorConfig();
+        interfaceConfig.setMonitor(monitorConfig);
+        Assertions.assertSame(monitorConfig, interfaceConfig.getMonitor());
+    }
     @Test
     public void testCluster() {
         InterfaceConfig interfaceConfig = new InterfaceConfig();
@@ -274,49 +346,6 @@ public class AbstractInterfaceConfigTest {
     }
 
     @Test
-    public void testApplication() {
-        InterfaceConfig interfaceConfig = new InterfaceConfig();
-        ApplicationConfig applicationConfig = new ApplicationConfig();
-        interfaceConfig.setApplication(applicationConfig);
-        Assertions.assertSame(applicationConfig, interfaceConfig.getApplication());
-    }
-
-    @Test
-    public void testModule() {
-        InterfaceConfig interfaceConfig = new InterfaceConfig();
-        ModuleConfig moduleConfig = new ModuleConfig();
-        interfaceConfig.setModule(moduleConfig);
-        Assertions.assertSame(moduleConfig, interfaceConfig.getModule());
-    }
-
-    @Test
-    public void testRegistry() {
-        InterfaceConfig interfaceConfig = new InterfaceConfig();
-        RegistryConfig registryConfig = new RegistryConfig();
-        interfaceConfig.setRegistry(registryConfig);
-        Assertions.assertSame(registryConfig, interfaceConfig.getRegistry());
-    }
-
-    @Test
-    public void testRegistries() {
-        InterfaceConfig interfaceConfig = new InterfaceConfig();
-        RegistryConfig registryConfig = new RegistryConfig();
-        interfaceConfig.setRegistries(Collections.singletonList(registryConfig));
-        Assertions.assertEquals(1, interfaceConfig.getRegistries().size());
-        Assertions.assertSame(registryConfig, interfaceConfig.getRegistries().get(0));
-    }
-
-    @Test
-    public void testMonitor() {
-        InterfaceConfig interfaceConfig = new InterfaceConfig();
-        interfaceConfig.setMonitor("monitor-addr");
-        Assertions.assertEquals("monitor-addr", interfaceConfig.getMonitor().getAddress());
-        MonitorConfig monitorConfig = new MonitorConfig();
-        interfaceConfig.setMonitor(monitorConfig);
-        Assertions.assertSame(monitorConfig, interfaceConfig.getMonitor());
-    }
-
-    @Test
     public void testOwner() {
         InterfaceConfig interfaceConfig = new InterfaceConfig();
         interfaceConfig.setOwner("owner");
@@ -350,6 +379,8 @@ public class AbstractInterfaceConfigTest {
         interfaceConfig.setScope("scope");
         Assertions.assertEquals("scope", interfaceConfig.getScope());
     }
+
+
 
     public static class InterfaceConfig extends AbstractInterfaceConfig {
 

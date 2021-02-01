@@ -23,6 +23,7 @@ import org.apache.dubbo.remoting.Dispatcher;
 /**
  * connect disconnect ensure the order
  */
+// OK
 public class ConnectionOrderedDispatcher implements Dispatcher {
 
     public static final String NAME = "connection";

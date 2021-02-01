@@ -21,6 +21,8 @@ import org.apache.dubbo.common.extension.SPI;
 /**
  * InvokerListener. (SPI, Singleton, ThreadSafe)
  */
+// OK
+// 和ExporterListener作用差不多，只不过一个监控Exporter的exported和unexported事件，一个监控Invoker的referred和destroyed
 @SPI
 public interface InvokerListener {
 
@@ -31,6 +33,7 @@ public interface InvokerListener {
      * @throws RpcException
      * @see org.apache.dubbo.rpc.Protocol#refer(Class, org.apache.dubbo.common.URL)
      */
+    // gx
     void referred(Invoker<?> invoker) throws RpcException;
 
     /**
@@ -39,6 +42,7 @@ public interface InvokerListener {
      * @param invoker
      * @see org.apache.dubbo.rpc.Invoker#destroy()
      */
+    // gx
     void destroyed(Invoker<?> invoker);
 
 }

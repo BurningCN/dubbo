@@ -24,14 +24,17 @@ import java.util.concurrent.CompletableFuture;
 /**
  *
  */
+// OK
 public class FutureContextTest {
 
     @Test
     public void testFutureContext() throws Exception {
         Thread thread1 = new Thread(() -> {
+            // getContext、和setFuture都进去
             FutureContext.getContext().setFuture(CompletableFuture.completedFuture("future from thread1"));
             try {
                 Thread.sleep(500);
+                // 进去
                 Assertions.assertEquals("future from thread1", FutureContext.getContext().getCompletableFuture().get());
             } catch (Exception e) {
                 e.printStackTrace();

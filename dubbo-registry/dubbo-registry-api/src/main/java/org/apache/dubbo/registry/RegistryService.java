@@ -26,6 +26,7 @@ import java.util.List;
  * @see org.apache.dubbo.registry.Registry
  * @see org.apache.dubbo.registry.RegistryFactory#getRegistry(URL)
  */
+// OK 直接子接口Registry
 public interface RegistryService {
 
     /**

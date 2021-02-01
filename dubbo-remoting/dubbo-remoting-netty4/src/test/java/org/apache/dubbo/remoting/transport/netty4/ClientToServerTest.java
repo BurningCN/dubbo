@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * ClientToServer
  */
+// OK
 public abstract class ClientToServerTest {
 
     protected static final String LOCALHOST = "127.0.0.1";
@@ -49,8 +50,8 @@ public abstract class ClientToServerTest {
     @BeforeEach
     protected void setUp() throws Exception {
         int port = NetUtils.getAvailablePort();
-        server = newServer(port, handler);
-        client = newClient(port);
+        server = newServer(port, handler);// 进去  注意handler
+        client = newClient(port);// 进去
     }
 
     @AfterEach
@@ -64,9 +65,13 @@ public abstract class ClientToServerTest {
         }
     }
 
+    // 通过Exchanges.bind和connect进行cs连接。注意传给bind的是 Replier<World>实例，内部会用ExchangeHandlerAdapater包装，然后client.request(new World("world"))，发请求，Replier的reply就会在服务端得到调用。然后回写数据给client，client的AllChannelHandler内部会构建received事件的相关任务，然后给DefaultFuture进行Complete。
     @Test
     public void testFuture() throws Exception {
-        CompletableFuture<Object> future = client.request(new World("world"));
+        // 进去 为了打断点，防止DefaultFuture超时抛异常，这里设置一个较大的超时时间1000000（原来程序没有该参数）
+        // 注意两个核心断点处，一个是WorldHandler的reply方法，一个是DefaultFuture的received方法
+        CompletableFuture<Object> future = client.request(new World("world"),1000000);
+        // 阻塞获取结果
         Hello result = (Hello) future.get();
         Assertions.assertEquals("hello,world", result.getName());
     }

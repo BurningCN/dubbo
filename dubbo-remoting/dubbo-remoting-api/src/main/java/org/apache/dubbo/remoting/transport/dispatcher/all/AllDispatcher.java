@@ -23,6 +23,7 @@ import org.apache.dubbo.remoting.Dispatcher;
 /**
  * default thread pool configure
  */
+// OK
 public class AllDispatcher implements Dispatcher {
 
     public static final String NAME = "all";

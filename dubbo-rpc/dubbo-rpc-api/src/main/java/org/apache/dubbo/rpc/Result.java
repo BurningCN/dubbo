@@ -44,6 +44,7 @@ import java.util.function.Function;
  * @see org.apache.dubbo.rpc.Invoker#invoke(Invocation)
  * @see AppResponse
  */
+// OK
 public interface Result extends Serializable {
 
     /**
@@ -172,10 +173,11 @@ public interface Result extends Serializable {
 
     /**
      * Add a callback which can be triggered when the RPC call finishes.
+     * 添加一个可以在RPC调用完成时触发的回调函数。
      * <p>
      * Just as the method name implies, this method will guarantee the callback being triggered under the same context as when the call was started,
      * see implementation in {@link Result#whenCompleteWithContext(BiConsumer)}
-     *
+     * 正如方法名所暗示的那样，该方法将保证在调用启动时相同的上下文中触发回调，
      * @param fn
      * @return
      */

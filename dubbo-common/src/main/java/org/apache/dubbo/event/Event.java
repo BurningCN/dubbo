@@ -23,6 +23,7 @@ import java.util.EventObject;
  *
  * @since 2.7.5
  */
+// OK
 public abstract class Event extends EventObject {
 
     private static final long serialVersionUID = -1704315605423947137L;
@@ -40,6 +41,7 @@ public abstract class Event extends EventObject {
      */
     public Event(Object source) {
         super(source);
+        // 技巧点：在new的时候就记录当前时间戳（rmq也有这个用法， 不是不过放在构造函数里，而是在属性定义处直接初始化）
         this.timestamp = System.currentTimeMillis();
     }
 

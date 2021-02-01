@@ -727,6 +727,7 @@ public final class ReflectUtils {
 
     public static Class<?> forName(String name) {
         try {
+            // 进去
             return name2class(name);
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException("Not found class " + name + ", cause: " + e.getMessage(), e);
@@ -750,6 +751,7 @@ public final class ReflectUtils {
      * @return Class instance.
      */
     public static Class<?> name2class(String name) throws ClassNotFoundException {
+        // 进去
         return name2class(ClassUtils.getClassLoader(), name);
     }
 
@@ -832,7 +834,9 @@ public final class ReflectUtils {
         }
         Class<?> clazz = NAME_CLASS_CACHE.get(name);
         if (clazz == null) {
+            // 加载类同时初始化
             clazz = Class.forName(name, true, cl);
+            // 放到缓存
             NAME_CLASS_CACHE.put(name, clazz);
         }
         return clazz;
@@ -1007,13 +1011,16 @@ public final class ReflectUtils {
     public static Constructor<?> findConstructor(Class<?> clazz, Class<?> paramType) throws NoSuchMethodException {
         Constructor<?> targetConstructor;
         try {
+            // 获取参数是paramType类型的构造器
             targetConstructor = clazz.getConstructor(new Class<?>[]{paramType});
         } catch (NoSuchMethodException e) {
             targetConstructor = null;
+            // 获取所有的构造器
             Constructor<?>[] constructors = clazz.getConstructors();
             for (Constructor<?> constructor : constructors) {
                 if (Modifier.isPublic(constructor.getModifiers())
                         && constructor.getParameterTypes().length == 1
+                        // 构造器的参数是不是paramType的子类型
                         && constructor.getParameterTypes()[0].isAssignableFrom(paramType)) {
                     targetConstructor = constructor;
                     break;
@@ -1237,17 +1244,37 @@ public final class ReflectUtils {
         return properties;
     }
 
+    // 这个方法主要是这样的，获取方法返回类型以及带泛型的返回类型。以及如果返回类型是CompletableFuture<x>修饰的，去掉外层的CompletableFuture，
+    // 返回x以及具体带泛型的返回类型
+    // 比如方法的返回类型是CompletableFuture<List<String>> 返回[List ,List<String>]
+    // 比如方法的返回类型是List<String> ，返回[List,List<String>]
+    // 比如方法的返回类型是String，返回[String,String]
     public static Type[] getReturnTypes(Method method) {
+        // 比如方法 返回类型为 CompletableFuture<List<String>> -----1 (1就是1这种例子，2就是2这种例子)
+        // 比如方法 返回类型为 CompletableFuture<Object> -------2
+
+        // class java.util.concurrent.CompletableFuture -----1
+        // class java.util.concurrent.CompletableFuture -------2
         Class<?> returnType = method.getReturnType();
+
+        // java.util.concurrent.CompletableFuture<java.util.List<java.lang.String>> -----1
+        // java.util.concurrent.CompletableFuture<java.lang.Object> ------2
         Type genericReturnType = method.getGenericReturnType();
+
         if (Future.class.isAssignableFrom(returnType)) {
             if (genericReturnType instanceof ParameterizedType) {
+                // java.util.List<java.lang.String> -----1
+                // class java.lang.Object -------2
                 Type actualArgType = ((ParameterizedType) genericReturnType).getActualTypeArguments()[0];
-                if (actualArgType instanceof ParameterizedType) {
+                if (actualArgType instanceof ParameterizedType) { // 是否还是泛型修饰的，情况1就是满足的
+                    // interface java.util.List -----1
                     returnType = (Class<?>) ((ParameterizedType) actualArgType).getRawType();
+                    // java.util.List<java.lang.String> -----1
                     genericReturnType = actualArgType;
                 } else {
+                    // class java.lang.Object -----2
                     returnType = (Class<?>) actualArgType;
+                    // class java.lang.Object -----2
                     genericReturnType = returnType;
                 }
             } else {
@@ -1265,6 +1292,7 @@ public final class ReflectUtils {
      * @return non-null read-only {@link Set}
      * @since 2.7.5
      */
+    // 代码非常清晰易懂
     public static Set<ParameterizedType> findParameterizedTypes(Class<?> sourceClass) {
         // Add Generic Interfaces
         List<Type> genericTypes = new LinkedList<>(asList(sourceClass.getGenericInterfaces()));
@@ -1324,6 +1352,7 @@ public final class ReflectUtils {
      * @return
      * @since 2.7.5
      */
+    // 方法清晰易懂
     public static <T> T getProperty(Object bean, String methodName) {
         Class<?> beanClass = bean.getClass();
         BeanInfo beanInfo = null;

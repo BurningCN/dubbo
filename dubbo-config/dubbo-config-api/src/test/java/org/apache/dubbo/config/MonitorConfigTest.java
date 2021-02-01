@@ -28,6 +28,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 
+// OK
 public class MonitorConfigTest {
     @Test
     public void testAddress() throws Exception {

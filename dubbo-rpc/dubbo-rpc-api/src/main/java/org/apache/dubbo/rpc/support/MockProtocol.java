@@ -24,7 +24,9 @@ import org.apache.dubbo.rpc.protocol.AbstractProtocol;
 
 /**
  * MockProtocol is used for generating a mock invoker by URL and type on consumer side
+ * MockProtocol用于在使用者端通过URL和类型生成模拟调用程序
  */
+// OK
 final public class MockProtocol extends AbstractProtocol {
 
     @Override
@@ -37,6 +39,7 @@ final public class MockProtocol extends AbstractProtocol {
         throw new UnsupportedOperationException();
     }
 
+    // 模板方法的实现，AbstractProtocol的refer方法最后一步会调用如下方法
     @Override
     public <T> Invoker<T> protocolBindingRefer(Class<T> type, URL url) throws RpcException {
         return new MockInvoker<>(url, type);

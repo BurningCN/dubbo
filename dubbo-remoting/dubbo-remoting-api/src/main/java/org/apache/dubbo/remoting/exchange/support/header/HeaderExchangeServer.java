@@ -50,6 +50,7 @@ import static org.apache.dubbo.remoting.utils.UrlUtils.getIdleTimeout;
 /**
  * ExchangeServerImpl
  */
+// OK
 public class HeaderExchangeServer implements ExchangeServer {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -62,9 +63,11 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     private CloseTimerTask closeTimerTask;
 
+    // gx 传进来的是NettyServer
     public HeaderExchangeServer(RemotingServer server) {
         Assert.notNull(server, "server == null");
         this.server = server;
+        // 进去
         startIdleCheckTask(getUrl());
     }
 
@@ -78,7 +81,7 @@ public class HeaderExchangeServer implements ExchangeServer {
     }
 
     private boolean isRunning() {
-        Collection<Channel> channels = getChannels();
+        Collection<Channel> channels = getChannels();// 进去
         for (Channel channel : channels) {
 
             /**
@@ -101,7 +104,7 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     @Override
     public void close(final int timeout) {
-        startClose();
+        startClose();// 进去
         if (timeout > 0) {
             final long max = (long) timeout;
             final long start = System.currentTimeMillis();
@@ -123,7 +126,7 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     @Override
     public void startClose() {
-        server.startClose();
+        server.startClose();// 进去
     }
 
     private void sendChannelReadOnlyEvent() {
@@ -160,7 +163,7 @@ public class HeaderExchangeServer implements ExchangeServer {
     @Override
     public Collection<ExchangeChannel> getExchangeChannels() {
         Collection<ExchangeChannel> exchangeChannels = new ArrayList<ExchangeChannel>();
-        Collection<Channel> channels = server.getChannels();
+        Collection<Channel> channels = server.getChannels();// 进去
         if (CollectionUtils.isNotEmpty(channels)) {
             for (Channel channel : channels) {
                 exchangeChannels.add(HeaderExchangeChannel.getOrAddChannel(channel));
@@ -178,7 +181,7 @@ public class HeaderExchangeServer implements ExchangeServer {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Collection<Channel> getChannels() {
-        return (Collection) getExchangeChannels();
+        return (Collection) getExchangeChannels();// 进去
     }
 
     @Override
@@ -205,10 +208,10 @@ public class HeaderExchangeServer implements ExchangeServer {
     public ChannelHandler getChannelHandler() {
         return server.getChannelHandler();
     }
-
+    // gx  主要被DubboProtocolServer的reset方法调用
     @Override
     public void reset(URL url) {
-        server.reset(url);
+        server.reset(url);// AbstractServer的reset 进去
         try {
             int currHeartbeat = getHeartbeat(getUrl());
             int currIdleTimeout = getIdleTimeout(getUrl());
@@ -259,6 +262,7 @@ public class HeaderExchangeServer implements ExchangeServer {
     }
 
     private void startIdleCheckTask(URL url) {
+        // 进去
         if (!server.canHandleIdle()) {
             AbstractTimerTask.ChannelProvider cp = () -> unmodifiableCollection(HeaderExchangeServer.this.getChannels());
             int idleTimeout = getIdleTimeout(url);

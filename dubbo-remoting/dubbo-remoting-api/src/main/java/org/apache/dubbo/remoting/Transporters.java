@@ -25,6 +25,9 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerDispatcher;
 /**
  * Transporter facade. (API, Static, ThreadSafe)
  */
+// OK
+// 和Exchanges一样也是一个门面，方便用户使用复杂的子系统，不和子系统直接交互。其bind、connect交给默认的NettyTransporter
+// 整个是这样的 Exchanges -> HeaderExchanger -> Transporters -> NettyTransporter -> new NettyServer/Client
 public class Transporters {
 
     static {
@@ -49,13 +52,13 @@ public class Transporters {
         }
         ChannelHandler handler;
         if (handlers.length == 1) {
-            handler = handlers[0];
+            handler = handlers[0];// 这个是DecodeHandler，DecodeHandler 包装 HeaderExchangeHandler 包装 HeartbeatHandlerTest$TestHeartbeatHandler
         } else {
             // 如果 handlers 元素数量大于1，则创建 ChannelHandler 分发器
             handler = new ChannelHandlerDispatcher(handlers);
         }
         // 获取自适应 Transporter 实例，并调用实例方法
-        // getTransporter() 方法获取的 Transporter 是在运行时动态创建的，类名为 Transporter$Adaptive，也就是自适应拓展类。
+        // getTransporter() 方法获取的 Transporter 是在运行时动态创建的，类名为 Transporter$Adaptive，也就是自适应拓展类(看文件:其他/Adaptive/Transporter&Adaptive)。
         // Transporter$Adaptive 会在运行时根据传入的 URL 参数决定加载什么类型的 Transporter，默认为 NettyTransporter。下面我们继续
         // 跟下去，这次分析的是 NettyTransporter 的 bind 方法 ，去看下
         return getTransporter().bind(url, handler);
@@ -75,9 +78,13 @@ public class Transporters {
         } else if (handlers.length == 1) {
             handler = handlers[0];
         } else {
+            // 如果 handler 数量大于1，则创建一个 ChannelHandler 分发器
             handler = new ChannelHandlerDispatcher(handlers);
         }
+        // 获取 Transporter 自适应拓展类，并调用 connect 方法生成 Client 实例
         return getTransporter().connect(url, handler);
+        // getTransporter 方法返回的是自适应拓展类，该类会在运行时根据客户端类型加载指定的 Transporter 实现类。若用户未配置客户端类型，
+        // 则默认加载 NettyTransporter，并调用该类的 connect 方法。
     }
 
     public static Transporter getTransporter() {

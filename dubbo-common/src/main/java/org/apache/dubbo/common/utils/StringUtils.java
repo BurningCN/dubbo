@@ -575,6 +575,7 @@ public final class StringUtils {
         boolean hasDot = false;
         int sz = str.length();
         for (int i = 0; i < sz; i++) {
+            // .符号
             if (str.charAt(i) == '.') {
                 if (hasDot || !allowDot) {
                     return false;
@@ -582,6 +583,7 @@ public final class StringUtils {
                 hasDot = true;
                 continue;
             }
+            // 判断每个字符是数字
             if (!Character.isDigit(str.charAt(i))) {
                 return false;
             }

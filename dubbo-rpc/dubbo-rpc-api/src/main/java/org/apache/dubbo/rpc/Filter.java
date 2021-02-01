@@ -23,6 +23,8 @@ import org.apache.dubbo.common.extension.SPI;
  * functions in dubbo are implemented base on the same mechanism. Since every time when remote method is
  * invoked, the filter extensions will be executed too, the corresponding penalty should be considered before
  * more filters are added.
+ *
+ * 用于拦截服务提供者和使用者调用的扩展，而且，dubbo中的大多数函数都是基于相同的机制实现的。因为每次调用remote method时，也会执行筛选器扩展，所以在添加更多筛选器之前应该考虑相应的惩罚。
  * <pre>
  *  They way filter work from sequence point of view is
  *    <b>
@@ -40,6 +42,7 @@ import org.apache.dubbo.common.extension.SPI;
  * @see org.apache.dubbo.rpc.filter.TokenFilter
  * @see org.apache.dubbo.rpc.filter.TpsLimitFilter
  */
+// OK
 @SPI
 public interface Filter {
     /**

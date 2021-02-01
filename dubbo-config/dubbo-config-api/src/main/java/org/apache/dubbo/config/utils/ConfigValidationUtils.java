@@ -171,31 +171,46 @@ public class ConfigValidationUtils {
     public static List<URL> loadRegistries(AbstractInterfaceConfig interfaceConfig, boolean provider) {
         // check && override if necessary
         List<URL> registryList = new ArrayList<URL>();
+        // eg <dubbo:application hostname="B-RHDTJG5H-2145.local" name="dubbo-demo-api-provider" />
         ApplicationConfig application = interfaceConfig.getApplication();
+        // eg <dubbo:registry address="zookeeper://127.0.0.1:2181" protocol="zookeeper" port="2181" />
         List<RegistryConfig> registries = interfaceConfig.getRegistries();
         if (CollectionUtils.isNotEmpty(registries)) {
             for (RegistryConfig config : registries) {
+                // eg zookeeper://127.0.0.1:2181
                 String address = config.getAddress();
                 if (StringUtils.isEmpty(address)) {
                     address = ANYHOST_VALUE;
                 }
+                // 不是"N/A"
                 if (!RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
                     Map<String, String> map = new HashMap<String, String>();
-                    AbstractConfig.appendParameters(map, application);
-                    AbstractConfig.appendParameters(map, config);
-                    map.put(PATH_KEY, RegistryService.class.getName());
-                    AbstractInterfaceConfig.appendRuntimeParameters(map);
+                    AbstractConfig.appendParameters(map, application);// application -> dubbo-demo-api-provider
+                    AbstractConfig.appendParameters(map, config);// "protocol" -> "zookeeper","port" -> "2181"
+                    map.put(PATH_KEY, RegistryService.class.getName());// path -> org.apache.dubbo.registry.RegistryService
+                    AbstractInterfaceConfig.appendRuntimeParameters(map); // 进去
                     if (!map.containsKey(PROTOCOL_KEY)) {
                         map.put(PROTOCOL_KEY, DUBBO_PROTOCOL);
                     }
+                    // 此时map eg
+                    //"path" -> "org.apache.dubbo.registry.RegistryService"
+                    //"protocol" -> "zookeeper"
+                    //"application" -> "dubbo-demo-api-provider"
+                    //"port" -> "2181"
+                    //"release" -> ""
+                    //"dubbo" -> "2.0.2"
+                    //"pid" -> "6714"
+                    //"timestamp" -> "1609849127050"
+
+                    // 根据这两个参数生成url list，进去
                     List<URL> urls = UrlUtils.parseURLs(address, map);
 
-                    for (URL url : urls) {
+                    for (URL url : urls) { // eg zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&timestamp=1609849127050
 
                         url = URLBuilder.from(url)
-                                .addParameter(REGISTRY_KEY, url.getProtocol())
-                                .setProtocol(extractRegistryType(url))
-                                .build();
+                                .addParameter(REGISTRY_KEY, url.getProtocol()) // 添加registry=xx(xx比如zookeeper) 参数
+                                .setProtocol(extractRegistryType(url)) // 这行，把原来url的protocol的值从zookeeper变成registry，extractRegistryType进去
+                                .build(); // eg registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&registry=zookeeper&timestamp=1609849127050
                         if ((provider && url.getParameter(REGISTER_KEY, true))
                                 || (!provider && url.getParameter(SUBSCRIBE_KEY, true))) {
                             registryList.add(url);
@@ -203,16 +218,17 @@ public class ConfigValidationUtils {
                     }
                 }
             }
-        }
+        } // 进去
         return genCompatibleRegistries(registryList, provider);
     }
 
     private static List<URL> genCompatibleRegistries(List<URL> registryList, boolean provider) {
         List<URL> result = new ArrayList<>(registryList.size());
         registryList.forEach(registryURL -> {
-            result.add(registryURL);
+            result.add(registryURL);// 先直接存到返回结果
             if (provider) {
                 // for registries enabled service discovery, automatically register interface compatible addresses.
+                // 对于注册表启用的服务发现，自动注册接口兼容的地址。
                 if (SERVICE_REGISTRY_PROTOCOL.equals(registryURL.getProtocol())
                         && registryURL.getParameter(REGISTRY_DUPLICATE_KEY, false)
                         && registryNotExists(registryURL, registryList, REGISTRY_PROTOCOL)) {
@@ -282,21 +298,27 @@ public class ConfigValidationUtils {
     /**
      * Legitimacy check and setup of local simulated operations. The operations can be a string with Simple operation or
      * a classname whose {@link Class} implements a particular function
+     * 本地模拟操作的合法性检查和设置。操作可以是具有简单操作的字符串，也可以是{@link Class}实现特定函数的类名
      *
      * @param interfaceClass for provider side, it is the {@link Class} of the service that will be exported; for consumer
      *                       side, it is the {@link Class} of the remote service interface that will be referenced
      */
     public static void checkMock(Class<?> interfaceClass, AbstractInterfaceConfig config) {
+        // 进去
         String mock = config.getMock();
         if (ConfigUtils.isEmpty(mock)) {
             return;
         }
 
+        // normalize 使标准化、正常化，进去
         String normalizedMock = MockInvoker.normalizeMock(mock);
+        // 是否return开头
         if (normalizedMock.startsWith(RETURN_PREFIX)) {
+            // 截取return后面的字符串
             normalizedMock = normalizedMock.substring(RETURN_PREFIX.length()).trim();
             try {
-                //Check whether the mock value is legal, if it is illegal, throw exception
+                // Check whether the mock value is legal, if it is illegal, throw exception
+                // 进去
                 MockInvoker.parseMockValue(normalizedMock);
             } catch (Exception e) {
                 throw new IllegalStateException("Illegal mock return in <dubbo:service/reference ... " +
@@ -314,7 +336,8 @@ public class ConfigValidationUtils {
                 }
             }
         } else {
-            //Check whether the mock class is a implementation of the interfaceClass, and if it has a default constructor
+            // Check whether the mock class is a implementation of the interfaceClass, and if it has a default constructor
+            // 检查mock类是否为interfaceClass的实现，以及它是否有默认构造函数 进去
             MockInvoker.getMockObject(normalizedMock, interfaceClass);
         }
     }
@@ -526,7 +549,7 @@ public class ConfigValidationUtils {
         }
     }
 
-    private static String extractRegistryType(URL url) {
+    private static String extractRegistryType(URL url) { // 判断注册类型是否是服务发现类型，进去。注册类型有两种service-discovery-registry 、registry
         return isServiceDiscoveryRegistryType(url) ? SERVICE_REGISTRY_PROTOCOL : REGISTRY_PROTOCOL;
     }
 

@@ -29,6 +29,7 @@ import org.apache.dubbo.remoting.transport.AbstractChannelHandlerDelegate;
 
 import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 
+// OK
 public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
 
     private static final Logger logger = LoggerFactory.getLogger(HeartbeatHandler.class);
@@ -37,38 +38,40 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
 
     public static final String KEY_WRITE_TIMESTAMP = "WRITE_TIMESTAMP";
 
+    // gx
     public HeartbeatHandler(ChannelHandler handler) {
         super(handler);
     }
 
     @Override
     public void connected(Channel channel) throws RemotingException {
-        setReadTimestamp(channel);
-        setWriteTimestamp(channel);
-        handler.connected(channel);
+        setReadTimestamp(channel);// 进去 channel是NettyChannel
+        setWriteTimestamp(channel);// 进去
+        handler.connected(channel);// AllChannelHandler  进去
     }
 
     @Override
     public void disconnected(Channel channel) throws RemotingException {
         clearReadTimestamp(channel);
         clearWriteTimestamp(channel);
-        handler.disconnected(channel);
+        handler.disconnected(channel);// AllChannelHandler  进去
     }
 
     @Override
     public void sent(Channel channel, Object message) throws RemotingException {
         setWriteTimestamp(channel);
-        handler.sent(channel, message);
+        handler.sent(channel, message); // handler为 AllChannelHandler
     }
 
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         setReadTimestamp(channel);
-        if (isHeartbeatRequest(message)) {
+        if (isHeartbeatRequest(message)) {// 进去
             Request req = (Request) message;
-            if (req.isTwoWay()) {
+            if (req.isTwoWay()) {// 进去
                 Response res = new Response(req.getId(), req.getVersion());
                 res.setEvent(HEARTBEAT_EVENT);
+                // 前面if满足表示收到请求的心跳包，所以这里需要回发心跳 // 进去
                 channel.send(res);
                 if (logger.isInfoEnabled()) {
                     int heartbeat = channel.getUrl().getParameter(Constants.HEARTBEAT_KEY, 0);
@@ -82,12 +85,14 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
             return;
         }
         if (isHeartbeatResponse(message)) {
+            // 收到响应的心跳，不必做其他操作
             if (logger.isDebugEnabled()) {
+                // 日志
                 logger.debug("Receive heartbeat response in thread " + Thread.currentThread().getName());
             }
             return;
         }
-        handler.received(channel, message);
+        handler.received(channel, message);// handler为 AllChannelHandler
     }
 
     private void setReadTimestamp(Channel channel) {
@@ -107,7 +112,7 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
     }
 
     private boolean isHeartbeatRequest(Object message) {
-        return message instanceof Request && ((Request) message).isHeartbeat();
+        return message instanceof Request && ((Request) message).isHeartbeat();// isHeartbeat 进去
     }
 
     private boolean isHeartbeatResponse(Object message) {

@@ -24,9 +24,12 @@ import org.apache.dubbo.common.utils.CollectionUtils;
 
 import java.util.List;
 
+// OK
+// 类似 ListenerExporterWrapper
 public class ListenerRegistryWrapper implements Registry {
     private static final Logger logger = LoggerFactory.getLogger(ListenerRegistryWrapper.class);
 
+    // 这个是目标Registry对象，真正的Registry对象，eg zkRegistry
     private final Registry registry;
     private final List<RegistryServiceListener> listeners;
 
@@ -50,6 +53,8 @@ public class ListenerRegistryWrapper implements Registry {
     public void destroy() {
         registry.destroy();
     }
+
+    // 以下四个方法实现很easy
 
     @Override
     public void register(URL url) {

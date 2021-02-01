@@ -29,9 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class ClientsTest {
+
     @Test
     public void testGetTransportEmpty() {
-
         try {
             ExtensionLoader.getExtensionLoader(Transporter.class).getExtension("");
             fail();

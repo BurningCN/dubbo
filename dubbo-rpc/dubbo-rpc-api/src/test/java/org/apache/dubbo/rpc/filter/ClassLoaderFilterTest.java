@@ -31,6 +31,7 @@ import org.mockito.Mockito;
 
 import java.net.URLClassLoader;
 
+// OK
 public class ClassLoaderFilterTest {
 
     private ClassLoaderFilter classLoaderFilter = new ClassLoaderFilter();
@@ -40,6 +41,7 @@ public class ClassLoaderFilterTest {
         URL url = URL.valueOf("test://test:11/test?accesslog=true&group=dubbo&version=1.1");
 
         String path = DemoService.class.getResource("/").getPath();
+        // 自定义加载器，URLClassLoader
         final URLClassLoader cl = new URLClassLoader(new java.net.URL[]{new java.net.URL("file:" + path)}) {
             @Override
             public Class<?> loadClass(String name) throws ClassNotFoundException {
@@ -52,6 +54,7 @@ public class ClassLoaderFilterTest {
         };
         final Class<?> clazz = cl.loadClass(DemoService.class.getCanonicalName());
         Invoker invoker = new MyInvoker(url) {
+            // 该方法会在ClassLoaderFilter调用，使用该class的加载器(就是上面的URLClassLoader)作为线程上下文加载器
             @Override
             public Class getInterface() {
                 return clazz;
@@ -65,6 +68,7 @@ public class ClassLoaderFilterTest {
         };
         Invocation invocation = Mockito.mock(Invocation.class);
 
+        // 进去
         classLoaderFilter.invoke(invoker, invocation);
     }
 }

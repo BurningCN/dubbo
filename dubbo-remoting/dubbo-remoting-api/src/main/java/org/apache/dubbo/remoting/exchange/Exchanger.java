@@ -29,6 +29,8 @@ import org.apache.dubbo.remoting.exchange.support.header.HeaderExchanger;
  * <a href="http://en.wikipedia.org/wiki/Message_Exchange_Pattern">Message Exchange Pattern</a>
  * <a href="http://en.wikipedia.org/wiki/Request-response">Request-Response</a>
  */
+// 上面的注释看下doc里的MEP.md （来源:https://blog.csdn.net/beijiguangyong/article/details/9674715)
+// OK
 @SPI(HeaderExchanger.NAME)
 public interface Exchanger {
 

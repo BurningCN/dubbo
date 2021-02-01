@@ -30,15 +30,32 @@ import org.apache.dubbo.remoting.transport.DecodeHandler;
  *
  *
  */
+// OK
+// 整个是这样的 Exchanges -> HeaderExchanger -> Transporters -> NettyTransporter -> new NettyServer/Client
 public class HeaderExchanger implements Exchanger {
 
     public static final String NAME = "header";
 
+
+    // connect和下面的bind对称
     @Override
     public ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
+        // HeaderExchangeClient包装Client/NettyClient
         return new HeaderExchangeClient(Transporters.connect(url, new DecodeHandler(new HeaderExchangeHandler(handler))), true);
     }
 
+    // ExchangeServer = Exchanger.bind(url, ExchangeHandler);
+    // Exchanger默认使用HeaderExchanger，其bind逻辑如下：
+    // 1.
+    //  (1) RemotingServer = Transporters.bind(url,ChannelHandler... handlers) ->
+    //  (2) getTransporter().bind(url, handler)  ->
+    //  (3) NettyTransporter.bind -> new NettyServer(url, handler) - > AbstractServer的构造方法 -> doOpen模板方法，子类实现
+    // 2.上面拿到的RemotingServer传给HeaderExchangeServer包装后返回
+
+    // 接口 ExchangeServer(RemotingServer server)
+    // 实现 HeaderExchangeServer(NettyServer server)
+
+    // handler参数比如说是DubboProtocol的requestHandler属性
     @Override
     public ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
         // 创建 HeaderExchangeServer 实例，该方法包含了多个逻辑，分别如下：

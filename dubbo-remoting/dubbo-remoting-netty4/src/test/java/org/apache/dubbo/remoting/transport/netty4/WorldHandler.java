@@ -23,6 +23,8 @@ import org.apache.dubbo.remoting.exchange.support.Replier;
 /**
  * DataHandler
  */
+// OK
+// gx
 public class WorldHandler implements Replier<World> {
 
     public Class<World> interest() {

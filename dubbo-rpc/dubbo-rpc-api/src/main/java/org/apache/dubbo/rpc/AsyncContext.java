@@ -19,10 +19,14 @@ package org.apache.dubbo.rpc;
 /**
  * AsyncContext works like {@see javax.servlet.AsyncContext} in the Servlet 3.0.
  * An AsyncContext is stated by a call to {@link RpcContext#startAsync()}.
+ *
+ * AsyncContext的工作方式类似{@see javax.servlet。Servlet 3.0中的AsyncContext}。
+ * AsyncContext是通过调用{@link RpcContext#startAsync()}来声明的。
  * <p>
  * The demo is {@see com.alibaba.dubbo.examples.async.AsyncConsumer}
  * and {@see com.alibaba.dubbo.examples.async.AsyncProvider}
  */
+// OK
 public interface AsyncContext {
 
     /**

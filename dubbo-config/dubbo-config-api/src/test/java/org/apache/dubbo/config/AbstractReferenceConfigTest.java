@@ -45,6 +45,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+// OK
 public class AbstractReferenceConfigTest {
 
     @Test
@@ -68,10 +69,32 @@ public class AbstractReferenceConfigTest {
         assertThat(referenceConfig.isGeneric(), is(true));
         Map<String, String> parameters = new HashMap<String, String>();
         AbstractInterfaceConfig.appendParameters(parameters, referenceConfig);
+        //"sticky" -> "false"
+        //"generic" -> "true"
         // FIXME: not sure why AbstractReferenceConfig has both isGeneric and getGeneric
         assertThat(parameters, hasKey("generic"));
     }
+    @Test
+    public void testGenericOverride() {
+        ReferenceConfig referenceConfig = new ReferenceConfig();
+        // 进去
+        referenceConfig.setGeneric("false");
+        referenceConfig.refresh();
+        // 进去
+        Assertions.assertFalse(referenceConfig.isGeneric());
+        Assertions.assertEquals("false", referenceConfig.getGeneric());
 
+        ReferenceConfig referenceConfig1 = new ReferenceConfig();
+        referenceConfig1.setGeneric(GENERIC_SERIALIZATION_NATIVE_JAVA);
+        referenceConfig1.refresh();
+        Assertions.assertEquals(GENERIC_SERIALIZATION_NATIVE_JAVA, referenceConfig1.getGeneric());
+        Assertions.assertTrue(referenceConfig1.isGeneric());
+
+        ReferenceConfig referenceConfig2 = new ReferenceConfig();
+        referenceConfig2.refresh();
+        Assertions.assertNull(referenceConfig2.getGeneric());
+    }
+    // 这个测试程序显然有问题，和前面的testInit有差？
     @Test
     public void testInjvm() throws Exception {
         ReferenceConfig referenceConfig = new ReferenceConfig();
@@ -87,6 +110,8 @@ public class AbstractReferenceConfigTest {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(REFERENCE_FILTER_KEY, "prefilter");
         AbstractInterfaceConfig.appendParameters(parameters, referenceConfig);
+        // 这个讲过，前面提前在map put了一个entry，entry的key值是getFilter上面@Parameter注解的key值，
+        // 所以会entry的value会拼接上getFilter的返回值
         assertThat(parameters, hasValue("prefilter,mockfilter"));
     }
 
@@ -99,6 +124,7 @@ public class AbstractReferenceConfigTest {
         parameters.put(ROUTER_KEY, "tag");
         AbstractInterfaceConfig.appendParameters(parameters, referenceConfig);
         assertThat(parameters, hasValue("tag,condition"));
+
         URL url = mock(URL.class);
         when(url.getParameter(ROUTER_KEY)).thenReturn("condition");
         List<RouterFactory> routerFactories = ExtensionLoader.getExtensionLoader(RouterFactory.class).getActivateExtension(url, ROUTER_KEY);
@@ -187,24 +213,7 @@ public class AbstractReferenceConfigTest {
         assertThat(referenceConfig.getGroup(), equalTo("group"));
     }
 
-    @Test
-    public void testGenericOverride() {
-        ReferenceConfig referenceConfig = new ReferenceConfig();
-        referenceConfig.setGeneric("false");
-        referenceConfig.refresh();
-        Assertions.assertFalse(referenceConfig.isGeneric());
-        Assertions.assertEquals("false", referenceConfig.getGeneric());
 
-        ReferenceConfig referenceConfig1 = new ReferenceConfig();
-        referenceConfig1.setGeneric(GENERIC_SERIALIZATION_NATIVE_JAVA);
-        referenceConfig1.refresh();
-        Assertions.assertEquals(GENERIC_SERIALIZATION_NATIVE_JAVA, referenceConfig1.getGeneric());
-        Assertions.assertTrue(referenceConfig1.isGeneric());
-
-        ReferenceConfig referenceConfig2 = new ReferenceConfig();
-        referenceConfig2.refresh();
-        Assertions.assertNull(referenceConfig2.getGeneric());
-    }
 
     private static class ReferenceConfig extends AbstractReferenceConfig {
 

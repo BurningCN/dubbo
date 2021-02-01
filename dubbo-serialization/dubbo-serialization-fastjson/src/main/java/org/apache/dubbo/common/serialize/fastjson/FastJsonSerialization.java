@@ -34,8 +34,10 @@ import static org.apache.dubbo.common.serialize.Constants.FASTJSON_SERIALIZATION
  *     e.g. &lt;dubbo:protocol serialization="fastjson" /&gt;
  * </pre>
  */
+// OK
 public class FastJsonSerialization implements Serialization {
 
+    // 类型用的byte，节省空间
     @Override
     public byte getContentTypeId() {
         return FASTJSON_SERIALIZATION_ID;
@@ -48,11 +50,13 @@ public class FastJsonSerialization implements Serialization {
 
     @Override
     public ObjectOutput serialize(URL url, OutputStream output) throws IOException {
+        // 进去
         return new FastJsonObjectOutput(output);
     }
 
     @Override
     public ObjectInput deserialize(URL url, InputStream input) throws IOException {
+        // 进去
         return new FastJsonObjectInput(input);
     }
 

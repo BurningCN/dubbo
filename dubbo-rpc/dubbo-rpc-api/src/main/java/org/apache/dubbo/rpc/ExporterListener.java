@@ -21,6 +21,10 @@ import org.apache.dubbo.common.extension.SPI;
 /**
  * ExporterListener. (SPI, Singleton, ThreadSafe)
  */
+// OK
+// 这个类的作用主要是监听exporter发生exported或者unexported之后进行怎么样的后置处理动作。可以看两个方法上面的注释就懂了。
+// 不过目前没有具体实现类只有一个抽象类ExporterListenerAdapter。如果有需求，你们可以自定义具体类，继承ExporterListenerAdapter
+// 和ExporterListener作用差不多，只不过一个监控Exporter的exported和unexported事件，一个监控Invoker的referred和destroyed
 @SPI
 public interface ExporterListener {
 

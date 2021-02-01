@@ -25,12 +25,15 @@ import java.util.Map;
 /**
  * DubboExporter
  */
+// OK
+// 和InjvmExporter基本一致，除了构造方法最后一步不同
 public class DubboExporter<T> extends AbstractExporter<T> {
 
     private final String key;
 
     private final Map<String, Exporter<?>> exporterMap;
 
+    // gx
     public DubboExporter(Invoker<T> invoker, String key, Map<String, Exporter<?>> exporterMap) {
         super(invoker);
         this.key = key;

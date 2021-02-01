@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.LongAdder;
  * Judge whether a particular invocation of service provider method should be allowed within a configured time interval.
  * As a state it contain name of key ( e.g. method), last invocation time, interval and rate count.
  */
+// OK
 class StatItem {
 
     private String name;
@@ -36,22 +37,30 @@ class StatItem {
 
     StatItem(String name, int rate, long interval) {
         this.name = name;
+
+        // 下两个表示在interval间隔内最多只能调用rate+1次（rate从0计数）（比如1s最多调用2次）
         this.rate = rate;
         this.interval = interval;
+        //  记录当前时间作为上次重置时间
         this.lastResetTime = System.currentTimeMillis();
+        // LongAdder和AtomicLong功能一样，不过前者效率更高，进去
         this.token = buildLongAdder(rate);
     }
 
     public boolean isAllowable() {
         long now = System.currentTimeMillis();
+        // 调用间隔检查
         if (now > lastResetTime + interval) {
+            // 重置
             token = buildLongAdder(rate);
             lastResetTime = now;
         }
 
+        // 再间隔内，但是次数用完了，返回false禁止调用
         if (token.sum() < 0) {
             return false;
         }
+        // 在间隔内，次数--
         token.decrement();
         return true;
     }

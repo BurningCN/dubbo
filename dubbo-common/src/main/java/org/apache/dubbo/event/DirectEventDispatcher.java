@@ -25,6 +25,7 @@ package org.apache.dubbo.event;
 public final class DirectEventDispatcher extends AbstractEventDispatcher {
 
     public DirectEventDispatcher() {
+        // 参数是一个线程池，可以看下，super进去
         super(DIRECT_EXECUTOR);
     }
 }

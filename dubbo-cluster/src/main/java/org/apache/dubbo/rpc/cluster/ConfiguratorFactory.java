@@ -18,12 +18,16 @@ package org.apache.dubbo.rpc.cluster;
 
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.extension.Adaptive;
+import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.extension.SPI;
+
+import java.security.cert.Extension;
 
 /**
  * ConfiguratorFactory. (SPI, Singleton, ThreadSafe)
  *
  */
+// OK
 @SPI
 public interface ConfiguratorFactory {
 

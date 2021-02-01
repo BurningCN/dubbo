@@ -25,12 +25,14 @@ import org.apache.dubbo.registry.support.FailbackRegistry;
 /**
  * FailedSubscribedTask
  */
+// OK
 public final class FailedSubscribedTask extends AbstractRetryTask {
 
     private static final String NAME = "retry subscribe";
 
     private final NotifyListener listener;
 
+    // gx  其他地方不说了 可以参考 FailedRegisteredTask
     public FailedSubscribedTask(URL url, FailbackRegistry registry, NotifyListener listener) {
         super(url, registry, NAME);
         if (listener == null) {
@@ -42,6 +44,7 @@ public final class FailedSubscribedTask extends AbstractRetryTask {
     @Override
     protected void doRetry(URL url, FailbackRegistry registry, Timeout timeout) {
         registry.doSubscribe(url, listener);
+        // 进去
         registry.removeFailedSubscribedTask(url, listener);
     }
 }

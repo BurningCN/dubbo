@@ -25,6 +25,7 @@ import org.apache.dubbo.common.URL;
  * @see org.apache.dubbo.registry.RegistryFactory#getRegistry(URL)
  * @see org.apache.dubbo.registry.support.AbstractRegistry
  */
+// OK
 public interface Registry extends Node, RegistryService {
     default void reExportRegister(URL url) {
         register(url);

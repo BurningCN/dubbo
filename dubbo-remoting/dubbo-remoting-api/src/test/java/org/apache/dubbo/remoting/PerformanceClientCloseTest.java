@@ -31,13 +31,17 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 /**
  * ProformanceClient
  * The test class will report abnormal thread pool, because the judgment on the thread pool concurrency problems produced in DefaultChannelHandler (connected event has been executed asynchronously, judgment, then closed the thread pool, thread pool and execution error, this problem can be specified through the Constants.CHANNEL_HANDLER_KEY=connection.)
+ * 测试类将报告异常的线程池,线程池并发性问题上的判断产生 DefaultChannelHandler(连接事件异步执行,判断,然后关闭线程池,线程池和执行错误,这个问题可以通过指定Constants.CHANNEL_HANDLER_KEY =连接。)
  */
+@Deprecated
+// OK
 public class PerformanceClientCloseTest  {
 
     private static final Logger logger = LoggerFactory.getLogger(PerformanceClientCloseTest.class);
 
     @Test
     public void testClient() throws Throwable {
+        System.setProperty("server","127.0.0.1:9911");
         // read server info from property
         if (PerformanceUtils.getProperty("server", null) == null) {
             logger.warn("Please set -Dserver=127.0.0.1:9911");
@@ -47,8 +51,8 @@ public class PerformanceClientCloseTest  {
         final String transporter = PerformanceUtils.getProperty(Constants.TRANSPORTER_KEY, Constants.DEFAULT_TRANSPORTER);
         final String serialization = PerformanceUtils.getProperty(Constants.SERIALIZATION_KEY, Constants.DEFAULT_REMOTING_SERIALIZATION);
         final int timeout = PerformanceUtils.getIntProperty(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-        final int concurrent = PerformanceUtils.getIntProperty("concurrent", 1);
-        final int runs = PerformanceUtils.getIntProperty("runs", Integer.MAX_VALUE);
+        final int concurrent = PerformanceUtils.getIntProperty("concurrent", 1); // 并发数/线程数 （10*100的10）
+        final int runs = PerformanceUtils.getIntProperty("runs", 10); // 每个线程执行的次数  （10*100的100）
         final String onerror = PerformanceUtils.getProperty("onerror", "continue");
 
         final String url = "exchange://" + server + "?transporter=" + transporter
@@ -59,20 +63,22 @@ public class PerformanceClientCloseTest  {
         final AtomicInteger count = new AtomicInteger();
         final AtomicInteger error = new AtomicInteger();
         for (int n = 0; n < concurrent; n++) {
-            new Thread(new Runnable() {
+            new Thread(new Runnable() { // concurrent个并发线程
                 public void run() {
-                    for (int i = 0; i < runs; i++) {
+                    for (int i = 0; i < runs; i++) { // 每个线程做runs次操作
                         ExchangeClient client = null;
                         try {
-                            client = Exchangers.connect(url);
+                            client = Exchangers.connect(url); // 连接  。 表明 concurrent*runs 个客户端（连接同一个server）
                             int c = count.incrementAndGet();
                             if (c % 100 == 0) {
+                                // 每隔100次打印
                                 System.out.println("count: " + count.get() + ", error: " + error.get());
                             }
                         } catch (Exception e) {
                             error.incrementAndGet();
                             e.printStackTrace();
                             System.out.println("count: " + count.get() + ", error: " + error.get());
+                            // 这里是个小技巧
                             if ("exit".equals(onerror)) {
                                 System.exit(-1);
                             } else if ("break".equals(onerror)) {
@@ -92,6 +98,7 @@ public class PerformanceClientCloseTest  {
                 }
             }).start();
         }
+        // 这里没啥的，主要是为了阻塞，直接System.in.read()亦可
         synchronized (PerformanceServerTest.class) {
             while (true) {
                 try {

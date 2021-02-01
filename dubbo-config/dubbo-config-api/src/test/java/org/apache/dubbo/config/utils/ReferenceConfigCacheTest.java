@@ -27,19 +27,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+// OK
 public class ReferenceConfigCacheTest {
 
     @BeforeEach
     public void setUp() throws Exception {
+        // 进去
         MockReferenceConfig.setCounter(0);
-        ReferenceConfigCache.CACHE_HOLDER.clear();
+        ReferenceConfigCache.CACHE_HOLDER.clear(); // 进去
     }
 
     @Test
     public void testGetCacheSameReference() throws Exception {
+        // 什么参数也不传，进去
         ReferenceConfigCache cache = ReferenceConfigCache.getCache();
-        MockReferenceConfig config = buildMockReferenceConfig("org.apache.dubbo.config.utils.service.FooService", "group1", "1.0.0");
+        // 进去
+        MockReferenceConfig config = buildMockReferenceConfig("org.apache.dubbo.config.utils.service.FooService",
+                "group1", "1.0.0");
+
         assertEquals(0L, config.getCounter());
+        // 进去
         cache.get(config);
         assertTrue(config.isGetMethodRun());
 

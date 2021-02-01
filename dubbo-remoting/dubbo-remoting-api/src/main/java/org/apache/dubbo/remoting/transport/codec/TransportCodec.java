@@ -33,23 +33,34 @@ import java.io.OutputStream;
 /**
  * Subclasses {@link org.apache.dubbo.remoting.telnet.codec.TelnetCodec} and {@link org.apache.dubbo.remoting.exchange.codec.ExchangeCodec}
  * both override all the methods declared in this class.
+ *
+ * 子类TelnetCodec和ExchangeCodec两者都覆盖在这个类中声明的所有方法。所以下面被标记为废弃 ，但是子类可不是废弃的，这种感觉有点奇怪
  */
+// OK
 @Deprecated
 public class TransportCodec extends AbstractCodec {
 
     @Override
     public void encode(Channel channel, ChannelBuffer buffer, Object message) throws IOException {
+        // ChannelBuffer -> ChannelBufferOutputStream 进去
         OutputStream output = new ChannelBufferOutputStream(buffer);
+        // 根据url获取序列化扩展类实例，然后调用serialize获取序列化器，eg 返回 new FastJsonObjectOutput(output)
+        // 序列化就是写出、保存，所以返回的是输出流，即将把msg灌入
         ObjectOutput objectOutput = getSerialization(channel).serialize(channel.getUrl(), output);
+        // 进去
         encodeData(channel, objectOutput, message);
+        // 进去
         objectOutput.flushBuffer();
+        // Cleanable类似一种标记接口
         if (objectOutput instanceof Cleanable) {
+            // 清理
             ((Cleanable) objectOutput).cleanup();
         }
     }
 
     @Override
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
+        // 进去
         InputStream input = new ChannelBufferInputStream(buffer);
         ObjectInput objectInput = getSerialization(channel).deserialize(channel.getUrl(), input);
         Object object = decodeData(channel, objectInput);
@@ -60,6 +71,7 @@ public class TransportCodec extends AbstractCodec {
     }
 
     protected void encodeData(Channel channel, ObjectOutput output, Object message) throws IOException {
+        // 进去
         encodeData(output, message);
     }
 
@@ -68,6 +80,8 @@ public class TransportCodec extends AbstractCodec {
     }
 
     protected void encodeData(ObjectOutput output, Object message) throws IOException {
+        // 写入数据（以fastJson，就是利用其api写到output输出流，FastJsonObjectOutput内部利用的是PrintWriter writer，writer进行写的时候
+        // 底层调用的是ChannelBufferOutputStream的write方法）
         output.writeObject(message);
     }
 

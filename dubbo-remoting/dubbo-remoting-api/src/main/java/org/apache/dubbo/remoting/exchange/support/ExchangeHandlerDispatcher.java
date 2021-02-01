@@ -56,10 +56,12 @@ public class ExchangeHandlerDispatcher implements ExchangeHandler {
         telnetHandler = new TelnetHandlerAdapter();
     }
 
+    // gx
     public ExchangeHandlerDispatcher(Replier<?> replier, ChannelHandler... handlers) {
-        replierDispatcher = new ReplierDispatcher(replier);
-        handlerDispatcher = new ChannelHandlerDispatcher(handlers);
+        replierDispatcher = new ReplierDispatcher(replier);// 进去
+        handlerDispatcher = new ChannelHandlerDispatcher(handlers);// 进去
         telnetHandler = new TelnetHandlerAdapter();
+        // 然后再去看下后面的几个事件相关的方法
     }
 
     public ExchangeHandlerDispatcher addChannelHandler(ChannelHandler handler) {
@@ -81,21 +83,22 @@ public class ExchangeHandlerDispatcher implements ExchangeHandler {
         replierDispatcher.removeReplier(type);
         return this;
     }
-
+    // gx
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public CompletableFuture<Object> reply(ExchangeChannel channel, Object request) throws RemotingException {
+        // reply 进去
         return CompletableFuture.completedFuture(((Replier) replierDispatcher).reply(channel, request));
     }
 
     @Override
     public void connected(Channel channel) {
-        handlerDispatcher.connected(channel);
+        handlerDispatcher.connected(channel);// ChannelHandlerDispatcher // 进去
     }
 
     @Override
     public void disconnected(Channel channel) {
-        handlerDispatcher.disconnected(channel);
+        handlerDispatcher.disconnected(channel);// ChannelHandlerDispatcher // 进去
     }
 
     @Override

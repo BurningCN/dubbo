@@ -36,7 +36,7 @@ public class ReplierDispatcher implements Replier<Object> {
     }
 
     public ReplierDispatcher(Replier<?> defaultReplier) {
-        this(defaultReplier, null);
+        this(defaultReplier, null);// 进去
     }
 
     public ReplierDispatcher(Replier<?> defaultReplier, Map<Class<?>, Replier<?>> repliers) {
@@ -71,7 +71,7 @@ public class ReplierDispatcher implements Replier<Object> {
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Object reply(ExchangeChannel channel, Object request) throws RemotingException {
-        return ((Replier) getReplier(request.getClass())).reply(channel, request);
+        return ((Replier) getReplier(request.getClass())).reply(channel, request);// getReplier 、reply 进去
     }
 
 }

@@ -22,7 +22,11 @@ import java.util.Map;
 /**
  * Provide a unified serialization registry, this class used for {@code dubbo-serialization-fst}
  * and {@code dubbo-serialization-kryo}, it will register some classes at startup time (for example {@link AbstractKryoFactory#create})
+ *
+ * 提供一个统一的序列化注册表，该类用于{@code dubbo-serialization-fst}
+ * 和{@code dubbo-serialization-kryo}，它将在启动时注册一些类(例如{@link AbstractKryoFactory#create})
  */
+// OK
 public abstract class SerializableClassRegistry {
 
 
@@ -33,7 +37,9 @@ public abstract class SerializableClassRegistry {
      *
      * @param clazz object type
      */
+    // gx
     public static void registerClass(Class<?> clazz) {
+        // 进去
         registerClass(clazz, null);
     }
 

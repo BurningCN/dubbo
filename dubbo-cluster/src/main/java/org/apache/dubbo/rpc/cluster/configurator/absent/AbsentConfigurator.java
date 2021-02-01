@@ -23,14 +23,19 @@ import org.apache.dubbo.rpc.cluster.configurator.AbstractConfigurator;
  * AbsentConfigurator
  *
  */
+// OK
 public class AbsentConfigurator extends AbstractConfigurator {
 
+    // gx
     public AbsentConfigurator(URL url) {
+        // 进去
         super(url);
     }
 
+    // 模板方法，被父类的configureIfMatch方法调用
     @Override
     public URL doConfigure(URL currentUrl, URL configUrl) {
+        // 只给currentUrl添加 在configUrl有但在currentUrl没有 的参数
         return currentUrl.addParametersIfAbsent(configUrl.getParameters());
     }
 

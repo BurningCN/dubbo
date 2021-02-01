@@ -25,8 +25,11 @@ import org.apache.dubbo.common.extension.SPI;
  * @see org.apache.dubbo.remoting.Transporter#bind(org.apache.dubbo.common.URL, ChannelHandler)
  * @see org.apache.dubbo.remoting.Transporter#connect(org.apache.dubbo.common.URL, ChannelHandler)
  */
+// OK
 @SPI
 public interface ChannelHandler {
+
+    // 主要是channel发生了一些事件，做出相应的回调处理
 
     /**
      * on channel connected.

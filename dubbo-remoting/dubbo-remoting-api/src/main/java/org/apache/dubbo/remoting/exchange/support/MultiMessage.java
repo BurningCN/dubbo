@@ -23,10 +23,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @see org.apache.dubbo.remoting.transport.MultiMessageHandler
  */
+// OK
 public final class MultiMessage implements Iterable {
 
     private final List messages = new ArrayList();
@@ -36,7 +39,7 @@ public final class MultiMessage implements Iterable {
 
     public static MultiMessage createFromCollection(Collection collection) {
         MultiMessage result = new MultiMessage();
-        result.addMessages(collection);
+        result.addMessages(collection);// 进去
         return result;
     }
 
@@ -44,6 +47,7 @@ public final class MultiMessage implements Iterable {
         return createFromCollection(Arrays.asList(args));
     }
 
+    // gx
     public static MultiMessage create() {
         return new MultiMessage();
     }

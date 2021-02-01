@@ -29,6 +29,7 @@ public class Application {
         if (isClassic(args)) {
             runWithRefer();
         } else {
+            // 进去
             runWithBootstrap();
         }
     }
@@ -39,14 +40,20 @@ public class Application {
 
     private static void runWithBootstrap() {
         ReferenceConfig<DemoService> reference = new ReferenceConfig<>();
+        // 进去
         reference.setInterface(DemoService.class);
+        // 进去
         reference.setGeneric("true");
+        // 不需要向Provider对应Application那样指定实现
+
 
         DubboBootstrap bootstrap = DubboBootstrap.getInstance();
-        bootstrap.application(new ApplicationConfig("dubbo-demo-api-consumer"))
-                .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
-                .reference(reference)
-                .start();
+        bootstrap.application(new ApplicationConfig("dubbo-demo-api-consumer")) // Provider对应Application也有这三个
+                 .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
+                // 进去
+                 .reference(reference)
+                // 进去
+                 .start();
 
         DemoService demoService = ReferenceConfigCache.getCache().get(reference);
         String message = demoService.sayHello("dubbo");
@@ -54,8 +61,8 @@ public class Application {
 
         // generic invoke
         GenericService genericService = (GenericService) demoService;
-        Object genericInvokeResult = genericService.$invoke("sayHello", new String[] { String.class.getName() },
-                new Object[] { "dubbo generic invoke" });
+        Object genericInvokeResult = genericService.$invoke("sayHello", new String[]{String.class.getName()},
+                new Object[]{"dubbo generic invoke"});
         System.out.println(genericInvokeResult);
     }
 

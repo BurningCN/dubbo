@@ -25,8 +25,10 @@ import org.apache.dubbo.remoting.exchange.support.MultiMessage;
  *
  * @see MultiMessage
  */
+// OK
 public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
 
+    // gx 传入的是 HeartbeatHandler
     public MultiMessageHandler(ChannelHandler handler) {
         super(handler);
     }
@@ -35,12 +37,13 @@ public class MultiMessageHandler extends AbstractChannelHandlerDelegate {
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         if (message instanceof MultiMessage) {
+            // MultiMessage是Iterable接口的实现类，所以可以下面直接for:方式
             MultiMessage list = (MultiMessage) message;
             for (Object obj : list) {
-                handler.received(channel, obj);
+                handler.received(channel, obj); // 进HeartbeatHandler的received
             }
         } else {
-            handler.received(channel, message);
+            handler.received(channel, message); // 进HeartbeatHandler的received
         }
     }
 }

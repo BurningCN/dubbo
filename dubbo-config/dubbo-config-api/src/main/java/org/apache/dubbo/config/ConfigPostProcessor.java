@@ -22,6 +22,7 @@ import org.apache.dubbo.common.extension.SPI;
  * 2019/12/30
  */
 
+// OK
 @SPI
 public interface ConfigPostProcessor {
 

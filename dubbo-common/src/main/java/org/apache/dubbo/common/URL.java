@@ -27,10 +27,7 @@ import org.apache.dubbo.common.utils.StringUtils;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -190,6 +187,7 @@ class URL implements Serializable {
                int port,
                String path,
                Map<String, String> parameters) {
+        // parameters就是?之后的参数对，toMethodParameters进去，然后this进去
         this(protocol, username, password, host, port, path, parameters, toMethodParameters(parameters));
     }
 
@@ -331,7 +329,7 @@ class URL implements Serializable {
         if (url.length() > 0) {
             host = url; // // localhost:8080 的 localhost
         }
-
+        // 进去
         return new URL(protocol, username, password, host, port, path, parameters);
     }
 
@@ -360,15 +358,20 @@ class URL implements Serializable {
         } else {
             for (Map.Entry<String, String> entry : parameters.entrySet()) {
                 String key = entry.getKey();
-                int methodSeparator = key.indexOf('.');
+                int methodSeparator = key.indexOf('.'); // test.async=true
                 if (methodSeparator > 0) {
-                    String method = key.substring(0, methodSeparator);
-                    String realKey = key.substring(methodSeparator + 1);
-                    URL.putMethodParameter(method, realKey, entry.getValue(), methodParameters);
+                    String method = key.substring(0, methodSeparator);// test
+                    String realKey = key.substring(methodSeparator + 1);//async=true
+                    URL.putMethodParameter(method, realKey, entry.getValue(), methodParameters);// 进去
                 }
             }
         }
         return methodParameters;
+        //methodParameters = {HashMap@1570}  size = 1
+        // "test" -> {HashMap@1952}  size = 1
+        //  key = "test"
+        //  value = {HashMap@1952}  size = 1
+        //   "async" -> "true"
     }
 
     public static URL valueOf(String url, String... reserveParams) {
@@ -553,7 +556,7 @@ class URL implements Serializable {
 
     public List<URL> getBackupUrls() {
         List<URL> urls = new ArrayList<>();
-        urls.add(this);
+        urls.add(this);// 包含自身
         String[] backups = getParameter(RemotingConstants.BACKUP_KEY, new String[0]);
         if (backups != null && backups.length > 0) {
             for (String backup : backups) {
@@ -873,14 +876,16 @@ class URL implements Serializable {
         }
         return value;
     }
-
     public String getMethodParameter(String method, String key) {
+        // getMethodParameters()返回的methodParameters其填充处注意下
+        // methodParameters - > <methodName:<key,val>>
         Map<String, String> keyMap = getMethodParameters().get(method);
         String value = null;
         if (keyMap != null) {
             value = keyMap.get(key);
         }
         if (StringUtils.isEmpty(value)) {
+            // 获取url的参数值
             value = parameters.get(key);
         }
         return value;
@@ -934,15 +939,18 @@ class URL implements Serializable {
     }
 
     public int getMethodParameter(String method, String key, int defaultValue) {
+        // 进去
         Number n = getCachedNumber(method, key);
         if (n != null) {
             return n.intValue();
         }
+        // 进去
         String value = getMethodParameter(method, key);
         if (StringUtils.isEmpty(value)) {
             return defaultValue;
         }
         int i = Integer.parseInt(value);
+        // 更新缓存 进去
         updateCachedNumber(method, key, i);
         return i;
     }
@@ -976,6 +984,7 @@ class URL implements Serializable {
     }
 
     private Number getCachedNumber(String method, String key) {
+        // [{"echo":[{"active":3},{},{}] },{} {}]
         Map<String, Number> keyNumber = getMethodNumbers().get(method);
         if (keyNumber != null) {
             return keyNumber.get(key);
@@ -1073,6 +1082,7 @@ class URL implements Serializable {
         if (method == null) {
             return false;
         }
+        // methodParameters的填充处在URL.valueOf
         return getMethodParameters().containsKey(method);
     }
 
@@ -1088,7 +1098,7 @@ class URL implements Serializable {
         if (StringUtils.isEmpty(value)) {
             return this;
         }
-        return addParameter(key, encode(value));
+        return addParameter(key, encode(value));// 编码，进去
     }
 
     public URL addParameter(String key, boolean value) {
@@ -1542,7 +1552,6 @@ class URL implements Serializable {
     public static String buildKey(String path, String group, String version) {
         return BaseServiceMetadata.buildServiceKey(path, group, version);
     }
-
     public String getProtocolServiceKey() {
         if (protocolServiceKey != null) {
             return protocolServiceKey;
@@ -1556,6 +1565,7 @@ class URL implements Serializable {
     }
 
     public String toServiceString() {
+        // 进去
         return buildString(true, false, true, true);
     }
 
@@ -1566,6 +1576,7 @@ class URL implements Serializable {
 
     public String getServiceInterface() {
         // 参数分别是interface和test，进去
+        // eg : test://ip:port/xx?interface=yy，此时path就是xx，interface=yy会存到parameters map中，一般xx、 yy是接口全限定名
         return getParameter(INTERFACE_KEY, path);
     }
 
@@ -1736,7 +1747,7 @@ class URL implements Serializable {
 
     public static void putMethodParameter(String method, String key, String value, Map<String, Map<String, String>> methodParameters) {
         Map<String, String> subParameter = methodParameters.computeIfAbsent(method, k -> new HashMap<>());
-        subParameter.put(key, value);
+        subParameter.put(key, value);// {"async":true}
     }
 
     /* add service scope operations, see InstanceAddressURL */

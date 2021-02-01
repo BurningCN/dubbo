@@ -27,10 +27,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @since 2.7.5
  */
+// OK
 public class FileSystemDynamicConfigurationFactoryTest {
 
     @Test
     public void testGetFactory() {
-        assertEquals(FileSystemDynamicConfigurationFactory.class, DynamicConfigurationFactory.getDynamicConfigurationFactory("file").getClass());
+        assertEquals(FileSystemDynamicConfigurationFactory.class,
+                // 进去，看下common模块下的DynamicConfigurationFactory的spi文件，里面两个扩展 nop 和 file
+                DynamicConfigurationFactory.getDynamicConfigurationFactory("file").getClass());
     }
 }

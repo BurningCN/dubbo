@@ -39,7 +39,7 @@ public class ChannelHandlerDispatcher implements ChannelHandler {
     }
 
     public ChannelHandlerDispatcher(ChannelHandler... handlers) {
-        this(handlers == null ? null : Arrays.asList(handlers));
+        this(handlers == null ? null : Arrays.asList(handlers));// 进去
     }
 
     public ChannelHandlerDispatcher(Collection<ChannelHandler> handlers) {
@@ -66,7 +66,7 @@ public class ChannelHandlerDispatcher implements ChannelHandler {
     public void connected(Channel channel) {
         for (ChannelHandler listener : channelHandlers) {
             try {
-                listener.connected(channel);
+                listener.connected(channel); // listener为 ChannelHandlerAdapter // 进去
             } catch (Throwable t) {
                 logger.error(t.getMessage(), t);
             }
@@ -77,7 +77,7 @@ public class ChannelHandlerDispatcher implements ChannelHandler {
     public void disconnected(Channel channel) {
         for (ChannelHandler listener : channelHandlers) {
             try {
-                listener.disconnected(channel);
+                listener.disconnected(channel);// listener为 ChannelHandlerAdapter // 进去
             } catch (Throwable t) {
                 logger.error(t.getMessage(), t);
             }

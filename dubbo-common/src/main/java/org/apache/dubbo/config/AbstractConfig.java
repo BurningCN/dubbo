@@ -240,7 +240,7 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
-    // todo
+    // todo 待分析
     protected static AsyncMethodInfo convertMethodConfig2AsyncInfo(MethodConfig methodConfig) {
         if (methodConfig == null || (methodConfig.getOninvoke() == null && methodConfig.getOnreturn() == null && methodConfig.getOnthrow() == null)) {
             return null;

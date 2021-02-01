@@ -43,7 +43,8 @@ import static org.apache.dubbo.remoting.Constants.DEFAULT_BUFFER_SIZE;
  * <p>
  * mvn clean test -Dtest=*PerformanceServerTest -Dport=9911
  */
-public class PerformanceServerTest  {
+@Deprecated
+public class PerformanceServerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(PerformanceServerTest.class);
     private static ExchangeServer server = null;
@@ -155,9 +156,14 @@ public class PerformanceServerTest  {
         }
         final int port = PerformanceUtils.getIntProperty("port", 9911);
         final boolean telnet = PerformanceUtils.getBooleanProperty("telnet", true);
-        if (telnet) statTelnetServer(port + 1);
-        server = statServer();
-
+        if (telnet) {
+            // 进去
+            statTelnetServer(port + 1);
+        } else {
+            // 进去
+            server = statServer();
+        }
+        // hang住
         synchronized (PerformanceServerTest.class) {
             while (true) {
                 try {

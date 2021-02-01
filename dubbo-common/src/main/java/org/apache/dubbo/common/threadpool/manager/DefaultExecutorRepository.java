@@ -82,7 +82,7 @@ public class DefaultExecutorRepository implements ExecutorRepository {
     // 外面的 key 表示服务提供方还是消费方，里面的 key 表示服务暴露的端口号，也就是说消费方对于相同端口号的服务只会创建一个线程池，
     // 共享同一个线程池进行服务请求和消息接收后一系列处理。
     public synchronized ExecutorService createExecutorIfAbsent(URL url) {
-        String componentKey = EXECUTOR_SERVICE_COMPONENT_KEY;
+        String componentKey = EXECUTOR_SERVICE_COMPONENT_KEY; // java.util.concurrent.ExecutorService
         if (CONSUMER_SIDE.equalsIgnoreCase(url.getParameter(SIDE_KEY))) {
             componentKey = CONSUMER_SIDE;
         }
@@ -90,8 +90,8 @@ public class DefaultExecutorRepository implements ExecutorRepository {
         //           不论key是否存在，强制用value覆盖进去。
         //           区别：put返回旧value或null，compute返回新的value
         //    2. putIfAbsent与computeIfAbsent：
-        //           key存在，则不操作，key不存在，则赋值一对新的（key，value）。
-        //           putIfAbsent返回旧value或null，computeIfAbsent返回新的value
+        //           key存在，则不操作，两个都返回当前key的val;
+        //           key不存在，则赋值一对新的（key，value）putIfAbsent返回null，computeIfAbsent返回新的value，且注意computeXX第二个参数接受的是Function
         Map<Integer, ExecutorService> executors = data.computeIfAbsent(componentKey, k -> new ConcurrentHashMap<>());
         Integer portKey = url.getPort();
         // createExecutor进去
@@ -115,6 +115,8 @@ public class DefaultExecutorRepository implements ExecutorRepository {
         /**
          * It's guaranteed that this method is called after {@link #createExecutorIfAbsent(URL)}, so data should already
          * have Executor instances generated and stored.
+         * 可以保证这个方法在{@link #createExecutorIfAbsent(URL)}之后被调用，所以data应该已经被调用了
+         * 生成并存储执行程序实例。
          */
         if (executors == null) {
             logger.warn("No available executors, this is not expected, framework should call createExecutorIfAbsent first " +
@@ -183,7 +185,7 @@ public class DefaultExecutorRepository implements ExecutorRepository {
 
     private ExecutorService createExecutor(URL url) {
         // 获取ThreadPool的自适应扩展类(源码字符串+Compiler自动生成的)，自适应扩展类的getExecutor方法内部会根据url获取对应的
-        // 扩展类实例（四种，具体看ThreadPool的SPI文件）并调用其getExecutor方法（同时传入url）
+        // 扩展类实例，默认是fixed（四种，具体看ThreadPool的SPI文件）并调用其getExecutor方法（同时传入url）
         return (ExecutorService) ExtensionLoader.getExtensionLoader(ThreadPool.class).getAdaptiveExtension().getExecutor(url);
     }
 

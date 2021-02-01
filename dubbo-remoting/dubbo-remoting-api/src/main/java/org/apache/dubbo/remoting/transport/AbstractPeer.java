@@ -45,11 +45,12 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
             throw new IllegalArgumentException("handler == null");
         }
         this.url = url;
-        this.handler = handler;
-    }
+        this.handler = handler; // 对于NettyServer，这里的handler为 MultiMessageHandler( HeartbeatHandler( AllChannelHandler( DecodeHandler( HeaderExchangerHandler( ExchangeHandler)))))
+    }                           // 对Client来说，这里 handler 为 AllChannelHandler，进去
 
     @Override
     public void send(Object message) throws RemotingException {
+        // 该方法由 AbstractClient 类（和NettyChannel）实现，去看下AbstractClient
         send(message, url.getParameter(Constants.SENT_KEY, false));
     }
 
@@ -123,13 +124,14 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
         if (closed) {
             return;
         }
-        handler.connected(ch);
-    }
+        handler.connected(ch); // 对于NettyServer，这里的handler为 MultiMessageHandler ，不过这个类的connected是继承 AbstractChannelHandlerDelegate 类的方法 ，进去
+    }                          // 对Client来说，这里 handler 为 AllChannelHandler，进去
 
     @Override
     public void disconnected(Channel ch) throws RemotingException {
-        handler.disconnected(ch);
-    }
+        handler.disconnected(ch);// 对于NettyServer，这里的handler为 MultiMessageHandler ，不过这个类的connected是继承 AbstractChannelHandlerDelegate 类的方法 ，进去
+    }                          // 对Client来说，这里 handler 为 AllChannelHandler，进去
+
 
     @Override
     public void sent(Channel ch, Object msg) throws RemotingException {
@@ -144,7 +146,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
         if (closed) {
             return;
         }
-        handler.received(ch, msg);
+        handler.received(ch, msg); //  对于NettyServer，这里的handler为 MultiMessageHandler
     }
 
     @Override

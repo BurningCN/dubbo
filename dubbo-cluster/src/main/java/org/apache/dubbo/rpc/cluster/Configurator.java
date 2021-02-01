@@ -35,6 +35,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.PRIORITY_KEY;
  * Configurator. (SPI, Prototype, ThreadSafe)
  *
  */
+// OK
 public interface Configurator extends Comparable<Configurator> {
 
     /**
@@ -69,28 +70,35 @@ public interface Configurator extends Comparable<Configurator> {
      * @param urls URL list to convert
      * @return converted configurator list
      */
+    // 传进来的url参数就像上面的li示例那样
     static Optional<List<Configurator>> toConfigurators(List<URL> urls) {
         if (CollectionUtils.isEmpty(urls)) {
             return Optional.empty();
         }
 
+        // 获取自适应配置工厂
         ConfiguratorFactory configuratorFactory = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                 .getAdaptiveExtension();
 
+        // 待返回容器
         List<Configurator> configurators = new ArrayList<>(urls.size());
         for (URL url : urls) {
+            // 有一个url是empty://的，清空容器，结束循环
             if (EMPTY_PROTOCOL.equals(url.getProtocol())) {
                 configurators.clear();
                 break;
             }
             Map<String, String> override = new HashMap<>(url.getParameters());
-            //The anyhost parameter of override may be added automatically, it can't change the judgement of changing url
+            // The anyhost parameter of override may be added automatically, it can't change the judgement of changing url
             override.remove(ANYHOST_KEY);
+            // 移除anyhost参数之后，没有剩余参数了，不处理该url
             if (CollectionUtils.isEmptyMap(override)) {
                 continue;
             }
+            // 根据工厂获取具体Configurator（两种具体产品），内部会从url取参数值来确定使用哪种产品（具体看ConfiguratorFactory$Adaptive.java）
             configurators.add(configuratorFactory.getConfigurator(url));
         }
+        // 排序，去看下面的compareTo
         Collections.sort(configurators);
         return Optional.of(configurators);
     }
@@ -106,11 +114,13 @@ public interface Configurator extends Comparable<Configurator> {
             return -1;
         }
 
+        // 根据host字符串的自然顺序排
         int ipCompare = getUrl().getHost().compareTo(o.getUrl().getHost());
         // host is the same, sort by priority
         if (ipCompare == 0) {
             int i = getUrl().getParameter(PRIORITY_KEY, 0);
             int j = o.getUrl().getParameter(PRIORITY_KEY, 0);
+            // Integer的compare，String的compareTo
             return Integer.compare(i, j);
         } else {
             return ipCompare;

@@ -78,12 +78,16 @@ public class ZookeeperRegistry extends FailbackRegistry {
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
+        // 获取组名，默认为 dubbo
         String group = url.getParameter(GROUP_KEY, DEFAULT_ROOT);
         if (!group.startsWith(PATH_SEPARATOR)) {
+            // group = "/" + group
             group = PATH_SEPARATOR + group;
         }
         this.root = group;
+        // 创建 Zookeeper 客户端，默认为 CuratorZookeeperTransporter
         zkClient = zookeeperTransporter.connect(url);
+        // 添加状态监听器
         zkClient.addStateListener((state) -> {
             if (state == StateListener.RECONNECTED) {
                 logger.warn("Trying to fetch the latest urls, in case there're provider changes during connection loss.\n" +
@@ -106,6 +110,10 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
             }
         });
+        // 在上面的代码代码中，我们重点关注 ZookeeperTransporter 的 connect 方法调用，这个方法用于创建 Zookeeper 客户端。创建好 Zookeeper
+        // 客户端，意味着注册中心的创建过程就结束了。接下来，再来分析一下 Zookeeper 客户端的创建过程。前面说过，这里的 zookeeperTransporter
+        // 类型为自适应拓展类，因此 connect 方法会在被调用时决定加载什么类型的 ZookeeperTransporter 拓展，默认为 CuratorZookeeperTransporter。
+        // 下面我们到 CuratorZookeeperTransporter 中看一看
     }
 
     @Override
@@ -126,7 +134,11 @@ public class ZookeeperRegistry extends FailbackRegistry {
     @Override
     public void doRegister(URL url) {
         try {
+            // 通过 Zookeeper 客户端创建节点，节点路径由 toUrlPath 方法生成，路径格式如下:
+            //   /${group}/${serviceInterface}/providers/${url} 比如 /dubbo/org.apache.dubbo.DemoService/providers/dubbo%3A%2F%2F127.0.0.1......
+            // toUrlPath 、create都进去，第二个参数根据url的dynamic参数值判定节点是否是临时节点
             zkClient.create(toUrlPath(url), url.getParameter(DYNAMIC_KEY, true));
+            // 到这里仅仅是provider对应的节点创建好了 ，没有内容（但是节点path含有完整的url，相当于provider的信息都在path上）
         } catch (Throwable e) {
             throw new RpcException("Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
         }
@@ -142,9 +154,9 @@ public class ZookeeperRegistry extends FailbackRegistry {
     }
 
     @Override
-    public void doSubscribe(final URL url, final NotifyListener listener) {
+    public void doSubscribe(final URL url, final NotifyListener listener) {// url是provider的信息，比如 provider://30.25.58.102:20880/....
         try {
-            if (ANY_VALUE.equals(url.getServiceInterface())) {
+            if (ANY_VALUE.equals(url.getServiceInterface())) { // "*".equals(x)
                 String root = toRootPath();
                 ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
                 ChildListener zkListener = listeners.computeIfAbsent(listener, k -> (parentPath, currentChilds) -> {
@@ -169,15 +181,20 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 }
             } else {
                 List<URL> urls = new ArrayList<>();
-                for (String path : toCategoriesPath(url)) {
+                for (String path : toCategoriesPath(url)) { // 进去
                     ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
+                    // ChildListener接口去看下，其方法是两个参数无返回值，所以k->右边两个参数
                     ChildListener zkListener = listeners.computeIfAbsent(listener, k -> (parentPath, currentChilds) -> ZookeeperRegistry.this.notify(url, k, toUrlsWithEmpty(url, parentPath, currentChilds)));
+                    // 创建持久节点，eg /dubbo/org.apache.dubbo.demo.DemoService/configurators
                     zkClient.create(path, false);
+                    // 对节点添加监听，返回的path下的子节点
                     List<String> children = zkClient.addChildListener(path, zkListener);
                     if (children != null) {
+                        // 进去
                         urls.addAll(toUrlsWithEmpty(url, path, children));
                     }
                 }
+                // 进去
                 notify(url, listener, urls);
             }
         } catch (Throwable e) {
@@ -234,11 +251,12 @@ public class ZookeeperRegistry extends FailbackRegistry {
     }
 
     private String toServicePath(URL url) {
-        String name = url.getServiceInterface();
+        String name = url.getServiceInterface(); // dubbo/org.apache.dubbo.demo.DemoService
         if (ANY_VALUE.equals(name)) {
             return toRootPath();
         }
-        return toRootDir() + URL.encode(name);
+        return toRootDir() + URL.encode(name);// toRootDir()  = /duubo/
+        // eg /dubbo/org.apache.dubbo.demo.DemoService
     }
 
     private String[] toCategoriesPath(URL url) {
@@ -246,20 +264,25 @@ public class ZookeeperRegistry extends FailbackRegistry {
         if (ANY_VALUE.equals(url.getParameter(CATEGORY_KEY))) {
             categories = new String[]{PROVIDERS_CATEGORY, CONSUMERS_CATEGORY, ROUTERS_CATEGORY, CONFIGURATORS_CATEGORY};
         } else {
+            // DEFAULT_CATEGORY = "providers"  取category参数的值，比如url如果是RegistryProtocol的registry.subscribe(overrideSubscribeUrl..)一路传过来的，那么该参数值就是configurators
             categories = url.getParameter(CATEGORY_KEY, new String[]{DEFAULT_CATEGORY});
         }
         String[] paths = new String[categories.length];
         for (int i = 0; i < categories.length; i++) {
+            // eg  /dubbo/org.apache.dubbo.demo.DemoService/configurators  -- >一会返回path的时候要创建这些节点的
             paths[i] = toServicePath(url) + PATH_SEPARATOR + categories[i];
         }
+
         return paths;
     }
 
     private String toCategoryPath(URL url) {
-        return toServicePath(url) + PATH_SEPARATOR + url.getParameter(CATEGORY_KEY, DEFAULT_CATEGORY);
+        // toServicePath进去
+        return toServicePath(url) + PATH_SEPARATOR + url.getParameter(CATEGORY_KEY, DEFAULT_CATEGORY);// DEFAULT_CATEGORY= "provider"
     }
 
     private String toUrlPath(URL url) {
+        // toCategoryPath进去
         return toCategoryPath(url) + PATH_SEPARATOR + URL.encode(url.toFullString());
     }
 

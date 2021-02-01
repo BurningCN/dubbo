@@ -108,6 +108,7 @@ public class LoggerFactory {
      * @return logger
      */
     public static Logger getLogger(Class<?> key) {
+        // Dubbo使用的都是失败安全的Logger-FailsafeLogger
         return LOGGERS.computeIfAbsent(key.getName(), name -> new FailsafeLogger(LOGGER_ADAPTER.getLogger(name)));
     }
 

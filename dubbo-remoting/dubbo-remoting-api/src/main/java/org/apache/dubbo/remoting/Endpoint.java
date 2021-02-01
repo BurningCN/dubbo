@@ -28,6 +28,7 @@ import java.net.InetSocketAddress;
  * @see org.apache.dubbo.remoting.Client
  * @see RemotingServer
  */
+// OK 如上，三个直接继承的接口
 public interface Endpoint {
 
     /**

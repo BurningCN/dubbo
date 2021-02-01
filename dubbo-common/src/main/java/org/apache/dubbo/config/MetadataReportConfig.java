@@ -32,6 +32,8 @@ import static org.apache.dubbo.common.utils.StringUtils.isEmpty;
  *
  * @export
  */
+// OK
+// eg <dubbo:metadata-report address="zookeeper://127.0.0.1:2181"/>
 public class MetadataReportConfig extends AbstractConfig {
 
     private static final long serialVersionUID = 55233L;

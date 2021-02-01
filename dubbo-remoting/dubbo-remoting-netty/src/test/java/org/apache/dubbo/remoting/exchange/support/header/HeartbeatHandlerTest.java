@@ -37,6 +37,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+// ===========================================================================
+// ===========================================================================
+// ===========================================================================
+// 这个类是在netty模块的，使用的是netty3的api 相对过时，这里不需要看，我把该test原样拷贝到了netty4模块下，去那边看
+// ===========================================================================
+// ===========================================================================
+// ===========================================================================
 
 public class HeartbeatHandlerTest {
 
@@ -65,18 +72,22 @@ public class HeartbeatHandlerTest {
     public void testServerHeartbeat() throws Exception {
         URL serverURL = URL.valueOf("telnet://localhost:" + NetUtils.getAvailablePort(56780))
                 .addParameter(Constants.EXCHANGER_KEY, HeaderExchanger.NAME)
-                .addParameter(Constants.TRANSPORTER_KEY, "netty3")
+                .addParameter(Constants.TRANSPORTER_KEY, "netty4")
                 .addParameter(Constants.HEARTBEAT_KEY, 1000);
+
+        // telnet://localhost:56780?exchanger=header&heartbeat=1000&transporter=netty4
+
         CountDownLatch connect = new CountDownLatch(1);
         CountDownLatch disconnect = new CountDownLatch(1);
-        TestHeartbeatHandler handler = new TestHeartbeatHandler(connect, disconnect);
-        server = Exchangers.bind(serverURL, handler);
+        TestHeartbeatHandler handler = new TestHeartbeatHandler(connect, disconnect);// 进去
+        server = Exchangers.bind(serverURL, handler);// 进去
         System.out.println("Server bind successfully");
 
         FakeChannelHandlers.setTestingChannelHandlers();
         serverURL = serverURL.removeParameter(Constants.HEARTBEAT_KEY);
 
         // Let the client not reply to the heartbeat, and turn off automatic reconnect to simulate the client dropped.
+        // 让客户端不响应心跳，并关闭自动重新连接以模拟客户机丢失。
         serverURL = serverURL.addParameter(Constants.HEARTBEAT_KEY, 600 * 1000);
         serverURL = serverURL.addParameter(Constants.RECONNECT_KEY, false);
 

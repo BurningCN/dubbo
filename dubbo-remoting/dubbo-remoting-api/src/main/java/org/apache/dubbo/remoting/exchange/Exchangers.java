@@ -29,10 +29,15 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerAdapter;
 /**
  * Exchanger facade. (API, Static, ThreadSafe)
  */
+// OK
+// 门面模式。提供bind和connect方法，参数都是url+ChannelHandler，分别返回ExchangeServer和ExchangeClient。bind和connect的逻辑分别是
+// getExchanger(url).bind(url, handler) 和 getExchanger(url).connect(url, handler)，getExchanger根据spi机制默认获取的是
+// HeaderExchanger，走他的bind和connect。static{}块调用Version类的checkDuplicate，门面肯定一般都是一份，所以不应该有多个重复的类（比如引入的依赖、jar有了重复的）
+// 整个是这样的 Exchanges -> HeaderExchanger -> Transporters -> NettyTransporter -> new NettyServer/Client
 public class Exchangers {
 
     static {
-        // check duplicate jar package
+        // check duplicate jar package 进去
         Version.checkDuplicate(Exchangers.class);
     }
 
@@ -44,7 +49,7 @@ public class Exchangers {
     }
 
     public static ExchangeServer bind(URL url, Replier<?> replier) throws RemotingException {
-        return bind(url, new ChannelHandlerAdapter(), replier);
+        return bind(url, new ChannelHandlerAdapter(), replier);// 进去
     }
 
     public static ExchangeServer bind(String url, ChannelHandler handler, Replier<?> replier) throws RemotingException {
@@ -52,20 +57,21 @@ public class Exchangers {
     }
 
     public static ExchangeServer bind(URL url, ChannelHandler handler, Replier<?> replier) throws RemotingException {
-        return bind(url, new ExchangeHandlerDispatcher(replier, handler));
+        return bind(url, new ExchangeHandlerDispatcher(replier, handler));// ExchangeHandlerDispatcher 、 bind 进去
     }
 
     public static ExchangeServer bind(String url, ExchangeHandler handler) throws RemotingException {
         return bind(URL.valueOf(url), handler);
     }
-
+    // ExchangeServer、 ExchangeHandler、Exchanger、
+    // ExchangeServer = Exchanger.bind(url, ExchangeHandler);
     public static ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
         if (url == null) {
             throw new IllegalArgumentException("url == null");
         }
         if (handler == null) {
             throw new IllegalArgumentException("handler == null");
-        }
+        } // 添加codec参数（如果没有的话，一般是有的，codec=dubbo）
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
         // 获取 Exchanger，默认为 HeaderExchanger。
         // 紧接着调用 HeaderExchanger 的 bind 方法创建 ExchangeServer 实例，看一下 HeaderExchanger 的 bind 方法
@@ -77,6 +83,7 @@ public class Exchangers {
     }
 
     public static ExchangeClient connect(URL url) throws RemotingException {
+        // 进去
         return connect(url, new ChannelHandlerAdapter(), null);
     }
 
@@ -93,6 +100,7 @@ public class Exchangers {
     }
 
     public static ExchangeClient connect(URL url, ChannelHandler handler, Replier<?> replier) throws RemotingException {
+        // ExchangeHandlerDispatcher、connect进去
         return connect(url, new ExchangeHandlerDispatcher(replier, handler));
     }
 
@@ -100,6 +108,7 @@ public class Exchangers {
         return connect(URL.valueOf(url), handler);
     }
 
+    // 
     public static ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
         if (url == null) {
             throw new IllegalArgumentException("url == null");
@@ -112,11 +121,14 @@ public class Exchangers {
     }
 
     public static Exchanger getExchanger(URL url) {
+        // url.getParameter("exchanger", "header"); 一般都是取的默认的header
         String type = url.getParameter(Constants.EXCHANGER_KEY, Constants.DEFAULT_EXCHANGER);
+        // 进去
         return getExchanger(type);
     }
 
     public static Exchanger getExchanger(String type) {
+        // 获取扩展实例
         return ExtensionLoader.getExtensionLoader(Exchanger.class).getExtension(type);
     }
 

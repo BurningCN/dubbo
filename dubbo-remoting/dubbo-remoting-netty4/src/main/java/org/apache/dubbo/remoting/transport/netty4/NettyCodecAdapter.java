@@ -33,6 +33,11 @@ import java.util.List;
 /**
  * NettyCodecAdapter.
  */
+// OK
+// 见名知意，实现编解码的，作为childHandler的，利用netty提供的编解码MessageToByteEncoder和ByteToMessageDecoder，将其委托给codec
+// （一般是dubboExchangeCodec）。几个关键属性：codec 、 encoder = new InternalEncoder()、decoder = new InternalDecoder() ，
+// 以InternalEncoder内部类为例，继承MessageToByteEncoder，encode方法内部最后调用codec.encode(channel, buffer, msg)用以编码。
+// 解码方法不知道为何是循环解码的？大概是和rmq的ByteBuffer很像，rmq是while(byteBuffer.hasRemaining()){}，这里是while(byteBuf.isReadable)
 final public class NettyCodecAdapter {
 
     private final ChannelHandler encoder = new InternalEncoder();
@@ -59,19 +64,22 @@ final public class NettyCodecAdapter {
         return decoder;
     }
 
-    private class InternalEncoder extends MessageToByteEncoder {
+    private class InternalEncoder extends MessageToByteEncoder { // 这里可以加泛型
 
+
+        // 将msg编码到out   具体的编解码交给Dubbo的序列化模块里的各个不同的序列化实例（rmq也有，不过直接用的fastJson）
         @Override
         protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
             org.apache.dubbo.remoting.buffer.ChannelBuffer buffer = new NettyBackedChannelBuffer(out);
             Channel ch = ctx.channel();
-            NettyChannel channel = NettyChannel.getOrAddChannel(ch, url, handler);
-            codec.encode(channel, buffer, msg);
+            NettyChannel channel = NettyChannel.getOrAddChannel(ch, url, handler); // handler是NettyServer
+            codec.encode(channel, buffer, msg);// 一般是DubboCountCodec、ExchangeCodec等 // 进去
         }
     }
 
     private class InternalDecoder extends ByteToMessageDecoder {
 
+        // 将input解码填充到out
         @Override
         protected void decode(ChannelHandlerContext ctx, ByteBuf input, List<Object> out) throws Exception {
 
@@ -79,10 +87,10 @@ final public class NettyCodecAdapter {
 
             NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
 
-            // decode object.
+            // decode object.  循环解码，一点点填充到out
             do {
                 int saveReaderIndex = message.readerIndex();
-                Object msg = codec.decode(channel, message);
+                Object msg = codec.decode(channel, message); // 一般是DubboCountCodec // 进去
                 if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {
                     message.readerIndex(saveReaderIndex);
                     break;
@@ -92,10 +100,11 @@ final public class NettyCodecAdapter {
                         throw new IOException("Decode without read data.");
                     }
                     if (msg != null) {
+                         // 一点点填充到out
                         out.add(msg);
                     }
                 }
-            } while (message.readable());
+            } while (message.readable()); //  rmq的ByteBuffer很像，他是while(hasRemaining()){}，这里是readable，底层是buffer.isReadable
         }
     }
 }

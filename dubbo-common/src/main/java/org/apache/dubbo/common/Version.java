@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Exchanger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -160,7 +161,7 @@ public final class Version {
     public static String getVersion(Class<?> cls, String defaultVersion) {
         try {
             // find version info from MANIFEST.MF first
-            Package pkg = cls.getPackage();
+            Package pkg = cls.getPackage();// eg org.apache.dubbo.demo
             String version = null;
             if (pkg != null) {
                 version = pkg.getImplementationVersion();
@@ -175,13 +176,13 @@ public final class Version {
             }
 
             // guess version from jar file name if nothing's found from MANIFEST.MF
-            CodeSource codeSource = cls.getProtectionDomain().getCodeSource();
+            CodeSource codeSource = cls.getProtectionDomain().getCodeSource();// 记住这种api
             if (codeSource == null) {
                 logger.info("No codeSource for class " + cls.getName() + " when getVersion, use default version " + defaultVersion);
                 return defaultVersion;
             }
 
-            String file = codeSource.getLocation().getFile();
+            String file = codeSource.getLocation().getFile();// 获取类所在的上层文件路径，记住这种api，比如/Users/gy821075/IdeaProjects/dubbo/dubbo-demo/dubbo-demo-interface/target/classes/（这个下有org/apache/dubbo/DemoService）
             if (!StringUtils.isEmpty(file) && file.endsWith(".jar")) {
                 version = getFromFile(file);
             }

@@ -26,6 +26,7 @@ import java.util.Map;
  *
  * @since 2.7.5
  */
+// OK
 public class ZookeeperInstance {
 
     private String id;

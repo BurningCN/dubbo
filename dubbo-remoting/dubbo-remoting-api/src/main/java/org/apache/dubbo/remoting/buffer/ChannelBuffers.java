@@ -68,6 +68,7 @@ public final class ChannelBuffers {
         if (array.length == 0) {
             return EMPTY_BUFFER;
         }
+        // 进去
         return new HeapChannelBuffer(array);
     }
 

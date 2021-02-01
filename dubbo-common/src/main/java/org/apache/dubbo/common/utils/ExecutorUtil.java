@@ -139,9 +139,9 @@ public class ExecutorUtil {
      */
     // 线程池的线程名称带ip信息
     public static URL setThreadName(URL url, String defaultName) {
-        String name = url.getParameter(THREAD_NAME_KEY, defaultName);
-        name = name + "-" + url.getAddress();
-        url = url.addParameter(THREAD_NAME_KEY, name);
+        String name = url.getParameter(THREAD_NAME_KEY, defaultName);// eg defaultName=DubboServerHandler
+        name = name + "-" + url.getAddress();// DubboServerHandler-192.168.1.7:20880
+        url = url.addParameter(THREAD_NAME_KEY, name);// threadname=DubboServerHandler-192.168.1.7:20880
         return url;
     }
 

@@ -20,7 +20,9 @@ import java.util.Collection;
 
 /**
  * Interface defining serialization optimizer, there are nothing implementations for now.
+ * 接口定义序列化优化器，目前没有任何实现。
  */
+// OK
 public interface SerializationOptimizer {
 
     /**
@@ -28,5 +30,6 @@ public interface SerializationOptimizer {
      *
      * @return serializable classes
      * */
+    // gx
     Collection<Class<?>> getSerializableClasses();
 }

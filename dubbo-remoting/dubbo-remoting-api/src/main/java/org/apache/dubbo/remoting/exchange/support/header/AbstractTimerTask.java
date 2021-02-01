@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * AbstractTimerTask
  */
+// OK
 public abstract class AbstractTimerTask implements TimerTask {
 
     private final ChannelProvider channelProvider;
@@ -36,6 +37,7 @@ public abstract class AbstractTimerTask implements TimerTask {
 
     protected volatile boolean cancel = false;
 
+    // gx
     AbstractTimerTask(ChannelProvider channelProvider, Long tick) {
         if (channelProvider == null || tick == null) {
             throw new IllegalArgumentException();
@@ -45,6 +47,7 @@ public abstract class AbstractTimerTask implements TimerTask {
     }
 
     static Long lastRead(Channel channel) {
+        // channel为HeaderExchangeClient或者HeaderExchangeServer实例
         return (Long) channel.getAttribute(HeartbeatHandler.KEY_READ_TIMESTAMP);
     }
 
@@ -74,9 +77,11 @@ public abstract class AbstractTimerTask implements TimerTask {
             return;
         }
 
+        // 再次延时调度  到触发点的时候会调用下面的run，然后再回到这里，形成周期
         timer.newTimeout(timeout.task(), tick, TimeUnit.MILLISECONDS);
     }
 
+    // gx
     @Override
     public void run(Timeout timeout) throws Exception {
         Collection<Channel> c = channelProvider.getChannels();
@@ -84,13 +89,16 @@ public abstract class AbstractTimerTask implements TimerTask {
             if (channel.isClosed()) {
                 continue;
             }
+            // 挨个调用
             doTask(channel);
         }
+        // 重放，形成周期任务，进去
         reput(timeout, tick);
     }
 
     protected abstract void doTask(Channel channel);
 
+    @FunctionalInterface
     interface ChannelProvider {
         Collection<Channel> getChannels();
     }

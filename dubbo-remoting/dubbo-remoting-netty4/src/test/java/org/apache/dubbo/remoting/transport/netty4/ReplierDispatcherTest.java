@@ -56,9 +56,13 @@ public class ReplierDispatcherTest {
     @BeforeEach
     public void startServer() throws RemotingException {
         port = NetUtils.getAvailablePort();
+        // 进去
         ReplierDispatcher dispatcher = new ReplierDispatcher();
+        // 进去
         dispatcher.addReplier(RpcMessage.class, new RpcMessageHandler());
+        // 进去
         dispatcher.addReplier(Data.class, (channel, msg) -> new StringMessage("hello world"));
+        // 进去 注意最后一个参数。最后ReplierDispatcher类型的dispatcher对象，作为ReplierDispatcher构造器的参数传入
         exchangeServer = Exchangers.bind(URL.valueOf("exchange://localhost:" + port + "?" + CommonConstants.TIMEOUT_KEY + "=60000"), dispatcher);
     }
 
@@ -73,6 +77,7 @@ public class ReplierDispatcherTest {
                 sb.append("(").append(random.nextLong()).append(")");
             Data d = new Data();
             d.setData(sb.toString());
+            // 以下未看 2021.01.26
             Assertions.assertEquals(client.request(d).get().toString(), "hello world");
         }
         clients.put(Thread.currentThread().getName(), client);

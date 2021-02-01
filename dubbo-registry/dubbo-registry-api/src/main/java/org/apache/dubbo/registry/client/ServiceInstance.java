@@ -21,10 +21,13 @@ import java.util.Map;
 
 /**
  * The model class of an instance of a service, which is used for service registration and discovery.
+ *
+ * 服务实例的模型类，用于服务注册和发现。
  * <p>
  *
  * @since 2.7.5
  */
+// OK
 public interface ServiceInstance extends Serializable {
 
     /**
@@ -60,7 +63,7 @@ public interface ServiceInstance extends Serializable {
     /**
      * The enable status of the registered service instance.
      *
-     * @return if <code>true</code>, indicates current instance is enabled, or disable, the client should remove this one.
+     * @return if <code>true</code>, indicates current instance is enabled, or disable, the client should remove(移除) this one.
      * The default value is <code>true</code>
      */
     default boolean isEnabled() {
@@ -70,7 +73,7 @@ public interface ServiceInstance extends Serializable {
     /**
      * The registered service instance is health or not.
      *
-     * @return if <code>true</code>, indicates current instance is enabled, or disable, the client may ignore this one.
+     * @return if <code>true</code>, indicates current instance is enabled, or disable, the client may ignore（忽略） this one.
      * The default value is <code>true</code>
      */
     default boolean isHealthy() {

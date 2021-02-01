@@ -44,6 +44,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 /**
  * DefaultFuture.
  */
+// OK
 public class DefaultFuture extends CompletableFuture<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultFuture.class);
@@ -72,10 +73,12 @@ public class DefaultFuture extends CompletableFuture<Object> {
         return executor;
     }
 
+    // gx
     public void setExecutor(ExecutorService executor) {
         this.executor = executor;
     }
 
+    // gx
     private DefaultFuture(Channel channel, Request request, int timeout) {
         this.channel = channel;
         this.request = request;
@@ -90,7 +93,9 @@ public class DefaultFuture extends CompletableFuture<Object> {
      * check time out of the future
      */
     private static void timeoutCheck(DefaultFuture future) {
+        // 去看run方法
         TimeoutCheckTask task = new TimeoutCheckTask(future.getId());
+        // 超时的时候检测一下
         future.timeoutCheckTask = TIME_OUT_TIMER.newTimeout(task, future.getTimeout(), TimeUnit.MILLISECONDS);
     }
 
@@ -104,14 +109,16 @@ public class DefaultFuture extends CompletableFuture<Object> {
      * @param timeout timeout
      * @return a new DefaultFuture
      */
+    // gx 主要是针对twoWay请求的，请求响应模式的 这个思想和rmq的非常相似，也是有一个responseTable
     public static DefaultFuture newFuture(Channel channel, Request request, int timeout, ExecutorService executor) {
+        // 进去
         final DefaultFuture future = new DefaultFuture(channel, request, timeout);
-        future.setExecutor(executor);
+        future.setExecutor(executor);// 进去
         // ThreadlessExecutor needs to hold the waiting future in case of circuit return.
         if (executor instanceof ThreadlessExecutor) {
             ((ThreadlessExecutor) executor).setWaitingFuture(future);
         }
-        // timeout check
+        // timeout check // 进去
         timeoutCheck(future);
         return future;
     }
@@ -127,6 +134,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
     public static void sent(Channel channel, Request request) {
         DefaultFuture future = FUTURES.get(request.getId());
         if (future != null) {
+            // 进去
             future.doSent();
         }
     }
@@ -134,6 +142,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
     /**
      * close a channel when a channel is inactive
      * directly return the unfinished requests.
+     * 当通道处于非活动状态时关闭通道，直接返回未完成的请求。
      *
      * @param channel channel to close
      */
@@ -153,16 +162,19 @@ public class DefaultFuture extends CompletableFuture<Object> {
                             channel +
                             " is inactive. Directly return the unFinished request : " +
                             future.getRequest());
+                    // 进去
                     DefaultFuture.received(channel, disconnectResponse);
                 }
             }
         }
     }
 
+    // gx
     public static void received(Channel channel, Response response) {
         received(channel, response, false);
     }
 
+    // 两个调用点（一个是正常服务端来数据之后，给future填充数据，一个是利用了TimeTask，延迟timeout之后调用一次）
     public static void received(Channel channel, Response response, boolean timeout) {
         try {
             DefaultFuture future = FUTURES.remove(response.getId());
@@ -172,6 +184,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
                     // decrease Time
                     t.cancel();
                 }
+                // 进去
                 future.doReceived(response);
             } else {
                 logger.warn("The timeout response finally returned at "
@@ -190,20 +203,22 @@ public class DefaultFuture extends CompletableFuture<Object> {
         Response errorResult = new Response(id);
         errorResult.setStatus(Response.CLIENT_ERROR);
         errorResult.setErrorMessage("request future has been canceled.");
-        this.doReceived(errorResult);
+        this.doReceived(errorResult);// 进去
         FUTURES.remove(id);
         CHANNELS.remove(id);
         return true;
     }
 
+    // gx
     public void cancel() {
-        this.cancel(true);
+        this.cancel(true); // 进去
     }
 
     private void doReceived(Response res) {
         if (res == null) {
             throw new IllegalStateException("response cannot be null");
         }
+        // completeFuture结果填充
         if (res.getStatus() == Response.OK) {
             this.complete(res.getResult());
         } else if (res.getStatus() == Response.CLIENT_TIMEOUT || res.getStatus() == Response.SERVER_TIMEOUT) {
@@ -247,6 +262,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
         sent = System.currentTimeMillis();
     }
 
+    // gx
     private String getTimeoutMessage(boolean scan) {
         long nowTimestamp = System.currentTimeMillis();
         return (sent > 0 ? "Waiting server-side response timeout" : "Sending request timeout in client-side")
@@ -260,6 +276,9 @@ public class DefaultFuture extends CompletableFuture<Object> {
                 + " -> " + channel.getRemoteAddress();
     }
 
+    // 一个sent时间戳值，用以标记这个是Request请求已经发过去了！但是因为等待服务器的数据发生了超时，如果没有设置过sent表示是Request请求还没有发过去。
+    // Sending request timeout in client-side by scan timer. start time: 2021-01-25 20:51:28.733, end time: 2021-01-25 20:51:33.749, elapsed: 5016 ms, timeout: 5000 ms, request: Request [id=0, version=null, twoway=true, event=false, broken=false, data=null], channel: null -> null
+    // Waiting server-side response timeout by scan timer. start time: 2021-01-25 20:54:53.636, end time: 2021-01-25 20:54:58.649, client elapsed: 2 ms, server elapsed: 5011 ms, timeout: 5000 ms, request: Request [id=10, version=null, twoway=true, event=false, broken=false, data=null], channel: null -> null
     private Request getRequestWithoutData() {
         Request newRequest = request;
         newRequest.setData(null);
@@ -282,7 +301,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
             }
 
             if (future.getExecutor() != null) {
-                future.getExecutor().execute(() -> notifyTimeout(future));
+                future.getExecutor().execute(() -> notifyTimeout(future));// 进去
             } else {
                 notifyTimeout(future);
             }
@@ -294,7 +313,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
             // set timeout status.
             timeoutResponse.setStatus(future.isSent() ? Response.SERVER_TIMEOUT : Response.CLIENT_TIMEOUT);
             timeoutResponse.setErrorMessage(future.getTimeoutMessage(true));
-            // handle response.
+            // handle response. 第三个参数true表示这次异步请求超时了，进去
             DefaultFuture.received(future.getChannel(), timeoutResponse, true);
         }
     }

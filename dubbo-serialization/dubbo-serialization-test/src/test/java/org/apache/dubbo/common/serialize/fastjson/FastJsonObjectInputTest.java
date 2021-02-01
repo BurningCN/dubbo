@@ -38,16 +38,19 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+// OK
 public class FastJsonObjectInputTest {
     private FastJsonObjectInput fastJsonObjectInput;
 
     @Test
     public void testReadBool() throws IOException {
+        // 进去
         fastJsonObjectInput = new FastJsonObjectInput(new ByteArrayInputStream("true".getBytes()));
+        // 进去
         boolean result = fastJsonObjectInput.readBool();
 
         assertThat(result, is(true));
-
+        // StringReader 注意
         fastJsonObjectInput = new FastJsonObjectInput(new StringReader("false"));
         result = fastJsonObjectInput.readBool();
 
@@ -57,6 +60,7 @@ public class FastJsonObjectInputTest {
     @Test
     public void testReadByte() throws IOException {
         fastJsonObjectInput = new FastJsonObjectInput(new ByteArrayInputStream("123".getBytes()));
+        // "123"整体进一个字节
         Byte result = fastJsonObjectInput.readByte();
 
         assertThat(result, is(Byte.parseByte("123")));
@@ -65,6 +69,7 @@ public class FastJsonObjectInputTest {
     @Test
     public void testReadBytes() throws IOException {
         fastJsonObjectInput = new FastJsonObjectInput(new ByteArrayInputStream("123456".getBytes()));
+        // 进去
         byte[] result = fastJsonObjectInput.readBytes();
 
         assertThat(result, is("123456".getBytes()));
@@ -113,6 +118,7 @@ public class FastJsonObjectInputTest {
     @Test
     public void testReadUTF() throws IOException {
         fastJsonObjectInput = new FastJsonObjectInput(new StringReader("\"wording\""));
+        // 进去
         String result = fastJsonObjectInput.readUTF();
 
         assertThat(result, is("wording"));
@@ -121,6 +127,7 @@ public class FastJsonObjectInputTest {
     @Test
     public void testReadObject() throws IOException, ClassNotFoundException {
         fastJsonObjectInput = new FastJsonObjectInput(new StringReader("{ \"name\":\"John\", \"age\":30 }"));
+        // 进去
         Person result = fastJsonObjectInput.readObject(Person.class);
 
         assertThat(result, not(nullValue()));
@@ -150,6 +157,7 @@ public class FastJsonObjectInputTest {
     public void testReadObjectWithoutClass() throws IOException, ClassNotFoundException {
         fastJsonObjectInput = new FastJsonObjectInput(new StringReader("{ \"name\":\"John\", \"age\":30 }"));
 
+       // 进去 没有传入class
         JSONObject readObject = (JSONObject) fastJsonObjectInput.readObject();
 
         assertThat(readObject, not(nullValue()));
@@ -160,10 +168,12 @@ public class FastJsonObjectInputTest {
 
     @Test
     public void testReadObjectWithTowType() throws Exception {
+        // [{},{}] json数组
         fastJsonObjectInput = new FastJsonObjectInput(new StringReader("[{\"name\":\"John\",\"age\":30},{\"name\":\"Born\",\"age\":24}]"));
 
         Method methodReturnType = getClass().getMethod("towLayer");
         Type type = methodReturnType.getGenericReturnType();
+        // 进去，这个用法注意下
         List<Person> o = fastJsonObjectInput.readObject(List.class, type);
 
         assertTrue(o instanceof List);

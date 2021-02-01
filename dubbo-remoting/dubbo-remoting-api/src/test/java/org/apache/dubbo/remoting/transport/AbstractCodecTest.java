@@ -30,17 +30,21 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+// OK
 public class AbstractCodecTest  {
 
     public void test_checkPayload_default8M() throws Exception {
         Channel channel = mock(Channel.class);
         given(channel.getUrl()).willReturn(URL.valueOf("dubbo://1.1.1.1"));
 
+        // 进去
         AbstractCodec.checkPayload(channel, 1 * 1024 * 1024);
 
         try {
+            // 进去
             AbstractCodec.checkPayload(channel, 15 * 1024 * 1024);
         } catch (IOException expected) {
+            // 前面15M，超过默认的8M，抛异常
             assertThat(expected.getMessage(), allOf(
                     CoreMatchers.containsString("Data length too large: "),
                     CoreMatchers.containsString("max payload: " + 8 * 1024 * 1024)
@@ -52,8 +56,10 @@ public class AbstractCodecTest  {
 
     public void test_checkPayload_minusPayloadNoLimit() throws Exception {
         Channel channel = mock(Channel.class);
+        // 注意这里payload = -1 表示无限制
         given(channel.getUrl()).willReturn(URL.valueOf("dubbo://1.1.1.1?payload=-1"));
 
+        // 内部不会阈值比较，不抛异常
         AbstractCodec.checkPayload(channel, 15 * 1024 * 1024);
 
         verify(channel, VerificationModeFactory.atLeastOnce()).getUrl();

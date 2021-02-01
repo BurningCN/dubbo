@@ -23,11 +23,13 @@ import org.apache.dubbo.common.extension.SPI;
 /**
  * Transporter. (SPI, Singleton, ThreadSafe)
  * <p>
- * <a href="http://en.wikipedia.org/wiki/Transport_Layer">Transport Layer</a>
+ * <a href="http://en.wikipedia.org/wiki/Transport_Layer">Transport Layer</a> 传输层
  * <a href="http://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client/Server</a>
  *
  * @see org.apache.dubbo.remoting.Transporters
  */
+// OK
+// 有bind和connect方法，分别返回RemotingServer和Client。主要是Transporters使用。
 @SPI("netty")
 public interface Transporter {
 

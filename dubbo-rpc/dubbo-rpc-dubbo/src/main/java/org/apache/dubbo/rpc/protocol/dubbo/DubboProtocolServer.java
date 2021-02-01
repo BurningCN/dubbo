@@ -21,11 +21,13 @@ import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.remoting.RemotingServer;
 import org.apache.dubbo.rpc.ProtocolServer;
 
+// OK
 public class DubboProtocolServer implements ProtocolServer {
 
-    private RemotingServer server;
+    private RemotingServer server; // HeaderExchangeServer
     private String address;
 
+    // gx
     public DubboProtocolServer(RemotingServer server) {
         this.server = server;
     }
@@ -52,7 +54,7 @@ public class DubboProtocolServer implements ProtocolServer {
 
     @Override
     public void reset(URL url) {
-        server.reset(url);
+        server.reset(url);// 进去
     }
 
     @Override

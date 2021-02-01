@@ -36,6 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+// OK
 public class ExecuteLimitFilterTest {
 
     private ExecuteLimitFilter executeLimitFilter = new ExecuteLimitFilter();
@@ -44,6 +45,7 @@ public class ExecuteLimitFilterTest {
     public void testNoExecuteLimitInvoke() throws Exception {
         Invoker invoker = Mockito.mock(Invoker.class);
         when(invoker.invoke(any(Invocation.class))).thenReturn(new AppResponse("result"));
+        // 没有executes参数
         when(invoker.getUrl()).thenReturn(URL.valueOf("test://test:11/test?accesslog=true&group=dubbo&version=1.1"));
 
         Invocation invocation = Mockito.mock(Invocation.class);
@@ -57,11 +59,12 @@ public class ExecuteLimitFilterTest {
     public void testExecuteLimitInvoke() throws Exception {
         Invoker invoker = Mockito.mock(Invoker.class);
         when(invoker.invoke(any(Invocation.class))).thenReturn(new AppResponse("result"));
+        // 有executes参数了
         when(invoker.getUrl()).thenReturn(URL.valueOf("test://test:11/test?accesslog=true&group=dubbo&version=1.1&executes=10"));
 
         Invocation invocation = Mockito.mock(Invocation.class);
         when(invocation.getMethodName()).thenReturn("testExecuteLimitInvoke");
-
+        // 进去
         Result result = executeLimitFilter.invoke(invoker, invocation);
         Assertions.assertEquals("result", result.getValue());
     }
@@ -82,8 +85,10 @@ public class ExecuteLimitFilterTest {
             executeLimitFilter.invoke(invoker, invocation);
         } catch (Exception e) {
             Assertions.assertTrue(e instanceof RpcException);
+            // 进去
             executeLimitFilter.onError(e, invoker, invocation);
         }
+        // 失败数为1
         Assertions.assertEquals(1, RpcStatus.getStatus(url, invocation.getMethodName()).getFailed());
     }
 
@@ -96,10 +101,13 @@ public class ExecuteLimitFilterTest {
         final Invocation invocation = Mockito.mock(Invocation.class);
         when(invocation.getMethodName()).thenReturn("testMoreThanExecuteLimitInvoke");
 
+        // 最多10次调用
         URL url = URL.valueOf("test://test:11/test?accesslog=true&group=dubbo&version=1.1&executes=" + maxExecute);
         final Invoker<ExecuteLimitFilter> invoker = new BlockMyInvoker<ExecuteLimitFilter>(url, 1000);
 
         final CountDownLatch latch = new CountDownLatch(1);
+        final CountDownLatch latch2 = new CountDownLatch(totalExecute);
+        // 发起20次
         for (int i = 0; i < totalExecute; i++) {
             Thread thread = new Thread(new Runnable() {
 
@@ -112,7 +120,10 @@ public class ExecuteLimitFilterTest {
                     try {
                         executeLimitFilter.invoke(invoker, invocation);
                     } catch (RpcException expected) {
+                        // ExecuteLimitFilter内部不通过的时候会抛异常，这里捕获后，failed++
                         failed.incrementAndGet();
+                    }finally {
+                        latch2.countDown();;
                     }
 
                 }
@@ -121,11 +132,7 @@ public class ExecuteLimitFilterTest {
         }
         latch.countDown();
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        latch2.await();
 
         Assertions.assertEquals(totalExecute - maxExecute, failed.get());
     }

@@ -46,15 +46,19 @@ import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
  *
  * @see org.apache.dubbo.registry.RegistryFactory
  */
+// OK
+// 设计到抽象工厂模式（不是严格的，多了一个AbstractXX，做一些模板方法设计）
 public abstract class AbstractRegistryFactory implements RegistryFactory {
 
     // Log output
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRegistryFactory.class);
 
     // The lock for the acquisition process of the registry
+    // 在创建 注册中心对象或者 销毁注册中心对象的时候会用到 锁
     protected static final ReentrantLock LOCK = new ReentrantLock();
 
     // Registry Collection Map<RegistryAddress, Registry>
+    // 缓存 注册中心对象使用  key就是注册中心url的一个toServiceString， value是注册中心对象
     protected static final Map<String, Registry> REGISTRIES = new HashMap<>();
 
     private static final AtomicBoolean destroyed = new AtomicBoolean(false);
@@ -72,6 +76,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         return REGISTRIES.get(key);
     }
 
+    // easy
     public static List<ServiceDiscovery> getServiceDiscoveries() {
         return AbstractRegistryFactory.getRegistries()
                 .stream()
@@ -119,28 +124,34 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
 
         url = URLBuilder.from(url)
                 .setPath(RegistryService.class.getName())
-                .addParameter(INTERFACE_KEY, RegistryService.class.getName())
-                .removeParameters(EXPORT_KEY, REFER_KEY)
+                .addParameter(INTERFACE_KEY, RegistryService.class.getName())// interface
+                .removeParameters(EXPORT_KEY, REFER_KEY) // export  refer
                 .build();
+        // eg : zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService
         String key = createRegistryCacheKey(url);
         // Lock the registry access process to ensure a single instance of the registry
         LOCK.lock();
         try {
+            // 访问缓存
             Registry registry = REGISTRIES.get(key);
             if (registry != null) {
                 return registry;
             }
             //create registry by spi/ioc
+            // 缓存未命中，创建 Registry 实例，进去
             registry = createRegistry(url);
             if (registry == null) {
                 throw new IllegalStateException("Can not create registry " + url);
             }
+            // 写入缓存
             REGISTRIES.put(key, registry);
             return registry;
         } finally {
             // Release the lock
             LOCK.unlock();
         }
+        // 如上，getRegistry 方法先访问缓存，缓存未命中则调用 createRegistry 创建 Registry，然后写入缓存。这里的 createRegistry 是一个
+        // 模板方法，由具体的子类实现。因此，下面我们到 ZookeeperRegistryFactory 中探究一番。
     }
 
     /**
@@ -154,6 +165,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         return url.toServiceStringWithoutResolving();
     }
 
+    // 由子类实现的 创建方法， 模板方法设计模式
     protected abstract Registry createRegistry(URL url);
 
 

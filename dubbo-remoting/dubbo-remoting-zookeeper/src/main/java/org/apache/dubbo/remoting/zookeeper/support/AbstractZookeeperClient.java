@@ -87,9 +87,9 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
             }
         }
 
-        // 去除最后的/
         int i = path.lastIndexOf('/');
         if (i > 0) {
+            // 递归创建上一级路径
             create(path.substring(0, i), false);
         }
         if (ephemeral) {

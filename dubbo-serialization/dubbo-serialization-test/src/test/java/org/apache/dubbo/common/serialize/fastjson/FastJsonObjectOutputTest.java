@@ -30,6 +30,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+// OK
 public class FastJsonObjectOutputTest {
     private FastJsonObjectOutput fastJsonObjectOutput;
     private FastJsonObjectInput fastJsonObjectInput;
@@ -44,7 +45,9 @@ public class FastJsonObjectOutputTest {
 
     @Test
     public void testWriteBool() throws IOException {
+        // 进去
         this.fastJsonObjectOutput.writeBool(true);
+        // 进去
         this.flushToInput();
 
         assertThat(fastJsonObjectInput.readBool(), is(true));
@@ -101,6 +104,7 @@ public class FastJsonObjectOutputTest {
 
     @Test
     public void testWriteBytes() throws IOException {
+        // 进去
         this.fastJsonObjectOutput.writeBytes("hello".getBytes());
         this.flushToInput();
 
@@ -109,9 +113,11 @@ public class FastJsonObjectOutputTest {
 
     @Test
     public void testWriteBytesWithSubLength() throws IOException {
+        // 进去
         this.fastJsonObjectOutput.writeBytes("hello".getBytes(), 2, 2);
         this.flushToInput();
 
+        // 写了两个字节，ll
         assertThat(this.fastJsonObjectInput.readBytes(), is("ll".getBytes()));
     }
 
@@ -126,6 +132,7 @@ public class FastJsonObjectOutputTest {
     @Test
     public void testWriteObject() throws IOException, ClassNotFoundException {
         Image image = new Image("http://dubbo.apache.org/img/dubbo_white.png", "logo", 300, 480, Image.Size.SMALL);
+        // 写文件
         this.fastJsonObjectOutput.writeObject(image);
         this.flushToInput();
 
@@ -136,6 +143,7 @@ public class FastJsonObjectOutputTest {
 
     private void flushToInput() throws IOException {
         this.fastJsonObjectOutput.flushBuffer();
+        // 前面各个write操作已经把数据写到byteArrayOutputStream
         this.byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
         this.fastJsonObjectInput = new FastJsonObjectInput(byteArrayInputStream);
     }

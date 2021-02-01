@@ -21,7 +21,11 @@ import org.apache.dubbo.common.lang.Prioritized;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.apache.dubbo.common.utils.ReflectUtils.findParameterizedTypes;
 
@@ -37,6 +41,7 @@ import static org.apache.dubbo.common.utils.ReflectUtils.findParameterizedTypes;
  * @see java.util.EventListener
  * @since 2.7.5
  */
+// OK
 @SPI
 @FunctionalInterface
 public interface EventListener<E extends Event> extends java.util.EventListener, Prioritized {
@@ -66,6 +71,7 @@ public interface EventListener<E extends Event> extends java.util.EventListener,
      * @return <code>null</code> if not found
      */
     static Class<? extends Event> findEventType(EventListener<?> listener) {
+        // 进去
         return findEventType(listener.getClass());
     }
 
@@ -75,20 +81,22 @@ public interface EventListener<E extends Event> extends java.util.EventListener,
      * @param listenerClass the {@link Class class} of {@link EventListener Dubbo event listener}
      * @return <code>null</code> if not found
      */
+    // 目的就是找到具体的泛型，比如 FileSystemServiceDiscovery implements ServiceDiscovery, EventListener<ServiceInstancesChangedEvent>
+    // 就是拿到<>里的ServiceInstancesChangedEvent
     static Class<? extends Event> findEventType(Class<?> listenerClass) {
         Class<? extends Event> eventType = null;
 
         if (listenerClass != null && EventListener.class.isAssignableFrom(listenerClass)) {
-            eventType = findParameterizedTypes(listenerClass)
+            eventType = findParameterizedTypes(listenerClass)// 进去
                     .stream()
-                    .map(EventListener::findEventType)
+                    .map(EventListener::findEventType)// 进去
                     .filter(Objects::nonNull)
                     .findAny()
                     .orElse((Class) findEventType(listenerClass.getSuperclass()));
         }
-
         return eventType;
     }
+
 
     /**
      * Find the type {@link Event Dubbo event} from the specified {@link ParameterizedType} presents
@@ -99,8 +107,8 @@ public interface EventListener<E extends Event> extends java.util.EventListener,
      */
     static Class<? extends Event> findEventType(ParameterizedType parameterizedType) {
         Class<? extends Event> eventType = null;
-
         Type rawType = parameterizedType.getRawType();
+        // rawType 就是findEventType(Class<?> listenerClass)方法上面例子的 EventListener<ServiceInstancesChangedEvent>部分
         if ((rawType instanceof Class) && EventListener.class.isAssignableFrom((Class) rawType)) {
             Type[] typeArguments = parameterizedType.getActualTypeArguments();
             for (Type typeArgument : typeArguments) {

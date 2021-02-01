@@ -21,6 +21,7 @@ import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.ChannelHandler;
 
+// OK
 public class ChannelEventRunnable implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(ChannelEventRunnable.class);
 
@@ -30,6 +31,7 @@ public class ChannelEventRunnable implements Runnable {
     private final Throwable exception;
     private final Object message;
 
+    // gx 跟下AllChannelHandler
     public ChannelEventRunnable(Channel channel, ChannelHandler handler, ChannelState state) {
         this(channel, handler, state, null);
     }
@@ -44,7 +46,7 @@ public class ChannelEventRunnable implements Runnable {
 
     public ChannelEventRunnable(Channel channel, ChannelHandler handler, ChannelState state, Object message, Throwable exception) {
         this.channel = channel;
-        this.handler = handler;
+        this.handler = handler; // DecodeHandler
         this.state = state;
         this.message = message;
         this.exception = exception;
@@ -52,17 +54,27 @@ public class ChannelEventRunnable implements Runnable {
 
     @Override
     public void run() {
+        // handler为 DecodeHandler
+
+        // 检测通道状态，对于请求或响应消息，此时 state = RECEIVED
         if (state == ChannelState.RECEIVED) {
             try {
+                // 进去（比如ExchangeClient 实例进行 client.request(xx)，服务端就会走这里）
                 handler.received(channel, message);
             } catch (Exception e) {
                 logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel
                         + ", message is " + message, e);
             }
+
+            // 如上，请求和响应消息出现频率明显比其他类型消息高，所以这里对该类型的消息进行了针对性判断。ChannelEventRunnable 仅是一个中转站，
+            // 它的 run 方法中并不包含具体的调用逻辑，仅用于将参数传给其他 ChannelHandler 对象进行处理，该对象类型为 DecodeHandler。 去看 DecodeHandler
+
+        // 其他消息类型通过 switch 进行处理
         } else {
             switch (state) {
             case CONNECTED:
                 try {
+                    // DecodeHandler,connected是父类 AbstractChannelHandlerDelegate 继承来的方法，进去
                     handler.connected(channel);
                 } catch (Exception e) {
                     logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel, e);
@@ -70,7 +82,7 @@ public class ChannelEventRunnable implements Runnable {
                 break;
             case DISCONNECTED:
                 try {
-                    handler.disconnected(channel);
+                    handler.disconnected(channel);// 进去
                 } catch (Exception e) {
                     logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel, e);
                 }
@@ -95,6 +107,8 @@ public class ChannelEventRunnable implements Runnable {
                 logger.warn("unknown state: " + state + ", message is " + message);
             }
         }
+
+
 
     }
 

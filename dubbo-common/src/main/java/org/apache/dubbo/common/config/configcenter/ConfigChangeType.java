@@ -19,7 +19,10 @@ package org.apache.dubbo.common.config.configcenter;
 /**
  * Config change event type
  */
+// OK
 public enum ConfigChangeType {
+
+    // 看下三个属性的调用处（CacheListener）
     /**
      * A config is created.
      */

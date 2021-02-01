@@ -27,6 +27,7 @@ import org.apache.dubbo.remoting.zookeeper.ZookeeperTransporter;
  */
 public class ZookeeperRegistryFactory extends AbstractRegistryFactory {
 
+    // zookeeperTransporter 由 SPI 在运行时注入，类型为 ZookeeperTransporter$Adaptive
     private ZookeeperTransporter zookeeperTransporter;
 
     /**
@@ -39,6 +40,9 @@ public class ZookeeperRegistryFactory extends AbstractRegistryFactory {
 
     @Override
     public Registry createRegistry(URL url) {
+            // 第一个参数是registryUrl(eg:zookeeper://xxx)
+            // 第二个参数是 ZookeeperTransporter$Adaptive，原因就是上面的setXX方法，会利用ioc注入相关依赖，不过注入的都是$Adpative的
+            // 创建 ZookeeperRegistry，进去
         return new ZookeeperRegistry(url, zookeeperTransporter);
     }
 

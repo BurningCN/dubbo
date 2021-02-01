@@ -28,12 +28,14 @@ import static org.apache.dubbo.common.constants.CommonConstants.HEARTBEAT_EVENT;
 /**
  * HeartbeatTimerTask
  */
+// OK
 public class HeartbeatTimerTask extends AbstractTimerTask {
 
     private static final Logger logger = LoggerFactory.getLogger(HeartbeatTimerTask.class);
 
     private final int heartbeat;
 
+    // gx
     HeartbeatTimerTask(ChannelProvider channelProvider, Long heartbeatTick, int heartbeat) {
         super(channelProvider, heartbeatTick);
         this.heartbeat = heartbeat;
@@ -45,12 +47,12 @@ public class HeartbeatTimerTask extends AbstractTimerTask {
             Long lastRead = lastRead(channel);
             Long lastWrite = lastWrite(channel);
             if ((lastRead != null && now() - lastRead > heartbeat)
-                    || (lastWrite != null && now() - lastWrite > heartbeat)) {
+                    || (lastWrite != null && now() - lastWrite > heartbeat)) {  // 直到这里，这些判断和CloseTimerTask的一样
                 Request req = new Request();
                 req.setVersion(Version.getProtocolVersion());
-                req.setTwoWay(true);
-                req.setEvent(HEARTBEAT_EVENT);
-                channel.send(req);
+                req.setTwoWay(true);// 表示对端也需要给我client发心跳数据
+                req.setEvent(HEARTBEAT_EVENT);// 进去
+                channel.send(req);// 进去，channel是 HeaderExchangeChannel
                 if (logger.isDebugEnabled()) {
                     logger.debug("Send heartbeat to remote channel " + channel.getRemoteAddress()
                             + ", cause: The channel has no data-transmission exceeds a heartbeat period: "

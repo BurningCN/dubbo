@@ -679,6 +679,7 @@ public class PojoUtils {
      * @since 2.7.8
      */
     public static <T> void updatePropertyIfAbsent(Supplier<T> getterMethod, Consumer<T> setterMethod, T newValue) {
+        // supplier.get()和consumer.accept()两个api注意下
         if (newValue != null && getterMethod.get() == null) {
             setterMethod.accept(newValue);
         }

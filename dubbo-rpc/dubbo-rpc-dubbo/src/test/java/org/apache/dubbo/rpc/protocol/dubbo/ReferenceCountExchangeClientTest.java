@@ -17,6 +17,7 @@
 package org.apache.dubbo.rpc.protocol.dubbo;
 
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.utils.DubboAppender;
 import org.apache.dubbo.common.utils.LogUtil;
@@ -65,11 +66,11 @@ public class ReferenceCountExchangeClientTest {
 
     @AfterAll
     public static void tearDownAfterClass() {
-        ProtocolUtils.closeAll();
+        ProtocolUtils.closeAll();// 进去
     }
 
     public static Invoker<?> referInvoker(Class<?> type, URL url) {
-        return (Invoker<?>) protocol.refer(type, url);
+        return (Invoker<?>) protocol.refer(type, url);// 进去
     }
 
     public static <T> Exporter<T> export(T instance, Class<T> type, String url) {
@@ -89,7 +90,7 @@ public class ReferenceCountExchangeClientTest {
      */
     @Test
     public void test_share_connect() {
-        init(0, 1);
+        init(0, 1);// 进去
         Assertions.assertEquals(demoClient.getLocalAddress(), helloClient.getLocalAddress());
         Assertions.assertEquals(demoClient, helloClient);
         destoy();
@@ -100,7 +101,7 @@ public class ReferenceCountExchangeClientTest {
      */
     @Test
     public void test_not_share_connect() {
-        init(1, 1);
+        init(1, 1);// 第一个参数为1，表示不使用连接复用，进去
         Assertions.assertNotSame(demoClient.getLocalAddress(), helloClient.getLocalAddress());
         Assertions.assertNotSame(demoClient, helloClient);
         destoy();
@@ -112,9 +113,10 @@ public class ReferenceCountExchangeClientTest {
     @Test
     public void test_mult_share_connect() {
         // here a three shared connection is established between a consumer process and a provider process.
+        // 在这里，消费者流程和提供者流程之间建立了三个共享连接。
         final int shareConnectionNum = 3;
 
-        init(0, shareConnectionNum);
+        init(0, shareConnectionNum); // DubboProtocol内部会创建三个HeaderExchangeClient,并用Referencexxx包装 ，进去
 
         List<ReferenceCountExchangeClient> helloReferenceClientList = getReferenceClientList(helloServiceInvoker);
         Assertions.assertEquals(shareConnectionNum, helloReferenceClientList.size());
@@ -125,6 +127,21 @@ public class ReferenceCountExchangeClientTest {
         // because helloServiceInvoker and demoServiceInvoker use share connect， so client list must be equal
         Assertions.assertEquals(helloReferenceClientList, demoReferenceClientList);
 
+        //helloReferenceClientList = {ArrayList@3205}  size = 3 ---——> // 注意这里的3 因为shareConnectionNum = 3 （init方法内部发起rpc调用的时候内部会进行一个client的选择）
+        // 0 = {ReferenceCountExchangeClient@3230}
+        //  url = {URL@3233} "dubbo://127.0.0.1:12345/demo?codec=dubbo&connections=0&heartbeat=60000&shareconnections=3"
+        //  referenceCount = {AtomicInteger@3234} "2" // 注意这里的2  ----> 因为init里面两次refer
+        //  client = {HeaderExchangeClient@3198} "HeaderExchangeClient [channel=org.apache.dubbo.remoting.transport.netty4.NettyClient [/30.25.58.202:53235 -> /30.25.58.202:12345]]"
+        // 1 = {ReferenceCountExchangeClient@3231}
+        //  url = {URL@3238} "dubbo://127.0.0.1:12345/demo?codec=dubbo&connections=0&heartbeat=60000&shareconnections=3"
+        //  referenceCount = {AtomicInteger@3239} "2" // 注意
+        //  client = {HeaderExchangeClient@3240} "HeaderExchangeClient [channel=org.apache.dubbo.remoting.transport.netty4.NettyClient [/30.25.58.202:53237 -> /30.25.58.202:12345]]"
+        // 2 = {ReferenceCountExchangeClient@3232}
+        //  url = {URL@3244} "dubbo://127.0.0.1:12345/demo?codec=dubbo&connections=0&heartbeat=60000&shareconnections=3"
+        //  referenceCount = {AtomicInteger@3245} "2" // 注意
+        //  client = {HeaderExchangeClient@3246} "HeaderExchangeClient [channel=org.apache.dubbo.remoting.transport.netty4.NettyClient [/30.25.58.202:53236 -> /30.25.58.202:12345]]"
+
+
         Assertions.assertEquals(demoClient.getLocalAddress(), helloClient.getLocalAddress());
         Assertions.assertEquals(demoClient, helloClient);
 
@@ -133,6 +150,7 @@ public class ReferenceCountExchangeClientTest {
 
     /**
      * test counter won't count down incorrectly when invoker is destroyed for multiple times
+     * 当调用程序被销毁多次时，测试计数器不会错误地计数
      */
     @Test
     public void test_multi_destory() {
@@ -212,22 +230,40 @@ public class ReferenceCountExchangeClientTest {
         Assertions.assertTrue(shareConnections >= 1);
 
         int port = NetUtils.getAvailablePort();
+        port = 12345;
+        // 下两个提供方url用的一个port
         URL demoUrl = URL.valueOf("dubbo://127.0.0.1:" + port + "/demo?" + CONNECTIONS_KEY + "=" + connections + "&" + SHARE_CONNECTIONS_KEY + "=" + shareConnections);
         URL helloUrl = URL.valueOf("dubbo://127.0.0.1:" + port + "/hello?" + CONNECTIONS_KEY + "=" + connections + "&" + SHARE_CONNECTIONS_KEY + "=" + shareConnections);
 
-        demoExporter = export(new DemoServiceImpl(), IDemoService.class, demoUrl);
-        helloExporter = export(new HelloServiceImpl(), IHelloService.class, helloUrl);
+        demoExporter = export(new DemoServiceImpl(), IDemoService.class, demoUrl);// 进去
+        helloExporter = export(new HelloServiceImpl(), IHelloService.class, helloUrl);// 进去
+        // helloExporter如下，注意exporterMap
 
-        demoServiceInvoker = (Invoker<IDemoService>) referInvoker(IDemoService.class, demoUrl);
+        // helloExporter = {DubboExporter@3115} "interface org.apache.dubbo.rpc.protocol.dubbo.ReferenceCountExchangeClientTest$IHelloService -> dubbo://127.0.0.1:62796/hello?connections=0&shareconnections=1"
+        // key = "hello:62796"
+        // exporterMap = {ConcurrentHashMap@2261}  size = 2
+        //  "demo:62796" -> {DubboExporter@2273} "interface org.apache.dubbo.rpc.protocol.dubbo.ReferenceCountExchangeClientTest$IDemoService -> dubbo://127.0.0.1:62796/demo?connections=0&shareconnections=1"
+        //  "hello:62796" -> {DubboExporter@3115} "interface org.apache.dubbo.rpc.protocol.dubbo.ReferenceCountExchangeClientTest$IHelloService -> dubbo://127.0.0.1:62796/hello?connections=0&shareconnections=1"
+        // logger = {FailsafeLogger@3999}
+        // invoker = {JavassistProxyFactory$1@3105} "interface org.apache.dubbo.rpc.protocol.dubbo.ReferenceCountExchangeClientTest$IHelloService -> dubbo://127.0.0.1:62796/hello?connections=0&shareconnections=1"
+        // unexported = false
+
+        demoUrl.addParameter("timeout",5000); // 这里是我特地加的，可能当前电脑比较慢，导致DefaultFuture经常超时
+
+        demoServiceInvoker = (Invoker<IDemoService>) referInvoker(IDemoService.class, demoUrl);// 进去
+        // demoServiceInvoker类型为AsyncToSyncInvoker，内部的invoker属性为DubboInvoker， getProxy进去
         demoService = proxy.getProxy(demoServiceInvoker);
+        // demoService类型为proxy0，内部含有InvokerInvocationHandler属性，而InvokerInvocationHandler含有AsyncToSyncInvoker
+        // demo进去 直接进InvokerInvocationHandler的invoke方法
+        // 交互逻辑非常复杂，要关注服务端的编解码、客户端的编解码，服务端是最终怎么调用到本地服务的方法的，客户端最终是怎么拿到结果的，相关逻辑打断点测试
         Assertions.assertEquals("demo", demoService.demo());
 
         helloServiceInvoker = (Invoker<IHelloService>) referInvoker(IHelloService.class, helloUrl);
         helloService = proxy.getProxy(helloServiceInvoker);
         Assertions.assertEquals("hello", helloService.hello());
 
-        demoClient = getClient(demoServiceInvoker);
-        helloClient = getClient(helloServiceInvoker);
+        demoClient = getClient(demoServiceInvoker);// 进去
+        helloClient = getClient(helloServiceInvoker);// 进去
     }
 
     private void destoy() {
@@ -241,8 +277,9 @@ public class ReferenceCountExchangeClientTest {
         if (invoker.getUrl().getParameter(CONNECTIONS_KEY, 1) == 1) {
             return getInvokerClient(invoker);
         } else {
-            ReferenceCountExchangeClient client = getReferenceClient(invoker);
+            ReferenceCountExchangeClient client = getReferenceClient(invoker);// 进去
             try {
+                // 获取ReferenceCountExchangeClient的ExchangeClient client属性值
                 Field clientField = ReferenceCountExchangeClient.class.getDeclaredField("client");
                 clientField.setAccessible(true);
                 return (ExchangeClient) clientField.get(client);
@@ -255,12 +292,13 @@ public class ReferenceCountExchangeClientTest {
     }
 
     private ReferenceCountExchangeClient getReferenceClient(Invoker<?> invoker) {
-        return getReferenceClientList(invoker).get(0);
+        return getReferenceClientList(invoker).get(0);// 进去
     }
 
     private List<ReferenceCountExchangeClient> getReferenceClientList(Invoker<?> invoker) {
-        List<ExchangeClient> invokerClientList = getInvokerClientList(invoker);
+        List<ExchangeClient> invokerClientList = getInvokerClientList(invoker);// 进去
 
+        // 筛选出为ReferenceCountExchangeClient填充到返回结果集中
         List<ReferenceCountExchangeClient> referenceCountExchangeClientList = new ArrayList<>(invokerClientList.size());
         for (ExchangeClient exchangeClient : invokerClientList) {
             Assertions.assertTrue(exchangeClient instanceof ReferenceCountExchangeClient);
@@ -275,8 +313,9 @@ public class ReferenceCountExchangeClientTest {
     }
 
     private List<ExchangeClient> getInvokerClientList(Invoker<?> invoker) {
-        @SuppressWarnings("rawtypes") DubboInvoker dInvoker = (DubboInvoker) ((AsyncToSyncInvoker) invoker).getInvoker();
+        @SuppressWarnings("rawtypes") DubboInvoker dInvoker = (DubboInvoker) ((AsyncToSyncInvoker) invoker).getInvoker();// 进去
         try {
+            // 获取DubboInvoker的ExchangeClient[] clients属性
             Field clientField = DubboInvoker.class.getDeclaredField("clients");
             clientField.setAccessible(true);
             ExchangeClient[] clients = (ExchangeClient[]) clientField.get(dInvoker);

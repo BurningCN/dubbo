@@ -27,10 +27,16 @@ public class ChannelHandlers {
 
     private static ChannelHandlers INSTANCE = new ChannelHandlers();
 
-    protected ChannelHandlers() {
+    public ChannelHandlers() {
+
+    }
+
+    protected static void setTestingChannelHandlers(ChannelHandlers instance) {
+        INSTANCE = instance;
     }
 
     public static ChannelHandler wrap(ChannelHandler handler, URL url) {
+        // 进去
         return ChannelHandlers.getInstance().wrapInternal(handler, url);
     }
 
@@ -38,12 +44,12 @@ public class ChannelHandlers {
         return INSTANCE;
     }
 
-    static void setTestingChannelHandlers(ChannelHandlers instance) {
-        INSTANCE = instance;
-    }
+
 
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
-        return new MultiMessageHandler(new HeartbeatHandler(ExtensionLoader.getExtensionLoader(Dispatcher.class)
-                .getAdaptiveExtension().dispatch(handler, url)));
-    }
+        // 去看下 Dispatcher$Adaptive
+        ChannelHandler dispatch = ExtensionLoader.getExtensionLoader(Dispatcher.class).getAdaptiveExtension().dispatch(handler, url);
+        HeartbeatHandler heartbeatHandler = new HeartbeatHandler(dispatch);
+        return new MultiMessageHandler(heartbeatHandler);
+    } // MultiMessageHandler( HeartbeatHandler( AllChannelHandler( DecodeHandler( HeaderExchangerHandler( ExchangeHandler)))))
 }

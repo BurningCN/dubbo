@@ -29,11 +29,16 @@ import java.util.concurrent.TimeoutException;
  * This is the type of the Future instance users get in an async call:
  * 1. unwrap AppResponse in appResponseFuture and convert to plain biz result represented by FutureAdapter.
  * 2. customized behaviors meaningful for RPC, for example, {@link #cancel(boolean)}
+ * 这是用户在异步调用中获得的未来实例的类型:
+ * 1. 在“appsponsefuture”中展开“appsponse”，并将其转换为“FutureAdapter”表示的简单商务结果。
+ * 2. 对RPC有意义的定制行为，例如，{@link #cancel(boolean)}
  */
+// OK
 public class FutureAdapter<V> extends CompletableFuture<V> {
 
     private CompletableFuture<AppResponse> appResponseFuture;
 
+    // gx
     public FutureAdapter(CompletableFuture<AppResponse> future) {
         this.appResponseFuture = future;
         future.whenComplete((appResponse, t) -> {
@@ -50,6 +55,22 @@ public class FutureAdapter<V> extends CompletableFuture<V> {
                 }
             }
         });
+    }
+
+    public static void main(String[] args) {
+        CompletableFuture<Long> completableFuture = new CompletableFuture<>();
+        completableFuture.thenApply(a->{
+            System.out.println(a);
+            return a;});
+        new Thread(()->{
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            completableFuture.complete(10L);
+        }).start();
+        System.out.println("over");
     }
 
     // TODO figure out the meaning of cancel in DefaultFuture.

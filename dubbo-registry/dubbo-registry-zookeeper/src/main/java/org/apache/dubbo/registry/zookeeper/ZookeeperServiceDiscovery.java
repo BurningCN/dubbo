@@ -51,13 +51,13 @@ import static org.apache.dubbo.registry.zookeeper.util.CuratorFrameworkUtils.bui
  * Zookeeper {@link ServiceDiscovery} implementation based on
  * <a href="https://curator.apache.org/curator-x-discovery/index.html">Apache Curator X Discovery</a>
  */
+
+// OK
 public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private URL registryURL;
-
-    private EventDispatcher dispatcher;
 
     private CuratorFramework curatorFramework;
 
@@ -75,9 +75,9 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     @Override
     public void initialize(URL registryURL) throws Exception {
         this.registryURL = registryURL;
-        this.curatorFramework = buildCuratorFramework(registryURL);
-        this.rootPath = ROOT_PATH.getParameterValue(registryURL);
-        this.serviceDiscovery = buildServiceDiscovery(curatorFramework, rootPath);
+        this.curatorFramework = buildCuratorFramework(registryURL); // 进去
+        this.rootPath = ROOT_PATH.getParameterValue(registryURL);// 进去 默认值 /services
+        this.serviceDiscovery = buildServiceDiscovery(curatorFramework, rootPath);// 进去
         this.serviceDiscovery.start();
     }
 
@@ -97,6 +97,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     public void register(ServiceInstance serviceInstance) throws RuntimeException {
         this.serviceInstance = serviceInstance;
+        // doInServiceRegistry、build进去  registerService是ServiceDiscovery的api
         doInServiceRegistry(serviceDiscovery -> {
             serviceDiscovery.registerService(build(serviceInstance));
         });
@@ -104,8 +105,10 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     public void update(ServiceInstance serviceInstance) throws RuntimeException {
         this.serviceInstance = serviceInstance;
+        // 进去
         if (isInstanceUpdated(serviceInstance)) {
             doInServiceRegistry(serviceDiscovery -> {
+                // build进去 updateService是ServiceDiscovery的api
                 serviceDiscovery.updateService(build(serviceInstance));
             });
         }
@@ -119,23 +122,32 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     @Override
     public Set<String> getServices() {
+        // 查全部的
         return doInServiceDiscovery(s -> new LinkedHashSet<>(s.queryForNames()));
     }
 
     @Override
     public List<ServiceInstance> getInstances(String serviceName) throws NullPointerException {
+        // 根据服务名称即父节点（当然带rootPath前缀）查询下的所有子节点，build进去  queryForInstances是api
         return doInServiceDiscovery(s -> build(s.queryForInstances(serviceName)));
     }
 
+    // 分页查询
     @Override
     public Page<ServiceInstance> getInstances(String serviceName, int offset, int pageSize, boolean healthyOnly) {
-        String path = buildServicePath(serviceName);
+        // 进去
+        String path = buildServicePath(serviceName);// eg /services/A
 
+        // execute进去
         return execute(path, p -> {
 
             List<ServiceInstance> serviceInstances = new LinkedList<>();
 
-            List<String> serviceIds = new LinkedList<>(curatorFramework.getChildren().forPath(p));
+            // 写操作比较多的话使用LinkedList
+            // 这里直接使用curatorFramework（zkClient）进行zk交互，其实前面的ServiceDiscovery在构造的时候传入了 curatorFramework，然后我们很方便的
+            // 的进行注册、取消注册、查询内部逻辑实际还是利用curatorFramework！
+            // 这个是取出p下的所有子节点
+            List<String> serviceIds = new LinkedList<>(curatorFramework.getChildren().forPath(p));// eg p = /services/A
 
             int totalSize = serviceIds.size();
 
@@ -151,6 +163,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
             for (int i = 0; i < pageSize; i++) {
                 if (iterator.hasNext()) {
                     String serviceId = iterator.next();
+                    // serviceName是父节点，serviceId是其子节点。这里是取子节点的值
                     ServiceInstance serviceInstance = build(serviceDiscovery.queryForInstance(serviceName, serviceId));
                     serviceInstances.add(serviceInstance);
                 }
@@ -163,6 +176,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     @Override
     public void addServiceInstancesChangedListener(ServiceInstancesChangedListener listener)
             throws NullPointerException, IllegalArgumentException {
+        //每一个服务/节点绑定一个watcher  ， registerServiceWatcher  进去，
         listener.getServiceNames().forEach(serviceName -> registerServiceWatcher(serviceName, listener));
     }
 
@@ -179,8 +193,10 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     protected void registerServiceWatcher(String serviceName, ServiceInstancesChangedListener listener) {
         String path = buildServicePath(serviceName);
         CuratorWatcher watcher = watcherCaches.computeIfAbsent(path, key ->
+                // 进去
                 new ZookeeperServiceDiscoveryChangeWatcher(this, serviceName, listener));
         try {
+            // 注册watcher
             curatorFramework.getChildren().usingWatcher(watcher).forPath(path);
         } catch (KeeperException.NoNodeException e) {
             // ignored

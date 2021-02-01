@@ -26,17 +26,20 @@ import org.apache.dubbo.remoting.Transporter;
 /**
  * Default extension of {@link Transporter} using netty4.x.
  */
+// OK
 public class NettyTransporter implements Transporter {
 
     public static final String NAME = "netty";
 
     @Override
     public RemotingServer bind(URL url, ChannelHandler handler) throws RemotingException {
+        // 进去，第二个参数一般是DecodeHandler
         return new NettyServer(url, handler);
     }
 
     @Override
     public Client connect(URL url, ChannelHandler handler) throws RemotingException {
+        // 进去
         return new NettyClient(url, handler);
     }
 

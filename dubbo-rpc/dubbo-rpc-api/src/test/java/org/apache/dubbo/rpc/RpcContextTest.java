@@ -26,19 +26,24 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+// OK
 public class RpcContextTest {
 
     @Test
     public void testGetContext() {
 
+        // 进去
         RpcContext rpcContext = RpcContext.getContext();
         Assertions.assertNotNull(rpcContext);
 
+        // 进去
         RpcContext.removeContext();
-        // if null, will return the initialize value.
-        //Assertions.assertNull(RpcContext.getContext());
+        // if null, will return the initialize value. <-注意
+        // Assertions.assertNull(RpcContext.getContext());
         Assertions.assertNotNull(RpcContext.getContext());
         Assertions.assertNotEquals(rpcContext, RpcContext.getContext());
+
+        // 以下同上
 
         RpcContext serverRpcContext = RpcContext.getServerContext();
         Assertions.assertNotNull(serverRpcContext);
@@ -51,14 +56,17 @@ public class RpcContextTest {
     @Test
     public void testAddress() {
         RpcContext context = RpcContext.getContext();
+        // 进去
         context.setLocalAddress("127.0.0.1", 20880);
         Assertions.assertEquals(20880, context.getLocalAddress().getPort());
+        // 进去
         Assertions.assertEquals("127.0.0.1:20880", context.getLocalAddressString());
 
         context.setRemoteAddress("127.0.0.1", 20880);
         Assertions.assertEquals(20880, context.getRemoteAddress().getPort());
         Assertions.assertEquals("127.0.0.1:20880", context.getRemoteAddressString());
 
+        // < 0 port = 0，进去
         context.setRemoteAddress("127.0.0.1", -1);
         context.setLocalAddress("127.0.0.1", -1);
         Assertions.assertEquals(0, context.getRemoteAddress().getPort());
@@ -74,11 +82,14 @@ public class RpcContextTest {
 
         //TODO fix npe
         //context.isProviderSide();
-
+        // 进去
         context.setUrl(URL.valueOf("test://test:11/test?accesslog=true&group=dubbo&version=1.1"));
+        // 进去
         Assertions.assertFalse(context.isConsumerSide());
+        // 进去
         Assertions.assertTrue(context.isProviderSide());
 
+        // 添加了side参数
         context.setUrl(URL.valueOf("test://test:11/test?accesslog=true&group=dubbo&version=1.1&side=consumer"));
         Assertions.assertTrue(context.isConsumerSide());
         Assertions.assertFalse(context.isProviderSide());
@@ -93,10 +104,14 @@ public class RpcContextTest {
         map.put("_22", "2222");
         map.put(".33", "3333");
 
+        // 进去
         context.setObjectAttachments(map);
+        // 进去
         Assertions.assertEquals(map, context.getObjectAttachments());
 
+        // 进去
         Assertions.assertEquals("1111", context.getAttachment("_11"));
+        // 进去
         context.setAttachment("_11", "11.11");
         Assertions.assertEquals("11.11", context.getAttachment("_11"));
 
@@ -108,6 +123,7 @@ public class RpcContextTest {
         Assertions.assertNull(context.getAttachment("_33"));
         Assertions.assertEquals("3333", context.getAttachment(".33"));
 
+        // 进去
         context.clearAttachments();
         Assertions.assertNull(context.getAttachment("_11"));
     }
@@ -121,10 +137,13 @@ public class RpcContextTest {
         map.put("_22", "2222");
         map.put(".33", "3333");
 
+        // 进去
         map.forEach(context::set);
 
+        // 进去
         Assertions.assertEquals(map, context.get());
 
+        // 进去
         Assertions.assertEquals("1111", context.get("_11"));
         context.set("_11", "11.11");
         Assertions.assertEquals("11.11", context.get("_11"));
@@ -137,6 +156,7 @@ public class RpcContextTest {
         Assertions.assertNull(context.get("_33"));
         Assertions.assertEquals("3333", context.get(".33"));
 
+        // 进去
         map.keySet().forEach(context::remove);
         Assertions.assertNull(context.get("_11"));
     }
@@ -145,14 +165,19 @@ public class RpcContextTest {
     public void testAsync() {
 
         RpcContext rpcContext = RpcContext.getContext();
+        // 进去
         Assertions.assertFalse(rpcContext.isAsyncStarted());
 
+        // 进去
         AsyncContext asyncContext = RpcContext.startAsync();
+        // 进去
         Assertions.assertTrue(rpcContext.isAsyncStarted());
 
+        // 进去
         asyncContext.write(new Object());
+        // 进去
         Assertions.assertTrue(((AsyncContextImpl) asyncContext).getInternalFuture().isDone());
-
+        // 进去
         rpcContext.stopAsync();
         Assertions.assertTrue(rpcContext.isAsyncStarted());
         RpcContext.removeContext();
@@ -160,6 +185,7 @@ public class RpcContextTest {
 
     @Test
     public void testAsyncCall() {
+        // 进去
         CompletableFuture<String> rpcFuture = RpcContext.getContext().asyncCall(() -> {
             throw new NullPointerException();
         });

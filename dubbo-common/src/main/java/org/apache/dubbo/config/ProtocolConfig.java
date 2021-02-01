@@ -30,6 +30,8 @@ import static org.apache.dubbo.config.Constants.PROTOCOLS_SUFFIX;
  *
  * @export
  */
+// OK
+// 很多setXX的调用一般是解析xml文件的时候调用的，具体见DubboNameSpaceHandler和DubboBeanDefinitionParser
 public class ProtocolConfig extends AbstractConfig {
 
     private static final long serialVersionUID = 6913423882496634749L;
@@ -224,6 +226,7 @@ public class ProtocolConfig extends AbstractConfig {
 
     public final void setName(String name) {
         this.name = name;
+        // 进去
         this.updateIdIfAbsent(name);
     }
 
@@ -538,6 +541,7 @@ public class ProtocolConfig extends AbstractConfig {
 
     @Override
     public void refresh() {
+        /* todo need pr 下面的重复refresh没意义
         if (StringUtils.isEmpty(this.getName())) {
             this.setName(DUBBO_VERSION_KEY);
         }
@@ -545,7 +549,16 @@ public class ProtocolConfig extends AbstractConfig {
         if (StringUtils.isNotEmpty(this.getId())) {
             this.setPrefix(PROTOCOLS_SUFFIX);
             super.refresh();
+        }*/
+        if (StringUtils.isEmpty(this.getName())) {
+            // 如果没有名称，默认设置为dubbo
+            this.setName(DUBBO_VERSION_KEY);
         }
+        if (StringUtils.isNotEmpty(this.getId())) {
+            // 如果id不为空，设置prefix为dubbo.protocols.
+            this.setPrefix(PROTOCOLS_SUFFIX);
+        }
+        super.refresh();
     }
 
     @Override

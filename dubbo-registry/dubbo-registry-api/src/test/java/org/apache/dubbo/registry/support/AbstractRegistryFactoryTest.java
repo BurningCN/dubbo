@@ -31,10 +31,12 @@ import java.util.List;
 /**
  * AbstractRegistryFactoryTest
  */
+// OK
 public class AbstractRegistryFactoryTest {
 
     private RegistryFactory registryFactory = new AbstractRegistryFactory() {
 
+        // 实现了该方法
         @Override
         protected Registry createRegistry(final URL url) {
             return new Registry() {
@@ -80,6 +82,7 @@ public class AbstractRegistryFactoryTest {
     @Test
     public void testRegistryFactoryCache() throws Exception {
         URL url = URL.valueOf("dubbo://" + NetUtils.getLocalAddress().getHostAddress() + ":2233");
+        // 进去，内部会调用上面实现的createRegistry方法
         Registry registry1 = registryFactory.getRegistry(url);
         Registry registry2 = registryFactory.getRegistry(url);
         Assertions.assertEquals(registry1, registry2);
@@ -95,10 +98,12 @@ public class AbstractRegistryFactoryTest {
         Assertions.assertEquals(registry1, registry2);
     }
 
+    // test cache
     @Test
     public void testRegistryFactoryGroupCache() throws Exception {
         Registry registry1 = registryFactory.getRegistry(URL.valueOf("dubbo://" + NetUtils.getLocalHost() + ":2233?group=aaa"));
         Registry registry2 = registryFactory.getRegistry(URL.valueOf("dubbo://" + NetUtils.getLocalHost() + ":2233?group=bbb"));
+        // group不一样，存到cache的key肯定不同
         Assertions.assertNotSame(registry1, registry2);
     }
 
@@ -115,9 +120,11 @@ public class AbstractRegistryFactoryTest {
         Collection<Registry> registries = AbstractRegistryFactory.getRegistries();
         Assertions.assertTrue(registries.contains(registry1));
         Assertions.assertTrue(registries.contains(registry2));
+        // 进去
         registry3.destroy();
         registries = AbstractRegistryFactory.getRegistries();
         Assertions.assertFalse(registries.contains(registry3));
+        // 进去
         AbstractRegistryFactory.destroyAll();
         registries = AbstractRegistryFactory.getRegistries();
         Assertions.assertFalse(registries.contains(registry1));

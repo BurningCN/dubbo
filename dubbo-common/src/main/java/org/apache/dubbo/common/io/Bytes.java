@@ -101,7 +101,9 @@ public class Bytes {
      * @return byte[].
      */
     public static byte[] int2bytes(int v) {
+        // 一个 int 等于 四个字节
         byte[] ret = {0, 0, 0, 0};
+        // 进去
         int2bytes(v, ret);
         return ret;
     }
@@ -113,6 +115,7 @@ public class Bytes {
      * @param b byte array.
      */
     public static void int2bytes(int v, byte[] b) {
+        // 进去
         int2bytes(v, b, 0);
     }
 
@@ -124,10 +127,15 @@ public class Bytes {
      * @param off array offset.
      */
     public static void int2bytes(int v, byte[] b, int off) {
+        // 很好懂
+        // 比如 int 32位/4个字节 表示为：00001000 00000100 00000010 00000001
         b[off + 3] = (byte) v;
         b[off + 2] = (byte) (v >>> 8);
         b[off + 1] = (byte) (v >>> 16);
         b[off + 0] = (byte) (v >>> 24);
+        // 1，一个字节包含8个二进制位
+        //2，一个十六进制可表示4个二进制位
+        //3，所以，一个字节可以由2个十六进制表示
     }
 
     /**
@@ -294,6 +302,11 @@ public class Bytes {
                 ((b[off + 0]) << 24);
     }
 
+    public static void main(String[] args) {
+        byte[] x = new byte[8];
+        long2bytes(99999, x, 0);
+        System.out.println(bytes2long(x, 0));
+    }
     /**
      * to int.
      *

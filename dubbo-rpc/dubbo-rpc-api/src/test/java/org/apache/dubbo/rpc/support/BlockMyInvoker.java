@@ -50,6 +50,7 @@ public class BlockMyInvoker<T> extends MyInvoker<T> {
             result.setException(new RuntimeException("mocked exception"));
         }
 
+        // 进去
         return AsyncRpcResult.newDefaultAsyncResult(result, invocation);
     }
 

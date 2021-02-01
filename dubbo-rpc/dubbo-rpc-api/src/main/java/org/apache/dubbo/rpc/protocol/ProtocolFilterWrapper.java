@@ -44,17 +44,17 @@ public class ProtocolFilterWrapper implements Protocol {
 
     private final Protocol protocol;
 
-    public ProtocolFilterWrapper(Protocol protocol) {
+    public ProtocolFilterWrapper(Protocol protocol) { // 注入ProtocolListenerWrapper
         if (protocol == null) {
             throw new IllegalArgumentException("protocol == null");
         }
         this.protocol = protocol;
     }
 
-    private static <T> Invoker<T> buildInvokerChain(final Invoker<T> invoker, String key, String group) {
+    private static <T> Invoker<T> buildInvokerChain(final Invoker<T> invoker, String key/*eg:service.filter*/, String group/*eg:provider*/) {
         Invoker<T> last = invoker;
+        // 根据几个条件激活满足的扩展类实例，比如 group参数值为provider，那么这种就满足：@Activate(group = CommonConstants.PROVIDER)
         List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
-
         if (!filters.isEmpty()) {
             for (int i = filters.size() - 1; i >= 0; i--) {
                 final Filter filter = filters.get(i);
@@ -75,11 +75,12 @@ public class ProtocolFilterWrapper implements Protocol {
                     public boolean isAvailable() {
                         return invoker.isAvailable();
                     }
-
+                    // 过滤器链式调用，消费者（ReferenceConfig、refer）发起接口的方法调用才会触发下面的方法
                     @Override
                     public Result invoke(Invocation invocation) throws RpcException {
                         Result asyncResult;
-                        try {
+                        try { // filter0的invoke方法传入了next目标对象invoker
+                            //   filter1的invoke方法传入了next为filter0.....一层套一层，注意最后返回的last，去看下注释
                             asyncResult = filter.invoke(next, invocation);
                         } catch (Exception e) {
                             if (filter instanceof ListenableFilter) {
@@ -100,6 +101,7 @@ public class ProtocolFilterWrapper implements Protocol {
                         } finally {
 
                         }
+                        // 进去，看AsyncRpcResult实现
                         return asyncResult.whenCompleteWithContext((r, t) -> {
                             if (filter instanceof ListenableFilter) {
                                 ListenableFilter listenableFilter = ((ListenableFilter) filter);
@@ -139,6 +141,7 @@ public class ProtocolFilterWrapper implements Protocol {
             }
         }
 
+        // 该last是最后一个new Invoker()生成的filter，其属性结构见文件（里面 过滤器链 一看就清晰明了）：buildInvokerChain的链式最后返回的invoker对象.md
         return last;
     }
 
@@ -149,9 +152,9 @@ public class ProtocolFilterWrapper implements Protocol {
 
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
-        if (UrlUtils.isRegistry(invoker.getUrl())) {
+        if (UrlUtils.isRegistry(invoker.getUrl())) {// 判断是不是使用的Registry协议(注意是有RegistryProtocol扩展类的)
             return protocol.export(invoker);
-        } // 构建一个调用过滤链，内部是多个Filter层层包装了下
+        } // protocol是ProtocolListenerWrapper实例，buildInvokerChain构建一个调用过滤链，内部是多个Filter层层包装了下
         return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
     }
 

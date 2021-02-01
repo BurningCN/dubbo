@@ -103,7 +103,9 @@ public class NetUtils {
         if (port <= 0) {
             return getAvailablePort();
         }
+        // [20880,65535)
         for (int i = port; i < MAX_PORT; i++) {
+            // 直接建立监听套接口，能绑定成功，这个端口就没有被占用，直接返回
             try (ServerSocket ignored = new ServerSocket(i)) {
                 return i;
             } catch (IOException e) {
@@ -114,6 +116,7 @@ public class NetUtils {
     }
 
     public static boolean isInvalidPort(int port) {
+        // (0,65535]
         return port <= MIN_PORT || port > MAX_PORT;
     }
 
@@ -199,17 +202,19 @@ public class NetUtils {
 
     private static volatile String HOST_ADDRESS;
 
+
     public static String getLocalHost() {
         if (HOST_ADDRESS != null) {
             return HOST_ADDRESS;
         }
 
-        InetAddress address = getLocalAddress();
+        InetAddress address = getLocalAddress();// eg 192.168.1.7 、 30.25.58.152
         if (address != null) {
             return HOST_ADDRESS = address.getHostAddress();
         }
         return LOCALHOST_VALUE;
     }
+
 
     public static String filterLocalHost(String host) {
         if (host == null || host.length() == 0) {
@@ -225,9 +230,9 @@ public class NetUtils {
             if (NetUtils.isInvalidLocalHost(host.substring(0, i))) {
                 return NetUtils.getLocalHost() + host.substring(i);
             }
-        } else {
+        } else { // 比如host为localhost，进这个分支
             if (NetUtils.isInvalidLocalHost(host)) {
-                return NetUtils.getLocalHost();
+                return NetUtils.getLocalHost(); // 进去
             }
         }
         return host;

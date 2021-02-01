@@ -27,6 +27,7 @@ import org.apache.dubbo.rpc.RpcException;
 /**
  * Set the current execution thread class loader to service interface's class loader.
  */
+// OK
 @Activate(group = CommonConstants.PROVIDER, order = -30000)
 public class ClassLoaderFilter implements Filter {
 
@@ -37,6 +38,7 @@ public class ClassLoaderFilter implements Filter {
         try {
             return invoker.invoke(invocation);
         } finally {
+            // 还原回去
             Thread.currentThread().setContextClassLoader(ocl);
         }
     }
