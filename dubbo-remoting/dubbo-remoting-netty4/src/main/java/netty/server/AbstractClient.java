@@ -1,8 +1,6 @@
 package netty.server;
 
 
-import io.netty.channel.Channel;
-
 import java.net.InetSocketAddress;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -60,7 +58,13 @@ public abstract class AbstractClient implements Client {
                     }
                 }
             } catch (RemotingException e) {
-                throw e;
+                if (url.getParameter(Constants.CHECK_KEY, true)) {
+                    close();
+                    throw e;
+                } else {
+                    System.out.println("Failed to start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress()
+                            + " connect to the server " + serverAddress + " (check == false, ignore and retry later!), cause: " + e.getMessage());
+                }
             } finally {
                 connectLock.unlock();
             }

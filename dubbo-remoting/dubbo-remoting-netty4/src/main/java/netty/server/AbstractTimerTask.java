@@ -11,14 +11,15 @@ public abstract class AbstractTimerTask implements Runnable {
     private final long interval;
     private volatile boolean stopped = false;
     private Thread thread;
+    private final String threadName;
 
     AbstractTimerTask(ChannelProvider channelProvider, long interval, String threadName) {
         this.channelProvider = channelProvider;
         this.interval = interval;
-        threadName = threadName == null ? "TimerTask" : threadName;
-        thread = new Thread(this, threadName + "-Thread");
+        this.threadName = (threadName == null ? "TimerTask" : threadName) + "-Thread";
+        thread = new Thread(this, threadName);
         thread.start();
-        System.out.println(threadName+"线程启动");
+        System.out.println(threadName + " 线程启动 .....");
     }
 
     @Override
@@ -40,6 +41,7 @@ public abstract class AbstractTimerTask implements Runnable {
 
     protected void stop() {
         this.stopped = true;
+        System.out.println(threadName + " 线程关闭 .....");
     }
 
     public boolean isStopped() {

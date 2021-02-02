@@ -24,6 +24,7 @@ public interface Constants {
     boolean DEFAULT_RECONNECT = true;
     int HEARTBEAT_CHECK_TICK = 3;
     int LEAST_HEARTBEAT_DURATION = 1000;
+    String CHECK_KEY = "check";
     //  ======== == === = == =
     String READONLY_EVENT = "R";
 

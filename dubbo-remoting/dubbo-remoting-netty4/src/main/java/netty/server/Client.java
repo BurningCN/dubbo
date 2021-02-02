@@ -18,5 +18,7 @@ public interface Client extends IdleSensible {
 
     InnerChannel getChannel();
 
+    boolean isConnected();
+
 
 }

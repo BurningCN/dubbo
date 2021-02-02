@@ -17,7 +17,7 @@ import static org.apache.dubbo.remoting.Constants.LEAST_HEARTBEAT_DURATION;
  */
 public class NettyClient extends AbstractClient {
     private Bootstrap bootstrap;
-    private volatile InnerChannel channel;
+    private volatile InnerChannel channel ;
     private ReconnectTimerTask reconnectTimerTask;
     private HeartBeatTimerTask heartBeatTimerTask;
 
