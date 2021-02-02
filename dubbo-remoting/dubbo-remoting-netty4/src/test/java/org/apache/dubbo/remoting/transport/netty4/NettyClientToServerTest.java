@@ -32,14 +32,14 @@ public class NettyClientToServerTest extends ClientToServerTest {
 
     protected ExchangeServer newServer(int port, Replier<?> receiver) throws RemotingException {
         // add heartbeat cycle to avoid unstable ut.
-        URL url = URL.valueOf("exchange://localhost:" + port + "?server=netty4");
+        URL url = URL.valueOf("exchange://localhost:" + port + "?server=netty4&serialization=fastjson");
         url = url.addParameter(Constants.HEARTBEAT_KEY, 600 * 1000);
         return Exchangers.bind(url, receiver);// 进去 注意receiver，内部用了ExchangeHandlerAdapter
     }
 
     protected ExchangeChannel newClient(int port) throws RemotingException {
         // add heartbeat cycle to avoid unstable ut.
-        URL url = URL.valueOf("exchange://localhost:" + port + "?client=netty4&timeout=3000");
+        URL url = URL.valueOf("exchange://localhost:" + port + "?client=netty4&timeout=3000&serialization=fastjson");
         url = url.addParameter(Constants.HEARTBEAT_KEY, 600 * 1000);
         return Exchangers.connect(url);// 进去 注意没有添加Handler，内部用了ExchangeHandlerAdapter
     }

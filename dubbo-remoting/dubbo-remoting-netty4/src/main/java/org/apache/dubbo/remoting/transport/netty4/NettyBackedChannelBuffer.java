@@ -40,6 +40,13 @@ public class NettyBackedChannelBuffer implements ChannelBuffer {
         this.buffer = buffer;
     }
 
+    public NettyBackedChannelBuffer() {
+
+    }
+
+    public void setBuffer(ByteBuf buffer) {
+        this.buffer = buffer;
+    }
 
     @Override
     public int capacity() {

@@ -29,10 +29,12 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /**
  * ChannelListenerDispatcher
  */
+// OK 大体结构和ReplierDispatcher类似
 public class ChannelHandlerDispatcher implements ChannelHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ChannelHandlerDispatcher.class);
 
+    // 保证线程安全，ReplierDispatcher 里面的map也是chm保证安全的。
     private final Collection<ChannelHandler> channelHandlers = new CopyOnWriteArraySet<ChannelHandler>();
 
     public ChannelHandlerDispatcher() {

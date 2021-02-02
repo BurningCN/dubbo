@@ -9,7 +9,7 @@ import java.io.IOException;
 public interface Codec2 {
     void encode(ChannelBuffer buffer, Object msg) throws IOException;
 
-    Object decode(ChannelBuffer buffer) throws IOException;
+    Object decode(ChannelBuffer buffer) throws IOException, ClassNotFoundException;
 
     enum DecodeResult {
         NEED_MORE_INPUT

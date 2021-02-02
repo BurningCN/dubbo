@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * ReplierDispatcher
  */
+// OK
 public class ReplierDispatcher implements Replier<Object> {
 
     private final Replier<?> defaultReplier;
@@ -39,6 +40,7 @@ public class ReplierDispatcher implements Replier<Object> {
         this(defaultReplier, null);// 进去
     }
 
+    // 只被内部调用，说明外界最多传defaultReplier，或者什么都不传，当然测试程序会调用后面的addReplier
     public ReplierDispatcher(Replier<?> defaultReplier, Map<Class<?>, Replier<?>> repliers) {
         this.defaultReplier = defaultReplier;
         if (repliers != null && repliers.size() > 0) {
@@ -69,7 +71,7 @@ public class ReplierDispatcher implements Replier<Object> {
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked", "rawtypes"}) // 这里的request是上层从真正的请求对象Request中的data属性
     public Object reply(ExchangeChannel channel, Object request) throws RemotingException {
         return ((Replier) getReplier(request.getClass())).reply(channel, request);// getReplier 、reply 进去
     }

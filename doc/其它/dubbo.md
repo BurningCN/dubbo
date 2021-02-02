@@ -460,6 +460,21 @@ userEventTriggered------>channel.send(req)------->AbstractPeer.send--------->Net
 
 **146.ReferenceCountExchangeClient。**ReferenceCountExchangeClient 内部定义了一个引用计数变量 referenceCount，每当该对象被引用一次 referenceCount 都会进行自增。每当 close 方法被调用时，referenceCount 进行自减。ReferenceCountExchangeClient 内部仅实现了一个引用计数的功能，其他方法并无复杂逻辑，均是直接调用被装饰对象的相关方法。注意close的时进行了一个replaceWithLazyClient。
 
+**147.ExchangeHandlerDispatcher。**
+
+```
+这个是在cs没有指定 ExchangeHandler 的时候的默认支持的实例，该类主要是含有  ReplierDispatcher 和 ChannelHandlerDispatcher，
+// 用以将ExchangeHandler接口的reply和channel事件分开，分别交给这两个属性，后者相当于监听器，可以指定多个，前面的一般指定一个即可，因为回复肯定一个人回复就行了。
+```
+
+
+
+```
+ExchangeHandlerDispatcher、ReplierDispatcher、ChannelHandlerDispatcher
+```
+
+
+
 **零散：Bytes**。
 
 （1）int2bytes。将int转化为四个字节的字节数组，原理如下：
