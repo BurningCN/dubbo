@@ -103,8 +103,12 @@ public class NettyClient extends AbstractClient {
 
     @Override
     protected void doClose() {
-        reconnectTimerTask.stop();
-        heartBeatTimerTask.stop();
+        if (reconnectTimerTask != null) {
+            reconnectTimerTask.stop();
+        }
+        if (heartBeatTimerTask != null) {
+            heartBeatTimerTask.stop();
+        }
     }
 
     @Override
@@ -115,7 +119,7 @@ public class NettyClient extends AbstractClient {
     @Override
 
     public boolean canHandleIdle() {
-        if(getUrl().getParameter("sendHeartbeatByTask",false)){ // only for test
+        if (getUrl().getParameter("sendHeartbeatByTask", false)) { // only for test
             return false;
         }
         return true;

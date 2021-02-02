@@ -10,7 +10,7 @@ public class HeartBeatTimerTask extends AbstractTimerTask {
     private final int heartbeatTimeout;
 
     public HeartBeatTimerTask(ChannelProvider channelProvider, long interval, int heartbeatTimeout) {
-        super(channelProvider, interval);
+        super(channelProvider, interval,"HeartBeatTimerTask");
         this.heartbeatTimeout = heartbeatTimeout;
     }
 

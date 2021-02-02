@@ -37,6 +37,10 @@ public class NettyChannel implements InnerChannel {
         return url;
     }
 
+    public Channel getChannel() {
+        return channel;
+    }
+
     // ===== ===== ===== CHANNEL_MAP ===== ===== ===== ===== =====
 
     public static NettyChannel getOrAddChannel(Channel channel, URL url) {

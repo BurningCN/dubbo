@@ -20,7 +20,7 @@ import static netty.server.DataTimeUtil.now;
 @io.netty.channel.ChannelHandler.Sharable
 public class NettyServerHandler extends ChannelDuplexHandler {
 
-    private final Map<String, Channel> channels = new ConcurrentHashMap<>();
+    private final Map<String, InnerChannel> channels = new ConcurrentHashMap<>();
     private final URL url;
     private final ChannelHandler handler;
 
@@ -39,7 +39,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         try {
             NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(),url);
-            channels.putIfAbsent(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), ctx.channel());
+            channels.putIfAbsent(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), channel);
             handler.connected(channel);
             System.out.println(now() + "The connection of " + channel.getRemoteAddress() + " -> " + channel.getLocalAddress() + " is established.");
         } catch (RemotingException e) {
@@ -68,6 +68,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         if (evt instanceof IdleStateEvent) {
             NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(),url);
             try {
+                if (url.getParameter("dont.close", false)) return; // only for test
                 System.out.println(now() + "IdleStateEvent triggered, close channel " + channel);
                 channel.close();
             } finally {
@@ -107,5 +108,9 @@ public class NettyServerHandler extends ChannelDuplexHandler {
         } catch (RemotingException e) {
 
         }
+    }
+
+    public Map<String, InnerChannel> getChannels() {
+        return channels;
     }
 }

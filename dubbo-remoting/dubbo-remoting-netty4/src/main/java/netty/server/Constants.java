@@ -23,6 +23,7 @@ public interface Constants {
     String RECONNECT_KEY = "reconnect";
     boolean DEFAULT_RECONNECT = true;
     int HEARTBEAT_CHECK_TICK = 3;
+    int LEAST_HEARTBEAT_DURATION = 1000;
     //  ======== == === = == =
     String READONLY_EVENT = "R";
 

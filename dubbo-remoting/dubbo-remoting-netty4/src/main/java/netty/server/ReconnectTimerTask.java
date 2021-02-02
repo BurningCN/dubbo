@@ -12,7 +12,7 @@ public class ReconnectTimerTask extends AbstractTimerTask {
     private final Client client;
 
     public ReconnectTimerTask(ChannelProvider channelProvider, long interval, long idleTimeout, Client client) {
-        super(channelProvider, interval);
+        super(channelProvider, interval,"ReconnectTimerTask");
         this.idleTimeout = idleTimeout;
         this.client = client;
     }

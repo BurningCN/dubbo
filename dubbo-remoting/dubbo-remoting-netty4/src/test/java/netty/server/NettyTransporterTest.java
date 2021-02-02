@@ -117,6 +117,20 @@ public class NettyTransporterTest {
         Thread.sleep(20 * 1000);
     }
 
+    @Test
+    public void testServerCloseAllIdleClient() throws Exception, RemotingException {
+        NettyTransporter transporter = new NettyTransporter();
+        URL url = URL.valueOf("dubbo://localhost:9991/test?heartbeat=1000");
+        url.addParameter("dont.send.heartbeat", true);
+        url.addParameter("reconnect", false);
+        url.addParameter("dont.close", true);
+        url.addParameter("closeTimeoutTask", true);
+        transporter.bind(url, getMockHandler());
+        transporter.connect(url, getMockHandler());
+        Thread.sleep(20 * 1000);
+    }
+
+
     public ChannelHandler getMockHandler() {
         return new DecodeHandler(new HeaderExchangeHandler(new MockChannelHandler()));
     }

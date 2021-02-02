@@ -24,18 +24,19 @@ public abstract class AbstractServer implements Server {
         this.codec = getChannelCodec(url);
         this.handler = handler;
         doOpen();
+        doStartTimer();
     }
 
-    protected Codec2 getChannelCodec(URL url) {
-        return new ExchangeCodec();
-        // todo myRPC 需要支持spi
+    @Override
+    public void close() {
+        doClose();
     }
 
-    public ChannelHandler getChannelHandler() {
-        return handler;
-    }
+    protected abstract void doClose();
 
     protected abstract void doOpen();
+
+    protected abstract void doStartTimer();
 
     public Codec2 getCodec() {
         return codec;
@@ -48,6 +49,15 @@ public abstract class AbstractServer implements Server {
     public int getIdleTimeout() {
         System.out.println("服务端读写空闲：" + idleTimeout);
         return idleTimeout;
+    }
+
+    protected Codec2 getChannelCodec(URL url) {
+        return new ExchangeCodec();
+        // todo myRPC 需要支持spi
+    }
+
+    public ChannelHandler getChannelHandler() {
+        return handler;
     }
 
     public URL getUrl() {
