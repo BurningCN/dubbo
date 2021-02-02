@@ -92,6 +92,14 @@ public class URL {
         return false;
     }
 
+    public String getParameter(String key, String defaultValue) {
+        if (parameters != null) { // todo myRPC 这里不应该判空
+            String value = parameters.get(key);
+            return (value == null || value.isEmpty()) ? defaultValue : value;
+        }
+        return defaultValue;
+    }
+
     public void setParameters(Map<String, String> parameters) {
         this.parameters = parameters;
     }
@@ -307,7 +315,7 @@ public class URL {
         if (value.equals(getParameters().get(key))) { // value != null
             return this;
         }
-        getParameters().put(key,value);
+        getParameters().put(key, value);
         // todo myRPC  原版本是深拷贝 我这里直接返回本身  why？
         return this;
     }

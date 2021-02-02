@@ -1,4 +1,4 @@
-package netty.server;
+package netty.server.serialization;
 
 import java.io.IOException;
 import java.lang.reflect.Type;

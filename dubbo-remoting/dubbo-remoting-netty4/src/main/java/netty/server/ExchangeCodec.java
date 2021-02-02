@@ -1,6 +1,12 @@
 package netty.server;
 
 
+import netty.server.serialization.fastjson.FastJsonSerialization;
+import netty.server.serialization.ObjectInput;
+import netty.server.serialization.ObjectOutput;
+import netty.server.serialization.Serialization;
+import netty.server.serialization.hessian2.Hessian2Serialization;
+
 import java.io.IOException;
 
 /**
@@ -25,12 +31,27 @@ public class ExchangeCodec implements Codec2 {
 
     private static final int SERIALIZATION_MASK = 0x1f;
 
+    private static Serialization serialization;
+
+    private URL url;
+
+    public ExchangeCodec(URL url) {
+        this.url = url;
+        String serializationExt = url.getParameter("serialization", "hessian2");
+        if (serializationExt.equalsIgnoreCase("fastjson")) {  // todo myRPC 支持SPI
+            serialization = new FastJsonSerialization();
+        } else {
+            serialization = new Hessian2Serialization();
+        }
+
+    }
+
     @Override
-    public void encode( ChannelBuffer buffer, Object msg) throws IOException {
+    public void encode(ChannelBuffer buffer, Object msg) throws IOException {
         if (msg instanceof Request) {
             encodeRequest(buffer, (Request) msg);
         } else if (msg instanceof Response) {
-            encodeResponse( buffer, (Response) msg);
+            encodeResponse(buffer, (Response) msg);
         } else {
             // todo myRPC
         }
@@ -53,7 +74,6 @@ public class ExchangeCodec implements Codec2 {
         // todo myRPC 非魔数
 
         ChannelBufferInputStream bis = new ChannelBufferInputStream(buffer);
-        Serialization serialization = new FastJsonSerializable(); // todo myRPC 支持SPI
         ObjectInput input = serialization.deSerialize(bis);
 
         byte flag = header[2], proto = (byte) (flag & SERIALIZATION_MASK);
@@ -131,7 +151,7 @@ public class ExchangeCodec implements Codec2 {
     private void encodeResponse(ChannelBuffer buffer, Response response) throws IOException {
         byte[] header = new byte[HEADER_LENGTH];
         Bytes.short2bytes(MAGIC, header);
-        Serialization serialization = new FastJsonSerializable();
+
         header[2] = serialization.getContentTypeId();
         if (response.isHeartbeat()) {
             header[2] |= FLAG_EVENT;
@@ -187,7 +207,7 @@ public class ExchangeCodec implements Codec2 {
 
         byte[] header = new byte[HEADER_LENGTH];
         Bytes.short2bytes(MAGIC, header);
-        Serialization serialization = new FastJsonSerializable();
+
         header[2] = (byte) (FLAG_REQUEST | serialization.getContentTypeId());
         if (request.isTwoWay()) {
             header[2] |= FLAG_TWOWAY;

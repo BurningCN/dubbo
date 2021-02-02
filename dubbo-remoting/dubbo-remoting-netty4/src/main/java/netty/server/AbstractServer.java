@@ -52,7 +52,7 @@ public abstract class AbstractServer implements Server {
     }
 
     protected Codec2 getChannelCodec(URL url) {
-        return new ExchangeCodec();
+        return new ExchangeCodec(url);
         // todo myRPC 需要支持spi
     }
 

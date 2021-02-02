@@ -16,8 +16,6 @@
  */
 package org.apache.dubbo.remoting.transport.netty4;
 
-import netty.server.FastJsonObjectInput;
-import netty.server.FastJsonObjectOutput;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.remoting.exchange.ExchangeChannel;
@@ -29,9 +27,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 /**

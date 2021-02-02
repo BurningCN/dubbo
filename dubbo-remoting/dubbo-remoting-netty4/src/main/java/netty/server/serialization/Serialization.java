@@ -1,4 +1,4 @@
-package netty.server;
+package netty.server.serialization;
 
 
 import java.io.InputStream;
@@ -10,6 +10,8 @@ import java.io.OutputStream;
  */
 public interface Serialization {
     byte getContentTypeId();
+
+    String getContentType();
 
     ObjectOutput serialize(OutputStream bos);
 

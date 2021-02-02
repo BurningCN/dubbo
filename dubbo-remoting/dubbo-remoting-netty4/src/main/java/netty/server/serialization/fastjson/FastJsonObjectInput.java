@@ -1,6 +1,7 @@
-package netty.server;
+package netty.server.serialization.fastjson;
 
 import com.alibaba.fastjson.JSON;
+import netty.server.serialization.ObjectInput;
 
 import java.io.*;
 import java.lang.reflect.Type;

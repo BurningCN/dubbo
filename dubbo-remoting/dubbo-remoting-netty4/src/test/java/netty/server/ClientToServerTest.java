@@ -42,8 +42,8 @@ public class ClientToServerTest {
         URL url = URL.valueOf("dubbo://127.0.0.1:" + 9998 + "/test.reconnect");
         Server server = transporter.bind(url, new WorldReplier());
         Client client = transporter.connect(url);
-        // 报错！！！核心就是我们在服务端反序列化调用的是JSON.parse()，返回的类型是JSONObject，导致ReplierDispatcher找不到该class类型的replier
-        // 而string类型的数据不会有问题！！这个需要等到自己实现DubboCodec和DecodeableRpcResult
+        // 注意如果使用fastJson该测试程序会报错，服务端反序列化调用的是JSON.parse()，返回的类型是JSONObject，导致ReplierDispatcher找不到该class类型的replier
+        // 使用Hessian2就不会有问题
         CompletableFuture<Object> request = client.getChannel().request(new World("xxx"), 100000);// 注意这里传输是自定义的引用类型，不是String
         System.out.println((World) request.get());
         client.close();

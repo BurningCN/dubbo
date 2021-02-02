@@ -8,6 +8,7 @@ import org.omg.CORBA.TIMEOUT;
  */
 public interface Constants {
     byte FAST_JSON_SERIALIZATION_ID = 6;
+    byte NATIVE_HESSIAN_SERIALIZATION_ID = 10;
     String CONNECT_TIMEOUT = "connect.timeout";
     int DEFAULT_CONNECT_TIMEOUT = 3000;
     String HEARTBEAT_KEY = "heartbeat";
