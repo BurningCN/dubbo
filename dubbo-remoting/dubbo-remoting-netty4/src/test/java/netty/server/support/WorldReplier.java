@@ -1,4 +1,7 @@
-package netty.server;
+package netty.server.support;
+
+import netty.server.InnerChannel;
+import netty.server.Replier;
 
 /**
  * @author geyu

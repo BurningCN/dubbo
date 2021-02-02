@@ -1,5 +1,7 @@
 package netty.server;
 
+import netty.server.support.World;
+import netty.server.support.WorldReplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

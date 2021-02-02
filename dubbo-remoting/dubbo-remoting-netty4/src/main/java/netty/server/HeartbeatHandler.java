@@ -24,8 +24,8 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
 
     @Override
     public void disconnected(InnerChannel channel) throws RemotingException {
-        setReadTimestamp(channel);
-        setWriteTimestamp(channel);
+        clearReadTimestamp(channel);
+        clearWriteTimestamp(channel);
         super.disconnected(channel);
     }
 
@@ -41,15 +41,15 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
         if (isHeartbeatRequest(msg)) {
             Request request = (Request) msg;
             if (request.isTwoWay()) {
-                Response response = new Response(request.getId(),request.getVersion());
+                Response response = new Response(request.getId(), request.getVersion());
                 response.setEvent(CommonConstants.HEARTBEAT_EVENT);
                 channel.send(response);
-                System.out.println("Received request heartbeat from remote channel " + channel.getRemoteAddress());
+                System.out.println(DataTimeUtil.now() + "Received request heartbeat from remote channel " + channel.getRemoteAddress());
             }
             return;
         }
         if (isHeartbeatResponse(msg)) {
-            System.out.println("Receive response heartbeat response from remote channel " + channel.getRemoteAddress());
+            System.out.println(DataTimeUtil.now() + "Receive response heartbeat response from remote channel " + channel.getRemoteAddress());
             return;
         }
         super.received(channel, msg);
@@ -61,6 +61,14 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
 
     private void setWriteTimestamp(InnerChannel channel) {
         channel.setAttribute(KEY_WRITE_TIMESTAMP, System.currentTimeMillis());
+    }
+
+    private void clearReadTimestamp(InnerChannel channel) {
+        channel.removeAttribute(KEY_READ_TIMESTAMP);
+    }
+
+    private void clearWriteTimestamp(InnerChannel channel) {
+        channel.removeAttribute(KEY_WRITE_TIMESTAMP);
     }
 
     private boolean isHeartbeatResponse(Object msg) {

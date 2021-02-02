@@ -72,7 +72,7 @@ public class HeartbeatHandlerTest {
         server = Exchangers.bind(serverURL, handler);// 进去
         System.out.println("Server bind successfully");
 
-        FakeChannelHandlers.setTestingChannelHandlers();// 进去
+        FakeChannelHandlers.setTestingChannelHandlers();// 进去 内部会没有DecodeHandler和HeartbeatHandler的包装
         //serverURL = serverURL.removeParameter(Constants.HEARTBEAT_KEY);// 无用，下面的addParameter会覆盖
 
         // Let the client not reply to the heartbeat, and turn off automatic reconnect to simulate the client dropped.

@@ -467,7 +467,7 @@ userEventTriggered------>channel.send(req)------->AbstractPeer.send--------->Net
 // 用以将ExchangeHandler接口的reply和channel事件分开，分别交给这两个属性，后者相当于监听器，可以指定多个，前面的一般指定一个即可，因为回复肯定一个人回复就行了。
 ```
 
-
+148。Serialization。
 
 ```
 ExchangeHandlerDispatcher、ReplierDispatcher、ChannelHandlerDispatcher

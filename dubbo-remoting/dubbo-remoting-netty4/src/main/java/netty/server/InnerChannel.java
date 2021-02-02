@@ -1,5 +1,7 @@
 package netty.server;
 
+import io.netty.channel.Channel;
+
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -9,6 +11,8 @@ import java.util.concurrent.ExecutorService;
  * @date 2021/1/31 14:50
  */
 public interface InnerChannel {
+
+    Channel getChannel();
 
     URL getUrl();
 

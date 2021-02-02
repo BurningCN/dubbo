@@ -12,6 +12,10 @@ public class ChannelHandlers {
         return INSTANCE;
     }
 
+    protected static void setTestingChannelHandlers(ChannelHandlers instance) {
+        INSTANCE = instance;
+    }
+
     public static ChannelHandler wrap(ChannelHandler handler) {
         return getINSTANCE().wrapInternal(handler);
     }

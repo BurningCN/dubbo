@@ -32,6 +32,7 @@ import java.io.OutputStream;
  *     e.g. &lt;dubbo:protocol serialization="xxx" /&gt;
  * </pre>
  */
+// OK
 @SPI("hessian2")
 public interface Serialization {
 
@@ -39,6 +40,9 @@ public interface Serialization {
      * Get content type unique id, recommended that custom implementations use values different with
      * any value of {@link Constants} and don't greater than ExchangeCodec.SERIALIZATION_MASK (31) 
      * because dubbo protocol use 5 bits to record serialization ID in header.
+     *
+     * 获取内容类型唯一的id，建议自定义实现使用不同于{@link Constants}的值，且不大于ExchangeCodec的值。
+     * SERIALIZATION_MASK(31)因为dubbo协议在头文件中使用5位来记录序列化ID。
      *
      * @return content type id
      */

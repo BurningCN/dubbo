@@ -1,4 +1,4 @@
-package netty.server;
+package netty.server.support;
 
 import java.io.Serializable;
 

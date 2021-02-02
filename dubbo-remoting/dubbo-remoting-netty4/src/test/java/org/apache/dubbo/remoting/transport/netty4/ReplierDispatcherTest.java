@@ -63,13 +63,15 @@ public class ReplierDispatcherTest {
         // 进去
         dispatcher.addReplier(Data.class, (channel, msg) -> new StringMessage("hello world"));
         // 进去 注意最后一个参数。最后ReplierDispatcher类型的dispatcher对象，作为ReplierDispatcher构造器的参数传入
-        exchangeServer = Exchangers.bind(URL.valueOf("exchange://localhost:" + port + "?" + CommonConstants.TIMEOUT_KEY + "=60000"), dispatcher);
+        exchangeServer = Exchangers.bind(URL.valueOf("exchange://localhost:" + port +
+                "?" + CommonConstants.TIMEOUT_KEY + "=60000"), dispatcher);
     }
 
 
     @Test
     public void testDataPackage() throws Exception {
-        ExchangeChannel client = Exchangers.connect(URL.valueOf("exchange://localhost:" + port + "?" + CommonConstants.TIMEOUT_KEY + "=60000"));
+        ExchangeChannel client = Exchangers.connect(URL.valueOf("exchange://localhost:" + port +
+                "?" + CommonConstants.TIMEOUT_KEY + "=60000&serialization=fastjson"));
         Random random = new Random();
         for (int i = 5; i < 100; i++) {
             StringBuilder sb = new StringBuilder();
@@ -77,7 +79,6 @@ public class ReplierDispatcherTest {
                 sb.append("(").append(random.nextLong()).append(")");
             Data d = new Data();
             d.setData(sb.toString());
-            // 以下未看 2021.01.26
             Assertions.assertEquals(client.request(d).get().toString(), "hello world");
         }
         clients.put(Thread.currentThread().getName(), client);
