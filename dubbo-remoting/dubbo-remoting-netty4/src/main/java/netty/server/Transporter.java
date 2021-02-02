@@ -7,7 +7,7 @@ package netty.server;
  */
 public interface Transporter {
 
-    Server bind(URL url, ChannelHandler channelHandler) throws RemotingException;
+    Server bind(URL url, ExchangeHandler channelHandler) throws RemotingException;
 
-    Client connect(URL url,ChannelHandler channelHandler) throws RemotingException;
+    Client connect(URL url,ExchangeHandler channelHandler) throws RemotingException;
 }

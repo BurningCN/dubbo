@@ -131,8 +131,8 @@ public class NettyTransporterTest {
     }
 
 
-    public ChannelHandler getMockHandler() {
-        return new DecodeHandler(new HeaderExchangeHandler(new MockChannelHandler()));
+    public ExchangeHandler getMockHandler() {
+        return new MockChannelHandler();
     }
 
 }
