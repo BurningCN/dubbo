@@ -1148,9 +1148,6 @@ public class ExtensionLoader<T> {
      */
     private void cacheName(Class<?> clazz, String name) {
         if (!cachedNames.containsKey(clazz)) {
-            if(clazz.getSimpleName().equals("String2BooleanConverter")){
-                System.out.println(1);
-            }
             cachedNames.put(clazz, name);
         }
     }
