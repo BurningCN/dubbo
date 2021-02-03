@@ -75,16 +75,43 @@ public class Request {
     public boolean isBroken() {
         return broken;
     }
+
     public void setEvent(String heartbeatEvent) {
         data = heartbeatEvent;
         isEvent = true;
     }
 
-    public static Request makeHeartbeat(){
+    public static Request makeHeartbeat() {
         Request request = new Request();
         request.setTwoWay(true);
         request.setVersion(Version.DEFAULT_VERSION);
         request.setEvent(CommonConstants.HEARTBEAT_EVENT);
         return request;
+    }
+
+    @Override
+    public String toString() {
+        return "Request{" +
+                "isTwoWay=" + isTwoWay +
+                ", version='" + version + '\'' +
+                ", data=" + safeToString(data) +
+                ", id=" + id +
+                ", isEvent=" + isEvent +
+                ", broken=" + broken +
+                '}';
+    }
+
+    private String safeToString(Object data) {
+        String ret = null;
+        try {
+            if (data != null) {
+                ret = data.toString();
+            }
+        } catch (Throwable e) {
+            ret = "<Fail toString of " + data.getClass() + ", cause: " +
+                    /*StringUtils.toString(e)*/ e.getMessage() + ">";// todo myRPC StringUtils.toString(e)
+        }
+        return ret;
+
     }
 }

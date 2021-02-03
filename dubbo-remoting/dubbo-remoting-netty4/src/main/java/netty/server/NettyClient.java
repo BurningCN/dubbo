@@ -4,6 +4,8 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
+import org.apache.dubbo.common.Version;
+import org.apache.dubbo.common.utils.NetUtils;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +19,7 @@ import static org.apache.dubbo.remoting.Constants.LEAST_HEARTBEAT_DURATION;
  */
 public class NettyClient extends AbstractClient {
     private Bootstrap bootstrap;
-    private volatile InnerChannel channel ;
+    private volatile InnerChannel channel;
     private ReconnectTimerTask reconnectTimerTask;
     private HeartBeatTimerTask heartBeatTimerTask;
 
@@ -49,6 +51,7 @@ public class NettyClient extends AbstractClient {
     }
 
     protected void doConnect() throws RemotingException {
+        long start = System.currentTimeMillis();
         ChannelFuture channelFuture = bootstrap.connect(getServerAddress());
         boolean ret = channelFuture.awaitUninterruptibly(getConnectTimeout());
         if (ret && channelFuture.isSuccess()) {
@@ -58,9 +61,13 @@ public class NettyClient extends AbstractClient {
             }
             channel = NettyChannel.getOrAddChannel(channelFuture.channel(), getUrl());
         } else if (channelFuture.cause() != null) {
-            throw new RemotingException();
+            throw new RemotingException("client(url: " + getUrl() + ") failed to connect to server "
+                    + getServerAddress() + ", error message is:" + channelFuture.cause().getMessage(), channelFuture.cause());
         } else { // 超时
-            throw new RemotingException();
+            throw new RemotingException("client(url: " + getUrl() + ") failed to connect to server "
+                    + getServerAddress() + " client-side timeout "
+                    + getConnectTimeout() + "ms (elapsed: " + (System.currentTimeMillis() - start) + "ms) from netty client "
+                    + NetUtils.getLocalHost());
         }
     }
 

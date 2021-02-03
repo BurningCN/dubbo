@@ -104,7 +104,8 @@ public class ReplierDispatcherTest {
     void clientExchangeInfo(int port) throws Exception {
         ExchangeChannel client = Exchangers.connect(URL.valueOf("exchange://localhost:" + port + "?" + CommonConstants.TIMEOUT_KEY + "=5000"));
         clients.put(Thread.currentThread().getName(), client);
-        MockResult result = (MockResult) client.request(new RpcMessage(DemoService.class.getName(), "plus", new Class<?>[]{int.class, int.class}, new Object[]{55, 25})).get();
+        MockResult result = (MockResult) client.request(new RpcMessage(
+                DemoService.class.getName(), "plus", new Class<?>[]{int.class, int.class}, new Object[]{55, 25})).get();
         Assertions.assertEquals(result.getResult(), 80);
         for (int i = 0; i < 100; i++) {
             client.request(new RpcMessage(DemoService.class.getName(), "sayHello", new Class<?>[]{String.class}, new Object[]{"qianlei" + i}));

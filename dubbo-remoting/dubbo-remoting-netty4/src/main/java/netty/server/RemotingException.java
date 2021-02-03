@@ -16,7 +16,13 @@ public class RemotingException extends Throwable {
 
     }
 
-    // ==== =====  不带cause
+    public RemotingException(String msg) {
+        this(msg, (Throwable) null);
+    }
+
+    public RemotingException(String msg, Throwable e) {
+        this(null, msg, e);
+    }
 
     public RemotingException(InnerChannel channel, String msg) {
         this(channel == null ? null : channel.getLocalAddress(), channel == null ? null : channel.getRemoteAddress(),

@@ -76,4 +76,30 @@ public class Response implements Serializable {
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }
+
+    @Override
+    public String toString() {
+        return "Response{" +
+                "id=" + id +
+                ", version='" + version + '\'' +
+                ", isEvent=" + isEvent +
+                ", status=" + status +
+                ", result=" + safeToString(result) +
+                ", errorMessage='" + errorMessage + '\'' +
+                '}';
+    }
+
+    private String safeToString(Object data) {
+        String ret = null;
+        try {
+            if (data != null) {
+                ret = data.toString();
+            }
+        } catch (Throwable e) {
+            ret = "<Fail toString of " + data.getClass() + ", cause: " +
+                    /*StringUtils.toString(e)*/ e.getMessage() + ">";// todo myRPC StringUtils.toString(e)
+        }
+        return ret;
+
+    }
 }

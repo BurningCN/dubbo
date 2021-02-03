@@ -92,11 +92,8 @@ public abstract class AbstractChannelHandlerDelegate implements ChannelHandlerDe
             executorService = repository.createExecutor(url);
         }*/
         // todo myRPC 上面都是空实现 ，临时如下
-        ExecutorService executorService = Executors.newFixedThreadPool(4, r -> {
-            Thread thread = new Thread(r);
-            thread.setName("dispatch thread");
-            return thread;
-        });
+        ExecutorService executorService = Executors.newFixedThreadPool(200,
+                new DefaultThreadFactory("dispatch thread"));
         return executorService;
-    }
+}
 }
