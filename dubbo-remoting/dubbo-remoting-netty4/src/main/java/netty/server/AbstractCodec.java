@@ -9,13 +9,12 @@ import java.io.IOException;
  */
 public abstract class AbstractCodec implements Codec2 {
 
-    protected void checkPayLoad(InnerChannel channel, long size) throws IOException {
-        int payload = Constants.DEFAULT_PAYLOAD;
-        if (channel != null && channel.getUrl() != null) {
-            payload = channel.getUrl().getPositiveParameter(Constants.PAYLOAD_KEY, payload);
-        }
+    protected void checkPayLoad(long size) throws IOException {
+        int payload = getUrl().getPositiveParameter(Constants.PAYLOAD_KEY, Constants.DEFAULT_PAYLOAD);
         if (size > payload) {
-            throw new ExceedPayloadLimitException("Data length too large: " + size + ", max payload: " + payload + ", channel: " + channel);
+            throw new ExceedPayloadLimitException("Data length too large: " + size + ", max payload: " + payload);
         }
     }
+
+    protected abstract URL getUrl();
 }

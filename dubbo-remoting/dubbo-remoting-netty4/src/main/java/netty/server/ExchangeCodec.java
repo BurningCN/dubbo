@@ -13,7 +13,7 @@ import java.io.IOException;
  * @author geyu
  * @date 2021/1/28 19:43
  */
-public class ExchangeCodec extends AbstractCodec  {
+public class ExchangeCodec extends AbstractCodec {
 
     private static final int HEADER_LENGTH = 16;
 
@@ -33,7 +33,7 @@ public class ExchangeCodec extends AbstractCodec  {
 
     private static Serialization serialization;
 
-    private URL url;
+    private final URL url;
 
     public ExchangeCodec(URL url) {
         this.url = url;
@@ -43,6 +43,11 @@ public class ExchangeCodec extends AbstractCodec  {
         } else {
             serialization = new Hessian2Serialization();
         }
+    }
+
+    @Override
+    public URL getUrl() {
+        return url;
     }
 
     @Override
@@ -65,7 +70,7 @@ public class ExchangeCodec extends AbstractCodec  {
             return DecodeResult.NEED_MORE_INPUT;
         }
         int len = Bytes.bytes2int(header, 12);
-        checkPayLoad(null,len);
+        checkPayLoad(len);
         if (readable < len + HEADER_LENGTH) {
             return DecodeResult.NEED_MORE_INPUT;
         }
@@ -177,7 +182,7 @@ public class ExchangeCodec extends AbstractCodec  {
         bos.flush();
         bos.close();
         int len = bos.writtenBytes();
-        checkPayLoad(null,len);
+        checkPayLoad(len);
         Bytes.int2Bytes(len, header, 12);
         buffer.writerIndex(savedWriterIndex);
         buffer.writerBytes(header);
@@ -230,7 +235,7 @@ public class ExchangeCodec extends AbstractCodec  {
         //bos.flush(); 没必要
         //bos.close();
         int len = bos.writtenBytes(); // 体长度
-        checkPayLoad(null,len);
+        checkPayLoad(len);
         Bytes.int2Bytes(len, header, 12);
         buffer.writerIndex(savedWriterIndex);
         buffer.writerBytes(header);
