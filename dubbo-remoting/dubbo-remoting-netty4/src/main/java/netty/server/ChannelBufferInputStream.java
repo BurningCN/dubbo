@@ -14,7 +14,7 @@ public class ChannelBufferInputStream extends InputStream {
 
     public ChannelBufferInputStream(ChannelBuffer buffer) {
         this.buffer = buffer;
-        this.startIndex = buffer.readIndex();
+        this.startIndex = buffer.readerIndex();
     }
 
     @Override

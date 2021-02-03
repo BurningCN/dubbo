@@ -17,6 +17,7 @@ public class Request {
 
     public Request() {
         this.id = newId();
+
     }
 
     private long newId() {

@@ -13,7 +13,7 @@ import java.io.IOException;
  * @author geyu
  * @date 2021/1/28 19:43
  */
-public class ExchangeCodec implements Codec2 {
+public class ExchangeCodec extends AbstractCodec  {
 
     private static final int HEADER_LENGTH = 16;
 
@@ -43,7 +43,6 @@ public class ExchangeCodec implements Codec2 {
         } else {
             serialization = new Hessian2Serialization();
         }
-
     }
 
     @Override
@@ -66,7 +65,7 @@ public class ExchangeCodec implements Codec2 {
             return DecodeResult.NEED_MORE_INPUT;
         }
         int len = Bytes.bytes2int(header, 12);
-        // todo myRPC checkPayload
+        checkPayLoad(null,len);
         if (readable < len + HEADER_LENGTH) {
             return DecodeResult.NEED_MORE_INPUT;
         }
@@ -178,6 +177,7 @@ public class ExchangeCodec implements Codec2 {
         bos.flush();
         bos.close();
         int len = bos.writtenBytes();
+        checkPayLoad(null,len);
         Bytes.int2Bytes(len, header, 12);
         buffer.writerIndex(savedWriterIndex);
         buffer.writerBytes(header);
@@ -230,7 +230,7 @@ public class ExchangeCodec implements Codec2 {
         //bos.flush(); 没必要
         //bos.close();
         int len = bos.writtenBytes(); // 体长度
-
+        checkPayLoad(null,len);
         Bytes.int2Bytes(len, header, 12);
         buffer.writerIndex(savedWriterIndex);
         buffer.writerBytes(header);

@@ -71,7 +71,7 @@ public class ReplierDispatcherTest {
     @Test
     public void testDataPackage() throws Exception {
         ExchangeChannel client = Exchangers.connect(URL.valueOf("exchange://localhost:" + port +
-                "?" + CommonConstants.TIMEOUT_KEY + "=60000&serialization=fastjson"));
+                "?" + CommonConstants.TIMEOUT_KEY + "=60000"));
         Random random = new Random();
         for (int i = 5; i < 100; i++) {
             StringBuilder sb = new StringBuilder();

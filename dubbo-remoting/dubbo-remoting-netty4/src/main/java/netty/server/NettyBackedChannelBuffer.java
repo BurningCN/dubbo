@@ -47,8 +47,13 @@ public class NettyBackedChannelBuffer implements ChannelBuffer {
     }
 
     @Override
-    public int readIndex() {
+    public int readerIndex() {
         return byteBuf.readerIndex();
+    }
+
+    @Override
+    public void readerIndex(int readerIndex) {
+        byteBuf.readerIndex(readerIndex);
     }
 
     @Override

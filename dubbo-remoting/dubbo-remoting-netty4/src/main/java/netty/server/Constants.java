@@ -26,6 +26,8 @@ public interface Constants {
     int HEARTBEAT_CHECK_TICK = 3;
     int LEAST_HEARTBEAT_DURATION = 1000;
     String CHECK_KEY = "check";
+    String PAYLOAD_KEY = "payload";
+    int DEFAULT_PAYLOAD = 8 * 1024 * 1024;
     //  ======== == === = == =
     String READONLY_EVENT = "R";
 

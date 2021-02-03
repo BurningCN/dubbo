@@ -17,7 +17,9 @@ public interface ChannelBuffer {
 
     void readBytes(byte[] header);
 
-    int readIndex();
+    int readerIndex();
+
+    void readerIndex(int readerIndex);
 
     boolean readable();
 

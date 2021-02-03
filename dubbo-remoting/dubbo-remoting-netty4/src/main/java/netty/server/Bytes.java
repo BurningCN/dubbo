@@ -34,16 +34,16 @@ public class Bytes {
 
     public static void int2Bytes(int v, byte[] b, int off) {
         b[off + 3] = (byte) v;
-        b[off + 2] = (byte) (v >>> 8 * 1);
-        b[off + 1] = (byte) (v >>> 8 * 2);
-        b[off + 0] = (byte) (v >>> 8 * 3); // 最高位
+        b[off + 2] = (byte) (v >>> 8);
+        b[off + 1] = (byte) (v >>> 16);
+        b[off + 0] = (byte) (v >>> 24); // 最高位
     }
 
     public static int bytes2int(byte[] b, int off) {
-        return (b[off + 3] & 0xff << 0) +
-                (b[off + 2] & 0xff << 8) +
-                (b[off + 1] & 0xff << 16) +
-                (b[off + 0] & 0xff << 24);
+        return ((b[off + 3] & 0xff) << 0) +
+                ((b[off + 2] & 0xff) << 8) +
+                ((b[off + 1] & 0xff) << 16) +
+                ((b[off + 0] & 0xff) << 24);
     }
 
     public static long bytes2long(byte[] b, int off) {

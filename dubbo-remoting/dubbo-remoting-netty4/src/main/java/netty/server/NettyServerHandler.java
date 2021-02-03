@@ -41,7 +41,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
             NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(),url);
             channels.putIfAbsent(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), channel);
             handler.connected(channel);
-            System.out.println(now() + "The connection of " + channel.getRemoteAddress() + " -> " + channel.getLocalAddress() + " is established.");
+            System.out.println(DataTimeUtil.now() + "[server]The connection of " + channel.getRemoteAddress() + " -> " + channel.getLocalAddress() + " is established.");
         } catch (RemotingException e) {
             e.printStackTrace();
         }
@@ -56,7 +56,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
             channels.remove(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()));
             NettyChannel.removeChannel(ctx.channel());
             handler.disconnected(channel);
-            System.out.println(now() + "The connection of " + channel.getRemoteAddress() + " -> " + channel.getLocalAddress() + " is disconnected.");
+            System.out.println(DataTimeUtil.now()+ "[server]The connection of " + channel.getRemoteAddress() + " -> " + channel.getLocalAddress() + " is disconnected.");
         } catch (RemotingException e) {
             e.printStackTrace();
         }

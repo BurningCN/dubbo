@@ -91,6 +91,10 @@ final public class NettyCodecAdapter {
             do {
                 int saveReaderIndex = message.readerIndex();
                 Object msg = codec.decode(channel, message); // 一般是DubboCountCodec // 进去
+                // 注意这里的判断非常重要！！！因为如果数据量大的话，tcp会拆包，比如发送端发送10726字节的数据，那么接受的时候此时Message，
+                // 第一个过来的分节一般是1024，其并不是一个完整的数据包（还差很多），而codec.decode内部就会有判断逻辑（），如果不够的话，
+                // 返回NEED_MORE_INPUT，进行如下处理，恢复读指针，然后等待tcp传入更多的数据，此时第二次（或者第三次...）进来decode方法的时候
+                // 此时的input参数很可能就是10726了！！！详见测试程序testDataPackage（大数据量的）
                 if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {
                     message.readerIndex(saveReaderIndex);
                     break;

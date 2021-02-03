@@ -89,9 +89,9 @@ public class DefaultFuture extends CompletableFuture<Object> {
         if (response.getStatus() == Response.OK) {
             this.complete(response.getResult());
         } else if (response.getStatus() == Response.CLIENT_TIMEOUT || response.getStatus() == Response.SERVER_TIMEOUT) {
-            this.completeExceptionally(new TimeoutException());
+            this.completeExceptionally(new TimeoutException(response.getStatus() == Response.SERVER_TIMEOUT,channel,response.getErrorMessage()));
         } else {
-            this.completeExceptionally(new RemotingException());
+            this.completeExceptionally(new RemotingException(channel, response.getErrorMessage()));
         }
     }
 

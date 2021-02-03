@@ -1,10 +1,12 @@
 package netty.server;
 
+import java.io.Serializable;
+
 /**
  * @author geyu
  * @date 2021/1/28 19:44
  */
-public class Response {
+public class Response implements Serializable {
     public static final byte OK = 20;
     public static final byte CLIENT_TIMEOUT = 30;
     public static final byte SERVER_TIMEOUT = 31;
