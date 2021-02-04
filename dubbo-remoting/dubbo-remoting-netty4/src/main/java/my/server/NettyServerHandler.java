@@ -36,6 +36,7 @@ public class NettyServerHandler extends ChannelDuplexHandler {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         try {
+            // todo myRPC 支持最大连接数，参考AbstractServer
             NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(),url);
             channels.putIfAbsent(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), channel);
             handler.connected(channel);

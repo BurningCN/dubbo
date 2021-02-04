@@ -133,6 +133,7 @@ public interface Constants {
     int DEFAULT_HEARTBEAT = 60 * 1000;
     String HEARTBEAT_TIMEOUT_KEY = "heartbeat.timeout";
     String CONNECTIONS_KEY = "connections";
+    String SHARE_CONNECTIONS_KEY = "shareconnections";
 
     int DEFAULT_BACKLOG = 1024;
 }

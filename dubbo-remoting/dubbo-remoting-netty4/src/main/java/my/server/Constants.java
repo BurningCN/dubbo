@@ -28,7 +28,19 @@ public interface Constants {
     String CHECK_KEY = "check";
     String PAYLOAD_KEY = "payload";
     int DEFAULT_PAYLOAD = 8 * 1024 * 1024;
+    String VERSION_KEY = "version";
+    String GROUP_KEY = "group";
+    String IS_SERVER_KEY = "isServer";
+    String ASYNC_KEY = "async";
+    String ID_KEY = "id";
+    String PROXY_KEY = "proxy";
+    String INTERFACES = "interfaces";
+    String INTERFACE_KEY = "interface";
+    String CONNECTIONS_KEY = "connections";
+    String SHARE_CONNECTIONS_KEY = "shareconnections";
+
     //  ======== == === = == =
     String READONLY_EVENT = "R";
 
+    String TOKEN_KEY = "token";
 }

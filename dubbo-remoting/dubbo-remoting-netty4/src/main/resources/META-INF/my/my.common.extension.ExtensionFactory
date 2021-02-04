@@ -1,0 +1,2 @@
+adaptive=my.common.extension.factory.AdaptiveExtensionFactory
+spi=my.common.extension.factory.SpiExtensionFactory

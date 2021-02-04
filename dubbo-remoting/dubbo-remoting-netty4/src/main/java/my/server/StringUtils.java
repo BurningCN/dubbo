@@ -9,6 +9,10 @@ public class StringUtils {
         return str == null || str.isEmpty();
     }
 
+    public static boolean isNotEmpty(String str) {
+        return !isEmpty(str);
+    }
+
 //    public static String toString(Throwable e){
 //
 //    }

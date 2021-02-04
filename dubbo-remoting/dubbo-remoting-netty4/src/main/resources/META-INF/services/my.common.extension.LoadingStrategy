@@ -1,0 +1,3 @@
+my.common.extension.ServiceLoadingStrategy
+my.common.extension.DefaultLoadingStrategy
+my.common.extension.InternalLoadingStrategy

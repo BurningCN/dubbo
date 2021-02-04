@@ -162,7 +162,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         // getInvokeMode进去
         invocation.setInvokeMode(RpcUtils.getInvokeMode(url, invocation));
         // 如果是异步调用，添加id，进去
-        RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+        RpcUtils.attachInvocationIdIfAsync(url, invocation);
 
         AsyncRpcResult asyncResult;
         try {

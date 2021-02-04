@@ -1,5 +1,6 @@
 package my.common.extension;
 
+
 /**
  * @author geyu
  * @date 2021/2/3 19:13
@@ -7,7 +8,7 @@ package my.common.extension;
 public class DefaultLoadingStrategy implements LoadingStrategy {
     @Override
     public String directory() {
-        return "/META-INF/my/";
+        return "META-INF/my/";
     }
 
     @Override

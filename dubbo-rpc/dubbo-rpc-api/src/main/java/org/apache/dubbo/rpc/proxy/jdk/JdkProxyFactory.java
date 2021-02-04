@@ -49,7 +49,7 @@ public class JdkProxyFactory extends AbstractProxyFactory {
     // url = {URL@1936} "test://test:11/test?group=dubbo&version=1.1"
     @Override
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
-        //
+        // 和javassist不一样，没有wrapper
         return new AbstractProxyInvoker<T>(proxy, type, url) {
             @Override
             protected Object doInvoke(T proxy, String methodName,

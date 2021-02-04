@@ -467,13 +467,15 @@ userEventTriggered------>channel.send(req)------->AbstractPeer.send--------->Net
 // 用以将ExchangeHandler接口的reply和channel事件分开，分别交给这两个属性，后者相当于监听器，可以指定多个，前面的一般指定一个即可，因为回复肯定一个人回复就行了。
 ```
 
-148。Serialization。
+**148。Serialization。**
 
 ```
 ExchangeHandlerDispatcher、ReplierDispatcher、ChannelHandlerDispatcher
 ```
 
+**149.GroupServiceKeyCache。**serviceKey的多级结构，ConcurrentMap<serviceName, ConcurrentMap<serviceVersion, ConcurrentMap<port, String>>>  还有一个Group，搞了多层嵌套的缓存 - - 。如果map层级过多，可以单组一个类，比如GroupServiceKeyCache，不然的话serviceGroup也会作为map的key。
 
+150.AbstractProxyFactory。
 
 **零散：Bytes**。
 

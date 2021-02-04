@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/1/28 18:12
  */
 public class URL {
+    private String address;
     private String protocol;
     private String username;
     private String pwd;
@@ -18,6 +19,7 @@ public class URL {
     private Map<String, String> parameters;
     private Map<String, Number> numberMap = new ConcurrentHashMap<>();
     private String ip;
+
 
     public String getProtocol() {
         return protocol;
@@ -68,21 +70,29 @@ public class URL {
         if (defaultValue <= 0) {
             throw new IllegalArgumentException("defaultValue <=0");
         }
-        int value = getParameter(key);
+        int value = getParameter(key, defaultValue);
         return value < 0 ? defaultValue : value;
     }
 
-    private int getParameter(String key) {
+
+    public String getParameter(String key) {
+        return parameters.get(key);
+    }
+
+    public int getParameter(String key, int defaultValue) {
         Number number = numberMap.get(key);
         if (number == null && parameters != null) {
             String val = parameters.get(key);
             if (val != null) {
                 number = Integer.parseInt(val);
                 numberMap.put(key, number);
+            } else {
+                return defaultValue;
             }
         }
         return number == null ? -1 : number.intValue();
     }
+
 
     public boolean getParameter(String key, boolean defaultValue) {
         if (parameters != null) { // todo myRPC 这里不应该判空
@@ -91,6 +101,7 @@ public class URL {
         }
         return false;
     }
+
 
     public String getParameter(String key, String defaultValue) {
         if (parameters != null) { // todo myRPC 这里不应该判空
@@ -111,7 +122,8 @@ public class URL {
         this.path = b.path;
         this.host = b.host;
         this.port = b.port;
-        this.parameters = b.parameters;
+        this.parameters = b.parameters != null ? b.parameters : new HashMap<>();
+        this.address = host + ":" + port;
     }
 
     public URL() {
@@ -125,12 +137,34 @@ public class URL {
         return ip;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void addParameterIfAbsent(String key, String value) {
+        if (StringUtils.isEmpty(key)
+                || StringUtils.isEmpty(value)) {
+            return;
+        }
+        if (hasParameter(key)) {
+            return;
+        }
+        Map<String, String> map = new HashMap<>(getParameters());
+        map.put(key, value);
+        parameters = map;
+    }
+
+    public boolean hasParameter(String key) {
+        String value = getParameter(key);
+        return value != null && value.length() > 0;
+    }
+
     public static class Builder {
-        String protocol = null;
-        String username = null;
-        String pwd = null;
-        String path = null;
-        String host = null;
+        String protocol;
+        String username;
+        String pwd;
+        String path;
+        String host;
         int port = 0;
         Map<String, String> parameters = null;
 
