@@ -88,7 +88,7 @@ public class AppResponse implements Result {
                 stackTraceField.setAccessible(true);
                 Object stackTrace = stackTraceField.get(exception);
                 if (stackTrace == null) {
-                    exception.setStackTrace(new StackTraceElement[0]);
+                    exception.setStackTrace(new StackTraceElement[0]); // 必须有堆栈
                 }
             } catch (Exception e) {
                 // ignore

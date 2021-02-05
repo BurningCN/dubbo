@@ -98,7 +98,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             currentClient = clients[0];
         } else {
             currentClient = clients[index.getAndIncrement() % clients.length];
-        }
+        }  // 默认是非oneway + 同步 + 超时1000
         try {
             // 判断接口是单方向的，进去
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
@@ -117,7 +117,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 ExecutorService executor = getCallbackExecutor(getUrl(), inv);
                 // 非oneWay 需要返回值，前面是send方法，这里是request方法，默认进 ReferenceCountExchangeClient 的request方法
                 CompletableFuture<AppResponse> appResponseFuture =
-                        // thenApply不会阻塞（正好和同步对应），request进去
+                        // thenApply不会阻塞（正好和同步对应），request进去，进DubboCountCodec的encode逻辑
                         currentClient.request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
                 // save for 2.6.x compatibility, for example, TraceFilter in Zipkin uses com.alibaba.xxx.FutureAdapter
                 FutureContext.getContext().setCompatibleFuture(appResponseFuture);

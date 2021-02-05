@@ -60,6 +60,21 @@ public class DefaultProtocolTest {
         Assertions.assertEquals(clients.length, 10);
     }
 
+
+    @Test
+    public void testInvoke() throws RemotingException {
+        URL demoUrl = URL.valueOf("dubbo://localhost:8989/demoService?group=demo&version=2.0.0");
+        Invoker<DemoService> serverInvoker = proxy.getInvoker(new DemoServiceImpl(), DemoService.class, demoUrl);
+        Exporter<DemoService> severExporter = protocol.export(serverInvoker);
+
+        // demoUrl.addParameter("shareconnections",5);
+        Invoker<DemoService> clientInvoker = protocol.refer(DemoService.class, demoUrl);
+        DemoService clientProxy = DefaultProtocolTest.proxy.getProxy(clientInvoker);  // 看到没，4步骤正好是一个对称
+
+        clientProxy.echo("哈喽，我是mmmm");
+
+    }
+
     public static <T> Exporter<T> export(T instance, Class<T> type, URL url) throws RemotingException {
         return protocol.export(proxy.getInvoker(instance, type, url));
     }

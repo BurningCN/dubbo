@@ -18,6 +18,8 @@ public class URL {
     private int port;
     private Map<String, String> parameters;
     private Map<String, Number> numberMap = new ConcurrentHashMap<>();
+    private Map<String, Map<String, Number>> methodNumbers;
+    private Map<String, Map<String, String>> methodParameters;
     private String ip;
 
 
@@ -62,6 +64,9 @@ public class URL {
     }
 
     public Map<String, String> getParameters() {
+        if(parameters == null){
+            parameters = new ConcurrentHashMap<>();
+        }
         return parameters;
     }
 
@@ -157,6 +162,78 @@ public class URL {
     public boolean hasParameter(String key) {
         String value = getParameter(key);
         return value != null && value.length() > 0;
+    }
+
+    public boolean getMethodParameter(String methodName, String key, boolean defaultValue) {
+        String val = getMethodParameter(methodName, key);
+        return StringUtils.isEmpty(val) ? defaultValue : Boolean.parseBoolean(val);
+    }
+
+    public long getMethodPositiveParameter(String methodName, String key, long defaultValue) {
+        if (defaultValue <= 0) {
+            throw new IllegalArgumentException("defaultValue <= 0");
+        }
+        long val = getMethodParameter(methodName, key, defaultValue);
+        return val <= 0 ? defaultValue : val;
+    }
+
+    public long getMethodParameter(String method, String key, long defaultValue) {
+        Number n = getCachedNumber(method, key);
+        if (n != null) {
+            return n.longValue();
+        }
+        String value = getMethodParameter(method, key);
+        if (StringUtils.isEmpty(value)) {
+            return defaultValue;
+        }
+
+        long l = Long.parseLong(value);
+        updateCachedNumber(method, key, l);
+        return l;
+    }
+
+
+    public String getMethodParameter(String method, String key) {
+        Map<String, String> keyMap = getMethodParameters().get(method);
+        String value = null;
+        if (keyMap != null) {
+            value = keyMap.get(key);
+        }
+        if (StringUtils.isEmpty(value)) {
+            value = parameters.get(key);
+        }
+        return value;
+    }
+
+
+    private void updateCachedNumber(String method, String key, long l) {
+
+        Map<String, Number> stringNumberMap = getMethodNumbers().computeIfAbsent(method, m -> new HashMap<>());
+        stringNumberMap.put(key, l);
+    }
+
+
+    private Number getCachedNumber(String method, String key) {
+        Map<String, Number> stringNumberMap = getMethodNumbers().get(method);
+        if (stringNumberMap != null) {
+            return stringNumberMap.get(key);
+        }
+        return null;
+    }
+
+    private Map<String, Map<String, Number>> getMethodNumbers() {
+        if (methodNumbers == null) {
+            methodNumbers = new ConcurrentHashMap<>();
+        }
+        return methodNumbers;
+    }
+
+
+    public Map<String, Map<String, String>> getMethodParameters() {
+        if (methodParameters == null) {
+            methodParameters = new ConcurrentHashMap<>();
+        }
+        return methodParameters;
     }
 
     public static class Builder {

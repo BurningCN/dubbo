@@ -71,7 +71,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
             // 调用invoker相关方法  --- > 和以往method.invoke(invoker,args)不同，这里是直接对象.方法
             if ("toString".equals(methodName)) {
                 return invoker.toString();
-            } else if ("$destroy".equals(methodName)) {
+            } else if ("$destroy".equals(methodName)) { // 因为客户端的代理类的生成是实现了内置的AbstractProxyFactory.Destroyable。这个是有该方法的
                 invoker.destroy();
                 return null;
             } else if ("hashCode".equals(methodName)) {

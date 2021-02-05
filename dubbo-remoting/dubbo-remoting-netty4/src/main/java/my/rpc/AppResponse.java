@@ -1,10 +1,13 @@
 package my.rpc;
 
+import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author geyu
  * @date 2021/2/4 16:13
  */
-public class AppResponse implements Result{
+public class AppResponse implements Result {
     private Object value;
 
     private Throwable exception;
@@ -27,5 +30,32 @@ public class AppResponse implements Result{
     @Override
     public void setException(Throwable exception) {
         this.exception = exception;
+    }
+
+    @Override
+    public Object recreate() throws Throwable {
+        if (exception != null) {
+            Class<?> exceptionClass = exception.getClass();
+            while (exceptionClass != Throwable.class) {
+                exceptionClass = exceptionClass.getSuperclass();
+            }
+            Field stackTraceField = exceptionClass.getDeclaredField("stackTrace");
+            stackTraceField.setAccessible(true);
+            Object stackTrace = stackTraceField.get(exception);
+            if (stackTrace == null) {
+                exception.setStackTrace(new StackTraceElement[0]);
+            }
+        }
+        return exception;
+    }
+
+    @Override
+    public Result get() {
+        return null;
+    }
+
+    @Override
+    public Result get(long timeout, TimeUnit unit) {
+        return null;
     }
 }

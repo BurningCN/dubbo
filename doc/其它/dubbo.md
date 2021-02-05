@@ -520,3 +520,16 @@ rpc模块的点。
 2.泛型的设计，invoker、Exporter、Protocol。
 
 3.连接复用，ReferenceCountClient引用计数。
+
+4.cs交互的对称结构。
+
+```
+Invoker<DemoService> serverInvoker = proxy.getInvoker(new DemoServiceImpl(), DemoService.class, demoUrl);
+Exporter<DemoService> severExporter = protocol.export(serverInvoker);
+
+Invoker<DemoService> clientInvoker = protocol.refer(DemoService.class, demoUrl);
+DemoService clientProxy = DefaultProtocolTest.proxy.getProxy(clientInvoker);
+```
+
+5.refer+getProxy之后，先行进入InvokeInvocationHandler，代理模式。
+

@@ -1,12 +1,18 @@
 package my.rpc;
 
 import my.server.Client;
-import my.server.Constants;
+import my.server.RemotingException;
 import my.server.URL;
+import org.apache.dubbo.rpc.TimeoutCountDown;
 
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import static my.common.constants.CommonConstants.*;
+import static my.rpc.Constants.*;
+import static my.server.Constants.SENT_KEY;
 
 /**
  * @author geyu
@@ -16,10 +22,42 @@ public class DefaultInvoker<T> extends AbstractInvoker<T> {
 
     private final Client[] clients;
     private final Set<Invoker<?>> invokers;
+    private AtomicPositiveInteger index = new AtomicPositiveInteger();
 
     public DefaultInvoker(Class<T> type, URL url, Client[] clients, Set<Invoker<?>> invokers) {
-        super(type, url, new String[]{Constants.INTERFACE_KEY, Constants.GROUP_KEY, Constants.TOKEN_KEY});
+        super(type, url, new String[]{INTERFACE_KEY, GROUP_KEY, TOKEN_KEY});
         this.clients = clients;
         this.invokers = invokers;
     }
+
+    @Override
+    protected Result doInvoke(Invocation invocation) throws RemotingException {
+        RpcInvocation inv = (RpcInvocation) invocation;
+
+        Client client;
+        if (clients.length == 1) {
+            client = clients[0];
+        } else {
+            client = clients[index.getAndIncrement() % clients.length];
+        }
+        // 默认是非oneway + 同步 + 超时1000
+        boolean isOneway = RpcUtils.isOneway(getURL(), invocation);
+        if (isOneway) {
+            boolean isSent = getURL().getMethodParameter(RpcUtils.getMethodName(invocation), SENT_KEY, false);
+            client.getChannel().send(inv, isSent);
+            return AsyncRpcResult.newDefaultAsyncResult(invocation);
+        } else {
+            int timeout = (int) invocation.get(TIMEOUT_KEY);
+            ExecutorService executor = getCallbackExecutor(getURL(), inv);
+
+            CompletableFuture<AppResponse> appResponseFuture =
+                    client.getChannel().request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
+
+            AsyncRpcResult result = new AsyncRpcResult(appResponseFuture, inv);
+            result.setExecutor(executor);
+            return result;
+        }
+    }
+
+
 }

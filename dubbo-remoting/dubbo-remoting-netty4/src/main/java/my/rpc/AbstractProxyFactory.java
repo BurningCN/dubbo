@@ -31,7 +31,7 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         // todo myRPC 泛化处理
 
         interfacesSet.addAll(Arrays.asList(INNER_INTERFACES));
-
+        interfacesSet.add(invoker.getInterface()); // 湖之一
         return doGetProxy(invoker, interfacesSet.toArray(new Class[0]));
     }
 

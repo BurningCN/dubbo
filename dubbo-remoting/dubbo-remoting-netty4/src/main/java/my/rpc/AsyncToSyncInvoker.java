@@ -1,6 +1,11 @@
 package my.rpc;
 
+import my.server.RemotingException;
 import my.server.URL;
+import org.apache.dubbo.rpc.InvokeMode;
+import org.apache.dubbo.rpc.RpcInvocation;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author geyu
@@ -20,10 +25,13 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
     }
 
     @Override
-    public Result invoke(Invocation invocation) {
-        return null;
+    public Result invoke(Invocation invocation) throws Exception, RemotingException {
+        Result asyncResult = invoker.invoke(invocation);
+        if (InvokeMode.SYNC == ((RpcInvocation) invocation).getInvokeMode()) {
+            asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+        }
+        return asyncResult;
     }
-
     @Override
     public URL getURL() {
         return invoker.getURL();

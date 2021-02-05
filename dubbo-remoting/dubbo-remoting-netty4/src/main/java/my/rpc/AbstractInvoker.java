@@ -2,12 +2,18 @@ package my.rpc;
 
 import my.common.utils.ArrayUtils;
 import my.common.utils.NetUtils;
+import my.server.RemotingException;
 import my.server.URL;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static my.common.constants.CommonConstants.*;
+import static my.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
  * @author geyu
@@ -73,21 +79,62 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
     }
 
     @Override
-    public Result invoke(Invocation inv) {
+    public Result invoke(Invocation inv) throws RemotingException {
         if (destroyed.get()) {
             System.out.println("Invoker for service " + this + " on consumer " + NetUtils.getLocalHost() + " is destroyed,  this invoker should not be used any longer");
         }
         RpcInvocation invocation = (RpcInvocation) inv;
         invocation.setInvoker(this); // 1
         if (CollectionUtils.isNotEmptyMap(attachments)) {
-            invocation.addAttachmentsIfAbsent(attachments); // 2
+            invocation.addObjectAttachmentsIfAbsent(attachments); // 2
         }
         Map<String, Object> rpcAttachments = RpcContext.getContext().getAttachments();
         if (CollectionUtils.isNotEmptyMap(rpcAttachments)) {
-            invocation.addAttachments(rpcAttachments); // 2
+            invocation.addObjectAttachments(rpcAttachments); // 2
         }
-        invocation.setInvokeMode(RpcUtil.getInvokeMode(invocation)); // 3
+        invocation.setInvokeMode(RpcUtils.getInvokeMode(invocation)); // 3
 
+        RpcUtils.attachInvocationIdIfAsync(url, invocation);
+
+        inv.setAttachment(PATH_KEY, getURL().getPath()); // 这部分内容本来是子类的， 我挪到这里了，为了统一在一处处理
+        inv.setAttachment(VERSION_KEY, getURL().getParameter(VERSION_KEY, "0.0.0"));
+        String methodName = RpcUtils.getMethodName(invocation);
+        int timeout = calculateTimeout(invocation, methodName);
+        invocation.setObjectAttachment(TIMEOUT_ATTACHMENT_KEY, timeout);
+        invocation.put(TIMEOUT_KEY, timeout);
+
+        /// todo myRPC 异常体系
+
+        AsyncRpcResult asyncResult = (AsyncRpcResult) doInvoke(invocation);
+        RpcContext.getContext().setFuture(new FutureAdapter(asyncResult.getResponseFuture()));
+        return asyncResult;
+    }
+
+    protected abstract Result doInvoke(Invocation invocation) throws RemotingException;
+
+    protected ExecutorService getCallbackExecutor(URL url, Invocation inv) {
+//        ExecutorService sharedExecutor = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension().getExecutor(url);
+//        if (InvokeMode.SYNC == RpcUtils.getInvokeMode(inv)) {
+//            return new ThreadlessExecutor(sharedExecutor);
+//        } else {
+//            return sharedExecutor;
+//        }
         return null;
+    }
+
+    private int calculateTimeout(Invocation invocation, String methodName) {
+        Object countdown = RpcContext.getContext().get(TIME_COUNTDOWN_KEY);
+        int timeout = DEFAULT_TIMEOUT;
+        if (countdown == null) {
+            timeout = (int) RpcUtils.getTimeout(getURL(), methodName, RpcContext.getContext(), DEFAULT_TIMEOUT);
+            if (getURL().getParameter(ENABLE_TIMEOUT_COUNTDOWN_KEY, false)) {
+                invocation.setObjectAttachment(TIMEOUT_ATTACHMENT_KEY, timeout); // pass timeout to remote server
+            }
+        } else {
+            TimeoutCountDown timeoutCountDown = (TimeoutCountDown) countdown;
+            timeout = (int) timeoutCountDown.timeRemaining(TimeUnit.MILLISECONDS);
+            invocation.setObjectAttachment(TIMEOUT_ATTACHMENT_KEY, timeout);// pass timeout to remote server
+        }
+        return timeout;
     }
 }

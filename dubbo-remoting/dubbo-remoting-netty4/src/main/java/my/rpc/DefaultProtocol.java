@@ -24,9 +24,9 @@ public class DefaultProtocol extends AbstractProtocol {
     }
 
     private Client[] getClients(URL url) {
-        int connections = url.getParameter(Constants.CONNECTIONS_KEY, 0);
+        int connections = url.getParameter(CONNECTIONS_KEY, 0);
         if (connections == 0) { // 1.isShared = true;
-            int shardConnections = url.getParameter(Constants.SHARE_CONNECTIONS_KEY, 1);
+            int shardConnections = url.getParameter(SHARE_CONNECTIONS_KEY, 1);
             List<ReferenceCountClient> referenceCountClientList = getReferenceCountClientList(url, shardConnections < 0 ? 1 : shardConnections);
             return referenceCountClientList.toArray(new Client[0]);
         } else { // 2.isShared = false;

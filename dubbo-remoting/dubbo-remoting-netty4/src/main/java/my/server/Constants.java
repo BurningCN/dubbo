@@ -43,4 +43,5 @@ public interface Constants {
     String READONLY_EVENT = "R";
 
     String TOKEN_KEY = "token";
+    String PATH = "path";
 }

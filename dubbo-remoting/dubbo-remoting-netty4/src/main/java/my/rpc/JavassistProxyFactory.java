@@ -4,6 +4,7 @@ package my.rpc;
 import my.common.bytecode.Proxy;
 import my.common.bytecode.Wrapper;
 import my.server.URL;
+
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -21,8 +22,8 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
         Wrapper wrapper = Wrapper.getWrapper(proxy.getClass());
         return new AbstractProxyInvoker<T>(proxy, type, url) {
             @Override
-            protected Object doInvoke(Object proxy, String methodName, Class[] parameterTypes, Object[] arguments) throws InvocationTargetException {
-                return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
+            protected Object doInvoke(Object proxy, String methodName, Class[] parameterTypes, Object[] arguments) throws Exception {
+                    return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
             }
         };
     }

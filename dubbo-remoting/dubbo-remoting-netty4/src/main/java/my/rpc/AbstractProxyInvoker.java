@@ -39,7 +39,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     }
 
     @Override
-    public Result invoke(Invocation invocation) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public Result invoke(Invocation invocation) throws Exception {
         Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
         CompletableFuture<Object> future = wrapWithFuture(value);
         CompletableFuture<AppResponse> appResponseFuture = future.handle((obj, t) -> {
@@ -83,6 +83,6 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
 
     }
 
-    protected abstract Object doInvoke(T proxy, String methodName, Class<?>[] parameterTypes, Object[] arguments) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException;
+    protected abstract Object doInvoke(T proxy, String methodName, Class<?>[] parameterTypes, Object[] arguments) throws Exception;
 
 }
