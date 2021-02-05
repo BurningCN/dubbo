@@ -163,7 +163,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     @Override
     public void close(int timeout) {
-        // referenceCount 自减
+        // referenceCount 自减 只有没有任何人引用了，才会进入分支，关闭client，这就是连接复用
         if (referenceCount.decrementAndGet() <= 0) {
             if (timeout == 0) {
                 client.close();

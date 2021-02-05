@@ -22,32 +22,40 @@ public class ReferenceCountClient implements Client {
 
     @Override
     public void connect() throws RemotingException {
-
+        client.connect();
     }
 
     @Override
     public void disconnect() throws RemotingException {
-
+        client.disconnect();
     }
 
     @Override
     public void reconnect() throws RemotingException {
-
+        client.reconnect();
     }
 
     @Override
     public void close() throws RemotingException {
+        if (referenceCount.decrementAndGet() <= 0) {
+            client.close();
+            replaceWithLazyClient();
+        }
 
+    }
+
+    private void replaceWithLazyClient() {
+        // todo myRPC
     }
 
     @Override
     public InnerChannel getChannel() {
-        return null;
+        return client.getChannel();
     }
 
     @Override
     public boolean isConnected() {
-        return false;
+        return client.isConnected();
     }
 
     public void incrementAndGetCount() {

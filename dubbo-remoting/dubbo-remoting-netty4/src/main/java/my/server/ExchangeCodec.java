@@ -23,15 +23,15 @@ public class ExchangeCodec extends AbstractCodec {
 
     private static final byte MAGIC_LOW = Bytes.short2bytes(MAGIC)[0];
 
-    private static final byte FLAG_REQUEST = (byte) 0x80;
+    protected static final byte FLAG_REQUEST = (byte) 0x80;
 
-    private static final byte FLAG_TWOWAY = (byte) 0x40;
+    protected static final byte FLAG_TWOWAY = (byte) 0x40;
 
-    private static final byte FLAG_EVENT = (byte) 0x20;
+    protected static final byte FLAG_EVENT = (byte) 0x20;
 
-    private static final int SERIALIZATION_MASK = 0x1f;
+    protected static final int SERIALIZATION_MASK = 0x1f;
 
-    private static Serialization serialization;
+    protected static Serialization serialization;
 
     private final URL url;
 
@@ -76,7 +76,15 @@ public class ExchangeCodec extends AbstractCodec {
         }
 
         // todo myRPC 非魔数
+        try {
+            return decodeBody(buffer, header);
+        } finally {
 
+        }
+
+    }
+
+    protected Object decodeBody(ChannelBuffer buffer, byte[] header) throws IOException {
         ChannelBufferInputStream bis = new ChannelBufferInputStream(buffer);
         ObjectInput input = serialization.deSerialize(bis);
 
@@ -96,7 +104,7 @@ public class ExchangeCodec extends AbstractCodec {
                 } else if (response.isEvent()) {
                     data = decodeEventData(input);
                 } else {
-                    data = decodeResponseData(input);
+                    data = decodeResponseData(input,response); // 传response是为了给子类用的，在当前类没有实际意义
                 }
                 response.setResult(data);
             } else {
@@ -114,29 +122,13 @@ public class ExchangeCodec extends AbstractCodec {
             } else if (request.isEvent()) {
                 data = decodeEventData(input);
             } else {
-                data = decodeRequestData(input);
+                data = decodeRequestData(input,request);// 传request是为了给子类用的，在当前类没有实际意义
             }
             request.setData(data);
             return request;
         }
     }
 
-    private Object decodeRequestData(ObjectInput input) throws IOException {
-        return input.readObject();
-    }
-
-    private Object decodeResponseData(ObjectInput input) throws IOException {
-        return input.readObject();
-    }
-
-
-    private Object decodeEventData(ObjectInput input) throws IOException {
-        return input.readObject();
-    }
-
-    private Object decodeHeartbeatData(ObjectInput input) throws IOException {
-        return input.readObject();
-    }
 
     /**
      * byte 16
@@ -173,7 +165,7 @@ public class ExchangeCodec extends AbstractCodec {
             if (response.isHeartbeat()) {
                 encodeEventData(output, response.getResult());
             } else {
-                encodeEventData(output, response.getResult());
+                encodeResponseDate(output, response.getResult());
             }
         } else {
             encodeErrorMsg(output, response.getErrorMessage());
@@ -190,9 +182,6 @@ public class ExchangeCodec extends AbstractCodec {
 
     }
 
-    private void encodeErrorMsg(ObjectOutput output, String errorMessage) throws IOException {
-        output.writeObject(errorMessage);
-    }
 
     /**
      * byte 16
@@ -242,11 +231,40 @@ public class ExchangeCodec extends AbstractCodec {
         buffer.writerIndex(savedWriterIndex + HEADER_LENGTH + len);
     }
 
-    private void encodeRequestData(ObjectOutput output, Object data) throws IOException {
+    protected void encodeRequestData(ObjectOutput output, Object data) throws IOException {
         output.writeObject(data);
     }
+
+    protected void encodeResponseDate(ObjectOutput output, Object data) throws IOException {
+        output.writeObject(data);
+    }
+
 
     private void encodeEventData(ObjectOutput output, Object data) throws IOException {
         output.writeObject(data);
     }
+
+    private void encodeErrorMsg(ObjectOutput output, String errorMessage) throws IOException {
+        output.writeObject(errorMessage);
+    }
+
+
+    protected Object decodeRequestData(ObjectInput input,Request request) throws IOException {
+        return input.readObject();
+    }
+
+    protected Object decodeResponseData(ObjectInput input,Response response) throws IOException {
+        return input.readObject();
+    }
+
+
+    protected Object decodeEventData(ObjectInput input) throws IOException {
+        return input.readObject();
+    }
+
+    protected Object decodeHeartbeatData(ObjectInput input) throws IOException {
+        return input.readObject();
+    }
+
+
 }

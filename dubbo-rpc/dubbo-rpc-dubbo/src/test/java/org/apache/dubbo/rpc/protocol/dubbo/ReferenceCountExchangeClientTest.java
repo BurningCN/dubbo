@@ -235,6 +235,9 @@ public class ReferenceCountExchangeClientTest {
         URL demoUrl = URL.valueOf("dubbo://127.0.0.1:" + port + "/demo?" + CONNECTIONS_KEY + "=" + connections + "&" + SHARE_CONNECTIONS_KEY + "=" + shareConnections);
         URL helloUrl = URL.valueOf("dubbo://127.0.0.1:" + port + "/hello?" + CONNECTIONS_KEY + "=" + connections + "&" + SHARE_CONNECTIONS_KEY + "=" + shareConnections);
 
+        demoUrl = demoUrl.addParameter("heartbeat",60000*5); // 这里是我特地加的，可能当前电脑比较慢，导致DefaultFuture经常超时
+        demoUrl= demoUrl.addParameter("timeout",60000*10); // 这里是我特地加的，可能当前电脑比较慢，导致DefaultFuture经常超时
+
         demoExporter = export(new DemoServiceImpl(), IDemoService.class, demoUrl);// 进去
         helloExporter = export(new HelloServiceImpl(), IHelloService.class, helloUrl);// 进去
         // helloExporter如下，注意exporterMap
@@ -248,7 +251,6 @@ public class ReferenceCountExchangeClientTest {
         // invoker = {JavassistProxyFactory$1@3105} "interface org.apache.dubbo.rpc.protocol.dubbo.ReferenceCountExchangeClientTest$IHelloService -> dubbo://127.0.0.1:62796/hello?connections=0&shareconnections=1"
         // unexported = false
 
-        demoUrl= demoUrl.addParameter("timeout",50000); // 这里是我特地加的，可能当前电脑比较慢，导致DefaultFuture经常超时
 
         demoServiceInvoker = (Invoker<IDemoService>) referInvoker(IDemoService.class, demoUrl);// 进去
         // demoServiceInvoker类型为AsyncToSyncInvoker，内部的invoker属性为DubboInvoker， getProxy进去

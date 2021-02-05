@@ -76,6 +76,9 @@ public class Request {
         return broken;
     }
 
+    public void setBroken(boolean broken) {
+        this.broken = broken;
+    }
     public void setEvent(String heartbeatEvent) {
         data = heartbeatEvent;
         isEvent = true;
