@@ -475,7 +475,7 @@ ExchangeHandlerDispatcher、ReplierDispatcher、ChannelHandlerDispatcher
 
 **149.GroupServiceKeyCache。**serviceKey的多级结构，ConcurrentMap<serviceName, ConcurrentMap<serviceVersion, ConcurrentMap<port, String>>>  还有一个Group，搞了多层嵌套的缓存 - - 。如果map层级过多，可以单组一个类，比如GroupServiceKeyCache，不然的话serviceGroup也会作为map的key。
 
-150.AbstractProxyFactory。
+**150.AbstractProxyFactory。**
 
 **零散：Bytes**。
 
@@ -506,3 +506,17 @@ public static int bytes2int(byte[] b, int off) {
 **零散。NetUtils。**getAvailablePort方法，如果传入的port<=0的话，直接ServerSocket ss = new ServerSocket() + ss.bind(null)然后ss.getLocalPortJ就能拿到可用端口值了，如果port>0那么循环（范围[port,65535]）进行new ServerSocket(port)如果成功，就返回port。
 
 **零散。Version。**checkDuplicate
+
+
+
+
+
+# ======
+
+rpc模块的点。
+
+1.判断某个address的List<ReferenceClient>是否存在的时候，搞了多个锁用以检查不同的value。
+
+2.泛型的设计，invoker、Exporter、Protocol。
+
+3.连接复用，ReferenceCountClient引用计数。

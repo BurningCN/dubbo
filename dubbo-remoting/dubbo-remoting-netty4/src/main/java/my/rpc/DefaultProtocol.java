@@ -62,38 +62,38 @@ public class DefaultProtocol extends AbstractProtocol {
     private List<ReferenceCountClient> getReferenceCountClientList(URL url, int shardConnections) {
         String address = url.getAddress();
         List<ReferenceCountClient> referenceCountClients = referenceCountClientMap.get(address);
-        if (checkClientCanUse(referenceCountClients)) {// 进去
-            // 增加引用计数 进去
+        if (checkClientCanUse(referenceCountClients)) {
             batchClientRefIncr(referenceCountClients);
             return referenceCountClients;
         }
-        locks.putIfAbsent(address, new Object());
+        locks.putIfAbsent(address, new Object()); // 分段锁 ，用以每个value的双重检查
         synchronized (locks.get(address)) {
             referenceCountClients = referenceCountClientMap.get(address);
-            if (checkClientCanUse(referenceCountClients)) {// 进去
-                // 增加引用计数 进去
+            if (checkClientCanUse(referenceCountClients)) { // 双重检查
                 batchClientRefIncr(referenceCountClients);
                 return referenceCountClients;
             }
-            if(referenceCountClients == null || referenceCountClients.isEmpty()){
+            if (CollectionUtils.isEmpty(referenceCountClients)) {
                 List<ReferenceCountClient> clients = new LinkedList<>();
-                for(int i=0;i<shardConnections;i++){
+                for (int i = 0; i < shardConnections; i++) {
                     clients.add(new ReferenceCountClient(initClient(url)));
                 }
-                referenceCountClientMap.put(address,clients);
-            }else{
-//                for(ReferenceCountClient client : referenceCountClients){
-//                    if()// todo myRPC
-//                }
-
+                referenceCountClientMap.put(address, clients);
+            } else {
+                for (int i = 0; i < referenceCountClients.size(); i++) {
+                    if (!referenceCountClients.get(i).isConnected()) {
+                        referenceCountClients.set(i, new ReferenceCountClient(initClient(url)));
+                    } else {
+                        referenceCountClients.get(i).incrementAndGetCount();
+                    }
+                }
             }
-
         }
-        return null;
+        return referenceCountClientMap.get(address);
     }
 
     private void batchClientRefIncr(List<ReferenceCountClient> referenceCountClients) {
-        if (referenceCountClients == null || referenceCountClients.isEmpty()) {
+        if (CollectionUtils.isEmpty(referenceCountClients)) {
             return;
         }
         for (ReferenceCountClient client : referenceCountClients) {
@@ -102,7 +102,7 @@ public class DefaultProtocol extends AbstractProtocol {
     }
 
     private boolean checkClientCanUse(List<ReferenceCountClient> referenceCountClients) {
-        if (referenceCountClients == null || referenceCountClients.isEmpty()) {
+        if (CollectionUtils.isEmpty(referenceCountClients)) {
             return false;
         }
         for (ReferenceCountClient client : referenceCountClients) {
