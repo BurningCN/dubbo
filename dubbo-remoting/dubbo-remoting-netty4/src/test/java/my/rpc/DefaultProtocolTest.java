@@ -70,7 +70,7 @@ public class DefaultProtocolTest {
         // demoUrl.addParameter("shareconnections",5);
         Invoker<DemoService> clientInvoker = protocol.refer(DemoService.class, demoUrl);
         DemoService clientProxy = DefaultProtocolTest.proxy.getProxy(clientInvoker);  // 看到没，4步骤正好是一个对称
-
+        // System.out.println("");
         clientProxy.echo("哈喽，我是mmmm");
 
     }
