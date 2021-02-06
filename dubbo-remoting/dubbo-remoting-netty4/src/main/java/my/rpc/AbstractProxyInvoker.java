@@ -1,5 +1,6 @@
 package my.rpc;
 
+import my.server.RemotingException;
 import my.server.URL;
 
 import java.lang.reflect.InvocationTargetException;
@@ -39,7 +40,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     }
 
     @Override
-    public Result invoke(Invocation invocation) throws Exception {
+    public Result invoke(Invocation invocation) throws RemotingException, Exception {
         Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
         CompletableFuture<Object> future = wrapWithFuture(value);
         CompletableFuture<AppResponse> appResponseFuture = future.handle((obj, t) -> {
@@ -83,6 +84,6 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
 
     }
 
-    protected abstract Object doInvoke(T proxy, String methodName, Class<?>[] parameterTypes, Object[] arguments) throws Exception;
+    protected abstract Object doInvoke(T proxy, String methodName, Class<?>[] parameterTypes, Object[] arguments) throws RemotingException, Exception;
 
 }

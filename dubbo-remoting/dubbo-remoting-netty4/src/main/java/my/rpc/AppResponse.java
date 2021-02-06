@@ -1,7 +1,11 @@
 package my.rpc;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * @author geyu
@@ -11,6 +15,8 @@ public class AppResponse implements Result {
     private Object value;
 
     private Throwable exception;
+
+    private Map<String, Object> attachments = new HashMap<>();
 
     @Override
     public Object getValue() {
@@ -57,5 +63,20 @@ public class AppResponse implements Result {
     @Override
     public Result get(long timeout, TimeUnit unit) {
         return null;
+    }
+
+    @Override
+    public <U> CompletableFuture<U> thenApply(Function<Result, ? extends U> fn) {
+        throw new UnsupportedOperationException("AppResponse represents an concrete business response, there will be no status changes, you should get internal values directly.");
+    }
+
+    @Override
+    public Map<String, Object> getObjectAttachments() {
+        return attachments;
+    }
+
+    @Override
+    public void setObjectAttachments(Map<String, Object> map) {
+        this.attachments = map == null ? new HashMap<>() : map;
     }
 }

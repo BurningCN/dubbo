@@ -6,4 +6,8 @@ package my.server;
  */
 public class Version {
     public static final String DEFAULT_VERSION = "1.0.0";
+
+    public static boolean isSupportResponseAttachment() {
+        return true;
+    }
 }

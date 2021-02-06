@@ -40,4 +40,9 @@ public class Hessian2ObjectOutput implements ObjectOutput {
     public void writeUTF(String v) throws IOException {
         h2o.writeString(v);
     }
+
+    @Override
+    public void writeByte(Byte b) throws IOException {
+        h2o.writeInt(b);
+    }
 }

@@ -14,7 +14,7 @@ import static org.apache.dubbo.remoting.Constants.*;
  */
 public class DefaultProtocol extends AbstractProtocol {
 
-    private ExchangeHandler requestHandler = new DefaultExchangeHandler();
+    private ExchangeHandler requestHandler = new DefaultExchangeHandler(this);
 
     @Override
     protected <T> Invoker<T> doRefer(Class<T> type, URL url) {

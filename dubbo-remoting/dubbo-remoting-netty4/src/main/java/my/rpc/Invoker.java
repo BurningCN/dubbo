@@ -10,5 +10,5 @@ public interface Invoker<T> extends Node {
 
     Class<T> getInterface();
 
-    Result invoke(Invocation invocation) throws Exception, RemotingException;
+    Result invoke(Invocation invocation) throws RemotingException, Exception;
 }

@@ -43,7 +43,49 @@ public class Hessian2ObjectInput implements ObjectInput {
     }
 
     @Override
+    public boolean readBool() throws IOException {
+        return h2i.readBoolean();
+    }
+
+    @Override
+    public byte readByte() throws IOException {
+        return (byte) h2i.readByte();
+    }
+
+    @Override
+    public short readShort() throws IOException {
+        return (short) h2i.readByte();
+    }
+
+    @Override
+    public int readInt() throws IOException {
+        return  h2i.readByte();
+    }
+
+    @Override
+    public long readLong() throws IOException {
+        return h2i.readLong();
+    }
+
+    @Override
+    public float readFloat() throws IOException {
+        return h2i.readFloat();
+    }
+
+    @Override
+    public double readDouble() throws IOException {
+        return h2i.readDouble();
+    }
+
+    @Override
     public String readUTF() throws IOException {
         return h2i.readString();
     }
+
+    @Override
+    public byte[] readBytes() throws IOException {
+        return h2i.readBytes();
+    }
+
+
 }

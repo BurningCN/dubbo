@@ -8,4 +8,6 @@ import java.io.IOException;
  */
 public interface DataOutput {
     void writeUTF(String v) throws IOException;
+
+    void writeByte(Byte b) throws  IOException;
 }

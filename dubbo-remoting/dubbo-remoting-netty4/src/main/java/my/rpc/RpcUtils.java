@@ -38,7 +38,7 @@ public class RpcUtils {
     public static void attachInvocationIdIfAsync(URL url, RpcInvocation invocation) {
     }
 
-    public static Type[] getReturnTypes(RpcInvocation rpcInvocation) {
+    public static Type[] getReturnTypes(Invocation rpcInvocation) {
         return null;
     }
 

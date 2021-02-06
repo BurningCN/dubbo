@@ -17,6 +17,13 @@ import static my.common.constants.CommonConstants.TIMEOUT_KEY;
  */
 public class DefaultCodec extends ExchangeCodec {
     public static final String NAME = "default";
+    public static final byte RESPONSE_WITH_EXCEPTION = 0;
+    public static final byte RESPONSE_VALUE = 1;
+    public static final byte RESPONSE_NULL_VALUE = 2;
+    public static final byte RESPONSE_WITH_EXCEPTION_WITH_ATTACHMENTS = 3;
+    public static final byte RESPONSE_VALUE_WITH_ATTACHMENTS = 4;
+    public static final byte RESPONSE_NULL_VALUE_WITH_ATTACHMENTS = 5;
+
 
     public DefaultCodec(URL url) {
         super(url);
@@ -44,7 +51,23 @@ public class DefaultCodec extends ExchangeCodec {
 
     @Override
     protected void encodeResponseDate(ObjectOutput output, Object data) throws IOException {
-
+        Result result = (Result) data;
+        Throwable throwable = result.getException();
+        boolean attach = Version.isSupportResponseAttachment();
+        if (throwable == null) {
+            Object value = result.getValue();
+            if (value == null) {
+                output.writeByte(attach ? RESPONSE_NULL_VALUE_WITH_ATTACHMENTS : RESPONSE_NULL_VALUE);
+            } else {
+                output.writeByte(attach ? RESPONSE_VALUE_WITH_ATTACHMENTS : RESPONSE_VALUE);
+                output.writeObject(value);
+            }
+        } else {
+            output.writeByte(attach ? RESPONSE_WITH_EXCEPTION_WITH_ATTACHMENTS : RESPONSE_WITH_EXCEPTION);
+            output.writeThrowable(throwable);
+        }
+        result.getObjectAttachments().put(VERSION_KEY, Version.DEFAULT_VERSION);
+        output.writeAttachments(result.getObjectAttachments());
     }
 
     @Override
@@ -81,5 +104,5 @@ public class DefaultCodec extends ExchangeCodec {
     }
 }
 
-    //
+//
 

@@ -41,4 +41,9 @@ public class FastJsonObjectOutput implements ObjectOutput {
     public void writeUTF(String v) throws IOException {
         writeObject(v);
     }
+
+    @Override
+    public void writeByte(Byte b) throws IOException {
+        writeObject(b);
+    }
 }

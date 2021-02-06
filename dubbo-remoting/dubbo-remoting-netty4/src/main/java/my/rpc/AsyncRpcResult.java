@@ -1,8 +1,10 @@
 package my.rpc;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * @author geyu
@@ -110,5 +112,20 @@ public class AsyncRpcResult implements Result {
 
     public void setExecutor(Executor executor) {
         this.executor = executor;
+    }
+
+    @Override
+    public Map<String, Object> getObjectAttachments() {
+        return getAppResponse().getObjectAttachments();
+    }
+
+    @Override
+    public void setObjectAttachments(Map<String, Object> map) {
+        getAppResponse().setObjectAttachments(map);
+    }
+
+    @Override
+    public <U> CompletableFuture<U> thenApply(Function<Result, ? extends U> fn) {
+        return responseFuture.thenApply(fn);
     }
 }
