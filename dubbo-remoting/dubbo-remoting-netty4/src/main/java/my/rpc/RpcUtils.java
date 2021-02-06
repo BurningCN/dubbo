@@ -6,8 +6,8 @@ import my.server.URL;
 import java.lang.reflect.Type;
 import java.util.concurrent.CompletableFuture;
 
+import static my.rpc.Constants.RETURN_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
-import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
 
 /**
  * @author geyu
@@ -85,5 +85,13 @@ public class RpcUtils {
         } else {
             return Long.parseLong(obj.toString());
         }
+    }
+
+    public static boolean isGenericCall(String desc, String methodName) {
+        return false;
+    }
+
+    public static boolean isEcho(String desc, String methodName) {
+        return false;
     }
 }

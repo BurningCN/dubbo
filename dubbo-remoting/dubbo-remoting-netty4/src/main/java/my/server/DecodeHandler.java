@@ -24,7 +24,7 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
         super.received(channel, message);
     }
 
-    private void decode(Object message) {
+    private void decode(Object message) { // 主要针对 RpcInvocation 的解码逻辑
         if(message instanceof Decodeable){
             try {
                 ((Decodeable)message).decode();
@@ -32,7 +32,6 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
             }catch (Throwable e){
                 System.out.println("Call Decodeable.decode failed: " + e.getMessage());
             }
-
         }
     }
 }

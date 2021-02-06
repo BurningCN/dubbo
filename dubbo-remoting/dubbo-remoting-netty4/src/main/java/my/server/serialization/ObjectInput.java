@@ -2,6 +2,7 @@ package my.server.serialization;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.Map;
 
 /**
  * @author gy821075
@@ -15,4 +16,8 @@ public interface ObjectInput {
     <T> T readObject(Class<T> clz, Type type) throws IOException;
 
     String readUTF() throws IOException;
+
+    default Map<String,Object> readAttachments() throws IOException {
+        return readObject(Map.class);
+    }
 }

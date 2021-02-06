@@ -3,7 +3,6 @@ package my.rpc;
 import my.common.utils.ReflectUtils;
 import my.common.utils.StringUtils;
 import my.server.URL;
-import org.apache.dubbo.rpc.AttachmentsAdapter;
 import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.MethodDescriptor;
 import org.apache.dubbo.rpc.model.ServiceDescriptor;

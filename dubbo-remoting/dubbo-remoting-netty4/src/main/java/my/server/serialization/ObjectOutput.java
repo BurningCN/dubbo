@@ -1,6 +1,7 @@
 package my.server.serialization;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * @author gy821075
@@ -11,4 +12,7 @@ public interface ObjectOutput extends DataOutput {
 
     void writeObject(Object data) throws IOException;
 
+    default void writeAttachments(Map<String,Object> attachments) throws  IOException{
+        writeObject(attachments);
+    }
 }
