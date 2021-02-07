@@ -126,12 +126,17 @@ public class DefaultProtocol extends AbstractProtocol {
         if (isServer) {
             Server server = serverMap.get(address);
             if (server == null) {
-                serverMap.putIfAbsent(address, transporter.bind(url, requestHandler));// todo myRPC createServer的逻辑需要补充
+                serverMap.putIfAbsent(address, createServer(url));// todo myRPC createServer的逻辑需要补充
             } else {
                 // todo myRPC reset
             }
         }
         return defaultExporter;
+    }
+
+    private Server createServer(URL url) throws RemotingException {
+        url.addParameter(CODEC_KEY, DefaultCodec.NAME);
+        return transporter.bind(url, requestHandler);
     }
 
 }

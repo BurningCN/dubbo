@@ -258,6 +258,8 @@ public class ReferenceCountExchangeClientTest {
         // demoService类型为proxy0，内部含有InvokerInvocationHandler属性，而InvokerInvocationHandler含有AsyncToSyncInvoker
         // demo进去 直接进InvokerInvocationHandler的invoke方法
         // 交互逻辑非常复杂，要关注服务端的编解码、客户端的编解码，服务端是最终怎么调用到本地服务的方法的，客户端最终是怎么拿到结果的，相关逻辑打断点测试
+
+        System.out.println(demoService.plus(10,9));
         Assertions.assertEquals("demo", demoService.demo());
 
         helloServiceInvoker = (Invoker<IHelloService>) referInvoker(IHelloService.class, helloUrl);
@@ -341,21 +343,33 @@ public class ReferenceCountExchangeClientTest {
 
     public interface IDemoService {
         String demo();
+        int plus(int n1,int n2);
     }
 
     public interface IHelloService {
         String hello();
+        int minus(int n1,int n2);
     }
 
     public class DemoServiceImpl implements IDemoService {
         public String demo() {
             return "demo";
         }
+
+        @Override
+        public int plus(int n1, int n2) {
+            return n1+n2;
+        }
     }
 
     public class HelloServiceImpl implements IHelloService {
         public String hello() {
             return "hello";
+        }
+
+        @Override
+        public int minus(int n1, int n2) {
+            return n1-n2;
         }
     }
 }

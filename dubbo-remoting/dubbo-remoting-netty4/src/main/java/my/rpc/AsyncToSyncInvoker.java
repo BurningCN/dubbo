@@ -2,8 +2,6 @@ package my.rpc;
 
 import my.server.RemotingException;
 import my.server.URL;
-import org.apache.dubbo.rpc.InvokeMode;
-import org.apache.dubbo.rpc.RpcInvocation;
 
 import java.util.concurrent.TimeUnit;
 

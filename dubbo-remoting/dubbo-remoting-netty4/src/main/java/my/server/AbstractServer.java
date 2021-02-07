@@ -1,5 +1,7 @@
 package my.server;
 
+import my.rpc.DefaultCodec;
+
 import java.net.InetSocketAddress;
 
 /**
@@ -52,7 +54,11 @@ public abstract class AbstractServer implements Server {
     }
 
     protected Codec2 getChannelCodec(URL url) {
-        return new ExchangeCodec(url);
+        if(url.getParameter("codec") == "default"){
+            return new DefaultCodec(url);
+        }else{
+            return new ExchangeCodec(url);
+        }
         // todo myRPC 需要支持spi
     }
 

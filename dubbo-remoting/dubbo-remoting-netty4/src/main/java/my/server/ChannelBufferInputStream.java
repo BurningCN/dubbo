@@ -1,5 +1,7 @@
 package my.server;
 
+import org.apache.dubbo.remoting.Channel;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -9,12 +11,24 @@ import java.io.InputStream;
  */
 public class ChannelBufferInputStream extends InputStream {
 
-    ChannelBuffer buffer;
-    int startIndex;
+
+    private ChannelBuffer buffer;
+    private int startIndex;
+    private int endIndex;
 
     public ChannelBufferInputStream(ChannelBuffer buffer) {
+        this(buffer, buffer.readableBytes());
+    }
+
+    public ChannelBufferInputStream(ChannelBuffer buffer, int length) {
         this.buffer = buffer;
         this.startIndex = buffer.readerIndex();
+        this.endIndex = startIndex + length;
+    }
+
+    @Override
+    public int available() throws IOException {
+        return endIndex - buffer.readerIndex();
     }
 
     @Override

@@ -62,8 +62,8 @@ public class DefaultProtocolTest {
 
 
     @Test
-    public void testInvoke() throws RemotingException {
-        URL demoUrl = URL.valueOf("dubbo://localhost:8989/demoService?group=demo&version=2.0.0");
+    public void testInvoke() throws RemotingException, InterruptedException {
+        URL demoUrl = URL.valueOf("dubbo://localhost:8989/demoService?heartbeat=600000&timeout=6000000&group=demoGroup&version=2.0.0");
         Invoker<DemoService> serverInvoker = proxy.getInvoker(new DemoServiceImpl(), DemoService.class, demoUrl);
         Exporter<DemoService> severExporter = protocol.export(serverInvoker);
 
@@ -72,6 +72,8 @@ public class DefaultProtocolTest {
         DemoService clientProxy = DefaultProtocolTest.proxy.getProxy(clientInvoker);  // 看到没，4步骤正好是一个对称
         // System.out.println("");
         clientProxy.echo("哈喽，我是mmmm");
+
+        Thread.sleep(600000);
 
     }
 
@@ -82,5 +84,7 @@ public class DefaultProtocolTest {
     public static <T> Invoker<T> refer(Class<T> type, URL url) throws RemotingException {
         return protocol.refer(type, url);
     }
+
+
 
 }

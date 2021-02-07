@@ -8,5 +8,5 @@ import java.util.concurrent.CompletableFuture;
  * @date 2021/1/30 16:37
  */
 public interface ExchangeHandler extends ChannelHandler {
-    CompletableFuture<Object> reply(InnerChannel channel, Object request) throws RemotingException;
+    CompletableFuture<Object> reply(InnerChannel channel, Object request) throws RemotingException, Exception;
 }

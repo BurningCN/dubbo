@@ -1,15 +1,16 @@
 package my.rpc;
 
+import my.common.io.UnsafeByteArrayInputStream;
 import my.common.utils.ArrayUtils;
 import my.server.*;
 import my.server.serialization.ObjectInput;
 import my.server.serialization.ObjectOutput;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import static my.rpc.defaults.Constants.*;
 import static my.common.constants.CommonConstants.*;
-import static my.common.constants.CommonConstants.TIMEOUT_KEY;
 
 /**
  * @author geyu
@@ -71,32 +72,40 @@ public class DefaultCodec extends ExchangeCodec {
     }
 
     @Override
-    protected Object decodeRequestData(ObjectInput input, Request request) throws IOException {
-        DecodeableRpcInvocation decodeableRpcInvocation = null;
+    protected Object decodeRequestData(ObjectInput input, Request request, InputStream is) throws IOException {
+        DecodeableRpcInvocation decodeableRpcInvocation;
         boolean isDecodeInIOThread = getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD);
         if (isDecodeInIOThread) {
             decodeableRpcInvocation = new DecodeableRpcInvocation(request, input);
             decodeableRpcInvocation.decode();
         } else {
-            // todo myRpc 原版用的是 UnsafeByteArrayInputStream
+            decodeableRpcInvocation = new DecodeableRpcInvocation(request, readRemainingBytes(is));
         }
         return decodeableRpcInvocation;
     }
 
     @Override
-    protected Object decodeResponseData(ObjectInput input, Response response) throws IOException {
-        DecodeableRpcResult decodeableRpcResult = null;
+    protected Object decodeResponseData(ObjectInput input, Response response, InputStream is) throws IOException {
+        DecodeableRpcResult decodeableRpcResult;
         boolean isDecodeInIOThread = getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD);
         if (isDecodeInIOThread) {
             decodeableRpcResult = new DecodeableRpcResult(response, input, (Invocation) getRequestData(response.getId()));
             decodeableRpcResult.decode();
         } else {
-            // todo myRpc 原版用的是 UnsafeByteArrayInputStream
+            decodeableRpcResult = new DecodeableRpcResult(response, readRemainingBytes(is), (Invocation) getRequestData(response.getId()));
         }
         return decodeableRpcResult;
 
     }
 
+    // 注意该方法很重要
+    private ObjectInput readRemainingBytes(InputStream is) throws IOException {
+        byte[] result = new byte[is.available()];
+        if (is.available() > 0) {
+            is.read(result);
+        }
+        return serialization.deSerialize(new UnsafeByteArrayInputStream(result));
+    }
 
     private Object getRequestData(long id) {
         DefaultFuture future = DefaultFuture.getFuture(id);

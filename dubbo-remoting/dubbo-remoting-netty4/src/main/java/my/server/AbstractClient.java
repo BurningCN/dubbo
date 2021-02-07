@@ -1,6 +1,8 @@
 package my.server;
 
 
+import my.rpc.DefaultCodec;
+
 import java.net.InetSocketAddress;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -39,8 +41,12 @@ public abstract class AbstractClient implements Client {
         return channelHandler;
     }
 
-    protected Codec2 getChannelCodec(URL url) {
-        return new ExchangeCodec(url);
+    private Codec2 getChannelCodec(URL url) {
+        if (url.getParameter("codec") == "default") {
+            return new DefaultCodec(url);
+        } else {
+            return new ExchangeCodec(url);
+        }
         // todo myRPC 需要支持spi
     }
 

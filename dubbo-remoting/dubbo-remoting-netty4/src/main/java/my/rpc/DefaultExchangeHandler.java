@@ -22,7 +22,7 @@ public class DefaultExchangeHandler implements ExchangeHandler {
     }
 
     @Override
-    public CompletableFuture<Object> reply(InnerChannel channel, Object request) throws RemotingException {
+    public CompletableFuture<Object> reply(InnerChannel channel, Object request) throws RemotingException, Exception {
         if (request instanceof Invocation) {
             throw new RemotingException(channel, "Unsupported request: "
                     + (request == null ? null : (request.getClass().getName() + ": " + request))
