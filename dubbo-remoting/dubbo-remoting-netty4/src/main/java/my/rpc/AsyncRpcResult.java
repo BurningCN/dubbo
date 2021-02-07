@@ -1,9 +1,7 @@
 package my.rpc;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Function;
 
 /**
@@ -75,12 +73,12 @@ public class AsyncRpcResult implements Result {
     }
 
     @Override
-    public Object recreate() {
+    public Object recreate() throws Throwable {
         RpcInvocation rpcInvocation = (RpcInvocation) invocation;
         if (rpcInvocation.getInvokeMode() == InvokeMode.FUTURE) {
             return RpcContext.getContext().getFuture();
         }
-        return getAppResponse();
+        return getAppResponse().recreate();
     }
 
     public Result getAppResponse() {
@@ -88,7 +86,7 @@ public class AsyncRpcResult implements Result {
             if (responseFuture.isDone()) {
                 return responseFuture.get();
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             // This should not happen in normal request process;
             System.out.println("Got exception when trying to fetch the underlying result from AsyncRpcResult.");
             throw new RpcException(e);
@@ -97,13 +95,13 @@ public class AsyncRpcResult implements Result {
     }
 
     @Override
-    public Result get() {
-        return null;
+    public Result get() throws ExecutionException, InterruptedException {
+        return responseFuture.get();
     }
 
     @Override
-    public Result get(long timeout, TimeUnit unit) {
-        return null;
+    public Result get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+        return responseFuture.get(timeout, unit); // todo myRPC 线程池
     }
 
     public CompletableFuture<AppResponse> getResponseFuture() {

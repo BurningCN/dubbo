@@ -96,8 +96,9 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
 
         RpcUtils.attachInvocationIdIfAsync(url, invocation);
 
-        inv.setAttachment(PATH_KEY, getURL().getPath()); // 这部分内容本来是子类的， 我挪到这里了，为了统一在一处处理
-        inv.setAttachment(VERSION_KEY, getURL().getParameter(VERSION_KEY, "0.0.0"));
+        inv.setObjectAttachment(GROUP_KEY, getURL().getParameter(GROUP_KEY));// 这部分内容本来是子类的， 我挪到这里了，为了统一在一处处理
+        inv.setObjectAttachment(PATH_KEY, getURL().getPath());
+        inv.setObjectAttachment(VERSION_KEY, getURL().getParameter(VERSION_KEY, "0.0.0"));
         String methodName = RpcUtils.getMethodName(invocation);
         int timeout = calculateTimeout(invocation, methodName);
         invocation.setObjectAttachment(TIMEOUT_ATTACHMENT_KEY, timeout);

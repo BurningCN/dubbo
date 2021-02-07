@@ -41,18 +41,24 @@ public class AppResponse implements Result {
     @Override
     public Object recreate() throws Throwable {
         if (exception != null) {
-            Class<?> exceptionClass = exception.getClass();
-            while (exceptionClass != Throwable.class) {
-                exceptionClass = exceptionClass.getSuperclass();
+            try {
+                Class<?> exceptionClass = exception.getClass();
+                while (exceptionClass != Throwable.class) {
+                    exceptionClass = exceptionClass.getSuperclass();
+                }
+                Field stackTraceField = exceptionClass.getDeclaredField("stackTrace");
+                stackTraceField.setAccessible(true);
+                Object stackTrace = stackTraceField.get(exception);
+                if (stackTrace == null) {
+                    exception.setStackTrace(new StackTraceElement[0]);
+                }
+            }catch (Throwable e){
+                // ignore
             }
-            Field stackTraceField = exceptionClass.getDeclaredField("stackTrace");
-            stackTraceField.setAccessible(true);
-            Object stackTrace = stackTraceField.get(exception);
-            if (stackTrace == null) {
-                exception.setStackTrace(new StackTraceElement[0]);
-            }
+            throw exception;
+
         }
-        return exception;
+        return value;
     }
 
     @Override

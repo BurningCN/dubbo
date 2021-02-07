@@ -67,14 +67,11 @@ public class DefaultProtocolTest {
         URL demoUrl = URL.valueOf("dubbo://localhost:8989/demoService?heartbeat=600000&timeout=6000000&group=demoGroup&version=2.0.0");
         Invoker<DemoService> serverInvoker = proxy.getInvoker(new DemoServiceImpl(), DemoService.class, demoUrl);
         Exporter<DemoService> severExporter = protocol.export(serverInvoker);
+
         Invoker<DemoService> clientInvoker = protocol.refer(DemoService.class, demoUrl);
         DemoService clientProxy = DefaultProtocolTest.proxy.getProxy(clientInvoker);  // 看到没，4步骤正好是一个对称
         ApplicationModel.getServiceRepository().registerService("demoService",DemoService.class);
-        // System.out.println("");
-        clientProxy.echo("哈喽，我是mmmm");
-
-        Thread.sleep(600000);
-
+        System.out.println(clientProxy.echo("哈喽，我是mmmm"));;
     }
 
     public static <T> Exporter<T> export(T instance, Class<T> type, URL url) throws RemotingException {

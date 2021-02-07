@@ -22,9 +22,9 @@ public interface Result {
 
     Object recreate() throws Throwable;
 
-    Result get();
+    Result get() throws ExecutionException, InterruptedException;
 
-    Result get(long timeout, TimeUnit unit);
+    Result get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException;
 
     <U> CompletableFuture<U> thenApply(Function<Result, ? extends U> fn);
 

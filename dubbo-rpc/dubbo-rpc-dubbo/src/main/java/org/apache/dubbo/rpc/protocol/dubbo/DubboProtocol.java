@@ -111,7 +111,7 @@ public class DubboProtocol extends AbstractProtocol {
         @Override
         public CompletableFuture<Object> reply(ExchangeChannel channel, Object message) throws RemotingException {
 
-            if (!(message instanceof Invocation)) {
+            if (!(message instanceof Invocation)) { // 这里是DecodeableRPCInvocation或者DecodeableRpcResult
                 throw new RemotingException(channel, "Unsupported request: "
                         + (message == null ? null : (message.getClass().getName() + ": " + message))
                         + ", channel: consumer: " + channel.getRemoteAddress() + " --> provider: " + channel.getLocalAddress());
@@ -148,7 +148,7 @@ public class DubboProtocol extends AbstractProtocol {
             RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
             // 通过 Invoker 调用具体的服务（去跟 JavassistProxyFactory 的AbstractProxyInvoker里的doInvoke方法 以及AbstractProxyInvoker本类的invoke方法）
             Result result = invoker.invoke(inv);
-            return result.thenApply(Function.identity());
+            return result.thenApply(Function.identity());// AsyncRpcResult thenApply 进去
 
             // 以上逻辑用于获取与指定服务对应的 Invoker 实例，并通过 Invoker 的 invoke 方法调用服务逻辑。invoke 方法定义在 AbstractProxyInvoker 中，代码如下。
             // ......

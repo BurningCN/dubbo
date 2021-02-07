@@ -1,12 +1,10 @@
 package my.common.rpc.model;
 
+import my.common.utils.ArrayUtils;
 import my.rpc.CollectionUtils;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -47,6 +45,18 @@ public class ServiceDescriptor {
         if (CollectionUtils.isNotEmptyMap(descriptorMap)) {
             MethodDescriptor methodDescriptor = descriptorMap.get(desc);
             return methodDescriptor;
+        }
+        return null;
+    }
+
+    public MethodDescriptor getMethod(String methodName, Class<?>[] parameterClasses) {
+        Map<String, MethodDescriptor> descriptorMap = descToMethods.get(methodName);
+        if (CollectionUtils.isNotEmptyMap(descriptorMap)) {
+            for (MethodDescriptor methodDescriptor : descriptorMap.values()) {
+                if (Arrays.equals(parameterClasses, methodDescriptor.getParameterClasses())) {
+                    return methodDescriptor;
+                }
+            }
         }
         return null;
     }

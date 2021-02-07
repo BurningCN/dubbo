@@ -89,7 +89,7 @@ public class DecodeableRpcResult extends AppResponse implements Decodeable {
 
     private void handleValue() throws IOException {
         Type[] returnTypes;
-        if (invocation instanceof RpcException) {
+        if (invocation instanceof RpcInvocation) {
             RpcInvocation inv = (RpcInvocation) invocation;
             returnTypes = inv.getReturnTypes();
         } else {

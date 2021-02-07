@@ -23,7 +23,7 @@ public class DefaultExchangeHandler implements ExchangeHandler {
 
     @Override
     public CompletableFuture<Object> reply(InnerChannel channel, Object request) throws RemotingException, Exception {
-        if (request instanceof Invocation) {
+        if (!(request instanceof Invocation)) {
             throw new RemotingException(channel, "Unsupported request: "
                     + (request == null ? null : (request.getClass().getName() + ": " + request))
                     + ", channel: consumer: " + channel.getRemoteAddress() + " --> provider: " + channel.getLocalAddress());
@@ -78,8 +78,8 @@ public class DefaultExchangeHandler implements ExchangeHandler {
     }
 
     private Invocation getInvocationWithoutData(Invocation inv) {
-        if(inv instanceof  RpcInvocation){
-            RpcInvocation rpcInvocation = (RpcInvocation)inv;
+        if (inv instanceof RpcInvocation) {
+            RpcInvocation rpcInvocation = (RpcInvocation) inv;
             rpcInvocation.setObjectAttachments(null);
             return rpcInvocation;
         }

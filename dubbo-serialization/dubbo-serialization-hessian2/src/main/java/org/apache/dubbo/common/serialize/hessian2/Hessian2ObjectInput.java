@@ -51,7 +51,7 @@ public class Hessian2ObjectInput implements ObjectInput {
 
     @Override
     public byte readByte() throws IOException {
-        return (byte) mH2i.readInt();
+        return (byte) mH2i.readInt(); // 注意这里，需要和写入相同，因为没有writeByte，写字节的时候只能writeInt，所以这里必须也是对应readInt
     }
 
     @Override

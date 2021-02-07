@@ -26,7 +26,7 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
     public Result invoke(Invocation invocation) throws Exception, RemotingException {
         Result asyncResult = invoker.invoke(invocation);
         if (InvokeMode.SYNC == ((RpcInvocation) invocation).getInvokeMode()) {
-            asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+            asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);// 进去
         }
         return asyncResult;
     }

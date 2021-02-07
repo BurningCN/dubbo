@@ -92,8 +92,4 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Decodeable
         setTargetServiceUniqueName(input.readUTF());
     }
 
-    public static void main(String[] args) {
-        ServiceRepository repository = ApplicationModel.getServiceRepository();
-
-    }
 }

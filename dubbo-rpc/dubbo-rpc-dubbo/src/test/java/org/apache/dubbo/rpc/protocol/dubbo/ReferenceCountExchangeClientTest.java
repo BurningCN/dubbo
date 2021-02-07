@@ -17,7 +17,6 @@
 package org.apache.dubbo.rpc.protocol.dubbo;
 
 import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.utils.DubboAppender;
 import org.apache.dubbo.common.utils.LogUtil;
@@ -26,7 +25,9 @@ import org.apache.dubbo.remoting.exchange.ExchangeClient;
 import org.apache.dubbo.rpc.Exporter;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.ProxyFactory;
+import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.protocol.AsyncToSyncInvoker;
+import org.apache.dubbo.rpc.protocol.dubbo.support.DemoService;
 import org.apache.dubbo.rpc.protocol.dubbo.support.ProtocolUtils;
 
 import org.junit.jupiter.api.AfterAll;
@@ -255,11 +256,13 @@ public class ReferenceCountExchangeClientTest {
         demoServiceInvoker = (Invoker<IDemoService>) referInvoker(IDemoService.class, demoUrl);// 进去
         // demoServiceInvoker类型为AsyncToSyncInvoker，内部的invoker属性为DubboInvoker， getProxy进去
         demoService = proxy.getProxy(demoServiceInvoker);
+
+        ApplicationModel.getServiceRepository().registerService("demo", IDemoService.class);
+        System.out.println(demoService.plus(10,9));// 上下这两行是我自己加的，就是想调用有参数有返回值的，注意如果有参数的话，必须要上面注册
+
         // demoService类型为proxy0，内部含有InvokerInvocationHandler属性，而InvokerInvocationHandler含有AsyncToSyncInvoker
         // demo进去 直接进InvokerInvocationHandler的invoke方法
         // 交互逻辑非常复杂，要关注服务端的编解码、客户端的编解码，服务端是最终怎么调用到本地服务的方法的，客户端最终是怎么拿到结果的，相关逻辑打断点测试
-
-        System.out.println(demoService.plus(10,9));
         Assertions.assertEquals("demo", demoService.demo());
 
         helloServiceInvoker = (Invoker<IHelloService>) referInvoker(IHelloService.class, helloUrl);

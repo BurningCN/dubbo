@@ -1,14 +1,13 @@
 package my.rpc;
 
+import my.common.rpc.model.ApplicationModel;
+import my.common.rpc.model.MethodDescriptor;
+import my.common.rpc.model.ServiceDescriptor;
+import my.common.rpc.model.ServiceRepository;
 import my.common.utils.ReflectUtils;
 import my.common.utils.StringUtils;
 import my.server.URL;
-import org.apache.dubbo.rpc.model.ApplicationModel;
-import org.apache.dubbo.rpc.model.MethodDescriptor;
-import org.apache.dubbo.rpc.model.ServiceDescriptor;
-import org.apache.dubbo.rpc.model.ServiceRepository;
-import static my.common.constants.CommonConstants.*;
-import static my.rpc.Constants.*;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -16,7 +15,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
-
+import static my.common.constants.CommonConstants.*;
+import static my.rpc.Constants.*;
 /**
  * @author geyu
  * @date 2021/2/4 14:18
@@ -125,7 +125,6 @@ public class RpcInvocation implements Invocation, Serializable {
     }
 
     private void initParameterDesc() {
-        // ServiceRepository >  ServiceDescriptor > MethodDescriptor
         ServiceRepository repository = ApplicationModel.getServiceRepository();
         if (StringUtils.isNotEmpty(serviceName)) {
             ServiceDescriptor serviceDescriptor = repository.lookupService(serviceName);
@@ -133,7 +132,7 @@ public class RpcInvocation implements Invocation, Serializable {
                 MethodDescriptor methodDescriptor = serviceDescriptor.getMethod(methodName, parameterTypes);
                 if (methodDescriptor != null) {
                     this.parameterTypesDesc = methodDescriptor.getParamDesc();
-                    this.compatibleParamSignatures = methodDescriptor.getCompatibleParamSignatures();
+                   //  this.compatibleParamSignatures = methodDescriptor.getCompatibleParamSignatures();
                     this.returnTypes = methodDescriptor.getReturnTypes();
                 }
             }
