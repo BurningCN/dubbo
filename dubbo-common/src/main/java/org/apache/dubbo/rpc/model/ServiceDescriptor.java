@@ -53,7 +53,7 @@ public class ServiceDescriptor {
     private void initMethods() {
         Method[] methodsToExport = this.serviceInterfaceClass.getMethods();
         for (Method method : methodsToExport) {
-            method.setAccessible(true);
+            method.setAccessible(true); // todo need pr  // 其实不需要，因为前面getMethods就是true的
             // 注意methods的结构，可能有多个同名的方法。取出或创建list
             List<MethodDescriptor> methodModels = methods.computeIfAbsent(method.getName(), (k) -> new ArrayList<>(1));
             // 填充到list，MethodDescriptor构造器里面就获取了方法的一些关键信息，进去

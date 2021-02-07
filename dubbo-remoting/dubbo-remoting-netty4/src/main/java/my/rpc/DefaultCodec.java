@@ -98,7 +98,7 @@ public class DefaultCodec extends ExchangeCodec {
 
     }
 
-    // 注意该方法很重要
+    //  注意该方法很重要!在ExchangeCodec进子类的逻辑，即DefaultCodec的时候，如果判定不在当前线程解码的话，需要重新构建一个【读指针移动到末尾操作】的新的ObjectInput，最根本的原因是需要把is里面包装的byteBuf的读指针读完，使得r=w，不然的话回到NettyCodecAdapter的时候会判定依然满足buffer.readableBytes>0，导致继续解码，其实是不必要的。
     private ObjectInput readRemainingBytes(InputStream is) throws IOException {
         byte[] result = new byte[is.available()];
         if (is.available() > 0) {

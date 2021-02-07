@@ -14,14 +14,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package my.common.context;
+package my.common.logger;
 
+/**
+ * Level
+ */
+public enum Level {
 
-import my.common.extension.SPI;
+    /**
+     * ALL
+     */
+    ALL,
 
-// 含有SPI注解，看看父接口
-// OK
-@SPI
-public interface FrameworkExt extends Lifecycle {
+    /**
+     * TRACE
+     */
+    TRACE,
+
+    /**
+     * DEBUG
+     */
+    DEBUG,
+
+    /**
+     * INFO
+     */
+    INFO,
+
+    /**
+     * WARN
+     */
+    WARN,
+
+    /**
+     * ERROR
+     */
+    ERROR,
+
+    /**
+     * OFF
+     */
+    OFF
 
 }

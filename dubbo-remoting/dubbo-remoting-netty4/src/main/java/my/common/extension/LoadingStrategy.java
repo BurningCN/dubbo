@@ -16,7 +16,7 @@
  */
 package my.common.extension;
 
-import org.apache.dubbo.common.lang.Prioritized;
+import my.common.lang.Prioritized;
 
 // OK
 // 加载策略接口，主要是定义从哪些文件目录加载类，以及目录的优先级。共有三个实现类去看下，很简单
