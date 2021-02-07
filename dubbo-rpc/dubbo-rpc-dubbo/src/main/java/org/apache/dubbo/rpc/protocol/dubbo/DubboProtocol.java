@@ -350,6 +350,7 @@ public class DubboProtocol extends AbstractProtocol {
 
         return exporter;
     }
+
     private void openServer(URL url) {// eg dubbo://192.168.1.7:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=192.168.1.7&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=46069&release=&side=provider&timestamp=1610267245557
         // find server.获取 host:port，并将其作为服务器实例的 key，用于标识当前的服务器实例
         String key = url.getAddress();// eg 192.168.1.7:20880
@@ -529,6 +530,8 @@ public class DubboProtocol extends AbstractProtocol {
         // 获取带有“引用计数”功能的 ExchangeClient
         List<ReferenceCountExchangeClient> clients = referenceClientMap.get(key);
 
+        // 使用共享连接的话，同一个address下的List<ReferenceCountClient>共享使用，直接调用下面的分支，使引用计数++，
+        // 不会重复创建，（即调用稍后面的buildReferenceCountExchangeClient即新进行连接的创建）
         if (checkClientCanUse(clients)) {// 进去
             // 增加引用计数 进去
             batchClientRefIncr(clients);

@@ -22,6 +22,8 @@ import my.common.extension.support.WrapperComparator;
 import my.common.lang.Prioritized;
 import my.common.utils.*;
 import my.server.URL;
+import my.common.compiler.Compiler;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
@@ -37,6 +39,7 @@ import static java.util.Collections.sort;
 import static java.util.ServiceLoader.load;
 import static java.util.stream.StreamSupport.stream;
 import static my.common.constants.CommonConstants.*;
+
 /**
  * {@link org.apache.dubbo.rpc.model.ApplicationModel}, {@code DubboBootstrap} and this class are
  * at present designed to be singleton or static (by itself totally static or uses some static fields).
@@ -816,7 +819,8 @@ public class ExtensionLoader<T> {
                 } catch (Exception e) {
                     /*logger.error("Failed to inject via method " + method.getName()
                             + " of interface " + type.getName() + ": " + e.getMessage(), e);
-                */}
+                */
+                }
 
             }
         } catch (Exception e) {
@@ -1049,8 +1053,8 @@ public class ExtensionLoader<T> {
                 }
             }
         } catch (Throwable t) {
-           // logger.error("Exception occurred when loading extension class (interface: " +
-             //       type + ", class file: " + resourceURL + ") in " + resourceURL, t);
+            // logger.error("Exception occurred when loading extension class (interface: " +
+            //       type + ", class file: " + resourceURL + ") in " + resourceURL, t);
         }
     }
 
@@ -1081,12 +1085,12 @@ public class ExtensionLoader<T> {
             // 缓存该Adaptive子类，进去
             cacheAdaptiveClass(clazz, overridden);
 
-        // 检测 clazz 是否是 Wrapper 类型，进去
+            // 检测 clazz 是否是 Wrapper 类型，进去
         } else if (isWrapperClass(clazz)) {
             //  存储 clazz 到 cachedWrapperClasses 缓存中，进去
             cacheWrapperClass(clazz);
 
-        // 程序进入此分支，表明 clazz 是一个普通的拓展类
+            // 程序进入此分支，表明 clazz 是一个普通的拓展类
         } else {
             // 大部分是这个，子类实现@Spi注解接口，类含有@Activate注解或者不含有任何注解。
             // 随便找个文件，比如org.apache.dubbo.common.threadpool.ThreadPool里面的实现类或者ActivateExt1Impl1实现类
@@ -1117,6 +1121,7 @@ public class ExtensionLoader<T> {
             }
         }
     }
+
     /**
      * cache name
      */
@@ -1136,7 +1141,7 @@ public class ExtensionLoader<T> {
             extensionClasses.put(name, clazz);
         } else if (c != clazz) {
             String duplicateMsg = "Duplicate extension " + type.getName() + " name " + name + " on " + c.getName() + " and " + clazz.getName();
-           // logger.error(duplicateMsg);
+            // logger.error(duplicateMsg);
             throw new IllegalStateException(duplicateMsg);
         }
     }
@@ -1287,7 +1292,8 @@ public class ExtensionLoader<T> {
         ClassLoader classLoader = findClassLoader();
         // 获取compiler接口的实现类(只有两个jdk和javassist，默认使用 javassist 作为编译器)，将上面的code str编译成类
         // 调用的getAdaptiveExtension，这里返回的是AdaptiveCompile类实例
-        org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
+
+        Compiler compiler = ExtensionLoader.getExtensionLoader(Compiler.class).getAdaptiveExtension();
         // 编译，方法返回Class。进去（AdaptiveCompile的compile）
         return compiler.compile(code, classLoader);
     }

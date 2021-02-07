@@ -1,1 +1,2 @@
 javassist=my.rpc.JavassistProxyFactory
+jdk==my.rpc.JdkProxyFactory

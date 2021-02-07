@@ -1,5 +1,6 @@
 package my.rpc;
 
+import my.common.extension.ExtensionLoader;
 import my.server.*;
 
 import java.util.LinkedList;
@@ -14,7 +15,43 @@ import static org.apache.dubbo.remoting.Constants.*;
  */
 public class DefaultProtocol extends AbstractProtocol {
 
+    public static final String NAME = "default";
+
+    private static DefaultProtocol INSTANCE;
+
     private ExchangeHandler requestHandler = new DefaultExchangeHandler(this);
+
+    public static DefaultProtocol getDefaultProtocol() {
+        if (INSTANCE == null) {
+            INSTANCE = (DefaultProtocol) ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(NAME);
+        }
+        return INSTANCE;
+    }
+
+    @Override
+    public <T> Exporter<T> export(Invoker<T> invoker) throws RemotingException {
+        URL url = invoker.getURL();
+        String serviceKey = GroupServiceKeyCache.serviceKey(url);
+        DefaultExporter defaultExporter = new DefaultExporter(invoker, serviceKey, exporterMap);
+        exporterMap.putIfAbsent(serviceKey, defaultExporter);
+        // todo myRPC 本地存根处理
+        String address = url.getAddress();
+        boolean isServer = url.getParameter(Constants.IS_SERVER_KEY, true);
+        if (isServer) {
+            Server server = serverMap.get(address);
+            if (server == null) {
+                serverMap.putIfAbsent(address, createServer(url));// todo myRPC createServer的逻辑需要补充
+            } else {
+                // todo myRPC reset
+            }
+        }
+        return defaultExporter;
+    }
+
+    private Server createServer(URL url) throws RemotingException {
+        url.addParameter(CODEC_KEY, DefaultCodec.NAME);
+        return transporter.bind(url, requestHandler);
+    }
 
     @Override
     protected <T> Invoker<T> doRefer(Class<T> type, URL url) {
@@ -62,6 +99,8 @@ public class DefaultProtocol extends AbstractProtocol {
     private List<ReferenceCountClient> getReferenceCountClientList(URL url, int shardConnections) {
         String address = url.getAddress();
         List<ReferenceCountClient> referenceCountClients = referenceCountClientMap.get(address);
+        // 使用共享连接的话，同一个address下的List<ReferenceCountClient>共享使用，直接调用下面的分支，使引用计数++，
+        // 不会重复创建，（即调用稍后面的new ReferenceCountClient(initClient(url))即新进行连接的创建）
         if (checkClientCanUse(referenceCountClients)) {
             batchClientRefIncr(referenceCountClients);
             return referenceCountClients;
@@ -113,30 +152,5 @@ public class DefaultProtocol extends AbstractProtocol {
         return true;
     }
 
-
-    @Override
-    public <T> Exporter<T> export(Invoker<T> invoker) throws RemotingException {
-        URL url = invoker.getURL();
-        String serviceKey = GroupServiceKeyCache.serviceKey(url);
-        DefaultExporter defaultExporter = new DefaultExporter(invoker, serviceKey, exporterMap);
-        exporterMap.putIfAbsent(serviceKey, defaultExporter);
-        // todo myRPC 本地存根处理
-        String address = url.getAddress();
-        boolean isServer = url.getParameter(Constants.IS_SERVER_KEY, true);
-        if (isServer) {
-            Server server = serverMap.get(address);
-            if (server == null) {
-                serverMap.putIfAbsent(address, createServer(url));// todo myRPC createServer的逻辑需要补充
-            } else {
-                // todo myRPC reset
-            }
-        }
-        return defaultExporter;
-    }
-
-    private Server createServer(URL url) throws RemotingException {
-        url.addParameter(CODEC_KEY, DefaultCodec.NAME);
-        return transporter.bind(url, requestHandler);
-    }
 
 }

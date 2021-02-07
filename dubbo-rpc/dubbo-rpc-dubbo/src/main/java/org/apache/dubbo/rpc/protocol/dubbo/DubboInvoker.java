@@ -79,7 +79,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         super(serviceType, url, new String[]{INTERFACE_KEY, GROUP_KEY, TOKEN_KEY});
         this.clients = clients;
         // get version.
-        this.version = url.getParameter(VERSION_KEY, "0.0.0");
+        this.version = url.getParameter(VERSION_KEY, "0.0.0");// 注意！这里和createServiceKey的0.0.0对应，用于没有给url指定version的情况
         this.invokers = invokers;
     }
 
@@ -179,7 +179,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 }
                 for (ExchangeClient client : clients) {
                     try {
-                        // 关闭连接
+                        // 关闭连接 走ReferenceCountExchangeClient 减少引用计数
                         client.close(ConfigurationUtils.getServerShutdownTimeout());
                     } catch (Throwable t) {
                         logger.warn(t.getMessage(), t);

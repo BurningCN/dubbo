@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static my.common.constants.CommonConstants.*;
 import static my.rpc.Constants.*;
@@ -23,6 +24,7 @@ public class DefaultInvoker<T> extends AbstractInvoker<T> {
     private final Client[] clients;
     private final Set<Invoker<?>> invokers;
     private AtomicPositiveInteger index = new AtomicPositiveInteger();
+    private final ReentrantLock destroyLock = new ReentrantLock();
 
     public DefaultInvoker(Class<T> type, URL url, Client[] clients, Set<Invoker<?>> invokers) {
         super(type, url, new String[]{INTERFACE_KEY, GROUP_KEY, TOKEN_KEY});
@@ -59,5 +61,28 @@ public class DefaultInvoker<T> extends AbstractInvoker<T> {
         }
     }
 
-
+    @Override
+    public void destroy() {
+        if (super.isDestroyed()) {
+            return;
+        } else {
+            destroyLock.lock();
+            try {
+                if (super.isDestroyed()) {
+                    return;
+                }
+                super.destroy();
+                if (invokers != null) {
+                    invokers.remove(this);
+                }
+                for (Client client : clients) {
+                    client.close();
+                }
+            } catch (RemotingException e) {
+                e.printStackTrace();
+            } finally {
+                destroyLock.unlock();
+            }
+        }
+    }
 }

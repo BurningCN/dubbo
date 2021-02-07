@@ -41,7 +41,6 @@ public class ReferenceCountClient implements Client {
             client.close();
             replaceWithLazyClient();
         }
-
     }
 
     private void replaceWithLazyClient() {
@@ -60,5 +59,10 @@ public class ReferenceCountClient implements Client {
 
     public void incrementAndGetCount() {
         referenceCount.incrementAndGet();
+    }
+
+    // for test
+    public Long getReferenceCount() {
+        return referenceCount.get();
     }
 }

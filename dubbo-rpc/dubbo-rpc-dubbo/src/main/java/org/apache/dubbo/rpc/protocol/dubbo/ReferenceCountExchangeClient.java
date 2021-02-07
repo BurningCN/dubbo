@@ -196,7 +196,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
                 .addParameter(RECONNECT_KEY, Boolean.FALSE)
                 .addParameter(SEND_RECONNECT_KEY, Boolean.TRUE.toString())
                 .addParameter(LazyConnectExchangeClient.REQUEST_WITH_WARNING_KEY, true);
-
+        // dubbo://127.0.0.1:12345/demo?codec=dubbo&connect.lazy.initial.state=true&connections=0&heartbeat=300000&lazyclient_request_with_warning=true&reconnect=false&send.reconnect=true&shareconnections=1&timeout=600000
         /**
          * the order of judgment in the if statement cannot be changed.
          * if语句中的判断顺序不能改变。

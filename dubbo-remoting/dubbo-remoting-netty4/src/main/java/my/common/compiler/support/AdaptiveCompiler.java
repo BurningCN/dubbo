@@ -17,8 +17,8 @@
 package my.common.compiler.support;
 
 import my.common.compiler.Compiler;
-import org.apache.dubbo.common.extension.Adaptive;
-import org.apache.dubbo.common.extension.ExtensionLoader;
+import my.common.extension.Adaptive;
+import my.common.extension.ExtensionLoader;
 
 /**
  * AdaptiveCompiler. (SPI, Singleton, ThreadSafe)

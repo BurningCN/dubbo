@@ -329,7 +329,7 @@ public class ReferenceCountExchangeClientTest {
 
             List<ExchangeClient> clientList = new ArrayList<ExchangeClient>(clients.length);
             for (ExchangeClient client : clients) {
-                clientList.add(client);
+                clientList.add(client); //todo need pr 可以直接Arrays.asList
             }
 
             // sorting makes it easy to compare between lists

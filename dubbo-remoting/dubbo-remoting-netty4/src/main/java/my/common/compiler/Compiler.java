@@ -16,7 +16,7 @@
  */
 package my.common.compiler;
 
-import org.apache.dubbo.common.extension.SPI;
+import my.common.extension.SPI;
 
 /**
  * Compiler. (SPI, Singleton, ThreadSafe)

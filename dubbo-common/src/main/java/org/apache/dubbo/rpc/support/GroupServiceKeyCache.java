@@ -63,7 +63,7 @@ public class GroupServiceKeyCache {
         }
 
         buf.append(serviceName);
-        if (StringUtils.isNotEmpty(serviceVersion) && !"0.0.0".equals(serviceVersion)) {
+        if (StringUtils.isNotEmpty(serviceVersion) && !"0.0.0".equals(serviceVersion)) {// 不要 0.0.0 这个默认的，至于填充处是在客户端序列化version如果没有传入的会用默认的0.0.0，我们不处理即可
             buf.append(':').append(serviceVersion);
         }
         buf.append(':').append(port);

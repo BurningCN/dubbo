@@ -1,7 +1,7 @@
 package my.rpc;
 
 import my.common.extension.Adaptive;
-import my.common.extension_todo.SPI;
+import my.common.extension.SPI;
 import my.server.RemotingException;
 import my.server.URL;
 /**

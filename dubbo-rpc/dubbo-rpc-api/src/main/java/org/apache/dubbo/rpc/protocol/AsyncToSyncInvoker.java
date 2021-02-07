@@ -103,6 +103,7 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
         invoker.destroy();
     }
 
+    // for test
     public Invoker<T> getInvoker() {
         return invoker;
     }

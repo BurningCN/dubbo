@@ -4,6 +4,7 @@ import my.common.utils.ArrayUtils;
 import my.common.utils.NetUtils;
 import my.server.RemotingException;
 import my.server.URL;
+import my.server.Version;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,6 +65,9 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         setAvailable(false);
     }
 
+    public boolean isDestroyed() {
+        return destroyed.get();
+    }
     @Override
     public boolean isAvailable() {
         return available;
@@ -98,7 +102,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
 
         inv.setObjectAttachment(GROUP_KEY, getURL().getParameter(GROUP_KEY));// 这部分内容本来是子类的， 我挪到这里了，为了统一在一处处理
         inv.setObjectAttachment(PATH_KEY, getURL().getPath());
-        inv.setObjectAttachment(VERSION_KEY, getURL().getParameter(VERSION_KEY, "0.0.0"));
+        inv.setObjectAttachment(VERSION_KEY, getURL().getParameter(VERSION_KEY, "0.0.0")); // 注意！这里和createServiceKey的0.0.0对应，用于没有给url指定version的情况
         String methodName = RpcUtils.getMethodName(invocation);
         int timeout = calculateTimeout(invocation, methodName);
         invocation.setObjectAttachment(TIMEOUT_ATTACHMENT_KEY, timeout);

@@ -63,10 +63,10 @@ public class DefaultExchangeHandler implements ExchangeHandler {
 
     private Invoker<?> getInvoker(InnerChannel channel, Invocation inv) throws RemotingException {
         String serviceKey = GroupServiceKeyCache.serviceKey(
-                String.valueOf(inv.getObjectAttachment(GROUP_KEY)),
-                String.valueOf(inv.getObjectAttachment(PATH_KEY)),
-                String.valueOf(inv.getObjectAttachment(VERSION_KEY)),
-                (channel.getLocalAddress().getPort()));
+                (String) (inv.getObjectAttachment(GROUP_KEY)),
+                (String) (inv.getObjectAttachment(PATH_KEY)),
+                (String) (inv.getObjectAttachment(VERSION_KEY)),
+                channel.getLocalAddress().getPort());
         Exporter<?> exporter = defaultProtocol.exporterMap.get(serviceKey);
         if (exporter == null) {
             throw new RemotingException(channel, "Not found exported service: " + serviceKey + " in " + defaultProtocol.exporterMap.keySet() + ", may be version or group mismatch " +
