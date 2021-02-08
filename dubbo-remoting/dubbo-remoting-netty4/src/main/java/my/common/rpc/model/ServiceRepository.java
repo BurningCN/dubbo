@@ -44,6 +44,6 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
 
     @Override
     public void destroy() throws IllegalStateException {
-
+        services.clear();
     }
 }

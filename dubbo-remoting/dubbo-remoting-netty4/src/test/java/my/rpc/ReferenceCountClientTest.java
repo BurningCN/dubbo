@@ -1,4 +1,4 @@
-package my;
+package my.rpc;
 
 import my.common.extension.ExtensionLoader;
 import my.common.utils.Assert;

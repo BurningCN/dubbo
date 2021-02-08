@@ -3,8 +3,10 @@ package my.rpc;
 import my.common.extension.ExtensionLoader;
 import my.server.*;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.dubbo.common.constants.CommonConstants.LAZY_CONNECT_KEY;
 import static org.apache.dubbo.remoting.Constants.*;
@@ -115,13 +117,13 @@ public class DefaultProtocol extends AbstractProtocol {
             if (CollectionUtils.isEmpty(referenceCountClients)) {
                 List<ReferenceCountClient> clients = new LinkedList<>();
                 for (int i = 0; i < shardConnections; i++) {
-                    clients.add(new ReferenceCountClient(initClient(url),requestHandler,url)); // 后两个参数是为了给ReferenceCountClient创建LazyClient
+                    clients.add(new ReferenceCountClient(initClient(url), requestHandler, url)); // 后两个参数是为了给ReferenceCountClient创建LazyClient
                 }
                 referenceCountClientMap.put(address, clients);
             } else {
                 for (int i = 0; i < referenceCountClients.size(); i++) {
                     if (!referenceCountClients.get(i).isConnected()) {
-                        referenceCountClients.set(i, new ReferenceCountClient(initClient(url),requestHandler,url));
+                        referenceCountClients.set(i, new ReferenceCountClient(initClient(url), requestHandler, url));
                     } else {
                         referenceCountClients.get(i).incrementAndGetCount();
                     }
@@ -153,4 +155,24 @@ public class DefaultProtocol extends AbstractProtocol {
     }
 
 
+    public void destroy() throws RemotingException {
+        if (CollectionUtils.isNotEmptyMap(serverMap)) {
+            for (Map.Entry<String, Server> entry : serverMap.entrySet()) {
+                String key = entry.getKey();
+                Server server = entry.getValue();
+                server.close();
+                System.out.println("Close  server,address:" + key);
+            }
+        }
+        if (CollectionUtils.isNotEmptyMap(referenceCountClientMap)) {
+            for (Map.Entry<String, List<ReferenceCountClient>> entry : referenceCountClientMap.entrySet()) {
+                String key = entry.getKey();
+                List<ReferenceCountClient> clients = entry.getValue();
+                for (ReferenceCountClient client : clients) {
+                    client.close();
+                    System.out.println("Close  client,address:" + key);
+                }
+            }
+        }
+    }
 }
