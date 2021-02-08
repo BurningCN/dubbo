@@ -1,1 +1,2 @@
 default=my.rpc.DefaultProtocol
+filter=my.rpc.api.protocol.ProtocolFilterWrapper

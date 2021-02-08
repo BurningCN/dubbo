@@ -2,6 +2,7 @@ package my.rpc;
 
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -43,7 +44,7 @@ public class AsyncRpcResult implements Result {
     public static AsyncRpcResult newDefaultAsyncResult(Invocation inv, Object v, Throwable throwable) {
         CompletableFuture<AppResponse> future = new CompletableFuture<>();
         AppResponse appResponse = new AppResponse();
-        if (throwable == null) {
+        if (throwable != null) {
             appResponse.setException(throwable);
         } else if (v != null) {
             appResponse.setValue(v);
@@ -125,5 +126,14 @@ public class AsyncRpcResult implements Result {
     @Override
     public <U> CompletableFuture<U> thenApply(Function<Result, ? extends U> fn) {
         return responseFuture.thenApply(fn);
+    }
+
+    @Override
+    public Result whenCompleteWithContext(BiConsumer<Result, Throwable> fn) {
+        this.responseFuture = responseFuture.whenComplete((v, t) -> {
+            // todo myRPC beforeContext afterContext
+            fn.accept(v, t);
+        });
+        return this;
     }
 }

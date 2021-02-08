@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -52,7 +53,7 @@ public class AppResponse implements Result {
                 if (stackTrace == null) {
                     exception.setStackTrace(new StackTraceElement[0]);
                 }
-            }catch (Throwable e){
+            } catch (Throwable e) {
                 // ignore
             }
             throw exception;
@@ -75,6 +76,12 @@ public class AppResponse implements Result {
     public <U> CompletableFuture<U> thenApply(Function<Result, ? extends U> fn) {
         throw new UnsupportedOperationException("AppResponse represents an concrete business response, there will be no status changes, you should get internal values directly.");
     }
+
+    @Override
+    public Result whenCompleteWithContext(BiConsumer<Result, Throwable> fn) {
+        throw new UnsupportedOperationException("AppResponse represents an concrete business response, there will be no status changes, you should get internal values directly.");
+    }
+
 
     @Override
     public Map<String, Object> getObjectAttachments() {

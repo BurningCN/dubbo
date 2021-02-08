@@ -88,10 +88,10 @@ public class RpcUtils {
     }
 
     public static boolean isGenericCall(String desc, String methodName) {
-        return false;
+        return ("$invoke".equals(methodName) || "$invokeAsync".equals(methodName)) && "Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/Object;".equals(desc);
     }
 
     public static boolean isEcho(String desc, String methodName) {
-        return false;
+        return "$echo".equals(methodName) && "Ljava/lang/Object;".equals(desc);
     }
 }

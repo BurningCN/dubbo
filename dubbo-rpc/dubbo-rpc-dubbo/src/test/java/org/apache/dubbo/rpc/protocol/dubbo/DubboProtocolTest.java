@@ -89,7 +89,7 @@ public class DubboProtocolTest {
         int port = NetUtils.getAvailablePort();
         protocol.export(proxy.getInvoker(service, DemoService.class, URL.valueOf("dubbo://127.0.0.1:" + port + "/" + DemoService.class.getName())));
         service = proxy.getProxy(protocol.refer(DemoService.class, URL.valueOf("dubbo://127.0.0.1:" + port + "/" + DemoService.class.getName()).addParameter("timeout",
-                3000L)));
+                3000*10000)));
         assertEquals(service.enumlength(new Type[]{}), Type.Lower);
         assertEquals(service.getSize(null), -1);
         assertEquals(service.getSize(new String[]{"", "", ""}), 3);
@@ -101,7 +101,7 @@ public class DubboProtocolTest {
         service.invoke("dubbo://127.0.0.1:" + port + "/" + DemoService.class.getName() + "", "invoke");
 
         service = proxy.getProxy(protocol.refer(DemoService.class, URL.valueOf("dubbo://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?client=netty").addParameter("timeout",
-                3000L)));
+                3000*10000)));
         // test netty client
         StringBuffer buf = new StringBuffer();
         for (int i = 0; i < 1024 * 32 + 32; i++)
@@ -110,7 +110,7 @@ public class DubboProtocolTest {
 
         // cast to EchoService
         EchoService echo = proxy.getProxy(protocol.refer(EchoService.class, URL.valueOf("dubbo://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?client=netty").addParameter("timeout",
-                3000L)));
+                3000*10000)));
         assertEquals(echo.$echo(buf.toString()), buf.toString());
         assertEquals(echo.$echo("test"), "test");
         assertEquals(echo.$echo("abcdefg"), "abcdefg");
@@ -149,7 +149,7 @@ public class DubboProtocolTest {
         // cast to EchoService
         EchoService echo = proxy.getProxy(protocol.refer(EchoService.class, URL.valueOf("dubbo://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?client=mina").addParameter("timeout",
                 3000L)));
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) { // 注意服务端的EchoFilter对$echo方法调用的特殊处理，直接不走invoker.invoke了
             assertEquals(echo.$echo(buf.toString()), buf.toString());
             assertEquals(echo.$echo("test"), "test");
             assertEquals(echo.$echo("abcdefg"), "abcdefg");
