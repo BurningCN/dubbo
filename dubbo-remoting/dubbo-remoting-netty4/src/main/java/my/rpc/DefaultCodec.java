@@ -55,18 +55,23 @@ public class DefaultCodec extends ExchangeCodec {
         Result result = (Result) data;
         Throwable throwable = result.getException();
         boolean attach = Version.isSupportResponseAttachment();
-        if (throwable == null) {
-            Object value = result.getValue();
-            if (value == null) {
-                output.writeByte(attach ? RESPONSE_NULL_VALUE_WITH_ATTACHMENTS : RESPONSE_NULL_VALUE);
+        try {
+            if (throwable == null) {
+                Object value = result.getValue();
+                if (value == null) {
+                    output.writeByte(attach ? RESPONSE_NULL_VALUE_WITH_ATTACHMENTS : RESPONSE_NULL_VALUE);
+                } else {
+                    output.writeByte(attach ? RESPONSE_VALUE_WITH_ATTACHMENTS : RESPONSE_VALUE);
+                    output.writeObject(value);
+                }
             } else {
-                output.writeByte(attach ? RESPONSE_VALUE_WITH_ATTACHMENTS : RESPONSE_VALUE);
-                output.writeObject(value);
+                output.writeByte(attach ? RESPONSE_WITH_EXCEPTION_WITH_ATTACHMENTS : RESPONSE_WITH_EXCEPTION);
+                output.writeThrowable(throwable);
             }
-        } else {
-            output.writeByte(attach ? RESPONSE_WITH_EXCEPTION_WITH_ATTACHMENTS : RESPONSE_WITH_EXCEPTION);
-            output.writeThrowable(throwable);
+        } catch (Throwable e) {
+            throw e; // 服务端对没有实现序列化接口的对象进行encode的时候回抛异常
         }
+
         result.getObjectAttachments().put(VERSION_KEY, Version.DEFAULT_VERSION);
         output.writeAttachments(result.getObjectAttachments());
     }

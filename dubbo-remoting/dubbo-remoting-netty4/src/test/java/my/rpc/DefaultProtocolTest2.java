@@ -114,4 +114,19 @@ public class DefaultProtocolTest2 {
             Assertions.assertTrue(e.getMessage().contains("my.rpc.support.NonSerialized must implement java.io.Serializable"));
         }
     }
+    @Test
+    public void testReturnNonSerialized() throws Exception, RemotingException {
+        DemoService service = new DemoServiceImpl();
+        int port = NetUtils.getAvailablePort();
+        protocol.export(proxy.getInvoker(service, DemoService.class, URL.valueOf("default://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?codec=exchange")));
+        service = proxy.getProxy(protocol.refer(DemoService.class, URL.valueOf("default://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?codec=exchange").addParameter("timeout",
+                3000L)));
+        try {
+            service.returnNonSerialized(); // 服务端在DefaultCodec的encodeResponseData方法内进行writeObject的时候会抛异常
+            Assertions.fail();
+        } catch (RpcException e) { // 这里暂时不匹配，这段逻辑先不做，不过肯定是会抛异常的
+            Assertions.assertTrue(e.getMessage().contains("my.rpc.support.NonSerialized must implement java.io.Serializable"));
+        }
+    }
+    
 }

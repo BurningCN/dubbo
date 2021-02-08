@@ -147,40 +147,80 @@ public class ExchangeCodec extends AbstractCodec {
      * 12 -15 datalength
      */
     private void encodeResponse(ChannelBuffer buffer, Response response) throws IOException {
-        byte[] header = new byte[HEADER_LENGTH];
-        Bytes.short2bytes(MAGIC, header);
-
-        header[2] = serialization.getContentTypeId();
-        if (response.isHeartbeat()) {
-            header[2] |= FLAG_EVENT;
-        }
-        byte status = response.getStatus();
-        header[3] = status;
-        Bytes.long2bytes(response.getId(), header, 4);
-
         int savedWriterIndex = buffer.writerIndex();
-        buffer.writerIndex(savedWriterIndex + HEADER_LENGTH);
+        try {
+            byte[] header = new byte[HEADER_LENGTH];
+            Bytes.short2bytes(MAGIC, header);
 
-        ChannelBufferOutputStream bos = new ChannelBufferOutputStream(buffer);
-        ObjectOutput output = serialization.serialize(bos);
-        if (status == Response.OK) {
+            header[2] = serialization.getContentTypeId();
             if (response.isHeartbeat()) {
-                encodeEventData(output, response.getResult());
-            } else {
-                encodeResponseDate(output, response.getResult());
+                header[2] |= FLAG_EVENT;
             }
-        } else {
-            encodeErrorMsg(output, response.getErrorMessage());
+            byte status = response.getStatus();
+            header[3] = status;
+            Bytes.long2bytes(response.getId(), header, 4);
+
+
+            buffer.writerIndex(savedWriterIndex + HEADER_LENGTH);
+
+            ChannelBufferOutputStream bos = new ChannelBufferOutputStream(buffer);
+            ObjectOutput output = serialization.serialize(bos);
+            if (status == Response.OK) {
+                if (response.isHeartbeat()) {
+                    encodeEventData(output, response.getResult());
+                } else {
+                    encodeResponseDate(output, response.getResult());
+                }
+            } else {
+                encodeErrorMsg(output, response.getErrorMessage());
+            }
+            output.flushBuffer();
+            bos.flush();
+            bos.close();
+            int len = bos.writtenBytes();
+            checkPayLoad(len);
+            Bytes.int2Bytes(len, header, 12);
+            buffer.writerIndex(savedWriterIndex);
+            buffer.writerBytes(header);
+            buffer.writerIndex(savedWriterIndex + HEADER_LENGTH + len);
+        } catch (Throwable t) {
+            // 下面这部分从原拷贝过来的，主要是测试服务端对没有实现序列化接口的对象进行encode的时候回抛异常，这里捕获异常传给消费者，先暂时不写这段 todo myRPC
+//            buffer.writerIndex(savedWriterIndex);
+//            if (!response.isEvent() && response.getStatus() != Response.BAD_RESPONSE) {
+//                Response r = new Response(response.getId(), response.getVersion());
+//                r.setStatus(Response.BAD_RESPONSE);
+//
+//                if (t instanceof ExceedPayloadLimitException) {
+//                    try {
+//                        r.setErrorMessage(t.getMessage());
+//                        channel.send(r);
+//                        return;
+//                    } catch (RemotingException e) {
+//                        System.out.println("Failed to send bad_response info back: " + t.getMessage() + ", cause: " + e.getMessage());
+//                    }
+//                } else {
+//                    // FIXME log error message in Codec and handle in caught() of IoHanndler?
+//                    System.out.println("Fail to encode response: " + res + ", send bad_response info instead, cause: " + t.getMessage(), t);
+//                    try {
+//                        r.setErrorMessage("Failed to send response: " + res + ", cause: " + StringUtils.toString(t));
+//                        channel.send(r);
+//                        return;
+//                    } catch (RemotingException e) {
+//                        logger.warn("Failed to send bad_response info back: " + res + ", cause: " + e.getMessage(), e);
+//                    }
+//                }
+//            }
+//            if (t instanceof IOException) {
+//                throw (IOException) t;
+//            } else if (t instanceof RuntimeException) {
+//                throw (RuntimeException) t;
+//            } else if (t instanceof Error) {
+//                throw (Error) t;
+//            } else {
+//                throw new RuntimeException(t.getMessage(), t);
+//            }
         }
-        output.flushBuffer();
-        bos.flush();
-        bos.close();
-        int len = bos.writtenBytes();
-        checkPayLoad(len);
-        Bytes.int2Bytes(len, header, 12);
-        buffer.writerIndex(savedWriterIndex);
-        buffer.writerBytes(header);
-        buffer.writerIndex(savedWriterIndex + HEADER_LENGTH + len);
+
 
     }
 
