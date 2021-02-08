@@ -41,10 +41,7 @@ public class ProtocolFilterWrapper implements Protocol {
                                 // todo myRPC
                             });
                         } catch (Exception e) {
-
                         }
-
-
                         return null;
                     }
 

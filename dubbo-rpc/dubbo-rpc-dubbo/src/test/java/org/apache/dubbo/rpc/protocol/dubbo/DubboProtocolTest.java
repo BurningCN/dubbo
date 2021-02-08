@@ -180,6 +180,8 @@ public class DubboProtocolTest {
         assertEquals("hello world@" + RemoteServiceImpl.class.getName(), remote.sayHello("world"));
 
 //       can't find target service addresses
+        // 这里可以强转的原因是remote是proxy0，其实现的接口列表有AbstractProxyFactory默认指定的这两个Destroyable.class, EchoService.class
+        // 强转后依然可以调用$echo，因为服务端有一个EchoFilter进行了特殊处理，不会实际往深了走，即从exporterMap找invoker啥的然后调用啥的
         EchoService remoteEecho = (EchoService) remote;
         assertEquals(remoteEecho.$echo("ok"), "ok");
     }

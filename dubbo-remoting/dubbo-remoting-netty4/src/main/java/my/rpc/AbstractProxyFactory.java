@@ -1,5 +1,6 @@
 package my.rpc;
 
+import my.common.service.EchoService;
 import my.server.Constants;
 import my.server.URL;
 
@@ -14,7 +15,8 @@ import java.util.regex.Pattern;
  * @date 2021/2/4 15:39
  */
 public abstract class AbstractProxyFactory implements ProxyFactory {
-    private static final Class<?>[] INNER_INTERFACES = {Destroyable.class};
+    private static final Class<?>[] INNER_INTERFACES = {Destroyable.class, EchoService.class};
+
     private Pattern COMMA_SPLIT_PATTERN = Pattern.compile("\\s*[,]+\\s*");
 
     @Override

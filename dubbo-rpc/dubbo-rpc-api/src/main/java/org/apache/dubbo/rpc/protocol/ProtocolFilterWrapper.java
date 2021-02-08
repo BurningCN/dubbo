@@ -40,7 +40,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.SERVICE_FILTER_K
  * ListenerProtocol
  */
 @Activate(order = 100)
-class ProtocolFilterWrapper implements Protocol {
+public class ProtocolFilterWrapper implements Protocol {
 
     private final Protocol protocol;
 
