@@ -33,6 +33,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.LAZY_CONNECT_KEY
 /**
  * dubbo protocol lazy connect test
  */
+// OK
 public class DubboLazyConnectTest {
 
     @BeforeAll
@@ -60,6 +61,7 @@ public class DubboLazyConnectTest {
     @Test
     public void testSticky2() {
         int port = NetUtils.getAvailablePort();
+        // 加了这个就不会立马连接，而是到真正调用的才会创建客户端
         URL url = URL.valueOf("dubbo://127.0.0.1:" + port + "/org.apache.dubbo.rpc.protocol.dubbo.IDemoService?" + LAZY_CONNECT_KEY + "=true");
         ProtocolUtils.refer(IDemoService.class, url);
     }
@@ -70,6 +72,7 @@ public class DubboLazyConnectTest {
             int port = NetUtils.getAvailablePort();
             URL url = URL.valueOf("dubbo://127.0.0.1:" + port + "/org.apache.dubbo.rpc.protocol.dubbo.IDemoService?" + LAZY_CONNECT_KEY + "=true");
             IDemoService service = (IDemoService) ProtocolUtils.refer(IDemoService.class, url);
+            // 真正调用的才会创建客户端，不过没有server，所以connect肯定失败
             service.get();
         });
     }
@@ -79,6 +82,7 @@ public class DubboLazyConnectTest {
         int port = NetUtils.getAvailablePort();
         URL url = URL.valueOf("dubbo://127.0.0.1:" + port + "/org.apache.dubbo.rpc.protocol.dubbo.IDemoService?" + LAZY_CONNECT_KEY + "=true&timeout=20000");
 
+        // 这里有server了 ，和上面的测试程序对比
         ProtocolUtils.export(new DemoServiceImpl(), IDemoService.class, url);
 
         IDemoService service = (IDemoService) ProtocolUtils.refer(IDemoService.class, url);
