@@ -1,8 +1,6 @@
 package my.rpc;
 
-import my.server.Client;
-import my.server.InnerChannel;
-import my.server.RemotingException;
+import my.server.*;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -11,13 +9,16 @@ import java.util.concurrent.atomic.AtomicLong;
  * @date 2021/2/4 20:22
  */
 public class ReferenceCountClient implements Client {
+    private URL url;
+    private ExchangeHandler requestHandler;
     private AtomicLong referenceCount = new AtomicLong(0);
-
     private Client client;
 
-    public ReferenceCountClient(Client client) {
+    public ReferenceCountClient(Client client, ExchangeHandler requestHandler, URL url) {
         this.client = client;
-        referenceCount.incrementAndGet();
+        this.requestHandler = requestHandler;
+        this.url = url;
+        this.referenceCount.incrementAndGet();
     }
 
     @Override
@@ -43,8 +44,14 @@ public class ReferenceCountClient implements Client {
         }
     }
 
-    private void replaceWithLazyClient() {
-        // todo myRPC
+    private void replaceWithLazyClient() { // 此时 ReferenceCountClient 变成LazyConnectClient，实际的客户端没有了，如果触发对该类ReferenceCountClient的请求时候，会跳转到LazyConnectClient
+        URL lazyUrl = url.addParameter("connect.lazy.initial.state", Boolean.TRUE)
+                .addParameter("reconnect", Boolean.FALSE)
+                .addParameter("send.reconnect", Boolean.TRUE.toString())
+                .addParameter(LazyConnectClient.REQUEST_WITH_WARNING_KEY, Boolean.TRUE);
+        if (!(client instanceof LazyConnectClient) || !client.isConnected()) {
+            client = new LazyConnectClient(lazyUrl, requestHandler);
+        }
     }
 
     @Override

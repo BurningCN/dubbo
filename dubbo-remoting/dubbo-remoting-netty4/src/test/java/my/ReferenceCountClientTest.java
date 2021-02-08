@@ -1,9 +1,11 @@
 package my;
 
 import my.common.extension.ExtensionLoader;
+import my.common.utils.Assert;
 import my.common.utils.NetUtils;
 import my.rpc.*;
 import my.server.Client;
+import my.server.NettyClient;
 import my.server.RemotingException;
 import my.server.URL;
 import org.junit.jupiter.api.Assertions;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author geyu
@@ -44,6 +47,65 @@ public class ReferenceCountClientTest {
         destoy();
     }
 
+    @Test
+    public void test_not_share_connect() throws RemotingException {
+        init(1, 1);// 进去
+        Assertions.assertNotSame(demoClient.getChannel().getLocalAddress(), helloClient.getChannel().getLocalAddress());
+        Assertions.assertNotSame(demoClient, helloClient);
+
+        Assertions.assertFalse(demoClient instanceof ReferenceCountClient); // 不是ReferenceCountClient类型，不用共享连接，直接用的NettyClient
+        Assertions.assertFalse(helloClient instanceof ReferenceCountClient);
+
+        destoy();
+    }
+
+    @Test
+    public void test_mult_share_connect() throws RemotingException {
+        init(0, 3);
+        List<ReferenceCountClient> referenceClientList_demoClientInvoker = getReferenceClientList(demoClientInvoker);
+        List<ReferenceCountClient> referenceClientList_helloClientInvoker = getReferenceClientList(helloClientInvoker);
+
+        Assertions.assertEquals(referenceClientList_demoClientInvoker.size(), 3);
+        Assertions.assertEquals(referenceClientList_helloClientInvoker.size(), 3);
+
+        Assertions.assertEquals(demoClient, helloClient);
+        destoy();
+    }
+
+    @Test
+    public void test_multi_destory() throws RemotingException {
+        init(0, 1);
+        demoClientInvoker.destroy();
+        demoClientInvoker.destroy(); // 这里两次关闭已经将计数置为0了，所有共享的client已经全部close，下面的destroy进去看看会不会还会进close（当然不会）
+        destoy();
+    }
+
+    @Test
+    public void test_counter_error() throws RemotingException, NoSuchFieldException, IllegalAccessException {
+        init(0, 1); // 一个client，引用计数为2
+
+        List<ReferenceCountClient> referenceClientList = getReferenceClientList(demoClientInvoker);
+        Assertions.assertEquals(referenceClientList.size(), 1);
+
+        List<ReferenceCountClient> referenceClientList1 = getReferenceClientList(helloClientInvoker);
+        Assertions.assertEquals(referenceClientList1.size(), 1);
+
+        ReferenceCountClient referenceCountClient = referenceClientList.get(0);
+        Field referenceCountField = referenceCountClient.getClass().getDeclaredField("referenceCount");
+        referenceCountField.setAccessible(true);
+        AtomicLong rc = (AtomicLong) referenceCountField.get(referenceCountClient);
+        Assertions.assertEquals(rc.get(), 2);
+
+        referenceCountClient.close();
+        Assertions.assertEquals(rc.get(), 1);
+
+        referenceCountClient.close();
+        Assertions.assertEquals(rc.get(), 0); // lazy被创建
+
+        Assertions.assertEquals(demoClientProxy.demo(), "demo");//lazy立即创建客户端连接发起调用
+        referenceCountClient.close(); // 关闭lazy因上面调用创建的client
+    }
+
     private void destoy() {
         // client invoker destroy
         demoClientInvoker.destroy();
@@ -59,10 +121,10 @@ public class ReferenceCountClientTest {
         Assertions.assertTrue(shareConnections >= 1);
         int port = NetUtils.getAvailablePort();
         URL demoURL = URL.valueOf("dubbo://localhost:" + port + "/demo?" +
-                "connections=" + connections + "&sharedconnections=" + shareConnections
+                "connections=" + connections + "&shareconnections=" + shareConnections
                 + "&heartbeat=600000" + "&timeout=600000");// 这里是我特地加的，避免调试出现心跳、请求响应超时
         URL helloURL = URL.valueOf("dubbo://localhost:" + port + "/hello?" +
-                "connections=" + connections + "&sharedconnections=" + shareConnections
+                "connections=" + connections + "&shareconnections=" + shareConnections
                 + "&heartbeat=600000" + "&timeout=600000");// 这里是我特地加的，避免调试出现心跳、请求响应超时;
         IDemoService demoService = new DemoServiceImpl();
         IHelloService helloService = new HelloServiceImpl();

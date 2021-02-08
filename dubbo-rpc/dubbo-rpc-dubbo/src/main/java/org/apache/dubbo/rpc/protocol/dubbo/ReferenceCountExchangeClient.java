@@ -204,6 +204,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
         if (!(client instanceof LazyConnectExchangeClient) || client.isClosed()) {
             // 进去
             client = new LazyConnectExchangeClient(lazyUrl, client.getExchangeHandler());
+            // 此时 ReferenceCountClient 变成LazyConnectClient，实际的客户端没有了，如果触发对该类ReferenceCountClient的请求时候，会跳转到LazyConnectClient
         }
     }
 

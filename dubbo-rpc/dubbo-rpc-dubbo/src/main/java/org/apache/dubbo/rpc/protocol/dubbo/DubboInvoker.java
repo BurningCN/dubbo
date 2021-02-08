@@ -150,7 +150,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             return false;
         }
         for (ExchangeClient client : clients) {
-            // 有一个为true，即代表整体可用
+            // 有一个为true，即代表整体可用(client有三种可能性：NettyClient、ReferenceCountExchangeClient、LazyClient)
             if (client.isConnected() && !client.hasAttribute(Constants.CHANNEL_ATTRIBUTE_READONLY_KEY)) {
                 //cannot write == not Available ?
                 return true;

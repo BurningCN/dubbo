@@ -115,13 +115,13 @@ public class DefaultProtocol extends AbstractProtocol {
             if (CollectionUtils.isEmpty(referenceCountClients)) {
                 List<ReferenceCountClient> clients = new LinkedList<>();
                 for (int i = 0; i < shardConnections; i++) {
-                    clients.add(new ReferenceCountClient(initClient(url)));
+                    clients.add(new ReferenceCountClient(initClient(url),requestHandler,url)); // 后两个参数是为了给ReferenceCountClient创建LazyClient
                 }
                 referenceCountClientMap.put(address, clients);
             } else {
                 for (int i = 0; i < referenceCountClients.size(); i++) {
                     if (!referenceCountClients.get(i).isConnected()) {
-                        referenceCountClients.set(i, new ReferenceCountClient(initClient(url)));
+                        referenceCountClients.set(i, new ReferenceCountClient(initClient(url),requestHandler,url));
                     } else {
                         referenceCountClients.get(i).incrementAndGetCount();
                     }

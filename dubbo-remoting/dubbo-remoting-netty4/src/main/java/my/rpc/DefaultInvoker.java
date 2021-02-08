@@ -85,4 +85,17 @@ public class DefaultInvoker<T> extends AbstractInvoker<T> {
             }
         }
     }
+
+    @Override
+    public boolean isAvailable() {
+        if (!super.isAvailable()) {
+            return false;
+        }
+        for (Client client : clients) {
+            if (client.isConnected() && !client.getChannel().hasAttribute("channel.readonly")) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -159,7 +159,7 @@ public class ReferenceCountExchangeClientTest {
         DubboAppender.doStart();
         DubboAppender.clear();
         demoServiceInvoker.destroy();
-        demoServiceInvoker.destroy();
+        demoServiceInvoker.destroy();// 这里两次关闭已经将计数置为0了，所有共享的client已经全部close，下面的destroy进去看看会不会还会进close（当然不会）
         Assertions.assertEquals("hello", helloService.hello());
         Assertions.assertEquals(0, LogUtil.findMessage(errorMsg), "should not  warning message");
         LogUtil.checkNoError();
@@ -177,14 +177,17 @@ public class ReferenceCountExchangeClientTest {
         DubboAppender.clear();
 
         // because the two interfaces are initialized, the ReferenceCountExchangeClient reference counter is 2
+        // 因为这两个接口已经初始化，所以ReferenceCountExchangeClient引用计数器为2
         ReferenceCountExchangeClient client = getReferenceClient(helloServiceInvoker);
 
         // close once, counter counts down from 2 to 1, no warning occurs
+        // 关闭一次，计数器从2下降到1，没有警告发生
         client.close();
-        Assertions.assertEquals("hello", helloService.hello());
+        Assertions.assertEquals("hello", helloService.hello()); // 依然可以调用
         Assertions.assertEquals(0, LogUtil.findMessage(errorMsg), "should not warning message");
 
         // generally a client can only be closed once, here it is closed twice, counter is incorrect
+        // 通常同一个客户端只能被关闭一次，这里是关闭两次，计数器是不正确的
         client.close();
 
         // wait close done.
@@ -195,10 +198,11 @@ public class ReferenceCountExchangeClientTest {
         }
 
         // due to the effect of LazyConnectExchangeClient, the client will be "revived" whenever there is a call.
+        // 由于LazyConnectExchangeClient的作用，每当有调用时，客户端将被“复活”。
         Assertions.assertEquals("hello", helloService.hello());
         Assertions.assertEquals(1, LogUtil.findMessage(errorMsg), "should warning message");
 
-        // output one error every 5000 invocations.
+        // output one error every 5000 invocations.这个是取决于LazyClient里的 warning_period = 5000，即通过lazy调用超过5000次则会记录日志
         Assertions.assertEquals("hello", helloService.hello());
         Assertions.assertEquals(1, LogUtil.findMessage(errorMsg), "should warning message");
 
@@ -215,8 +219,18 @@ public class ReferenceCountExchangeClientTest {
          * But this is a bit special, because after the client is closed twice, there are several calls to helloService,
          * that is, the client inside the ReferenceCountExchangeClient is actually active, so the third shutdown here is still effective,
          * let the resurrection After the client is really closed.
+         *
+         * / * *
+         * *这是第三次关闭同一个客户端。在正常情况下,
+         * *客户端值应该关闭一次(即关闭操作是不可逆的)。
+         * *关闭后，客户端引用计数器的值变为-1。
+         * *
+         * *但这有一点特殊，因为在客户端关闭两次后，有几个调用helloService，
+         * *也就是说，ReferenceCountExchangeClient内部的客户端实际上是活跃的，所以第三次关闭这里仍然有效，
+         * *让复活(这个复活两个字很重要)后的客户真正关闭。
+         * * /
          */
-        client.close();
+        client.close(); // 进ReferenceCountExchangeClient的close，其内部的client.close调用的是LazyClient的
 
         // client has been replaced with lazy client. lazy client is fetched from referenceclientmap, and since it's
         // been invoked once, it's close status is false
