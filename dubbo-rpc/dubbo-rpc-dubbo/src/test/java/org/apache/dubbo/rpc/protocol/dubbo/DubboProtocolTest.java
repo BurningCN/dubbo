@@ -207,6 +207,8 @@ public class DubboProtocolTest {
         service = proxy.getProxy(protocol.refer(DemoService.class, URL.valueOf("dubbo://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?codec=exchange").addParameter("timeout",
                 3000L)));
         try {
+            // 在DubboCodec进行encodeRequestData时候进行out.writeAttachments(inv.getArguments())（该new NonSerialized()会
+            // 保存到inv的属性中）的时候发现是实体类型/引用类型，非基本数据类型，却没有实现序列化接口，netty的encode就会抛异常
             service.nonSerializedParameter(new NonSerialized());
             Assertions.fail();
         } catch (RpcException e) {

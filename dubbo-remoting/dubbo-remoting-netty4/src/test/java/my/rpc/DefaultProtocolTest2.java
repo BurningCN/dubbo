@@ -8,6 +8,7 @@ import my.rpc.support.*;
 import my.server.RemotingException;
 import my.server.URL;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -82,5 +83,35 @@ public class DefaultProtocolTest2 {
         // 强转后依然可以调用$echo，因为服务端有一个EchoFilter进行了特殊处理，不会实际往深了走，即从exporterMap找invoker啥的然后调用啥的
         EchoService remoteEecho = (EchoService) remote;
         assertEquals(remoteEecho.$echo("ok"), "ok");
+    }
+
+    @Test
+    public void testPerm() throws Exception, RemotingException {
+        DemoService service = new DemoServiceImpl();
+        int port = NetUtils.getAvailablePort();
+        protocol.export(proxy.getInvoker(service, DemoService.class, URL.valueOf("default://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?codec=exchange")));
+        service = proxy.getProxy(protocol.refer(DemoService.class, URL.valueOf("default://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?codec=exchange").addParameter("timeout",
+                3000L)));
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 1000; i++)
+            service.getSize(new String[]{"", "", ""});
+        System.out.println("take:" + (System.currentTimeMillis() - start));
+    }
+
+     @Test
+    public void testNonSerializedParameter() throws Exception, RemotingException {
+        DemoService service = new DemoServiceImpl();
+        int port = NetUtils.getAvailablePort();
+        protocol.export(proxy.getInvoker(service, DemoService.class, URL.valueOf("default://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?codec=exchange")));
+        service = proxy.getProxy(protocol.refer(DemoService.class, URL.valueOf("default://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?codec=exchange").addParameter("timeout",
+                3000L)));
+        try {
+            // 在DefaultCodec进行encodeRequestData时候进行out.writeAttachments(inv.getArguments())（该new NonSerialized()会
+            // 保存到inv的属性中）的时候发现是实体类型/引用类型，非基本数据类型，却没有实现序列化接口，netty的encode就会抛异常
+            service.nonSerializedParameter(new NonSerialized());
+            Assertions.fail();
+        } catch (RpcException e) {
+            Assertions.assertTrue(e.getMessage().contains("my.rpc.support.NonSerialized must implement java.io.Serializable"));
+        }
     }
 }
