@@ -1,1 +1,2 @@
 echo=my.rpc.api.filter.EchoFilter
+timeout=my.rpc.api.filter.TimeoutFilter

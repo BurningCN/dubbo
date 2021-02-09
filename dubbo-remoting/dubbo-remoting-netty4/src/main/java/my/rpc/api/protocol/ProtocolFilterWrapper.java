@@ -25,24 +25,45 @@ public class ProtocolFilterWrapper implements Protocol {
         this.protocol = protocol;
     }
 
+    @Override
+    public <T> Exporter<T> export(Invoker<T> invoker) throws RemotingException {
+        // todo myRPC isRegistry
+        return protocol.export(buildInvokerChain(invoker, "service.filter", "provider"));
+    }
+
+    @Override
+    public <T> Invoker<T> refer(Class<T> type, URL url) {
+        return buildInvokerChain(protocol.refer(type, url), "reference.filter", "consumer");
+    }
+
     private static <T> Invoker<T> buildInvokerChain(Invoker<T> invoker, String key, String group) {
         List<Filter> filterList = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getURL(), key, group);
         Invoker innerInvoker = invoker;
         if (CollectionUtils.isNotEmpty(filterList)) {
             for (int i = filterList.size() - 1; i >= 0; i--) {
-                Filter previous = filterList.get(i);
+                Filter filter = filterList.get(i);
                 Invoker finalInnerInvoker = innerInvoker;
                 Invoker<T> tempInvoker = new Invoker<T>() {
                     @Override
                     public Result invoke(Invocation invocation) throws RemotingException, Exception {
+                        Result result = null;
                         try {
-                            Result result = previous.invoke(finalInnerInvoker, invocation);
-                            return result.whenCompleteWithContext((v, t) -> {
-                                // todo myRPC
-                            });
+                            result = filter.invoke(finalInnerInvoker, invocation);
                         } catch (Exception e) {
+                            if (filter instanceof Filter.Listener) {
+                                ((Filter.Listener) filter).onError(e, invoker, invocation);
+                            }
                         }
-                        return null;
+                        return result.whenCompleteWithContext((v, t) -> {
+                            if (filter instanceof Filter.Listener) {
+                                if (t != null) {
+                                    ((Filter.Listener) filter).onError(t, invoker, invocation);
+                                } else {
+                                    ((Filter.Listener) filter).onResponse(v, invoker, invocation);
+                                }
+
+                            }
+                        });
                     }
 
                     @Override
@@ -71,14 +92,5 @@ public class ProtocolFilterWrapper implements Protocol {
         return innerInvoker;
     }
 
-    @Override
-    public <T> Exporter<T> export(Invoker<T> invoker) throws RemotingException {
-        // todo myRPC isRegistry
-        return protocol.export(buildInvokerChain(invoker, "service.filter", "provider"));
-    }
 
-    @Override
-    public <T> Invoker<T> refer(Class<T> type, URL url) {
-        return buildInvokerChain(protocol.refer(type, url), "reference.filter", "consumer");
-    }
 }
