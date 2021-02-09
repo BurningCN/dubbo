@@ -128,5 +128,10 @@ public class DefaultProtocolTest2 {
             Assertions.assertTrue(e.getMessage().contains("my.rpc.support.NonSerialized must implement java.io.Serializable"));
         }
     }
+
+    @Test
+    public void  testRemoteApplication(){
+        // 对比原版，涉及到ContextFilter todo myRPC
+    }
     
 }

@@ -235,8 +235,8 @@ public class DubboProtocolTest {
     public void testRemoteApplicationName() throws Exception {
         DemoService service = new DemoServiceImpl();
         int port = NetUtils.getAvailablePort();
-        URL url = URL.valueOf("dubbo://127.0.0.1:" + port + "/" + DemoService.class.getName() + "?codec=exchange").addParameter("timeout",
-                3000L).addParameter("application", "consumer");
+        URL url = URL.valueOf("dubbo://127.0.0.1:" + 9999 + "/" + DemoService.class.getName() + "?codec=exchange").addParameter("timeout",
+                100*3000L).addParameter("application", "consumer");
         protocol.export(proxy.getInvoker(service, DemoService.class, url));
         service = proxy.getProxy(protocol.refer(DemoService.class, url));
         assertEquals(service.getRemoteApplicationName(), "consumer");
