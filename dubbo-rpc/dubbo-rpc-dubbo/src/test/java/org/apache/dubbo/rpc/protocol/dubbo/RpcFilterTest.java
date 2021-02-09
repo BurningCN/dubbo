@@ -46,6 +46,10 @@ public class RpcFilterTest {
         int port = NetUtils.getAvailablePort();
         URL url = URL.valueOf("dubbo://127.0.0.1:" + port + "/org.apache.dubbo.rpc.protocol.dubbo.support.DemoService?service.filter=echo");
         ApplicationModel.getServiceRepository().registerService(DemoService.class);
+        // 再说一下 比如 url = "xxxx://ip:port/test?..."如果注册的时候(即上面registerService)没有指定test这个path，会抛异常，因为如果发现"有参数"的调用，
+        // 在DecodeableRpcInvocation内部会从ApplicationModel.getServiceRepository().lookUp(path)，而你没指定，默认的path就是接口全限定名称
+        // 就抛异常了。如果非带有参数的调用，/xxx随便写，也不需要registerService，直接就能调用成功，因为不会走DecodeableRpcInvocation内部那个逻辑
+        // 直接到requestHandler的reply....不说了
         protocol.export(proxy.getInvoker(service, DemoService.class, url));
         service = proxy.getProxy(protocol.refer(DemoService.class, url));
         Assertions.assertEquals("123", service.echo("123"));
