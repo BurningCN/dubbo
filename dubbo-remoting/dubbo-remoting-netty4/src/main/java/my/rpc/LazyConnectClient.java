@@ -25,7 +25,9 @@ public class LazyConnectClient implements Client {
     private final ExchangeHandler requestHandler;
     private volatile Client client;
     private final ReentrantLock connectLock = new ReentrantLock();
-    private AtomicLong warningcount = new AtomicLong(0);
+    private AtomicLong warningCount = new AtomicLong(0);
+    private volatile InnerChannel lazyChannel;
+    private ReentrantLock lazyChannelLock = new ReentrantLock();
 
     public LazyConnectClient(URL url, ExchangeHandler requestHandler) {
         this.url = url.addParameter("send.reconnect", Boolean.TRUE.toString());
@@ -38,7 +40,16 @@ public class LazyConnectClient implements Client {
 
     @Override
     public InnerChannel getChannel() {
-        return new LazyInnerChannel();
+        if (lazyChannel == null) {
+            lazyChannelLock.lock();
+            try {
+                lazyChannel = new LazyInnerChannel();
+            } finally {
+                lazyChannelLock.unlock();
+            }
+        }
+        return lazyChannel;
+
     }
 
     class LazyInnerChannel extends AbstractDelegateChannel {
@@ -100,12 +111,27 @@ public class LazyConnectClient implements Client {
             super.send(message, sent);
         }
 
+        @Override
+        public void setAttribute(String key, Object value) {
+            checkClient();
+            super.setAttribute(key, value);
+        }
+
+        @Override
+        public boolean hasAttribute(String key) {
+            if (client == null) {
+                return false;
+            } else {
+                return super.hasAttribute(key);
+            }
+        }
+
         private void warning() {
             if (requestWithWarning) {
-                if (warningcount.get() % 2 == 0) {
+                if (warningCount.get() % 2 == 0) {
                     System.out.println("safe guard client , should not be called ,must have a bug.");
                 }
-                warningcount.incrementAndGet();
+                warningCount.incrementAndGet();
             }
         }
     }

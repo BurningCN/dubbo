@@ -140,6 +140,7 @@ public class DubboInvokerAvilableTest { // todo need pr 名称拼写错误
         ExchangeClient exchangeClient = getClients((DubboInvoker<?>) invoker.getInvoker())[0];
         Assertions.assertFalse(exchangeClient.isClosed());
         try {
+            // 进去，走lazyClient的逻辑，有一个checkClient的过程
             exchangeClient.setAttribute(Constants.CHANNEL_ATTRIBUTE_READONLY_KEY, Boolean.TRUE);
             fail();
         } catch (IllegalStateException e) {

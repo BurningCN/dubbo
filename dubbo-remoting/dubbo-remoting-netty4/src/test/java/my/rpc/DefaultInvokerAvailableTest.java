@@ -80,6 +80,32 @@ public class DefaultInvokerAvailableTest {
 
     }
 
+    @Test
+    public void test_lazyClient_setChannelReadOnly() throws RemotingException, NoSuchFieldException, IllegalAccessException {
+        int port = NetUtils.getAvailablePort();
+        URL url = URL.valueOf("default://127.0.0.1:" + port + "/my.rpc.support.DemoService?connections=1&lazy=true");
+        // 注意lazy不是专门为RfClient而用的，也可以直接代理NettyClient
+        protocol.export(proxy.getInvoker(new DemoServiceImpl(), DemoService.class, url));
+        ApplicationModel.getServiceRepository().registerService("test", DemoService.class);
+
+        Invoker<DemoService> refer = protocol.refer(DemoService.class, url);
+        DemoService proxy = DefaultInvokerAvailableTest.proxy.getProxy(refer);
+
+
+        InnerChannel[] clientsChannels = getClientsChannels((DefaultInvoker<?>) ((AsyncToSyncInvoker)refer).getInvoker());
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            clientsChannels[0].setAttribute("channel.readonly", true);
+        });
+
+
+        Assertions.assertEquals("ok", proxy.echo("ok"));
+        Assertions.assertTrue(refer.isAvailable());
+        clientsChannels[0].setAttribute("channel.readonly", true);
+        Assertions.assertFalse(refer.isAvailable());
+
+
+    }
+
     private InnerChannel[] getClientsChannels(DefaultInvoker<?> invoker) throws NoSuchFieldException, IllegalAccessException {
         Field declaredField = invoker.getClass().getDeclaredField("clients");
         declaredField.setAccessible(true);

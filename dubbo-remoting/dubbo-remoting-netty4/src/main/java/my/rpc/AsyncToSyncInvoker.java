@@ -67,5 +67,8 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
         return invoker.isAvailable();
     }
 
-
+    // for Test
+    public Invoker<T> getInvoker() {
+        return invoker;
+    }
 }
