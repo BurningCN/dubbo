@@ -56,7 +56,7 @@ public class DefaultProtocol extends AbstractProtocol {
     }
 
     @Override
-    protected <T> Invoker<T> doRefer(Class<T> type, URL url) {
+    public <T> Invoker<T> doRefer(Class<T> type, URL url) {
         DefaultInvoker<T> invoker = new DefaultInvoker<T>(type, url, getClients(url), invokerSet);
         invokerSet.add(invoker);
         return invoker;

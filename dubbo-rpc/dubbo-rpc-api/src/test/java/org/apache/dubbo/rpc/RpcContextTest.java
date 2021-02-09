@@ -62,6 +62,7 @@ public class RpcContextTest {
         // 进去
         Assertions.assertEquals("127.0.0.1:20880", context.getLocalAddressString());
 
+        // 前面是local，这里是remote
         context.setRemoteAddress("127.0.0.1", 20880);
         Assertions.assertEquals(20880, context.getRemoteAddress().getPort());
         Assertions.assertEquals("127.0.0.1:20880", context.getRemoteAddressString());
@@ -178,7 +179,7 @@ public class RpcContextTest {
         // 进去
         Assertions.assertTrue(((AsyncContextImpl) asyncContext).getInternalFuture().isDone());
         // 进去
-        rpcContext.stopAsync();
+        rpcContext.stopAsync(); // 这里应该可以前面RpcContext.startAsync();对应，用静态方法！！ todo need pr
         Assertions.assertTrue(rpcContext.isAsyncStarted());
         RpcContext.removeContext();
     }

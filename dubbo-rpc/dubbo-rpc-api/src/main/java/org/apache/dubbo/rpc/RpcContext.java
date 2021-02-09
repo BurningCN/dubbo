@@ -735,7 +735,7 @@ public class RpcContext {
         try {
             try {
                 setAttachment(ASYNC_KEY, Boolean.TRUE.toString());
-                // 这不还是同步阻塞调用吗？？？
+                // 这不还是同步阻塞调用吗？？？是的，但是call方法内部可能直接返回future了
                 final T o = callable.call();
                 //local invoke will return directly
                 if (o != null) {
