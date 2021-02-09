@@ -19,6 +19,14 @@ public class AppResponse implements Result {
 
     private Map<String, Object> attachments = new HashMap<>();
 
+    public AppResponse() {
+    }
+
+    public AppResponse(Throwable exception) {
+        this.exception = exception;
+    }
+
+
     @Override
     public Object getValue() {
         return value;
