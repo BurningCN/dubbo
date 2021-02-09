@@ -153,6 +153,7 @@ public class NettyChannel implements InnerChannel {
         removeChannelIfDisconnected(channel);
         attributes.clear();
         channel.close(); // 关键
+        markActive(false); // 这句话自己加的，否则Client#isConnected依然是true，因为没有提供isClose和isConnected两个分离的方法
     }
 
     // ===== ===== ===== Disconnected、isActive、isConnected ===== ===== ===== ===== =====

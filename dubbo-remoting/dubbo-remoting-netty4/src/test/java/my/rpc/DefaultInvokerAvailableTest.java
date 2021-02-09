@@ -1,6 +1,7 @@
 package my.rpc;
 
 import my.common.extension.ExtensionLoader;
+import my.common.rpc.model.ApplicationModel;
 import my.common.utils.NetUtils;
 import my.rpc.support.DemoService;
 import my.rpc.support.DemoServiceImpl;
@@ -56,20 +57,42 @@ public class DefaultInvokerAvailableTest {
         DefaultInvoker<?> invoker = (DefaultInvoker<?>) protocol.doRefer(DemoService.class, url);
         Assertions.assertTrue(invoker.isAvailable());
 
-        getClients(invoker)[0].setAttribute("channel.readonly", Boolean.TRUE);
+        getClientsChannels(invoker)[0].setAttribute("channel.readonly", Boolean.TRUE);
 
         Assertions.assertFalse(invoker.isAvailable());
 
         // reset status since connection is shared among invokers
-        getClients(invoker)[0].removeAttribute("channel.readonly");
+        getClientsChannels(invoker)[0].removeAttribute("channel.readonly");
     }
 
-    private InnerChannel[] getClients(DefaultInvoker<?> invoker) throws NoSuchFieldException, IllegalAccessException {
+    @Test
+    public void test_NOClients() throws NoSuchFieldException, IllegalAccessException, RemotingException {
+        int port = NetUtils.getAvailablePort();
+        URL url = URL.valueOf("default://127.0.0.1:" + port + "/test?connections=1");
+        protocol.export(proxy.getInvoker(new DemoServiceImpl(), DemoService.class, url));
+        ApplicationModel.getServiceRepository().registerService("test", DemoService.class);
+
+        DefaultInvoker<DemoService> refer = (DefaultInvoker<DemoService>) protocol.doRefer(DemoService.class, url);
+        DemoService proxy = DefaultInvokerAvailableTest.proxy.getProxy(refer);
+        Client[] clients = getClients(refer);
+        clients[0].close(); // 一个引用计数，到0.直接关闭NettyClient
+        Assertions.assertFalse(refer.isAvailable());
+
+    }
+
+    private InnerChannel[] getClientsChannels(DefaultInvoker<?> invoker) throws NoSuchFieldException, IllegalAccessException {
         Field declaredField = invoker.getClass().getDeclaredField("clients");
         declaredField.setAccessible(true);
         Client[] clients = (Client[]) declaredField.get(invoker);
         List<InnerChannel> innerChannelList = Stream.of(clients).map(client -> client.getChannel()).collect(Collectors.toList());
         return innerChannelList.toArray(new InnerChannel[0]);
+    }
+
+    private Client[] getClients(DefaultInvoker<?> invoker) throws NoSuchFieldException, IllegalAccessException {
+        Field declaredField = invoker.getClass().getDeclaredField("clients");
+        declaredField.setAccessible(true);
+        Client[] clients = (Client[]) declaredField.get(invoker);
+        return clients;
     }
 
 }
