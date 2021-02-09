@@ -26,6 +26,10 @@ public class AppResponse implements Result {
         this.exception = exception;
     }
 
+    public AppResponse(Object value) {
+        this.value = value;
+    }
+
 
     @Override
     public Object getValue() {

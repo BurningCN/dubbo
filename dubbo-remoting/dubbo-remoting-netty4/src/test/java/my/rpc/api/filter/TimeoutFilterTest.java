@@ -1,8 +1,6 @@
 package my.rpc.api.filter;
 
-import my.common.bytecode.Proxy;
 import my.common.extension.ExtensionLoader;
-import my.rpc.Decodeable;
 import my.rpc.Protocol;
 import my.rpc.ProxyFactory;
 import my.rpc.support.DemoService;
@@ -22,10 +20,10 @@ public class TimeoutFilterTest {
     public void TestInvokeTimeout() throws RemotingException {
         Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
         ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
-        URL url = URL.valueOf("default://localhost:9999/test&timeout=6000000");
+        URL url = URL.valueOf("default://localhost:9999/test?timeout=6000000");
         protocol.export(proxyFactory.getInvoker(new DemoServiceImpl(), DemoService.class,url));
         DemoService proxy = proxyFactory.getProxy(protocol.refer(DemoService.class, url));
-        proxy.timestamp();
+        System.out.println(proxy.timestamp());
         System.out.println(Thread.currentThread().getName());
     }
 }

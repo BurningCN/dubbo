@@ -34,6 +34,7 @@ public class ProtocolFilterWrapper implements Protocol {
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) {
         return buildInvokerChain(protocol.refer(type, url), "reference.filter", "consumer");
+        // - - 2020.02.08 目前现有提供的都是服务端的Filter（EchoFilter+TimeoutFilter），客户端还没有
     }
 
     private static <T> Invoker<T> buildInvokerChain(Invoker<T> invoker, String key, String group) {

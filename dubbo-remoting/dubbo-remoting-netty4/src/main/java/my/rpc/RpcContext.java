@@ -102,6 +102,10 @@ public class RpcContext {
         return localAddress;
     }
 
+    public String getLocalHost() {
+        return localAddress == null ? null : localAddress.getHostName();
+    }
+
     public RpcContext setRemoteAddress(String host, int port) {
         if (port < 0) {
             port = 0;
@@ -112,6 +116,11 @@ public class RpcContext {
 
     public InetSocketAddress getRemoteAddress() {
         return remoteAddress;
+    }
+
+
+    public String getRemoteHost() {
+        return remoteAddress == null ? null : remoteAddress.getHostName();
     }
 
     public void setUrl(URL url) {

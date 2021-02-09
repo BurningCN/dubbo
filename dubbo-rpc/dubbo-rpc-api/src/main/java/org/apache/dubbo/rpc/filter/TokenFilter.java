@@ -40,12 +40,12 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
  * @see Filter
  */
 // OK
-// value表示url含有token参数，该filter才会被激活
+// value表示url含有TOKEN_KEY参数，该filter才会被激活，下两个是且的关系
 @Activate(group = CommonConstants.PROVIDER, value = TOKEN_KEY)
 public class TokenFilter implements Filter {
 
     @Override
-    public Result invoke(Invoker<?> invoker, Invocation inv)
+    public Result invoke(Invoker<?> invoker, Invocation inv) // invoker是服务端自己的，DubboProtocol有一个getInvoker方法，inv是远端传过来反序列化生成的
             throws RpcException {
         String token = invoker.getUrl().getParameter(TOKEN_KEY);
         if (ConfigUtils.isNotEmpty(token)) {
