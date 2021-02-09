@@ -34,6 +34,12 @@ public abstract class AbstractServer implements Server {
         doClose();
     }
 
+    @Override
+    public void close(int timeout) {
+        // balalala
+        doClose();
+    }
+
     protected abstract void doClose();
 
     protected abstract void doOpen();

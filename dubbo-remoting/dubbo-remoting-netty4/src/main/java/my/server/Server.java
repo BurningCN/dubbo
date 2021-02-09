@@ -6,6 +6,7 @@ package my.server;
  */
 public interface Server extends IdleSensible {
     void close();
+    void close(int timeout);
 //    boolean isBind();
 //    Collection<InnerChannel> getChannels();
 }
