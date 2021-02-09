@@ -186,6 +186,11 @@ public class RpcInvocation implements Invocation, Serializable {
         return methodName;
     }
 
+    @Override // for yes
+    public String setMethodName(String methodName) {
+        return this.methodName = methodName;
+    }
+
     @Override
     public String getServiceName() {
         return serviceName;
@@ -195,9 +200,6 @@ public class RpcInvocation implements Invocation, Serializable {
         this.serviceName = serviceName;
     }
 
-    public void setMethodName(String methodName) {
-        this.methodName = methodName;
-    }
 
     @Override
     public Class<?>[] getParameterTypes() {

@@ -21,6 +21,7 @@ public class TimeoutFilterTest {
         Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
         ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
         URL url = URL.valueOf("default://localhost:9999/test?timeout=6000000");
+        url.addParameter("timeout-countdown","xx");
         protocol.export(proxyFactory.getInvoker(new DemoServiceImpl(), DemoService.class,url));
         DemoService proxy = proxyFactory.getProxy(protocol.refer(DemoService.class, url));
         System.out.println(proxy.timestamp());

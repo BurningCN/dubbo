@@ -33,7 +33,7 @@ import static org.apache.dubbo.rpc.Constants.EXECUTES_KEY;
  * The maximum parallel execution request count per method per service for the provider.If the max configured
  * <b>executes</b> is set to 10 and if invoke request where it is already 10 then it will throws exception. It
  * continue the same behaviour un till it is <10.
- *
+ * <p>
  * 提供程序的每个服务的每个方法的最大并行执行请求数。如果配置了max
  * executes被设置为10，并且如果调用请求时它已经是10，那么它将抛出异常。它
  * 继续相同的行为，直到它<10。
@@ -81,7 +81,7 @@ public class ExecuteLimitFilter implements Filter, Filter.Listener {
     public void onError(Throwable t, Invoker<?> invoker, Invocation invocation) {
         if (t instanceof RpcException) {
             RpcException rpcException = (RpcException) t;
-            if (rpcException.isLimitExceed()) {
+            if (rpcException.isLimitExceed()) { // 如果本身是因为限流抛异常了，不需要走到下面endCount
                 return;
             }
         }

@@ -37,6 +37,8 @@ public interface DemoService {
 
     String getThreadName();
 
+    String testForExecuteLimit() throws InterruptedException;
+
     int getSize(String[] strs);
 
     int getSize(Object[] os);

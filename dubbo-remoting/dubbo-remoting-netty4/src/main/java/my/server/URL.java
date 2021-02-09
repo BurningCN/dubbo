@@ -1,7 +1,9 @@
 package my.server;
 
-import java.util.HashMap;
-import java.util.Map;
+import my.common.utils.ArrayUtils;
+import my.common.utils.CollectionUtils;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -21,6 +23,7 @@ public class URL {
     private Map<String, Map<String, Number>> methodNumbers;
     private Map<String, Map<String, String>> methodParameters;
     private String ip;
+    private volatile transient String identity;
 
 
     public String getProtocol() {
@@ -64,7 +67,7 @@ public class URL {
     }
 
     public Map<String, String> getParameters() {
-        if(parameters == null){
+        if (parameters == null) {
             parameters = new ConcurrentHashMap<>();
         }
         return parameters;
@@ -192,6 +195,21 @@ public class URL {
         return l;
     }
 
+    public int getMethodParameter(String method, String key, int defaultValue) {
+        Number n = getCachedNumber(method, key);
+        if (n != null) {
+            return n.intValue();
+        }
+        String value = getMethodParameter(method, key);
+        if (StringUtils.isEmpty(value)) {
+            return defaultValue;
+        }
+
+        int i = Integer.parseInt(value);
+        updateCachedNumber(method, key, i);
+        return i;
+    }
+
 
     public String getMethodParameter(String method, String key) {
         Map<String, String> keyMap = getMethodParameters().get(method);
@@ -235,6 +253,8 @@ public class URL {
         }
         return methodParameters;
     }
+
+
 
     public static class Builder {
         String protocol;
@@ -355,6 +375,84 @@ public class URL {
         return new URL.Builder().username(username).host(host).port(port).pwd(pwd).protocol(protocol).parameters(parameters).path(path).build();
     }
 
+
+    public String toIdentityString() {
+        if (identity != null) {
+            return identity;
+        }
+        return identity = buildString(true, false); // only return identity message, see the method "equals" and "hashCode"
+    }
+
+    private String buildString(boolean appendUser, boolean appendParameter, String... parameters) {
+        return buildString(appendUser, appendParameter, false, false, parameters);
+    }
+    private String buildString(boolean appendUser, boolean appendParameter, boolean useIP, boolean useService, String... parameters) {
+        StringBuilder buf = new StringBuilder();
+        if (StringUtils.isNotEmpty(protocol)) {
+            buf.append(protocol);
+            buf.append("://");
+        }
+        if (appendUser && StringUtils.isNotEmpty(username)) {
+            buf.append(username);
+            if (StringUtils.isNotEmpty(pwd)) {
+                buf.append(":");
+                buf.append(pwd);
+            }
+            buf.append("@");
+        }
+        String host;
+        if (useIP) {
+            host = getIp();
+        } else {
+            host = getHost();
+        }
+        if (StringUtils.isNotEmpty(host)) {
+            buf.append(host);
+            if (port > 0) {
+                buf.append(":");
+                buf.append(port);
+            }
+        }
+        String path = null;
+        if (useService) {
+            // path = getServiceKey();
+        } else {
+            path = getPath();
+        }
+        if (StringUtils.isNotEmpty(path)) {
+            buf.append("/");
+            buf.append(path);
+        }
+
+        if (appendParameter) {
+            buildParameters(buf, true, parameters);
+        }
+        return buf.toString();
+    }
+
+
+    private void buildParameters(StringBuilder buf, boolean concat, String[] parameters) {
+        if (CollectionUtils.isNotEmptyMap(getParameters())) {
+            List<String> includes = (ArrayUtils.isEmpty(parameters) ? null : Arrays.asList(parameters));
+            boolean first = true;
+            for (Map.Entry<String, String> entry : new TreeMap<>(getParameters()).entrySet()) {
+                if (StringUtils.isNotEmpty(entry.getKey())
+                        && (includes == null || includes.contains(entry.getKey()))) {
+                    if (first) {
+                        if (concat) {
+                            buf.append("?");
+                        }
+                        first = false;
+                    } else {
+                        buf.append("&");
+                    }
+                    buf.append(entry.getKey());
+                    buf.append("=");
+                    buf.append(entry.getValue() == null ? "" : entry.getValue().trim());
+                }
+            }
+        }
+    }
 
     public String getHost() {
         return host;

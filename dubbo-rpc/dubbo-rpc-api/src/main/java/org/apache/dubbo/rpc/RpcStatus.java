@@ -108,9 +108,9 @@ public class RpcStatus {
         if (methodStatus.active.get() == Integer.MAX_VALUE) {
             return false;
         }
-        // 乐观锁常用手段：循环+后面的cas
+        // 乐观锁常用手段：循环+后面的cas  ---这个写的有点冗余，上面的 if== 判断和下面的==判断，可以看myRPC版本的
         for (int i; ; ) {
-            // active 是 AtomicInteger结构
+            // active 是 AtomicInteger结构  // cas+轮询，每次进来必须查询，获取内存最新值
             i = methodStatus.active.get();
 
             // 如果超过最大调用次数，返回false

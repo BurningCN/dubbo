@@ -14,6 +14,8 @@ public interface Invocation {
 
     String getMethodName();
 
+    String setMethodName(String methodName); // for test
+
     String getServiceName();
 
     Class<?>[] getParameterTypes();

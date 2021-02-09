@@ -15,6 +15,6 @@ public interface Filter {
     interface Listener {
         void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation);
 
-        void onError(Throwable appResponse, Invoker<?> invoker, Invocation invocation);
+        void onError(Throwable t, Invoker<?> invoker, Invocation invocation);
     }
 }

@@ -35,7 +35,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
     public AbstractInvoker(Class<T> type, URL url, Map<String, Object> attachments) {
         this.type = type;
         this.url = url;
-        this.attachments = Collections.unmodifiableMap(attachments);
+        this.attachments = attachments == null ? null : Collections.unmodifiableMap(attachments);
     }
 
     public AbstractInvoker(Class<T> type, URL url, String[] keys) {
@@ -68,6 +68,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
     public boolean isDestroyed() {
         return destroyed.get();
     }
+
     @Override
     public boolean isAvailable() {
         return available;

@@ -49,6 +49,12 @@ public class DemoServiceImpl implements DemoService {
         return Thread.currentThread().getName();
     }
 
+    @Override
+    public String testForExecuteLimit() throws InterruptedException {
+        Thread.sleep(1000);
+        return "success";
+    }
+
     public int getSize(String[] strs) {
         if (strs == null)
             return -1;
