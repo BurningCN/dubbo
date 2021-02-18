@@ -1,6 +1,7 @@
 package my.server;
 
 import my.rpc.DefaultCodec;
+import my.rpc.DefaultCountCodec;
 
 import java.net.InetSocketAddress;
 
@@ -61,7 +62,7 @@ public abstract class AbstractServer implements Server {
 
     protected Codec2 getChannelCodec(URL url) {
         if(url.getParameter("codec") == "default"){
-            return new DefaultCodec(url);
+            return new DefaultCountCodec(url);
         }else{
             return new ExchangeCodec(url);
         }

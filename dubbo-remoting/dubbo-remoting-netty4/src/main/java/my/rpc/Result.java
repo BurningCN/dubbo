@@ -35,4 +35,5 @@ public interface Result {
 
     Result whenCompleteWithContext(BiConsumer<Result, Throwable> fn);
 
+    void setObjectAttachment(String key, Object value);
 }

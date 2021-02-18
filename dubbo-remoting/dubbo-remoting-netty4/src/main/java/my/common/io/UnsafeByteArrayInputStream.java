@@ -16,8 +16,10 @@
  */
 package my.common.io;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.channels.FileChannel;
+import java.nio.file.OpenOption;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * UnsafeByteArrayInputStream.
@@ -35,11 +37,13 @@ public class UnsafeByteArrayInputStream extends InputStream {
         this(buf, offset, buf.length - offset);
     }
 
+
     public UnsafeByteArrayInputStream(byte[] buf, int offset, int length) {
         mData = buf;
         mPosition = mMark = offset;
         mLimit = Math.min(offset + length, buf.length);
     }
+
 
     @Override
     public int read() {

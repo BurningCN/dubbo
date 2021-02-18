@@ -3,10 +3,13 @@ package my.rpc;
 import my.common.utils.ArrayUtils;
 import my.common.utils.Assert;
 import my.common.utils.StringUtils;
+import my.server.CodecSupport;
 import my.server.Response;
 import my.server.serialization.ObjectInput;
+import my.server.serialization.Serialization;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -15,35 +18,40 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @date 2021/2/5 18:48
  */
 public class DecodeableRpcResult extends AppResponse implements Decodeable {
+    private InputStream is;
+    private byte proto;
     private Response response;
     private ObjectInput input;
     private Invocation invocation;
     private AtomicBoolean decoded = new AtomicBoolean(false);
 
 
-    public DecodeableRpcResult(Response response, ObjectInput input, Invocation invocation) {
+    public DecodeableRpcResult(Response response, InputStream is, Invocation invocation, byte proto) {
         Assert.notNull(response, "response == null");
-        Assert.notNull(input, "input == null");
+        Assert.notNull(is, "is == null");
         Assert.notNull(invocation, "requestData == null");
         this.response = response;
-        this.input = input;
+        this.is = is;
         this.invocation = invocation;
+        this.proto = proto;
     }
-    public void decode() throws IOException{
+
+    public void decode() throws IOException {
         try {
-            if(decoded.compareAndSet(false,true) && input!=null){
+            if (decoded.compareAndSet(false, true) && is != null) {
                 this.doDecode();
             }
-        }catch (Throwable e){
+        } catch (Throwable e) {
             System.out.printf("Decode rpc result failed: " + e.getMessage());
             response.setResult(Response.CLIENT_ERROR);
             response.setErrorMessage(StringUtils.toString(e));
         }
 
     }
+
     public void doDecode() throws IOException {
-        Thread thread = Thread.currentThread();
-        System.out.printf("Decoding in thread -- [" + thread.getName() + "#" + thread.getId() + "]");
+        Serialization serialization = CodecSupport.getSerializationById(proto);
+        input = serialization.deSerialize(is);
         // 反序列化响应类型
         byte flag = input.readByte();
         switch (flag) {

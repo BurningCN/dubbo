@@ -1,8 +1,6 @@
 package my.server;
 
 
-import my.common.io.UnsafeByteArrayInputStream;
-import my.rpc.DefaultCodec;
 import my.server.serialization.Serialization;
 import my.server.serialization.fastjson.FastJsonSerialization;
 import my.server.serialization.ObjectInput;
@@ -80,15 +78,15 @@ public class ExchangeCodec extends AbstractCodec {
 
         // todo myRPC 非魔数
         try {
-            return decodeBody(buffer, header);
+            return decodeBody(buffer, header, len);
         } finally {
 
         }
 
     }
 
-    protected Object decodeBody(ChannelBuffer buffer, byte[] header) throws IOException {
-        ChannelBufferInputStream bis = new ChannelBufferInputStream(buffer);
+    protected Object decodeBody(ChannelBuffer buffer, byte[] header, int len) throws IOException {
+        ChannelBufferInputStream bis = new ChannelBufferInputStream(buffer, len);
         ObjectInput input = serialization.deSerialize(bis);
 
         byte flag = header[2], proto = (byte) (flag & SERIALIZATION_MASK);
@@ -107,7 +105,7 @@ public class ExchangeCodec extends AbstractCodec {
                 } else if (response.isEvent()) {
                     data = decodeEventData(input);
                 } else {
-                    data = decodeResponseData(input, response, bis); // 传response bis是为了给子类用的，在当前类没有实际意义
+                    data = decodeResponseData(input, response, bis, proto); // 传response bis是为了给子类用的，在当前类没有实际意义
                 }
                 response.setResult(data);
             } else {
@@ -125,7 +123,7 @@ public class ExchangeCodec extends AbstractCodec {
             } else if (request.isEvent()) {
                 data = decodeEventData(input);
             } else {
-                data = decodeRequestData(input, request, bis);// 传request bis 是为了给子类用的，在当前类没有实际意义
+                data = decodeRequestData(input, request, bis, proto);// 传request bis 是为了给子类用的，在当前类没有实际意义
             }
             request.setData(data);
             return request;
@@ -291,11 +289,11 @@ public class ExchangeCodec extends AbstractCodec {
     }
 
 
-    protected Object decodeRequestData(ObjectInput input, Request request, InputStream is) throws IOException {
+    protected Object decodeRequestData(ObjectInput input, Request request, InputStream is, byte proto) throws IOException {
         return input.readObject();
     }
 
-    protected Object decodeResponseData(ObjectInput input, Response response, InputStream is) throws IOException {
+    protected Object decodeResponseData(ObjectInput input, Response response, InputStream is, byte proto) throws IOException {
         return input.readObject();
     }
 

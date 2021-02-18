@@ -4,6 +4,7 @@ import org.apache.dubbo.remoting.Channel;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author gy821075

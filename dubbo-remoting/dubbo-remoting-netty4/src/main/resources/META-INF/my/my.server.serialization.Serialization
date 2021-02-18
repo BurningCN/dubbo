@@ -1,0 +1,2 @@
+hessian2=my.server.serialization.hessian2.Hessian2Serialization
+fastjson=my.server.serialization.fastjson.FastJsonSerialization

@@ -91,26 +91,30 @@ public class ExecuteLimitFilterTest {
     }
 
     @Test
-    public void testByFilterChain() throws RemotingException { // todo myRPC这个程序有问题，服务端DecodeableRpcInvocation #doDecode解码解的很乱
+    public void testByFilterChain() throws RemotingException, InterruptedException { // todo myRPC这个程序有问题，服务端DecodeableRpcInvocation #doDecode解码解的很乱
         Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
         ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
-        URL url = URL.valueOf("default://localhost:9999/test?timeout=60000&executes=10");
+        URL url = URL.valueOf("default://localhost:9999/test?timeout=60000");//&executes=10
         protocol.export(proxyFactory.getInvoker(new DemoServiceImpl(), DemoService.class, url));
         DemoService proxy = proxyFactory.getProxy(protocol.refer(DemoService.class, url));
 
         final AtomicInteger failed = new AtomicInteger(0);
-
+        final AtomicInteger successes = new AtomicInteger(0);
         ExecutorService executorService = Executors.newFixedThreadPool(20);
+        CountDownLatch downLatch = new CountDownLatch(20);
         for (int i = 0; i < 20; i++) {
             executorService.submit(() -> {
                 try {
-                    String xx = proxy.testForExecuteLimit();
-                } catch (RpcException | InterruptedException e) {
+                    Assertions.assertTrue(proxy.getThreadName().startsWith("dispatch"));
+                    downLatch.countDown();
+                    successes.incrementAndGet();
+                } catch (RpcException e) {
                     failed.incrementAndGet();
                 }
             });
         }
-        RpcStatus status = RpcStatus.getStatus(url, "getThreadName");
+        downLatch.await();
+        RpcStatus status = RpcStatus.getStatus(url, "testForExecuteLimit");
         try {
             System.in.read();
         } catch (IOException e) {

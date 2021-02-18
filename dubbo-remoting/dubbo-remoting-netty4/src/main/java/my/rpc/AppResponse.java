@@ -105,6 +105,10 @@ public class AppResponse implements Result {
         this.attachments = map == null ? new HashMap<>() : map;
     }
 
+    public void setObjectAttachment(String key, Object value) {
+        attachments.put(key, value);
+    }
+
     public void clear() {
         this.value = null;
         this.exception = null;

@@ -17,19 +17,20 @@
 package org.apache.dubbo.rpc.filter;
 
 import org.apache.dubbo.common.URL;
-import org.apache.dubbo.rpc.AppResponse;
-import org.apache.dubbo.rpc.Invocation;
-import org.apache.dubbo.rpc.Invoker;
-import org.apache.dubbo.rpc.Result;
-import org.apache.dubbo.rpc.RpcException;
-import org.apache.dubbo.rpc.RpcStatus;
+import org.apache.dubbo.common.extension.ExtensionLoader;
+import org.apache.dubbo.remoting.RemotingException;
+import org.apache.dubbo.rpc.*;
 import org.apache.dubbo.rpc.support.BlockMyInvoker;
 
+import org.apache.dubbo.rpc.support.DemoService;
+import org.apache.dubbo.rpc.support.DemoServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -122,8 +123,9 @@ public class ExecuteLimitFilterTest {
                     } catch (RpcException expected) {
                         // ExecuteLimitFilter内部不通过的时候会抛异常，这里捕获后，failed++
                         failed.incrementAndGet();
-                    }finally {
-                        latch2.countDown();;
+                    } finally {
+                        latch2.countDown();
+                        ;
                     }
 
                 }

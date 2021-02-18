@@ -2,6 +2,7 @@ package my.server;
 
 
 import my.rpc.DefaultCodec;
+import my.rpc.DefaultCountCodec;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.locks.ReentrantLock;
@@ -43,7 +44,7 @@ public abstract class AbstractClient implements Client {
 
     private Codec2 getChannelCodec(URL url) {
         if (url.getParameter("codec") == "default") {
-            return new DefaultCodec(url);
+            return new DefaultCountCodec(url);
         } else {
             return new ExchangeCodec(url);
         }

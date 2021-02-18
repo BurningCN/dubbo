@@ -1,15 +1,19 @@
 package my.rpc;
 
+import jdk.internal.util.xml.impl.Input;
 import my.common.rpc.model.ApplicationModel;
 import my.common.rpc.model.MethodDescriptor;
 import my.common.rpc.model.ServiceDescriptor;
 import my.common.rpc.model.ServiceRepository;
 import my.common.utils.ReflectUtils;
+import my.server.CodecSupport;
 import my.server.Request;
 import my.server.serialization.ObjectInput;
+import my.server.serialization.Serialization;
 import org.apache.dubbo.common.utils.Assert;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static my.common.constants.CommonConstants.PATH_KEY;
@@ -21,20 +25,24 @@ import static my.common.constants.CommonConstants.VERSION_KEY;
  */
 public class DecodeableRpcInvocation extends RpcInvocation implements Decodeable {
     private final Request request;
-    private final ObjectInput input;
     private AtomicBoolean decoded = new AtomicBoolean(false);
     private static Object[] EMPTY_OBJECT_ARRAY = new Object[0];
     private static Class<?>[] EMPTY_CLASS_ARRAY = new Class[0];
 
-    public DecodeableRpcInvocation(Request request, ObjectInput input) {
-        Assert.notNull(input, "input == null");
+    private InputStream is;
+    private byte proto;
+
+
+    public DecodeableRpcInvocation(Request request, InputStream is, byte proto) {
+        Assert.notNull(is, "is == null");
         Assert.notNull(request, "request == null");
         this.request = request;
-        this.input = input;
+        this.is = is;
+        this.proto = proto;
     }
 
     public void decode() {
-        if (decoded.compareAndSet(false, true) && input != null){
+        if (decoded.compareAndSet(false, true) && is != null) {
             try {
                 doDecode();
             } catch (Throwable e) {
@@ -45,6 +53,8 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Decodeable
     }
 
     private void doDecode() throws IOException, ClassNotFoundException {
+        Serialization serialization = CodecSupport.getSerializationById(proto);
+        ObjectInput input = serialization.deSerialize(is);
         String version = input.readUTF();
         String path = input.readUTF();
         String methodName = input.readUTF();
@@ -58,6 +68,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Decodeable
 
         Class<?>[] pts = EMPTY_CLASS_ARRAY;
         Object[] args = EMPTY_OBJECT_ARRAY;
+
         if (desc.length() > 0) {
             ServiceRepository repository = ApplicationModel.getServiceRepository();
             ServiceDescriptor serviceDescriptor = repository.lookupService(path);

@@ -8,6 +8,7 @@ import my.server.serialization.ObjectOutput;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static my.rpc.defaults.Constants.*;
 import static my.common.constants.CommonConstants.*;
@@ -32,6 +33,8 @@ public class DefaultCodec extends ExchangeCodec {
 
 
     // 原版的内容，因为感觉有很多和父类的重复代码，我就直接利用保护方法，让子类重写和父类不同的部分即可。
+
+    private static AtomicInteger atomicInteger = new AtomicInteger(0);
 
     @Override
     protected void encodeRequestData(ObjectOutput output, Object data) throws IOException {
@@ -77,39 +80,39 @@ public class DefaultCodec extends ExchangeCodec {
     }
 
     @Override
-    protected Object decodeRequestData(ObjectInput input, Request request, InputStream is) throws IOException {
+    protected Object decodeRequestData(ObjectInput input, Request request, InputStream is, byte proto) throws IOException {
         DecodeableRpcInvocation decodeableRpcInvocation;
         boolean isDecodeInIOThread = getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD);
         if (isDecodeInIOThread) {
-            decodeableRpcInvocation = new DecodeableRpcInvocation(request, input);
+            decodeableRpcInvocation = new DecodeableRpcInvocation(request, is, proto);
             decodeableRpcInvocation.decode();
         } else {
-            decodeableRpcInvocation = new DecodeableRpcInvocation(request, readRemainingBytes(is));
+            decodeableRpcInvocation = new DecodeableRpcInvocation(request, readRemainingBytes(is), proto);
         }
         return decodeableRpcInvocation;
     }
 
     @Override
-    protected Object decodeResponseData(ObjectInput input, Response response, InputStream is) throws IOException {
+    protected Object decodeResponseData(ObjectInput input, Response response, InputStream is, byte proto) throws IOException {
         DecodeableRpcResult decodeableRpcResult;
         boolean isDecodeInIOThread = getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD);
         if (isDecodeInIOThread) {
-            decodeableRpcResult = new DecodeableRpcResult(response, input, (Invocation) getRequestData(response.getId()));
+            decodeableRpcResult = new DecodeableRpcResult(response, is, (Invocation) getRequestData(response.getId()), proto);
             decodeableRpcResult.decode();
         } else {
-            decodeableRpcResult = new DecodeableRpcResult(response, readRemainingBytes(is), (Invocation) getRequestData(response.getId()));
+            decodeableRpcResult = new DecodeableRpcResult(response, readRemainingBytes(is), (Invocation) getRequestData(response.getId()), proto);
         }
         return decodeableRpcResult;
 
     }
 
     //  注意该方法很重要!在ExchangeCodec进子类的逻辑，即DefaultCodec的时候，如果判定不在当前线程解码的话，需要重新构建一个【读指针移动到末尾操作】的新的ObjectInput，最根本的原因是需要把is里面包装的byteBuf的读指针读完，使得r=w，不然的话回到NettyCodecAdapter的时候会判定依然满足buffer.readableBytes>0，导致继续解码，其实是不必要的。
-    private ObjectInput readRemainingBytes(InputStream is) throws IOException {
+    private InputStream readRemainingBytes(InputStream is) throws IOException {
         byte[] result = new byte[is.available()];
         if (is.available() > 0) {
             is.read(result);
         }
-        return serialization.deSerialize(new UnsafeByteArrayInputStream(result));
+        return new UnsafeByteArrayInputStream(result);
     }
 
     private Object getRequestData(long id) {
@@ -117,6 +120,3 @@ public class DefaultCodec extends ExchangeCodec {
         return future == null ? null : future.getRequest().getData();
     }
 }
-
-//
-

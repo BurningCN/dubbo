@@ -136,4 +136,10 @@ public class AsyncRpcResult implements Result {
         });
         return this;
     }
+
+    @Override
+    public void setObjectAttachment(String key, Object value) {
+        getAppResponse().setObjectAttachment(key, value);
+
+    }
 }
