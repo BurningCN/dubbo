@@ -46,17 +46,19 @@ public class ClassLoaderFilterTest {
             @Override
             public Class<?> loadClass(String name) throws ClassNotFoundException {
                 try {
-                    return findClass(name);
+                    return findClass(name); // 自定义类加载器一定是重写loadClass，并且！！要调用这个方法findClass，因为该方法内部会抛异常，这样我们补货异常，然后让上层加载器去加载
                 } catch (ClassNotFoundException e) {
-                    return super.loadClass(name);
+                    return super.loadClass(name); // 比如下面要加载DemoService的时候，肯定是需要先加载父类Object，但是这个我们的自定义URLClassLoader是无法加载的，就需要走这里的逻辑
                 }
             }
         };
+        // 注意实际在loadClass的时候还是利用AppClassLoader加载的，不过会传递给URLClassLoader
+        // 如果对aClass和DemoService.class分别调用getClassLoader,发现返回的分别是URLClassLoader和AppClassLoader
         final Class<?> clazz = cl.loadClass(DemoService.class.getCanonicalName());
         Invoker invoker = new MyInvoker(url) {
             // 该方法会在ClassLoaderFilter调用，使用该class的加载器(就是上面的URLClassLoader)作为线程上下文加载器
             @Override
-            public Class getInterface() {
+            public Class getInterface() {// 注意一定要重写这个方法，因为我们是要URLClassLoader
                 return clazz;
             }
 
