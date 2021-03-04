@@ -91,9 +91,54 @@ AbstractClient紧接着会调用connect方法，内部用到了connectLock锁保
 
 从NettyClient.getChannel().request(xx)开始，这里的getChannel就是NettyChannel（在C doConnect S之后，对netty 的 Channel做了包装）。
 
+#### 从Request谈起
+
+------
+
 request需要指定三个参数：Object data, int timeout, ExecutorService executor。第一个就是要发给S的数据，第二个是请求超时时间（request是twoWay的），第三个是给DefaultFuture使用的，作用是检测到超时之后使用线程池（如果有的话）调用notifyTimeout方法。后两个参数非必传，默认超时时间为1s。
 
-request方法内部使用了一个非常牛逼而又常见的操作，针对twoWay的，构造Request之后，存储到DefaultFuture的内部全局容器中。
+#### 构建DefaultFuture
+
+------
+
+request方法内部使用了一个非常牛逼而又常见的操作，针对twoWay的，构造Request之后，使用DefaultFuture.newFuture工厂方法创建了一个DefaultFuture（这里简称DF），DF构造方法内部把<req.getId(),DF this对象>作为entry存到一个static修饰的futureTable全局容器中。这样客户端接收服务端响应包的时候（触发点在HeaderExchangeHandler的received方法的handleResponse分支逻辑），response的id和request的id是一致的，就能从futureTable拿到df，然后调用complete、completeExceptionally完成任务（DefaultFuture extends CompletableFuture<Object> ）。
+
+DF构造方法内部最后一步会使用ScheduledExecutorService调度线程池延迟timeout时候进行超时检测，根据id从futureTable拿到DF对象，判断如果!isDone()的话，则调用notifyTimeout方法，该方法主要是**手动**构建了一个Response（正常情况是反序列化服务端传来的Response），该Reponse.status不是OK状态，最后会调用completeExceptionally。还有一点就是notifyTimeout方法的调用者可以是传给request的executor也可以是调度线程池的线程本身，推荐使用request方法的时候提供executor，这样调度线程池专门取检测，而不需要关注超时的后续通知操作（notifyTimeout）。
+
+#### Send以及是否阻塞
+
+------
+
+前面构造Request+DF对象之后，调用send(request)并返回DF（DF是CompletableFuture<Object>类型）。所以请求是一个异步操作（这里还不一定，取决于send内部是不是异步的，下面会介绍）
+
+再谈NettyChannel的send的逻辑：核心使用Netty包Channel对象的writeAndFlush方法发消息，如：ChannelFuture future = channel.writeAndFlush(request)，然后根据url参数是否含有sent=true，是的话，那么就需要阻塞等待！！等待时长为url的timeout参数值（这个timeout就是前面一段传给request方法的timeout），阻塞等待的api如boolean success = future.await(timeout)。注意异常情况对future.cancel。
+
+#### 编码
+
+------
+
+channel.writeAndFlush数据就发出去了，但是还得先经过Encoder编码器。流转顺序是从NettyCodecAdapter#InternelEncoder，再到codec--DefaultCountCodec ，其包装了DefaultCodec，其包装了ExchangeCodec。
+
+NettyCodecAdapter#InternelEncoder内置的编码器：InternalEncoder extends MessageToByteEncoder，实现方法 encode(ChannelHandlerContext ctx, Object msg, ByteBuf out)，将msg编码到out。encode方法内部会使用NettyBackedChannelBuffer包装ByteBuf。
+
+然后走到ExchangeCodec的encode方法，只有两个参数：msg和ChannelBuffer，目的就是把前者编码到后者（后面会用序列化）。encode根据msg是请求还是响应类型，走对应的逻辑，这里是对请求编码，肯定是走encodeRequest逻辑。整体逻辑是Header+Body写到buffer。我们先编码/写头部，首先Header的结构如下：
+
+```
+* byte 16
+* 0-1 magic code
+* 2 flag
+* 8 - 1-request/0-response
+* 7 - two way
+* 6 - heartbeat
+* 1-5 serialization id
+* 3 status
+* 20 ok
+* 90 error?
+* 4-11 id (long)
+* 12 -15 datalength
+```
+
+准备16个字节长度的字节数组，0~1字节写入魔数(short) 0xdabb。此时还不知道12~15 body的长度，所以我们还不能先写头部到buffer，所以先让buffer.writerIndex(16);移动16个字节，空出头，先写Body。
 
 
 

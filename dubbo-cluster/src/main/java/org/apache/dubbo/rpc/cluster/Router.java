@@ -31,6 +31,7 @@ import java.util.List;
  * @see org.apache.dubbo.rpc.cluster.Cluster#join(Directory)
  * @see org.apache.dubbo.rpc.cluster.Directory#list(Invocation)
  */
+// OK
 public interface Router extends Comparable<Router> {
 
     int DEFAULT_PRIORITY = Integer.MAX_VALUE;
@@ -43,7 +44,7 @@ public interface Router extends Comparable<Router> {
     URL getUrl();
 
     /**
-     * Filter invokers with current routing rule and only return the invokers that comply with the rule.
+     * Filter invokers with current routing rule and only return the invokers that comply(遵守) with the rule.
      *
      * @param invokers   invoker list
      * @param url        refer url
@@ -68,10 +69,12 @@ public interface Router extends Comparable<Router> {
     /**
      * To decide whether this router need to execute every time an RPC comes or should only execute when addresses or
      * rule change.
+     * 决定路由器是否需要在每次RPC来的时候执行，或者只在地址或规则改变的时候执行。
+     * Router 的 runtime 参数这里简单说明一下，这个参数决定了是否在每次调用服务时都执行路由规则。如果 runtime 为 true，那么每次调用服务前，都需要进行服务路由。这个对性能造成影响，配置时需要注意。
      *
      * @return true if the router need to execute every time.
      */
-    boolean isRuntime();
+    boolean isRuntime(); // 实际没有调用处
 
     /**
      * To decide whether this router should take effect when none of the invoker can match the router rule, which

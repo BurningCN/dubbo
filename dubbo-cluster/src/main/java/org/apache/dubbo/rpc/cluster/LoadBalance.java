@@ -33,6 +33,7 @@ import java.util.List;
  *
  * @see org.apache.dubbo.rpc.cluster.Cluster#join(Directory)
  */
+// OK
 @SPI(RandomLoadBalance.NAME)
 public interface LoadBalance {
 
@@ -40,11 +41,11 @@ public interface LoadBalance {
      * select one invoker in list.
      *
      * @param invokers   invokers.
-     * @param url        refer url
+     * @param url        refer url todo need pr 这个参数没有用
      * @param invocation invocation.
      * @return selected invoker.
      */
-    @Adaptive("loadbalance")
+    @Adaptive("loadbalance") // 和router的route方法参数签名一致
     <T> Invoker<T> select(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException;
 
 }

@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+// OK
 public class LeastActiveBalanceTest extends LoadBalanceBaseTest {
     @Disabled
     @Test

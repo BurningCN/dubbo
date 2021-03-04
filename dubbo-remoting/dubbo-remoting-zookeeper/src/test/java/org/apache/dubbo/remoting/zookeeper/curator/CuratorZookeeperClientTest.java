@@ -212,7 +212,7 @@ public class CuratorZookeeperClientTest {
         curatorClient.getClient().setData().forPath(path + "/d.json", "dfsasf".getBytes());
         // delete操作也会触发前面回调
         curatorClient.delete(path + "/d.json");
-        curatorClient.delete(path);
+        curatorClient.delete(path);// 这个删了没用卵用，并不会出发监听，因为是前面针对path + "/d.json"的
         valueFromCache = curatorClient.getContent(path + "/d.json");
         Assertions.assertNull(valueFromCache);
         Thread.sleep(2000L);

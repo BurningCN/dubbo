@@ -46,6 +46,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.FAIL_BACK_TASKS_KEY;
  *
  * <a href="http://en.wikipedia.org/wiki/Failback">Failback</a>
  */
+// FailbackClusterInvoker 会在调用失败后，返回一个空结果给服务消费者。并通过定时任务对失败的调用进行重传，适合执行消息通知等操作。下面来看一下它的实现逻辑。
 public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(FailbackClusterInvoker.class);
@@ -77,6 +78,7 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
         if (failTimer == null) {
             synchronized (this) {
                 if (failTimer == null) {
+                    // 创建定时任务，每隔5秒执行一次
                     failTimer = new HashedWheelTimer(
                             new NamedThreadFactory("failback-cluster-timer", true),
                             1,
@@ -85,25 +87,32 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
         }
         RetryTimerTask retryTimerTask = new RetryTimerTask(loadbalance, invocation, invokers, lastInvoker, retries, RETRY_FAILED_PERIOD);
-        try {
+        try {      // 对失败的调用进行重试
             failTimer.newTimeout(retryTimerTask, RETRY_FAILED_PERIOD, TimeUnit.SECONDS);
         } catch (Throwable e) {
             logger.error("Failback background works error,invocation->" + invocation + ", exception: " + e.getMessage());
         }
     }
+    // 这个类主要由3个方法组成，首先是 doInvoker，该方法负责初次的远程调用。若远程调用失败，则通过 addFailed 方法将调用信息存入到 failed 中，
+    // 等待定时重试。addFailed 在开始阶段会根据 retryFuture 为空与否，来决定是否开启定时任务。retryFailed 方法则是包含了失败重试的逻辑，
+    // 该方法会对 failed 进行遍历，然后依次对 Invoker 进行调用。调用成功则将 Invoker 从 failed 中移除，调用失败则忽略失败原因。
+    //
+    // 以上就是 FailbackClusterInvoker 的执行逻辑，不是很复杂，继续往下看 FailfastClusterInvoker
 
     @Override
     protected Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         Invoker<T> invoker = null;
         try {
+
             checkInvokers(invokers, invocation);
-            invoker = select(loadbalance, invocation, invokers, null);
-            return invoker.invoke(invocation);
+            invoker = select(loadbalance, invocation, invokers, null);  // 选择 Invoker
+            return invoker.invoke(invocation); // 进行调用
         } catch (Throwable e) {
+            // 如果调用过程中发生异常，此时仅打印错误日志，不抛出异常
             logger.error("Failback to invoke method " + invocation.getMethodName() + ", wait for retry in background. Ignored exception: "
                     + e.getMessage() + ", ", e);
-            addFailed(loadbalance, invocation, invokers, invoker);
-            return AsyncRpcResult.newDefaultAsyncResult(null, null, invocation); // ignore
+            addFailed(loadbalance, invocation, invokers, invoker); // 记录调用信息
+            return AsyncRpcResult.newDefaultAsyncResult(null, null, invocation);    // 返回一个空结果给服务消费者
         }
     }
 

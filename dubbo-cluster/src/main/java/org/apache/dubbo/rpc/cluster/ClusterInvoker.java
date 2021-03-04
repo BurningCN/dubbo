@@ -29,8 +29,13 @@ import org.apache.dubbo.rpc.Invoker;
  * sub ClusterInvoker representing one Registry. Take ZoneAwareClusterInvoker as an example, it is specially customized for
  * multi-registry use cases: first, pick up one ClusterInvoker, then do LB inside the chose ClusterInvoker.
  *
+ * 这是RPC代理在消费者端引用的最终调用程序类型。
+ * ClusterInvoker保存了一组普通的调用者，存储在一个目录中，映射到一个注册表。
+ * ClusterInvoker实现通常提供LB或HA策略，如FailoverClusterInvoker。
+ * 在多注册表订阅的场景中，最终的集群调用器将引用几个子集群调用器，每个子集群调用器代表一个注册表。以ZoneAwareClusterInvoker为例，它是专门为多注册表用例定制的:首先，选择一个ClusterInvoker，然后在选择的ClusterInvoker中做LB。
  * @param <T>
  */
+// OK
 public interface ClusterInvoker<T> extends Invoker<T> {
     URL getRegistryUrl();
 

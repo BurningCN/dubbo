@@ -45,6 +45,7 @@ import static org.mockito.Mockito.mock;
 /**
  * RoundRobinLoadBalanceTest
  */
+// OK
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class LoadBalanceBaseTest {
     Invocation invocation;

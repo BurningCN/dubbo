@@ -35,6 +35,7 @@ import org.yaml.snakeyaml.constructor.Constructor;
  *     =>
  *     1.1.1.1
  */
+// OK
 public class ConditionRuleParser {
 
     public static ConditionRouterRule parse(String rawRule) {

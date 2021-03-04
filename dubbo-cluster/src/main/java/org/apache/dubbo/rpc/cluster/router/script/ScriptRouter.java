@@ -49,6 +49,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.TYPE_KEY;
 /**
  * ScriptRouter
  */
+// OK
 public class ScriptRouter extends AbstractRouter {
     public static final String NAME = "SCRIPT_ROUTER";
     private static final int SCRIPT_ROUTER_DEFAULT_PRIORITY = 0;

@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.rpc.cluster;
 
+// OK
 public interface Constants {
 
     String FAIL_BACK_TASKS_KEY = "failbacktasks";

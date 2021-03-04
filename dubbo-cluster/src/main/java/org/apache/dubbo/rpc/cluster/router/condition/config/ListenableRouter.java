@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 /**
  * Abstract router which listens to dynamic configuration
  */
+// OK
 public abstract class ListenableRouter extends AbstractRouter implements ConfigurationListener {
     public static final String NAME = "LISTENABLE_ROUTER";
     private static final String RULE_SUFFIX = ".condition-router";
@@ -70,6 +71,7 @@ public abstract class ListenableRouter extends AbstractRouter implements Configu
                 routerRule = ConditionRuleParser.parse(event.getContent());
                 generateConditions(routerRule);
             } catch (Exception e) {
+                // 解析原始条件规则失败，不生效，请检查条件规则是否与模板匹配，原始规则为
                 logger.error("Failed to parse the raw condition rule and it will not take effect, please check " +
                         "if the condition rule matches with the template, the raw rule is:\n " + event.getContent(), e);
             }

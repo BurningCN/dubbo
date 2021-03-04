@@ -303,7 +303,7 @@ public class RpcStatus {
         if (succeeded == 0) {
             return 0;
         }
-        return getSucceededElapsed() / succeeded;
+        return getSucceededElapsed() / succeeded; // 调用成功的请求数总数对应的总耗时 / 调用成功的请求数总数 = 成功调用的平均时间。
     }
 
     /**

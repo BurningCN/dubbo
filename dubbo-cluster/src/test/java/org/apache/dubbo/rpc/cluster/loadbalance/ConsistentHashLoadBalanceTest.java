@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+// OK
 @SuppressWarnings("rawtypes")
 public class ConsistentHashLoadBalanceTest extends LoadBalanceBaseTest {
 
@@ -47,6 +48,7 @@ public class ConsistentHashLoadBalanceTest extends LoadBalanceBaseTest {
             }
         }
 
+        // runs请求都会落到同一个invoker上，因为getInvokeCounter里面select方法传入的invocation参数是一样的，一致性hash的特点就是相同参数请求只会落到那个invoker上
         Assertions.assertEquals(counter.size() - 1,
                 unHitedInvokerCount, "the number of unHitedInvoker should be counter.size() - 1");
         Assertions.assertEquals(1, hitedInvokers.size(), "the number of hitedInvoker should be 1");

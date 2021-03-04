@@ -341,12 +341,12 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
                 String content = null;
                 String path = null;
                 switch (type) {
-                    case NODE_ADDED:
+                    case NODE_ADDED: // 前面监听的path本身！！不是子。比如这里path本身节点被创建了
                         eventType = EventType.NodeCreated;
                         path = event.getData().getPath();
                         content = event.getData().getData() == null ? "" : new String(event.getData().getData(), CHARSET);
                         break;
-                    case NODE_UPDATED:
+                    case NODE_UPDATED: // path本身节点数据被修改了
                         eventType = EventType.NodeDataChanged;
                         path = event.getData().getPath();
                         content = event.getData().getData() == null ? "" : new String(event.getData().getData(), CHARSET);

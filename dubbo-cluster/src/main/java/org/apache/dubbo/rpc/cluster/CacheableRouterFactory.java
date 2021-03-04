@@ -24,7 +24,10 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * If you want to provide a router implementation based on design of v2.7.0, please extend from this abstract class.
  * For 2.6.x style router, please implement and use RouterFactory directly.
+ * 如果你想提供一个基于v2.7.0设计的路由器实现，请扩展这个抽象类。
+ * 2.6。x风格路由器，请直接实现和使用RouterFactory。
  */
+// OK
 public abstract class CacheableRouterFactory implements RouterFactory {
     private ConcurrentMap<String, Router> routerMap = new ConcurrentHashMap<>();
 

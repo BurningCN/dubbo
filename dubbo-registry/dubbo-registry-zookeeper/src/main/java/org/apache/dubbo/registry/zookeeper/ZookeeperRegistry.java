@@ -318,7 +318,10 @@ public class ZookeeperRegistry extends FailbackRegistry {
     /**
      * When zookeeper connection recovered from a connection loss, it need to fetch the latest provider list.
      * re-register watcher is only a side effect and is not mandate.
+     * zookeeper连接丢失后恢复，需要获取最新的提供商列表。
+     * *重新注册观察者只是一个副作用，不是强制的。
      */
+
     private void fetchLatestAddresses() {
         // subscribe
         Map<URL, Set<NotifyListener>> recoverSubscribed = new HashMap<URL, Set<NotifyListener>>(getSubscribed());

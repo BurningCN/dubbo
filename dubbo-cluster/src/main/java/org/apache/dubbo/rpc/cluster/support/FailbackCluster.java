@@ -30,6 +30,8 @@ public class FailbackCluster extends AbstractCluster {
 
     @Override
     public <T> AbstractClusterInvoker<T> doJoin(Directory<T> directory) throws RpcException {
+        // 创建并返回 FailbackClusterInvoker 对象
+        // 如上，FailbackCluster 的逻辑也是很简单，无需解释了。所以接下来，我们把重点放在各种 Cluster Invoker 上
         return new FailbackClusterInvoker<>(directory);
     }
 

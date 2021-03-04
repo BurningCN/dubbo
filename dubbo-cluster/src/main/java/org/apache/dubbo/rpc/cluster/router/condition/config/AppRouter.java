@@ -22,6 +22,7 @@ import org.apache.dubbo.common.constants.CommonConstants;
 /**
  * Application level router, "application.condition-router"
  */
+// OK
 public class AppRouter extends ListenableRouter {
     public static final String NAME = "APP_ROUTER";
     /**

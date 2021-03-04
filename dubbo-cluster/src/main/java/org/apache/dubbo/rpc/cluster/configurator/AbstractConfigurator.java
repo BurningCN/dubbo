@@ -46,6 +46,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.OVERRIDE_PROVIDERS_KEY;
  * AbstractOverrideConfigurator
  */
 // OK
+// 集群中关于configurator实现的部分，有两种配置方式，分别是不存在再添加和覆盖添加
 public abstract class AbstractConfigurator implements Configurator {
 
     // 这个就是override url
@@ -80,7 +81,7 @@ public abstract class AbstractConfigurator implements Configurator {
             // 获取两个url的side参数值
             String currentSide = url.getParameter(SIDE_KEY);
             String configuratorSide = configuratorUrl.getParameter(SIDE_KEY);
-            // 两个url的side相等，且side为consumer，且configuratorUrl的port为0，默认值就是0，即没port
+            // 两个url的side相等，且side为consumer，且configuratorUrl的port为0，默认值就是0，即没port(configuratorUrl本身就只有ip没有port，可以看Configurator#configure注释)
             if (currentSide.equals(configuratorSide) && CONSUMER.equals(configuratorSide) && 0 == configuratorUrl.getPort()) {
                 // 获取本机当前本地ip作为host
                 url = configureIfMatch(NetUtils.getLocalHost(), url);
@@ -124,6 +125,7 @@ public abstract class AbstractConfigurator implements Configurator {
         return url;
     }
 
+    // 该方法是当条件匹配时，才对url进行配置。
     // 传进的host有3种值，ANYHOST_VALUE、url.getHost()、NetUtils.getLocalHost()
     private URL configureIfMatch(String host, URL url) {
         // 判断1 host

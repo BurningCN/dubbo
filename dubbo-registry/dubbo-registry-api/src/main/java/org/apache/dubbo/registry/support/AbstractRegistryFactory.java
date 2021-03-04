@@ -98,7 +98,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
             LOGGER.info("Close all registries " + getRegistries());
         }
         // Lock up the registry shutdown process
-        LOCK.lock();
+        LOCK.lock();// 设计的精巧，当前线程已经走到这步骤，但是别的线程有可能还在后面getRegistry的LOCK.lock()这步骤前，而这俩是用的一把锁
         try {
             for (Registry registry : getRegistries()) {
                 try {

@@ -120,7 +120,7 @@ public abstract class AbstractRegistry implements Registry {
             String filename = url.getParameter(FILE_KEY, defaultFilename);
             File file = null;
             if (ConfigUtils.isNotEmpty(filename)) {
-                file = new File(filename);
+                file = new File(filename);// 如果filename为"N/A",那么file = null
                 if (!file.exists() && file.getParentFile() != null && !file.getParentFile().exists()) {
                     if (!file.getParentFile().mkdirs()) {
                         throw new IllegalArgumentException("Invalid registry cache file " + file + ", cause: Failed to create directory " + file.getParentFile() + "!");
@@ -284,7 +284,7 @@ public abstract class AbstractRegistry implements Registry {
         return null;
     }
 
-    // 根据url查找对应url集合
+    // 根据url查找对应url集合 ，参数 url是 consumer url，这里是找到消费者订阅的那些提供者urls
     @Override
     public List<URL> lookup(URL url) {
         List<URL> result = new ArrayList<>();
@@ -304,8 +304,12 @@ public abstract class AbstractRegistry implements Registry {
             // urls设置到reference中，调用reference获取urls，遍历urls，procotol不是empty的就添加到结果集合中返回
 
             final AtomicReference<List<URL>> reference = new AtomicReference<>();
-            NotifyListener listener = reference::set;
+            NotifyListener listener = reference::set;// 等同于 newValue -> reference.set(newValue);
             subscribe(url, listener); // Subscribe logic guarantees the first notify to return
+            // 这里取到的是可能是空的，也可能不是。不是的情况，在多线程并发的情况下极易发生，即别的线程在外界调用了该类的notify(urls)方法，
+            // 因为前面订阅了，所以在notify(urls)方法内部判断match的话，就会调用重载的三参数的notify方法，这样上面listener.notify就得到触发了，
+            // 下面的get就能拿到值了。当然如果下面get取到的为空也没关系，等到外界触发notify(urls)或者三参的，依然会调用上面listener.notify。
+            // 这样再接着调用lookup就会走上面的if逻辑，能拿到提供者的urls了
             List<URL> urls = reference.get();
             if (CollectionUtils.isNotEmpty(urls)) {
                 for (URL u : urls) {
@@ -373,7 +377,7 @@ public abstract class AbstractRegistry implements Registry {
             listeners.remove(listener);
         }
 
-        // do not forget remove notified
+        // do not forget remove notified  从缓存移除，不然下次lookup还能找到该url订阅的其他provider urls
         notified.remove(url);
     }
 
@@ -437,6 +441,10 @@ public abstract class AbstractRegistry implements Registry {
      * @param listener listener
      * @param urls     provider latest urls
      */
+    // 2021.02.20 下面关于该方法的注释有点难懂，其实意思是这样的，前两个参数就是subscribe的参数，url是消费者，一个url有多个listener
+    // 第三个参数是provider urls，表示提供者列表有变更了，要通知给监听url的监听器。方法内部会将urls和url匹配，获取符合的urls，然后对这些urls
+    // 进行分类，然后按照类型进行通知，调用listener.notify(categoryList);
+
     // 验证参数是否为空，接着遍历urls，根据category 来分类，然后从notified 已经通知的缓存中获取分类url信息，获取的结果是个map，
     // Map<String, List<URL>> key是分组 ，value就是在该组下面的url。接着就是遍历上面分组出来的那个result，塞到从缓存中获取的那个map中，
     // 接着调用 listener.notify方法,最后进行saveProperties。

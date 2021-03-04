@@ -32,10 +32,11 @@ import static org.apache.dubbo.common.extension.ExtensionLoader.getExtensionLoad
  * Dynamic Configuration
  * <br/>
  * From the use scenario internally inside framework, there're mainly three kinds of methods:
+ * 从框架内部的使用场景来看，主要有三种方法:
  * <ol>
  * <li>{@link #getProperties(String, String, long)}, get configuration file from Config Center at start up.</li>
  * <li>{@link #addListener(String, String, ConfigurationListener)}/ {@link #removeListener(String, String, ConfigurationListener)}
- * , add or remove listeners for governance rules or config items that need to watch.</li>
+ * , add or remove listeners for governance rules or config items that need to watch.</li> 为需要监视的治理规则或配置项添加或删除侦听器
  * <li>{@link #getProperty(String, Object)}, get a single config item.</li>
  * <li>{@link #getConfig(String, String, long)}, get the specified config</li>
  * </ol>
@@ -69,10 +70,11 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
     }
 
     /**
-     * Register a configuration listener for a specified key
+     * Register a configuration listener for a specified key  为指定的键注册配置监听器
      * The listener only works for service governance purpose, so the target group would always be the value user
      * specifies at startup or 'dubbo' by default. This method will only register listener, which means it will not
      * trigger a notification that contains the current value.
+     * 监听器仅用于服务治理目的，因此目标组将始终为启动时user指定的值或默认的'dubbo'。此方法将只注册侦听器，这意味着它不会触发包含当前值的通知。
      *
      * @param key      the key to represent a configuration
      * @param group    the group where the key belongs to
@@ -117,6 +119,7 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
     /**
      * This method are mostly used to get a compound config file with {@link #getDefaultTimeout() the default timeout},
      * such as a complete dubbo.properties file.
+     * *该方法主要用于获取带有{@link #getDefaultTimeout()}的复合配置文件，例如完整的 dubbo.properties 文件。
      */
     default String getProperties(String key, String group) throws IllegalStateException {
         return getProperties(key, group, getDefaultTimeout());
@@ -124,7 +127,7 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
 
     /**
      * This method are mostly used to get a compound config file, such as a complete dubbo.properties file.
-     *
+     *  这种方法主要用于获取复合配置文件，例如完整的 dubbo.properties 文件。
      * @revision 2.7.4
      */
     default String getProperties(String key, String group, long timeout) throws IllegalStateException {
@@ -133,7 +136,7 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
 
     /**
      * Publish Config mapped to the given key under the {@link #getDefaultGroup() default group}
-     *
+     * 发布配置映射到给定的键在默认组下
      * @param key     the key to represent a configuration
      * @param content the content of configuration
      * @return <code>true</code> if success, or <code>false</code>

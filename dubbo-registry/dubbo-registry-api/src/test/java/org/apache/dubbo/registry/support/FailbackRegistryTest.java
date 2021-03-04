@@ -73,10 +73,13 @@ public class FailbackRegistryTest {
         };
         registry = new MockRegistry(registryUrl, latch);
         registry.setBad(true);
-        registry.register(serviceUrl);
+        registry.register(serviceUrl);// 去看MockRegistry的doRegister
         registry.unregister(serviceUrl);
         registry.subscribe(serviceUrl.setProtocol(CONSUMER_PROTOCOL).addParameters(CollectionUtils.toStringMap("check", "false")), listner);
         registry.unsubscribe(serviceUrl.setProtocol(CONSUMER_PROTOCOL).addParameters(CollectionUtils.toStringMap("check", "false")), listner);
+
+        // unregister和unsubscribe内部会removeFailedRegister和removeFailedSubscribe
+        // 即1 、3 任务失败了，想要重试，但是被2、4给cancel了，所以以2 、4为准， 最后只会调用MockRegistry的doUnregister和doUnsubscribe
 
         //Failure can not be called to listener.
         assertEquals(false, notified.get());

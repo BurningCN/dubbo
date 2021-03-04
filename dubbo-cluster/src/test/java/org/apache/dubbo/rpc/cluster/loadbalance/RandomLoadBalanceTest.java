@@ -32,7 +32,7 @@ public class RandomLoadBalanceTest extends LoadBalanceBaseTest {
     @Test
     public void testRandomLoadBalanceSelect() {
         int runs = 1000;
-        Map<Invoker, AtomicLong> counter = getInvokeCounter(runs, RandomLoadBalance.NAME);
+        Map<Invoker, AtomicLong> counter = getInvokeCounter(runs, RandomLoadBalance.NAME);// 进去
         for (Map.Entry<Invoker, AtomicLong> entry : counter.entrySet()) {
             Long count = entry.getValue().get();
             Assertions.assertTrue(Math.abs(count - runs / (0f + invokers.size())) < runs / (0f + invokers.size()), "abs diff should < avg");

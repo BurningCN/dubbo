@@ -121,7 +121,7 @@ public class AbstractClusterInvokerTest {
         given(mockedInvoker1.getUrl()).willReturn(turl.setPort(999).setProtocol("mock"));
 
         invokers.add(invoker1);
-        dic = new StaticDirectory<>(url, invokers, null);
+        dic = new StaticDirectory<>(url, invokers, null);// 进去
         dic.setConsumerUrl(consumerUrl);
         cluster = new AbstractClusterInvoker(dic) {
             @Override
@@ -164,16 +164,16 @@ public class AbstractClusterInvokerTest {
             }
         };
 
-        // invoke
+        // invoke // 进去
         cluster.invoke(invocation);
     }
 
     @Test
     public void testSelect_Invokersize0() throws Exception {
-        LoadBalance l = cluster.initLoadBalance(invokers, invocation);
+        LoadBalance l = cluster.initLoadBalance(invokers, invocation);// 进去
         Assertions.assertNotNull(l,"cluster.initLoadBalance returns null!");
         {
-            Invoker invoker = cluster.select(l, null, null, null);
+            Invoker invoker = cluster.select(l, null, null, null);// 进去
             Assertions.assertNull(invoker);
         }
         {
@@ -190,8 +190,8 @@ public class AbstractClusterInvokerTest {
         invokers.add(invoker1);
         LoadBalance l = cluster.initLoadBalance(invokers, invocation);
         Assertions.assertNotNull(l,"cluster.initLoadBalance returns null!");
-        Invoker invoker = cluster.select(l, null, invokers, null);
-        Assertions.assertEquals(invoker1, invoker);
+        Invoker invoker = cluster.select(l, null, invokers, null);// 进去
+        Assertions.assertEquals(invoker1, invoker); //  invokers 集合 只有一个invoker肯定只选择唯一的那个
     }
 
     @Test
@@ -204,12 +204,14 @@ public class AbstractClusterInvokerTest {
         {
             selectedInvokers.clear();
             selectedInvokers.add(invoker4);
+            // 注意最后一个参数 selectedInvokers，进行选择的时候不会选这个集合内的invoker，会避开这些，所以最后选出的是invoker2
             Invoker invoker = cluster.select(l, invocation, invokers, selectedInvokers);
             Assertions.assertEquals(invoker2, invoker);
         }
         {
             selectedInvokers.clear();
             selectedInvokers.add(invoker2);
+            // 和上面同理
             Invoker invoker = cluster.select(l, invocation, invokers, selectedInvokers);
             Assertions.assertEquals(invoker4, invoker);
         }
@@ -217,9 +219,9 @@ public class AbstractClusterInvokerTest {
 
     @Test
     public void testSelect_multiInvokers() throws Exception {
-        testSelect_multiInvokers(RoundRobinLoadBalance.NAME);
-        testSelect_multiInvokers(LeastActiveLoadBalance.NAME);
-        testSelect_multiInvokers(RandomLoadBalance.NAME);
+        testSelect_multiInvokers(RoundRobinLoadBalance.NAME);// 进去
+        testSelect_multiInvokers(LeastActiveLoadBalance.NAME);// 进去
+        testSelect_multiInvokers(RandomLoadBalance.NAME);// 进去
     }
 
     @Test
@@ -360,7 +362,7 @@ public class AbstractClusterInvokerTest {
         int runs = d.intValue();
         Assertions.assertTrue(runs > min);
         LoadBalance lb = ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(lbname);
-        initlistsize5();
+        initlistsize5();// 进去
         for (int i = 0; i < runs; i++) {
             Invoker sinvoker = cluster.select(lb, invocation, invokers, selectedInvokers);
             Assertions.assertTrue(sinvoker.isAvailable());

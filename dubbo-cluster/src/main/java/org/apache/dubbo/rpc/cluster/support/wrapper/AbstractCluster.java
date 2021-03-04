@@ -32,16 +32,19 @@ import java.util.List;
 
 import static org.apache.dubbo.common.constants.CommonConstants.REFERENCE_INTERCEPTOR_KEY;
 
+// OK
 public abstract class AbstractCluster implements Cluster {
 
     private <T> Invoker<T> buildClusterInterceptors(AbstractClusterInvoker<T> clusterInvoker, String key) {
         AbstractClusterInvoker<T> last = clusterInvoker;
         List<ClusterInterceptor> interceptors = ExtensionLoader.getExtensionLoader(ClusterInterceptor.class).getActivateExtension(clusterInvoker.getUrl(), key);
-
+        // 根据需要包装ClusterInvoker, 使用切面的方式进行拦截器接入，按先后依次强入拦截器
         if (!interceptors.isEmpty()) {
             for (int i = interceptors.size() - 1; i >= 0; i--) {
                 final ClusterInterceptor interceptor = interceptors.get(i);
                 final AbstractClusterInvoker<T> next = last;
+                // 使用内部类进行包装拦截器
+                // 先后顺序如: beforeC -> beforeB -> beforeA (spring中还有Around) -> afterA -> afterB -> afterC (spring中还有afterReturn)
                 last = new InterceptorInvokerNode<>(clusterInvoker, interceptor, next);
             }
         }
@@ -50,6 +53,7 @@ public abstract class AbstractCluster implements Cluster {
 
     @Override
     public <T> Invoker<T> join(Directory<T> directory) throws RpcException {
+        // ClusterInvoker 调用入口, 让具体策略实现 doJoin(), 并在其基础上进行包装拦截器, 依据来源 reference.interceptor=xxx
         return buildClusterInterceptors(doJoin(directory), directory.getUrl().getParameter(REFERENCE_INTERCEPTOR_KEY));
     }
 
@@ -88,6 +92,8 @@ public abstract class AbstractCluster implements Cluster {
         public Result invoke(Invocation invocation) throws RpcException {
             Result asyncResult;
             try {
+                // 拦截器的具体处理逻辑
+                // 有个 intercept() 的默认方法，其为调用 clusterInvoker.invoke(invocation);  从而实现链式调用
                 interceptor.before(next, invocation);
                 asyncResult = interceptor.intercept(next, invocation);
             } catch (Exception e) {

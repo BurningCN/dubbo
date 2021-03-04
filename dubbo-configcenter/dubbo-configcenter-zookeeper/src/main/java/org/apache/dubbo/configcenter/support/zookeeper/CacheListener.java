@@ -88,6 +88,7 @@ public class CacheListener implements DataListener {
 
         // TODO We only care the changes happened on a specific path level, for example
         //  /dubbo/config/dubbo/configurators, other config changes not in this level will be ignored,
+        // TODO，我们只关心发生在特定路径级别上的更改/dubbo/config/dubbo/configurators，其他配置更改在这个级别将被忽略，
         if (path.split("/").length >= MIN_PATH_DEPTH) {
             // 将path转化为key，就是/转化为.
             String key = pathToKey(path);

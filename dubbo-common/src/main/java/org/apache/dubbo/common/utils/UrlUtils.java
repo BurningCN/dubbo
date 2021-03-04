@@ -423,41 +423,48 @@ public class UrlUtils {
 
     public static boolean isMatchGlobPattern(String pattern, String value, URL param) {
         if (param != null && pattern.startsWith("$")) {
-            pattern = param.getRawParameter(pattern.substring(1));
-        }
+            pattern = param.getRawParameter(pattern.substring(1));// 引用服务消费者参数，param 参数为服务消费者 url
+        }// 调用重载方法继续比较
         return isMatchGlobPattern(pattern, value);
     }
 
     public static boolean isMatchGlobPattern(String pattern, String value) {
-        if ("*".equals(pattern)) {
-            return true;
+        if ("*".equals(pattern)) {// 对 * 通配符提供支持
+            return true; // 匹配规则为通配符 *，直接返回 true 即可
         }
         if (StringUtils.isEmpty(pattern) && StringUtils.isEmpty(value)) {
-            return true;
+            return true;  // pattern 和 value 均为空，此时可认为两者相等，返回 true
         }
         if (StringUtils.isEmpty(pattern) || StringUtils.isEmpty(value)) {
-            return false;
+            return false; // pattern 和 value 其中有一个为空，表明两者不相等，返回 false
         }
 
-        int i = pattern.lastIndexOf('*');
+        int i = pattern.lastIndexOf('*'); // 定位 * 通配符位置
         // doesn't find "*"
-        if (i == -1) {
+        if (i == -1) {// 匹配规则中不包含通配符，此时直接比较 value 和 pattern 是否相等即可，并返回比较结果
             return value.equals(pattern);
         }
-        // "*" is at the end
+        // "*" is at the end// 通配符 "*" 在匹配规则尾部，比如 10.0.21.*
         else if (i == pattern.length() - 1) {
+            // 检测 value 是否以“不含通配符的匹配规则”开头，并返回结果。比如:
+            // pattern = 10.0.21.*，value = 10.0.21.12，此时返回 true
             return value.startsWith(pattern.substring(0, i));
         }
-        // "*" is at the beginning
+        // "*" is at the beginning // 通配符 "*" 在匹配规则头部
         else if (i == 0) {
-            return value.endsWith(pattern.substring(i + 1));
+            return value.endsWith(pattern.substring(i + 1)); // 检测 value 是否以“不含通配符的匹配规则”结尾，并返回结果
         }
-        // "*" is in the middle
+        // "*" is in the middle// 通配符 "*" 在匹配规则中间位置
         else {
+            // 通过通配符将 pattern 分成两半，得到 prefix 和 suffix
             String prefix = pattern.substring(0, i);
             String suffix = pattern.substring(i + 1);
+            // 检测 value 是否以 prefix 开头，且以 suffix 结尾，并返回结果
             return value.startsWith(prefix) && value.endsWith(suffix);
         }
+        //以上就是 isMatchGlobPattern 两个重载方法的全部逻辑，这两个方法分别对普通的匹配过程，以及”引用消费者参数“和通配符匹配等特性提供了支持。这两个方法的逻辑不是很复杂，且代码中也进行了比较详细的注释，因此就不多说了
+        //3. 总结
+        //本篇文章对条件路由的表达式解析和服务路由过程进行了较为细致的分析。总的来说，条件路由的代码还是有一些复杂的，需要静下心来看。在阅读条件路由代码的过程中，要多调试。一般的框架都会有单元测试，Dubbo 也不例外，因此大家可以直接通过 ConditionRouterTest 对条件路由进行调试，无需重头构建测试用例。
     }
 
     public static boolean isServiceKeyMatch(URL pattern, URL value) {
@@ -473,18 +480,18 @@ public class UrlUtils {
         return urls.stream().filter(predicate).collect(Collectors.toList());
     }
 
-    public static boolean isConfigurator(URL url) {
+    public static boolean isConfigurator(URL url) { // override:// 或者含有参数 category= configurators
         return OVERRIDE_PROTOCOL.equals(url.getProtocol()) ||
                 CONFIGURATORS_CATEGORY.equals(url.getParameter(CATEGORY_KEY, DEFAULT_CATEGORY));
     }
 
     public static boolean isRoute(URL url) {
-        return ROUTE_PROTOCOL.equals(url.getProtocol()) ||
+        return ROUTE_PROTOCOL.equals(url.getProtocol()) || // route:// 或者含有参数 category= routers
                 ROUTERS_CATEGORY.equals(url.getParameter(CATEGORY_KEY, DEFAULT_CATEGORY));
     }
 
     public static boolean isProvider(URL url) {
-        return !OVERRIDE_PROTOCOL.equals(url.getProtocol()) &&
+        return !OVERRIDE_PROTOCOL.equals(url.getProtocol()) && // 不是override://也不是route://，且含有参数 category= providers（默认也是providers）
                 !ROUTE_PROTOCOL.equals(url.getProtocol()) &&
                 PROVIDERS_CATEGORY.equals(url.getParameter(CATEGORY_KEY, PROVIDERS_CATEGORY));
     }

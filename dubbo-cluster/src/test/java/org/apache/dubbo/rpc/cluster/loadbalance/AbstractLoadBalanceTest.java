@@ -34,6 +34,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.WEIGHT_KEY;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+// OK
 public class AbstractLoadBalanceTest {
 
     private AbstractLoadBalance balance = new AbstractLoadBalance() {

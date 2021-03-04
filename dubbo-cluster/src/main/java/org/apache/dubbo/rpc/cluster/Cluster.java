@@ -31,13 +31,14 @@ import org.apache.dubbo.rpc.cluster.support.FailoverCluster;
  * <a href="http://en.wikipedia.org/wiki/Fault-tolerant_system">Fault-Tolerant</a>
  *
  */
+// OK
 @SPI(Cluster.DEFAULT)
 public interface Cluster {
-    String DEFAULT = FailoverCluster.NAME;
+    String DEFAULT = FailoverCluster.NAME; // 默认的扩展类为FailoverCluste
 
     /**
      * Merge the directory invokers to a virtual invoker.
-     *
+     * 合并目录调用器到虚拟调用器。
      * @param <T>
      * @param directory
      * @return cluster invoker
@@ -54,6 +55,7 @@ public interface Cluster {
         if (StringUtils.isEmpty(name)) {
             name = Cluster.DEFAULT;
         }
+        // wrap 表示是否需要用Wrapper包装（平常我们直接getExtension(name)内部是默认包装的）
         return ExtensionLoader.getExtensionLoader(Cluster.class).getExtension(name, wrap);
     }
 }

@@ -531,12 +531,12 @@ public class AbstractRegistryTest {
         } catch (Exception e) {
             Assertions.assertTrue(e instanceof NullPointerException);
         }
-        List<URL> urlList1 = abstractRegistry.lookup(testUrl);
+        List<URL> urlList1 = abstractRegistry.lookup(testUrl);// ***
         Assertions.assertFalse(urlList1.contains(testUrl));
         // loop up after registry
         List<URL> urls = new ArrayList<>();
         urls.add(testUrl);
-        abstractRegistry.notify(urls);
+        abstractRegistry.notify(urls);// 前面***内部以及自动注册了，这里直接通知
         List<URL> urlList2 = abstractRegistry.lookup(testUrl);
         Assertions.assertTrue(urlList2.contains(testUrl));
 

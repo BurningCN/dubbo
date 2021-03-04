@@ -22,6 +22,7 @@ import org.apache.dubbo.common.config.configcenter.DynamicConfiguration;
 /**
  * Service level router, "server-unique-name.condition-router"
  */
+// OK
 public class ServiceRouter extends ListenableRouter {
     public static final String NAME = "SERVICE_ROUTER";
     /**

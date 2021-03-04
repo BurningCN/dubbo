@@ -24,6 +24,7 @@ import org.apache.dubbo.rpc.cluster.RouterFactory;
  * ConditionRouterFactory
  *
  */
+// OK
 public class ConditionRouterFactory implements RouterFactory {
 
     public static final String NAME = "condition";

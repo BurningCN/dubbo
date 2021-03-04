@@ -33,6 +33,7 @@ import java.util.List;
 
 import static org.apache.dubbo.rpc.cluster.Constants.RULE_KEY;
 
+// OK
 public class ScriptRouterTest {
 
     private URL SCRIPT_URL = URL.valueOf("script://javascript?type=javascript");
@@ -51,11 +52,12 @@ public class ScriptRouterTest {
 
     @Test
     public void testRouteReturnAll() {
+        // 这段代码很好懂，就是定义一个function route 函数，定义之后直接调用，传invokers
         Router router = new ScriptRouterFactory().getRouter(getRouteUrl("function route(op1,op2){return op1} route(invokers)"));
-        List<Invoker<String>> invokers = new ArrayList<Invoker<String>>();
-        invokers.add(new MockInvoker<String>());
-        invokers.add(new MockInvoker<String>());
-        invokers.add(new MockInvoker<String>());
+        List<Invoker<String>> invokers = new ArrayList<>();
+        invokers.add(new MockInvoker<>());
+        invokers.add(new MockInvoker<>());
+        invokers.add(new MockInvoker<>());
         List<Invoker<String>> filteredInvokers = router.route(invokers, invokers.get(0).getUrl(), new RpcInvocation());
         Assertions.assertEquals(invokers, filteredInvokers);
     }

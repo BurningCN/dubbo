@@ -24,6 +24,7 @@ import org.apache.dubbo.rpc.cluster.RouterFactory;
 /**
  * Application level router factory
  */
+// OK
 @Activate(order = 200)
 public class AppRouterFactory implements RouterFactory {
     public static final String NAME = "app";

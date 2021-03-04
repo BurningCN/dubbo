@@ -24,6 +24,7 @@ import org.apache.dubbo.rpc.cluster.Router;
 /**
  * Service level router factory
  */
+// OK
 @Activate(order = 300)
 public class ServiceRouterFactory extends CacheableRouterFactory {
 

@@ -198,7 +198,7 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
         // 去除最后的/
         int i = path.lastIndexOf('/');
         if (i > 0) {
-            create(path.substring(0, i), false);
+            create(path.substring(0, i), false);// 递归 这里不用原ephemeral参数的原因是因为，临时节点下不能创建子节点的原因，既然递归创建上级了，那么肯定就是持久节点，所以直接false
         }
         if (ephemeral) {
             createEphemeral(path, content);

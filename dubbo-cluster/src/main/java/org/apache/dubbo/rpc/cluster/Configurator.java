@@ -57,14 +57,15 @@ public interface Configurator extends Comparable<Configurator> {
     /**
      * Convert override urls to map for use when re-refer. Send all rules every time, the urls will be reassembled and
      * calculated
+     * 将覆盖url转换为映射，以便重新引用时使用。每次发送所有规则，url将被重新组装和计算
      *
-     * URL contract:
+     * URL contract:  合同，契约；婚约；（非正式）暗杀协议；（桥牌）定约
      * <ol>
      * <li>override://0.0.0.0/...( or override://ip:port...?anyhost=true)&para1=value1... means global rules
-     * (all of the providers take effect)</li>
-     * <li>override://ip:port...?anyhost=false Special rules (only for a certain provider)</li>
-     * <li>override:// rule is not supported... ,needs to be calculated by registry itself</li>
-     * <li>override://0.0.0.0/ without parameters means clearing the override</li>
+     * (all of the providers take effect)</li> 意味着全局规则(所有提供者生效)
+     * <li>override://ip:port...?anyhost=false Special rules (only for a certain provider)</li>特殊规则(仅适用于某一提供者)
+     * <li>override:// rule is not supported... ,needs to be calculated by registry itself</li> 规则不支持…，需要由注册表本身计算
+     * <li>override://0.0.0.0/ without parameters means clearing the override</li> 没有参数意味着清除覆盖
      * </ol>
      *
      * @param urls URL list to convert
@@ -90,13 +91,14 @@ public interface Configurator extends Comparable<Configurator> {
             }
             Map<String, String> override = new HashMap<>(url.getParameters());
             // The anyhost parameter of override may be added automatically, it can't change the judgement of changing url
+            // 覆盖可自动添加任意主机参数，不能改变对变化url的判断
             override.remove(ANYHOST_KEY);
             // 移除anyhost参数之后，没有剩余参数了，不处理该url
             if (CollectionUtils.isEmptyMap(override)) {
                 continue;
             }
             // 根据工厂获取具体Configurator（两种具体产品），内部会从url取参数值来确定使用哪种产品（具体看ConfiguratorFactory$Adaptive.java）
-            configurators.add(configuratorFactory.getConfigurator(url));
+            configurators.add(configuratorFactory.getConfigurator(url));// 比如url为override:// 那么就是OverrideConfigurator
         }
         // 排序，去看下面的compareTo
         Collections.sort(configurators);
