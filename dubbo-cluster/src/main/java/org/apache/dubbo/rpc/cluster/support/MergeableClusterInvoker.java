@@ -46,6 +46,9 @@ import static org.apache.dubbo.rpc.Constants.MERGER_KEY;
 /**
  * @param <T>
  */
+// OK
+// MergeableCluster聚合集群，将集群中的调用结果聚合起来返回结果。比如菜单服务，接口一样，但有多种实现，用group区分，现在消费方需从每种group中
+// 调用一次返回结果，合并结果返回，这样就可以实现聚合菜单项。比较鸡肋，小点的项目应该都用不到
 @SuppressWarnings("unchecked")
 public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
 

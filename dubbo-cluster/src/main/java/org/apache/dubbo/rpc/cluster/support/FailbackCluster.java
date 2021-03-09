@@ -24,6 +24,7 @@ import org.apache.dubbo.rpc.cluster.support.wrapper.AbstractCluster;
  * {@link FailbackClusterInvoker}
  *
  */
+// OK
 public class FailbackCluster extends AbstractCluster {
 
     public final static String NAME = "failback";

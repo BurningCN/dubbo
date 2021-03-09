@@ -25,6 +25,7 @@ import org.apache.dubbo.rpc.cluster.Directory;
  * AvailableCluster
  *
  */
+// OK
 public class AvailableCluster implements Cluster {
 
     public static final String NAME = "available";

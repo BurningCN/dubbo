@@ -83,6 +83,7 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
         return directory.getInterface();
     }
 
+    // 用户文档-用法示例-服务降级.md
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         Result result = null;

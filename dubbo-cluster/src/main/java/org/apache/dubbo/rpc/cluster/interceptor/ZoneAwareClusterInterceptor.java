@@ -28,9 +28,9 @@ import static org.apache.dubbo.common.constants.RegistryConstants.REGISTRY_ZONE;
 import static org.apache.dubbo.common.constants.RegistryConstants.REGISTRY_ZONE_FORCE;
 
 /**
- * Determines the zone information of current request.
+ * Determines the zone information of current request.  确定当前请求的zone信息。
  *
- * active only when url has key 'cluster=zone-aware'
+ * active only when url has key 'cluster=zone-aware' ---- 注意
  */
 @Activate(value = "cluster:zone-aware")
 public class ZoneAwareClusterInterceptor implements ClusterInterceptor {

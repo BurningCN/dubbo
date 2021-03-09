@@ -102,12 +102,12 @@ public class FailoverClusterInvokerTest {
 
     @Test()
     public void testInvokeWithRPCException() {
-        given(invoker1.invoke(invocation)).willThrow(new RpcException());
+        given(invoker1.invoke(invocation)).willThrow(new RpcException()); // 该invoker#invoke会抛异常
         given(invoker1.isAvailable()).willReturn(true);
         given(invoker1.getUrl()).willReturn(url);
         given(invoker1.getInterface()).willReturn(FailoverClusterInvokerTest.class);
 
-        given(invoker2.invoke(invocation)).willReturn(result);
+        given(invoker2.invoke(invocation)).willReturn(result); // 该invoker#invoke正常，所以内部会选择这个invoker调用并获取返回结果
         given(invoker2.isAvailable()).willReturn(true);
         given(invoker2.getUrl()).willReturn(url);
         given(invoker2.getInterface()).willReturn(FailoverClusterInvokerTest.class);
@@ -148,7 +148,7 @@ public class FailoverClusterInvokerTest {
 
         given(dic.getUrl()).willReturn(url);
         given(dic.getConsumerUrl()).willReturn(url);
-        given(dic.list(invocation)).willReturn(null);
+        given(dic.list(invocation)).willReturn(null); // 注意这里，在FailoverCluser的doInvoke方法会调用checkCluster检查
         given(dic.getInterface()).willReturn(FailoverClusterInvokerTest.class);
         invocation.setMethodName("method1");
 
@@ -157,7 +157,7 @@ public class FailoverClusterInvokerTest {
 
         FailoverClusterInvoker<FailoverClusterInvokerTest> invoker = new FailoverClusterInvoker<FailoverClusterInvokerTest>(dic);
         try {
-            invoker.invoke(invocation);
+            invoker.invoke(invocation); // FailoverCluster的checkInvokers内部判断invokers为空则抛异常
             fail();
         } catch (RpcException expected) {
             assertFalse(expected.getCause() instanceof RpcException);
@@ -167,6 +167,7 @@ public class FailoverClusterInvokerTest {
     /**
      * When invokers in directory changes after a failed request but just before a retry effort,
      * then we should reselect from the latest invokers before retry.
+     * 当请求失败后，目录下的调用器发生变化，但在重试之前，，我们应该重新选择最新的调用程序。
      */
     @Test
     public void testInvokerDestroyAndReList() {
@@ -199,6 +200,7 @@ public class FailoverClusterInvokerTest {
         RpcInvocation inv = new RpcInvocation();
         inv.setMethodName("test");
 
+        // dic用的invokers和前面call里面的invokers是一个对象，所以FailoverCluster在重试的时候回dic.doList获取最新的invokers集合，里面只有invoker3
         Directory<Demo> dic = new MockDirectory<Demo>(url, invokers);
 
         FailoverClusterInvoker<Demo> clusterinvoker = new FailoverClusterInvoker<Demo>(dic);

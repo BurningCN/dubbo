@@ -85,12 +85,12 @@ public class FailfastClusterInvokerTest {
         Assertions.assertThrows(RpcException.class, () -> {
             resetInvoker1ToException();
             FailfastClusterInvoker<FailfastClusterInvokerTest> invoker = new FailfastClusterInvoker<FailfastClusterInvokerTest>(dic);
-            invoker.invoke(invocation);
+            invoker.invoke(invocation); // resetInvoker1ToException设置了invoker1#invoke会抛异常，在  FailfastClusterInvoker 被捕获并抛异常
             Assertions.assertSame(invoker1, RpcContext.getContext().getInvoker());
         });
     }
 
-    @Test()
+    @Test() // todo need pr 不需要()
     public void testInvokeNoException() {
 
         resetInvoker1ToNoException();
@@ -117,7 +117,7 @@ public class FailfastClusterInvokerTest {
 
         FailfastClusterInvoker<FailfastClusterInvokerTest> invoker = new FailfastClusterInvoker<FailfastClusterInvokerTest>(dic);
         try {
-            invoker.invoke(invocation);
+            invoker.invoke(invocation); // 前面dic.list(inv)返回null，会在checkInvokers检查invokers为空抛异常
             fail();
         } catch (RpcException expected) {
             assertFalse(expected.getCause() instanceof RpcException);

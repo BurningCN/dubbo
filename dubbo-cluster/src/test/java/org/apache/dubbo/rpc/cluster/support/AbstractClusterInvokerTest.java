@@ -173,13 +173,13 @@ public class AbstractClusterInvokerTest {
         LoadBalance l = cluster.initLoadBalance(invokers, invocation);// 进去
         Assertions.assertNotNull(l,"cluster.initLoadBalance returns null!");
         {
-            Invoker invoker = cluster.select(l, null, null, null);// 进去
+            Invoker invoker = cluster.select(l, null, null, null);// 进去 invokers 参数为 null
             Assertions.assertNull(invoker);
         }
         {
             invokers.clear();
             selectedInvokers.clear();
-            Invoker invoker = cluster.select(l, null, invokers, null);
+            Invoker invoker = cluster.select(l, null, invokers, null);// 进去 invokers.size == 0
             Assertions.assertNull(invoker);
         }
     }
@@ -188,7 +188,7 @@ public class AbstractClusterInvokerTest {
     public void testSelect_Invokersize1() throws Exception {
         invokers.clear();
         invokers.add(invoker1);
-        LoadBalance l = cluster.initLoadBalance(invokers, invocation);
+        LoadBalance l = cluster.initLoadBalance(invokers, invocation);// 默认randomLB
         Assertions.assertNotNull(l,"cluster.initLoadBalance returns null!");
         Invoker invoker = cluster.select(l, null, invokers, null);// 进去
         Assertions.assertEquals(invoker1, invoker); //  invokers 集合 只有一个invoker肯定只选择唯一的那个

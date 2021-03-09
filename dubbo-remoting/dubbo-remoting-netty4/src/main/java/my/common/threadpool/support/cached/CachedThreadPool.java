@@ -40,9 +40,9 @@ public class CachedThreadPool implements ThreadPool {
     public Executor getExecutor(URL url) {
         String name = url.getParameter(THREAD_NAME_KEY, DEFAULT_THREAD_NAME);
         int cores = url.getParameter(CORE_THREADS_KEY, DEFAULT_CORE_THREADS);
-        int threads = url.getParameter(THREADS_KEY, Integer.MAX_VALUE);
-        int queues = url.getParameter(QUEUES_KEY, DEFAULT_QUEUES);
-        int alive = url.getParameter(ALIVE_KEY, DEFAULT_ALIVE);
+        int threads = url.getParameter(THREADS_KEY, Integer.MAX_VALUE); // 最大个数为Integer最大值
+        int queues = url.getParameter(QUEUES_KEY, DEFAULT_QUEUES); // 默认数量为0
+        int alive = url.getParameter(ALIVE_KEY, DEFAULT_ALIVE);// 空闲一分钟自动删除，需要时重建。
         return new ThreadPoolExecutor(cores, threads, alive, TimeUnit.MILLISECONDS,
                 queues == 0 ? new SynchronousQueue<Runnable>() :
                         (queues < 0 ? new LinkedBlockingQueue<Runnable>()

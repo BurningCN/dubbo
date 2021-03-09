@@ -40,10 +40,13 @@ import static org.apache.dubbo.common.constants.CommonConstants.RETRIES_KEY;
 /**
  * When invoke fails, log the initial error and retry other invokers (retry n times, which means at most n different invokers will be invoked)
  * Note that retry causes latency.
+ * 当调用失败时，记录初始错误并重试其他调用者(重试n次，这意味着最多将调用n个不同的调用者)
+ * 请注意重试会导致延迟。
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Failover">Failover</a>
  *
  */
+// OK
 // FailoverClusterInvoker 在调用失败时，会自动切换 Invoker 进行重试。默认配置下，Dubbo 会使用这个类作为缺省 Cluster Invoker。下面来看一下该类的逻辑。
 public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
@@ -60,7 +63,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         checkInvokers(copyInvokers, invocation);
         String methodName = RpcUtils.getMethodName(invocation);
         // 获取重试次数
-        int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
+        int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1; // +1是 原本的调用 算一次，比如调某个invoker，如果失败最多failover2次，那么总共就循环3次
         if (len <= 0) {
             len = 1;
         }
@@ -70,12 +73,11 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         Set<String> providers = new HashSet<String>(len);
         // 循环调用，失败重试
         for (int i = 0; i < len; i++) {
-            //Reselect before retry to avoid a change of candidate `invokers`.
-            //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
+            //Reselect before retry to avoid a change of candidate `invokers`. 在重试之前重新选择，以避免候选' invokers '的更改
+            //NOTE: if `invokers` changed, then `invoked` also lose accuracy.  注意:如果' invokers '改变，那么' invoked '也会失去准确性。
             if (i > 0) {
                 checkWhetherDestroyed();
-                // 在进行重试前重新列举 Invoker，这样做的好处是，如果某个服务挂了，
-                // 通过调用 list 可得到最新可用的 Invoker 列表
+                // 在进行重试前重新列举 Invoker，这样做的好处是，如果某个服务挂了，通过调用 list 可得到最新可用的 Invoker 列表
                 copyInvokers = list(invocation);
                 // check again 对 copyinvokers 进行判空检查
                 checkInvokers(copyInvokers, invocation);

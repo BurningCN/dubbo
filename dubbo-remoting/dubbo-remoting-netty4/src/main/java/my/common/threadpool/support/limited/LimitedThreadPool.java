@@ -54,7 +54,7 @@ public class LimitedThreadPool implements ThreadPool {
                 // InternalThreadLocal可以后面去了解。NamedInternalThreadFactory进去
                 new NamedInternalThreadFactory(name, true),
                 new AbortPolicyWithReport(name, url));// 拒绝策略，使用基于AbortPolicy自定义的一个拒绝策略，进去
-
+    // LimitedThreadPool 只增长不收缩的目的是为了避免收缩时突然来了大流量引起的性能问题。
     }
 
 }

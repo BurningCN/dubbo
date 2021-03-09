@@ -107,8 +107,7 @@ public class ForkingClusterInvokerTest {
     @Test
     public void testInvokeException() {
         resetInvokerToException();
-        ForkingClusterInvoker<ForkingClusterInvokerTest> invoker = new ForkingClusterInvoker<ForkingClusterInvokerTest>(
-                dic);
+        ForkingClusterInvoker<ForkingClusterInvokerTest> invoker = new ForkingClusterInvoker<>(dic);
 
         try {
             invoker.invoke(invocation);

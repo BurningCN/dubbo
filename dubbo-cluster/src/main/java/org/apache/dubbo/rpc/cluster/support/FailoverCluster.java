@@ -16,13 +16,20 @@
  */
 package org.apache.dubbo.rpc.cluster.support;
 
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.cluster.Directory;
+import org.apache.dubbo.rpc.cluster.directory.StaticDirectory;
 import org.apache.dubbo.rpc.cluster.support.wrapper.AbstractCluster;
+import org.apache.dubbo.rpc.support.MockInvoker;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * {@link FailoverClusterInvoker}
- *
  */
 public class FailoverCluster extends AbstractCluster {
 
@@ -34,4 +41,14 @@ public class FailoverCluster extends AbstractCluster {
         return new FailoverClusterInvoker<>(directory);
     }
 
+    public static void main(String[] args) {
+        List<Invoker<FailoverCluster>> invokers = new ArrayList<>();
+        URL url = URL.valueOf("test://test:12/test?cluster=zone-aware");
+        invokers.add(new MockInvoker<>(url,FailoverCluster.class));
+        StaticDirectory<FailoverCluster> staticDirectory = new StaticDirectory(url,invokers);
+        FailoverCluster failoverCluster = new FailoverCluster();
+        Invoker<FailoverCluster> join = failoverCluster.join(staticDirectory);
+        RpcInvocation rpcInvocation = new RpcInvocation();
+        join.invoke(rpcInvocation);
+    }
 }

@@ -41,8 +41,11 @@ import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_FORKS;
 
 /**
  * NOTICE! This implementation does not work well with async call.
- *
+ * <p>
  * Invoke a specific number of invokers concurrently, usually used for demanding real-time operations, but need to waste more service resources.
+ * <p>
+ * 注意!这个实现在异步调用中不能很好地工作。
+ * 同时调用特定数量的调用程序，通常用于要求实时操作，但需要浪费更多的服务资源。
  *
  * <a href="http://en.wikipedia.org/wiki/Fork_(topology)">Fork</a>
  */
@@ -52,7 +55,7 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
      * Use {@link NamedInternalThreadFactory} to produce {@link org.apache.dubbo.common.threadlocal.InternalThread}
      * which with the use of {@link org.apache.dubbo.common.threadlocal.InternalThreadLocal} in {@link RpcContext}.
      */
-    private final ExecutorService executor = Executors.newCachedThreadPool(
+    private final ExecutorService executor = Executors.newCachedThreadPool( // 使用该线程的原因是，需要为每个invoker调用都指派一个线程去执行
             new NamedInternalThreadFactory("forking-cluster-timer", true));
 
     public ForkingClusterInvoker(Directory<T> directory) {
@@ -65,12 +68,16 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
         try {
             checkInvokers(invokers, invocation);
             final List<Invoker<T>> selected;
-            final int forks = getUrl().getParameter(FORKS_KEY, DEFAULT_FORKS);
-            final int timeout = getUrl().getParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+            // 获取 forks 配置
+            final int forks = getUrl().getParameter(FORKS_KEY, DEFAULT_FORKS); // 2
+            // 获取超时配置
+            final int timeout = getUrl().getParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT); // 1000
+            // 如果 forks 配置不合理，则直接将 invokers 赋值给 selected
             if (forks <= 0 || forks >= invokers.size()) {
                 selected = invokers;
             } else {
                 selected = new ArrayList<>(forks);
+                // 循环选出 forks 个 Invoker，并添加到 selected 中
                 while (selected.size() < forks) {
                     Invoker<T> invoker = select(loadbalance, invocation, invokers, selected);
                     if (!selected.contains(invoker)) {
@@ -79,24 +86,34 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
                     }
                 }
             }
+            // ----------------------✨ 分割线1 ✨---------------------- //
             RpcContext.getContext().setInvokers((List) selected);
             final AtomicInteger count = new AtomicInteger();
             final BlockingQueue<Object> ref = new LinkedBlockingQueue<>();
+            // 遍历 selected 列表
             for (final Invoker<T> invoker : selected) {
+                // 为每个 Invoker 创建一个执行线程
                 executor.execute(() -> {
                     try {
+                        // 进行远程调用
                         Result result = invoker.invoke(invocation);
+                        // 将结果存到阻塞队列中
                         ref.offer(result);
                     } catch (Throwable e) {
                         int value = count.incrementAndGet();
+                        // 仅在 value 大于等于 selected.size() 时，才将异常对象
+                        // 放入阻塞队列中，请大家思考一下为什么要这样做。
                         if (value >= selected.size()) {
-                            ref.offer(e);
+                            ref.offer(e);  // 将异常对象存入到阻塞队列中
                         }
                     }
                 });
             }
+            // ----------------------✨ 分割线2 ✨---------------------- //
             try {
+                // 从阻塞队列中取出远程调用结果
                 Object ret = ref.poll(timeout, TimeUnit.MILLISECONDS);
+                // 如果结果类型为 Throwable，则抛出异常
                 if (ret instanceof Throwable) {
                     Throwable e = (Throwable) ret;
                     throw new RpcException(e instanceof RpcException ? ((RpcException) e).getCode() : 0, "Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e.getMessage(), e.getCause() != null ? e.getCause() : e);
@@ -110,4 +127,12 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
             RpcContext.getContext().clearAttachments();
         }
     }
+    // ForkingClusterInvoker 的 doInvoker 方法比较长，这里通过两个分割线将整个方法划分为三个逻辑块。从方法开始到分割线1之间的代码主要是用于
+    // 选出 forks 个 Invoker，为接下来的并发调用提供输入。分割线1和分割线2之间的逻辑通过线程池并发调用多个 Invoker，并将结果存储在阻塞队列中。
+    // 分割线2到方法结尾之间的逻辑主要用于从阻塞队列中获取返回结果，并对返回结果类型进行判断。如果为异常类型，则直接抛出，否则返回。
+    //
+    //以上就是ForkingClusterInvoker 的 doInvoker 方法大致过程。我们在分割线1和分割线2之间的代码上留了一个问题，问题是这样的：
+    // 为什么要在`value >= selected.size()`的情况下，才将异常对象添加到阻塞队列中？这里来解答一下。原因是这样的，在并行调用多个服务提供者的情
+    // 况下，只要有一个服务提供者能够成功返回结果，而其他全部失败。此时 ForkingClusterInvoker 仍应该返回成功的结果，而非抛出异常。
+    // 在`value >= selected.size()`时将异常对象放入阻塞队列中，可以保证异常对象不会出现在正常结果的前面，这样可从阻塞队列中优先取出正常的结果。
 }

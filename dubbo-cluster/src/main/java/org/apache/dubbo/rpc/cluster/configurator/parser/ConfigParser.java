@@ -40,6 +40,7 @@ import static org.apache.dubbo.common.constants.RegistryConstants.DYNAMIC_CONFIG
 /**
  * Config parser
  */
+// OK
 public class ConfigParser {
 
     public static List<URL> parseConfigurators(String rawConfig) {
@@ -152,7 +153,7 @@ public class ConfigParser {
             sb.append(item.getSide());
         }
         Map<String, String> parameters = item.getParameters();
-        if (CollectionUtils.isEmptyMap(parameters)) {
+        if (CollectionUtils.isEmptyMap(parameters)) { // 至少有1个参数
             throw new IllegalStateException("Invalid configurator rule, please specify at least one parameter " +
                     "you want to change in the rule.");
         }

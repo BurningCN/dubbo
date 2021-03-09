@@ -50,6 +50,7 @@ import static org.mockito.Mockito.mock;
  * FailbackClusterInvokerTest
  * <p>
  * add annotation @TestMethodOrder, the testARetryFailed Method must to first execution
+ * 添加注释@TestMethodOrder, testARetryFailed方法必须首先执行
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class FailbackClusterInvokerTest {
@@ -148,7 +149,6 @@ public class FailbackClusterInvokerTest {
         LogUtil.stop();
     }
 
-    @Disabled
     @Test
     @Order(4)
     public void testARetryFailed() throws Exception {
@@ -166,6 +166,7 @@ public class FailbackClusterInvokerTest {
         Assertions.assertNull(RpcContext.getContext().getInvoker());
 //        invoker.retryFailed();// when retry the invoker which get from failed map already is not the mocked invoker,so
         //Ensure that the main thread is online
+        //当重试时，从失败的map获取的调用者已经不是被模拟的调用者，因此确保主线程在线
         CountDownLatch countDown = new CountDownLatch(1);
         countDown.await(15000L, TimeUnit.MILLISECONDS);
         LogUtil.stop();

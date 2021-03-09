@@ -24,6 +24,7 @@ import org.apache.dubbo.rpc.cluster.support.wrapper.AbstractCluster;
  * BroadcastCluster
  *
  */
+// OK
 public class BroadcastCluster extends AbstractCluster {
 
     @Override

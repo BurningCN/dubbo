@@ -132,6 +132,7 @@ public abstract class AbstractCluster implements Cluster {
         @Override
         protected Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
             // The only purpose is to build a interceptor chain, so the cluster related logic doesn't matter.
+            // 唯一的目的是建立一个拦截链，因此集群相关的逻辑无关紧要。
             return null;
         }
     }

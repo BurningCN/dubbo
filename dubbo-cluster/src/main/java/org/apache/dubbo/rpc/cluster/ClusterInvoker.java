@@ -36,6 +36,9 @@ import org.apache.dubbo.rpc.Invoker;
  * @param <T>
  */
 // OK
+// ClusterInvoker、Directory、LoadBalance、Router的关系如下：
+// ClusterInvoker 依赖 Directory 和 LoadBalance， Directory 依赖RouterChain ，先使用 Directory 获取符合的invokers，
+// 然后利用lb选择某个具体的invoker
 public interface ClusterInvoker<T> extends Invoker<T> {
     URL getRegistryUrl();
 

@@ -41,6 +41,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.WEIGHT_KEY;
 /**
  *
  */
+// OK
 public class ConfigParserTest {
 
     private String streamToString(InputStream stream) throws IOException {

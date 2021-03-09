@@ -51,6 +51,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.DEFAULT_CLUSTER_STICKY;
 /**
  * AbstractClusterInvoker
  */
+// OK
 // 我们首先从各种 Cluster Invoker 的父类 AbstractClusterInvoker 源码开始说起。前面说过，集群工作过程可分为两个阶段，第一个阶段是在服务消费
 // 者初始化期间，这个在[服务引用](https://dubbo.apache.org/zh/docs/v2.7/dev/source/cluster/)那篇文章中分析过，就不赘述。第二个阶段是在
 // 服务消费者进行远程调用时，此时 AbstractClusterInvoker 的 invoke 方法会被调用。列举 Invoker，负载均衡等操作均会在此阶段被执行。因此下面先
@@ -132,11 +133,15 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
      * the selected invoker has the minimum chance to be one in the previously selected list, and also
      * guarantees this invoker is available.
      *
+     * 使用loadbalance策略选择调用程序。
+     * a)首先，使用loadbalance选择一个调用者。如果此调用程序在先前选定的列表中，或者如果此调用程序不可用，则继续步骤b(重新选择)，否则返回第一个选定的调用程序
+     * b)重选，重选验证规则:已选>可用。该规则保证被选中的调用程序在之前选中的列表中有最小的机会，并且还保证这个调用程序是可用的。
+     *
      * @param loadbalance load balance policy
      * @param invocation  invocation
      * @param invokers    invoker candidates
-     * @param selected    exclude selected invokers or not
-     * @return the invoker which will final to do invoke.
+     * @param selected    exclude selected invokers or not  是否排除选定的调用者
+     * @return the invoker which will final to do invoke.  将以do invoke结尾的调用程序。
      * @throws RpcException exception
      */
     protected Invoker<T> select(LoadBalance loadbalance, Invocation invocation,
@@ -238,6 +243,9 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
      * Reselect, use invokers not in `selected` first, if all invokers are in `selected`,
      * just pick an available one using loadbalance policy.
      *
+     * 重新选择，首先使用不在 selected 中的调用者，如果所有的调用者都在 selected 中，
+     * 使用loadbalance策略选择一个可用的。
+     *
      * @param loadbalance    load balance policy
      * @param invocation     invocation
      * @param invokers       invoker candidates
@@ -294,7 +302,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
 
     @Override
     public Result invoke(final Invocation invocation) throws RpcException {
-        checkWhetherDestroyed();
+        checkWhetherDestroyed();// 进去
 
         // 绑定 attachments 到 invocation 中.
         // binding attachments into invocation.
@@ -332,7 +340,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
             throw new RpcException(RpcException.NO_INVOKER_AVAILABLE_AFTER_FILTER, "Failed to invoke the method "
                     + invocation.getMethodName() + " in the service " + getInterface().getName()
                     + ". No provider available for the service " + directory.getConsumerUrl().getServiceKey()
-                    + " from registry " + directory.getUrl().getAddress()
+                    + " from registry " + directory.getUrl().getAddress() // 从这里看出getUrl和上面getConsumerUrl的区别了
                     + " on the consumer " + NetUtils.getLocalHost()
                     + " using the dubbo version " + Version.getVersion()
                     + ". Please check if the providers have been started and registered.");
