@@ -40,6 +40,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_PROTOCOL
 /**
  * DubboMonitor
  */
+// OK
 public class DubboMonitor implements Monitor {
 
     private static final Logger logger = LoggerFactory.getLogger(DubboMonitor.class);
@@ -65,12 +66,15 @@ public class DubboMonitor implements Monitor {
 
     private final ConcurrentMap<Statistics, AtomicReference<long[]>> statisticsMap = new ConcurrentHashMap<Statistics, AtomicReference<long[]>>();
 
+    // gx 之所以需要monitorInvoker的原因是因为DubboMonitor是实现Node，Node那些方法，直接委托给Invoker即可
     public DubboMonitor(Invoker<MonitorService> monitorInvoker, MonitorService monitorService) {
         this.monitorInvoker = monitorInvoker;
         this.monitorService = monitorService;
         // The time interval for timer <b>scheduledExecutorService</b> to send data
+        // 默认60s 通知一次(调用send方法)
         final long monitorInterval = monitorInvoker.getUrl().getPositiveParameter("interval", 60000);
         // collect timer for collecting statistics data
+        // ScheduledFuture + ScheduledExecutorService.scheduleWithFixedDelay结合使用的方式，这样比如我们不想要该任务进行调度了，直接sendFuture.cancel(true)即可
         sendFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 // collect data
@@ -104,7 +108,7 @@ public class DubboMonitor implements Monitor {
             long maxConcurrent = numbers[9];
             String protocol = getUrl().getParameter(DEFAULT_PROTOCOL);
 
-            // send statistics data
+            // send statistics data 把指标信息封装到url
             URL url = statistics.getUrl()
                     .addParameters(MonitorService.TIMESTAMP, timestamp,
                             MonitorService.SUCCESS, String.valueOf(success),
@@ -119,11 +123,14 @@ public class DubboMonitor implements Monitor {
                             MonitorService.MAX_CONCURRENT, String.valueOf(maxConcurrent),
                             DEFAULT_PROTOCOL, protocol
                     );
+            // 调用监控方的collect方法，注意本类的collect方法和 monitorService.collect(url) 是不同的，外界是先调用DubboMoniter的collect方法
+            // 然后其定时任务会把这些统计指标通过send方法发送给业务方的monitorService
             monitorService.collect(url);
 
             // reset
             long[] current;
             long[] update = new long[LENGTH];
+            // 这里使用cas更新的原因是 statisticsMap 是共享的，可能当前在send，还有外界调用collect，所以下面的get()的值，刚get到，又被别的线程（别的线程调用collect对这个指标累加了又）赋值了
             do {
                 current = reference.get();
                 if (current == null) {
@@ -160,6 +167,7 @@ public class DubboMonitor implements Monitor {
         // use CompareAndSet to sum
         long[] current;
         long[] update = new long[LENGTH];
+        // 这里cas的原因是，该collect方法被外部多线程调用，假设多线程他们的statistics是一致的，为了确保所有线程对该statistics的指标值都能正确累加，所以必须要用cas
         do {
             current = reference.get();
             if (current == null) {
@@ -206,6 +214,7 @@ public class DubboMonitor implements Monitor {
     @Override
     public void destroy() {
         try {
+            // 内部会取消该任务
             ExecutorUtil.cancelScheduledFuture(sendFuture);
         } catch (Throwable t) {
             logger.error("Unexpected error occur at cancel sender timer, cause: " + t.getMessage(), t);

@@ -24,6 +24,8 @@ import java.io.Serializable;
 /**
  * Statistics. (SPI, Prototype, ThreadSafe)
  */
+// OK
+// 从这个类就能看到一个指标级别是到方法的，也知道一个服务必有的几个信息，下面的属性正好是从大到小
 public class Statistics implements Serializable {
 
     private static final long serialVersionUID = -6921183057683641441L;

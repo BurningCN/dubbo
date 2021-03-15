@@ -26,7 +26,7 @@ import org.apache.dubbo.common.extension.SPI;
  * @see org.apache.dubbo.remoting.Transporter#connect(org.apache.dubbo.common.URL, ChannelHandler)
  */
 // OK
-@SPI
+@SPI //todo need pr 不需要SPI注解
 public interface ChannelHandler {
 
     // 主要是channel发生了一些事件，做出相应的回调处理

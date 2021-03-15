@@ -39,6 +39,10 @@ public interface ClusterInterceptor {
      * and {@link #after(AbstractClusterInvoker, Invocation)}, methods to add your own logic expected to be
      * executed before and after invoke.
      *
+     * *不需要覆盖这个方法，覆盖{@link #before(AbstractClusterInvoker, Invocation)}
+     * *和{@link #after(AbstractClusterInvoker, Invocation)}方法来添加您自己期望的逻辑
+     * *在调用之前和之后执行。
+     *
      * @param clusterInvoker
      * @param invocation
      * @return

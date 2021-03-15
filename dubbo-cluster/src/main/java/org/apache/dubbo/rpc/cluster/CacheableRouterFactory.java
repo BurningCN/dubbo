@@ -18,8 +18,8 @@ package org.apache.dubbo.rpc.cluster;
 
 import org.apache.dubbo.common.URL;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * If you want to provide a router implementation based on design of v2.7.0, please extend from this abstract class.
@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 // OK
 public abstract class CacheableRouterFactory implements RouterFactory {
-    private ConcurrentMap<String, Router> routerMap = new ConcurrentHashMap<>();
+    private Map<String, Router> routerMap = new ConcurrentHashMap<>();
 
     @Override
     public Router getRouter(URL url) {

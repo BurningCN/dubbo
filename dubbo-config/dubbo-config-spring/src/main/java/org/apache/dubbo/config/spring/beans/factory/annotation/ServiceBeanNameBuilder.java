@@ -38,6 +38,7 @@ import static org.springframework.core.annotation.AnnotationUtils.getAnnotationA
  * @see ReferenceBean
  * @since 2.6.5
  */
+// OK
 public class ServiceBeanNameBuilder {
 
     private static final String SEPARATOR = ":";

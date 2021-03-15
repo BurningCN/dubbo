@@ -62,11 +62,11 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
 
     protected Directory<T> directory;
 
-    protected boolean availablecheck;
+    protected boolean availablecheck; // 从url获取该参数值，如果为true，那么每次使用invoker的时候，都会调用invoker.isAvailable()
 
     private AtomicBoolean destroyed = new AtomicBoolean(false);
 
-    private volatile Invoker<T> stickyInvoker = null;
+    private volatile Invoker<T> stickyInvoker = null;// 粘滞invoker，如果url的参数sticky为true，那么往后的请求都会打到这个invoker上
 
     public AbstractClusterInvoker() {
     }
@@ -132,7 +132,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
      * b) Reselection, the validation rule for reselection: selected > available. This rule guarantees that
      * the selected invoker has the minimum chance to be one in the previously selected list, and also
      * guarantees this invoker is available.
-     *
+     * <p>
      * 使用loadbalance策略选择调用程序。
      * a)首先，使用loadbalance选择一个调用者。如果此调用程序在先前选定的列表中，或者如果此调用程序不可用，则继续步骤b(重新选择)，否则返回第一个选定的调用程序
      * b)重选，重选验证规则:已选>可用。该规则保证被选中的调用程序在之前选中的列表中有最小的机会，并且还保证这个调用程序是可用的。
@@ -242,7 +242,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
     /**
      * Reselect, use invokers not in `selected` first, if all invokers are in `selected`,
      * just pick an available one using loadbalance policy.
-     *
+     * <p>
      * 重新选择，首先使用不在 selected 中的调用者，如果所有的调用者都在 selected 中，
      * 使用loadbalance策略选择一个可用的。
      *
@@ -373,7 +373,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
     protected LoadBalance initLoadBalance(List<Invoker<T>> invokers, Invocation invocation) {
         try {
             if (CollectionUtils.isNotEmpty(invokers)) {
-                return  ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(invokers.get(0).getUrl()
+                return ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(invokers.get(0).getUrl()
                         .getMethodParameter(RpcUtils.getMethodName(invocation), LOADBALANCE_KEY, DEFAULT_LOADBALANCE));
             } else {
                 return ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(DEFAULT_LOADBALANCE);

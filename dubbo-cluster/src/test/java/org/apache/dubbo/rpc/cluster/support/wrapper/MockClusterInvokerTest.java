@@ -59,7 +59,7 @@ public class MockClusterInvokerTest {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName());
         url = url.addParameter(MOCK_KEY, "fail")
                 .addParameter(REFER_KEY, URL.encode(PATH_KEY + "=" + IHelloService.class.getName()));
-        Invoker<IHelloService> cluster = getClusterInvoker(url);
+        Invoker<IHelloService> cluster = getClusterInvoker(url);// 进去
         URL mockUrl = URL.valueOf("mock://localhost/" + IHelloService.class.getName()
                 + "?getSomething.mock=return aa");
 
@@ -673,6 +673,7 @@ public class MockClusterInvokerTest {
 
     private Invoker<IHelloService> getClusterInvokerMock(URL url, Invoker<IHelloService> mockInvoker) {
         // As `javassist` have a strict restriction of argument types, request will fail if Invocation do not contains complete parameter type information
+        // 由于“javassist”对参数类型有严格的限制，如果调用没有包含完整的参数类型信息，请求将会失败
         final URL durl = url.addParameter("proxy", "jdk");
         invokers.clear();
         ProxyFactory proxy = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getExtension("jdk");

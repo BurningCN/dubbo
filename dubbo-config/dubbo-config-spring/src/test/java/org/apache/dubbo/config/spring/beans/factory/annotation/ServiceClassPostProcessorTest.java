@@ -43,7 +43,7 @@ import java.util.Map;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(
         classes = {
-                ServiceAnnotationTestConfiguration2.class,
+                ServiceAnnotationTestConfiguration2.class, // 注意
                 ServiceClassPostProcessorTest.class
         })
 @TestPropertySource(properties = {
@@ -74,7 +74,6 @@ public class ServiceClassPostProcessorTest {
 
     @Test
     public void test() {
-
         Map<String, HelloService> helloServicesMap = beanFactory.getBeansOfType(HelloService.class);
 
         Assertions.assertEquals(2, helloServicesMap.size());

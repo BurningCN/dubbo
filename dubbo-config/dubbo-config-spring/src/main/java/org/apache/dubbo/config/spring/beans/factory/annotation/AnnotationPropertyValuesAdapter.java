@@ -33,6 +33,7 @@ import static com.alibaba.spring.util.AnnotationUtils.getAttributes;
  * @see PropertyValues
  * @since 2.5.11
  */
+// OK
 class AnnotationPropertyValuesAdapter implements PropertyValues {
 
     private final PropertyValues delegate;
@@ -53,6 +54,7 @@ class AnnotationPropertyValuesAdapter implements PropertyValues {
         this.delegate = new MutablePropertyValues(getAttributes(annotation, propertyResolver, ignoreDefaultValue, ignoreAttributeNames));
     }
 
+    // gx
     public AnnotationPropertyValuesAdapter(Annotation annotation, PropertyResolver propertyResolver, String... ignoreAttributeNames) {
         this(annotation, propertyResolver, true, ignoreAttributeNames);
     }

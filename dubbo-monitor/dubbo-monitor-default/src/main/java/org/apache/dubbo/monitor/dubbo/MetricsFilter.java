@@ -76,18 +76,22 @@ public class MetricsFilter implements Filter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 只调用一次，暴露指标服务
         if (exported.compareAndSet(false, true)) {
             this.protocolName = invoker.getUrl().getParameter(METRICS_PROTOCOL) == null ?
                     DEFAULT_PROTOCOL : invoker.getUrl().getParameter(METRICS_PROTOCOL);
 
             Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(protocolName);
 
+            // 指标端口
             this.port = invoker.getUrl().getParameter(METRICS_PORT) == null ?
                     protocol.getDefaultPort() : Integer.valueOf(invoker.getUrl().getParameter(METRICS_PORT));
 
+            // 初始化获取指标服务提供者
             Invoker<MetricsService> metricsInvoker = initMetricsInvoker();
 
             try {
+                // 暴露指标服务
                 protocol.export(metricsInvoker);
             } catch (RuntimeException e) {
                 logger.error("Metrics Service need to be configured" +
@@ -99,8 +103,10 @@ public class MetricsFilter implements Filter {
         boolean isProvider = context.isProviderSide();
         long start = System.currentTimeMillis();
         try {
+            // 走后续Filter
             Result result = invoker.invoke(invocation); // proceed invocation chain
             long duration = System.currentTimeMillis() - start;
+            // 统计指标，既然统计耗时，我猜这个指标是放在最外层的
             reportMetrics(invoker, invocation, duration, "success", isProvider);
             return result;
         } catch (RpcException e) {

@@ -32,8 +32,10 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 public class SpringContainer implements Container {
 
     public static final String SPRING_CONFIG = "dubbo.spring.config";
+    // 注意此写法，两个 *
     public static final String DEFAULT_SPRING_CONFIG = "classpath*:META-INF/spring/*.xml";
     private static final Logger logger = LoggerFactory.getLogger(SpringContainer.class);
+    // 该spring容器主要是处理 ClassPathXml 的
     static ClassPathXmlApplicationContext context;
 
     public static ClassPathXmlApplicationContext getContext() {
@@ -46,17 +48,18 @@ public class SpringContainer implements Container {
         if (StringUtils.isEmpty(configPath)) {
             configPath = DEFAULT_SPRING_CONFIG;
         }
+        // split内容为正则表达式
         context = new ClassPathXmlApplicationContext(configPath.split("[,\\s]+"), false);
-        context.refresh();
-        context.start();
+        context.refresh(); // 注意
+        context.start();// 注意
     }
 
     @Override
     public void stop() {
         try {
             if (context != null) {
-                context.stop();
-                context.close();
+                context.stop();// 注意
+                context.close();// 注意
                 context = null;
             }
         } catch (Throwable e) {

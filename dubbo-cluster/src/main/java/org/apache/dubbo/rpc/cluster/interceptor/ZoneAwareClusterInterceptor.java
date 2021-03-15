@@ -38,8 +38,8 @@ public class ZoneAwareClusterInterceptor implements ClusterInterceptor {
     @Override
     public void before(AbstractClusterInvoker<?> clusterInvoker, Invocation invocation) {
         RpcContext rpcContext = RpcContext.getContext();
-        String zone = (String) rpcContext.getAttachment(REGISTRY_ZONE);
-        String force = (String) rpcContext.getAttachment(REGISTRY_ZONE_FORCE);
+        String zone = rpcContext.getAttachment(REGISTRY_ZONE);
+        String force = rpcContext.getAttachment(REGISTRY_ZONE_FORCE);
         ExtensionLoader<ZoneDetector> loader = ExtensionLoader.getExtensionLoader(ZoneDetector.class);
         if (StringUtils.isEmpty(zone) && loader.hasExtension("default")) {
             ZoneDetector detector = loader.getExtension("default");

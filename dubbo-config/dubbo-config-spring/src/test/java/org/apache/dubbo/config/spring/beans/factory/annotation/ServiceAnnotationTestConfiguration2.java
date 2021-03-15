@@ -36,11 +36,12 @@ import org.springframework.transaction.TransactionStatus;
  *
  * @since 2.7.7
  */
+// OK
 @PropertySource("classpath:/META-INF/default.properties")
 public class ServiceAnnotationTestConfiguration2 {
 
     /**
-     * Current application configuration, to replace XML config:
+     * Current application configuration, to replace XML config: 当前应用程序配置，以替换XML配置:
      * <prev>
      * &lt;dubbo:application name="dubbo-demo-application"/&gt;
      * </prev>

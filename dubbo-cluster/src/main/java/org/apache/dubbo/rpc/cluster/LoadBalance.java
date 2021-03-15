@@ -41,7 +41,7 @@ public interface LoadBalance {
      * select one invoker in list.
      *
      * @param invokers   invokers.
-     * @param url        refer url todo need pr 这个参数没有用
+     * @param url        refer url
      * @param invocation invocation.
      * @return selected invoker.
      */

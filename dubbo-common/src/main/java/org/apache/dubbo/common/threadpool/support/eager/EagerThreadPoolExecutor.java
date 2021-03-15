@@ -41,7 +41,7 @@ public class EagerThreadPoolExecutor extends ThreadPoolExecutor {
     public EagerThreadPoolExecutor(int corePoolSize,
                                    int maximumPoolSize,
                                    long keepAliveTime,
-                                   TimeUnit unit, TaskQueue<Runnable> workQueue,
+                                   TimeUnit unit, TaskQueue workQueue,
                                    ThreadFactory threadFactory,
                                    RejectedExecutionHandler handler) { // 这个就是拒绝策略，eg AbortPolicy implements RejectedExecutionHandler handler
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);

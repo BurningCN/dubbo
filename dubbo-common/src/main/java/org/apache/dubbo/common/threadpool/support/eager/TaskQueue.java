@@ -81,7 +81,7 @@ public class TaskQueue<R extends Runnable> extends LinkedBlockingQueue<Runnable>
         }
 
         // currentPoolThreadSize >= max
-        // 重点: 代码运行到此处，说明当前线程数 >= 最大线程数，需要真正的提交到队列中
+        // 重点: 代码运行到此处，说明当前线程数 = 最大线程数，需要真正的提交到队列中
         return super.offer(runnable);
     }
 

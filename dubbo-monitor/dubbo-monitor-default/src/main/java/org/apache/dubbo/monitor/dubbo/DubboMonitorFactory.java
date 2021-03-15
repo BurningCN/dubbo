@@ -34,16 +34,19 @@ import static org.apache.dubbo.remoting.Constants.CHECK_KEY;
 /**
  * DefaultMonitorFactory
  */
+// OK
 public class DubboMonitorFactory extends AbstractMonitorFactory {
 
     private Protocol protocol;
 
     private ProxyFactory proxyFactory;
 
+    // spi的ioc实现注入
     public void setProtocol(Protocol protocol) {
         this.protocol = protocol;
     }
 
+    // spi的ioc实现注入
     public void setProxyFactory(ProxyFactory proxyFactory) {
         this.proxyFactory = proxyFactory;
     }
@@ -63,6 +66,8 @@ public class DubboMonitorFactory extends AbstractMonitorFactory {
         }
         urlBuilder.addParameters(CHECK_KEY, String.valueOf(false),
                 REFERENCE_FILTER_KEY, filter + "-monitor");
+
+        // 类似一个消费者的使用方式，refer+getProxy
         Invoker<MonitorService> monitorInvoker = protocol.refer(MonitorService.class, urlBuilder.build());
         MonitorService monitorService = proxyFactory.getProxy(monitorInvoker);
         return new DubboMonitor(monitorInvoker, monitorService);

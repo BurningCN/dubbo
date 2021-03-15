@@ -65,7 +65,7 @@ public abstract class AbstractCodec implements Codec2 {
     }
 
     protected boolean isClientSide(Channel channel) {
-        String side = (String)channel.getAttribute(SIDE_KEY);
+        String side = (String)channel.getAttribute(SIDE_KEY); // 从属性表获取
         if (CLIENT_SIDE.equals(side)) {
             return true;
         } else if (SERVER_SIDE.equals(side)) {
@@ -79,7 +79,7 @@ public abstract class AbstractCodec implements Codec2 {
                 && NetUtils.filterLocalHost(url.getIp()).equals(
                 NetUtils.filterLocalHost(address.getAddress()
                     .getHostAddress()));
-            channel.setAttribute(SIDE_KEY, isClient ? CLIENT_SIDE
+            channel.setAttribute(SIDE_KEY, isClient ? CLIENT_SIDE // 填充到属性表
                 : SERVER_SIDE);
             return isClient;
         }

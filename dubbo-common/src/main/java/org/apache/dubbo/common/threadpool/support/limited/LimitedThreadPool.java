@@ -38,7 +38,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREADS_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
 
 /**
- * Creates a thread pool that creates new threads as needed until limits reaches. This thread pool will not shrink
+ * Creates a thread pool that creates new threads as needed until limits reaches. This thread pool will not shrink（缩小）
  * automatically.
  * 创建一个线程池，根据需要创建新的线程，直到限制到达。此线程池不会自动收缩。
  */

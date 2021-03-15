@@ -37,6 +37,7 @@ import static org.apache.dubbo.config.spring.beans.factory.annotation.ServiceBea
  * @see ServiceBeanNameBuilder
  * @since 2.6.6
  */
+// OK
 @Service(interfaceClass = DemoService.class, group = GROUP, version = VERSION,
         application = "application", module = "module", registry = {"1", "2", "3"})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -65,6 +66,7 @@ public class ServiceBeanNameBuilderTest {
         Assertions.assertEquals("ServiceBean:org.apache.dubbo.config.spring.api.DemoService:1.0.0:DUBBO",
                 builder.build());
 
+        // todo need pr 这里重复了
         Assertions.assertEquals("ServiceBean:org.apache.dubbo.config.spring.api.DemoService:1.0.0:DUBBO",
                 builder.build());
     }

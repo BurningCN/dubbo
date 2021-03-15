@@ -41,6 +41,7 @@ public class RouterChain<T> {
 
     // Fixed router instances: ConfigConditionRouter, TagRouter, e.g., the rule for each instance may change but the
     // instance will never delete or recreate.
+    //固定的路由器实例:ConfigConditionRouter, TagRouter，例如，每个实例的规则可能会改变，但是实例永远不会被删除或重新创建。
     private List<Router> builtinRouters = Collections.emptyList();
 
     public static <T> RouterChain<T> buildChain(URL url) {

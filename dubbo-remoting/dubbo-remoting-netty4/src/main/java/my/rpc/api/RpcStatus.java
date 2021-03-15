@@ -31,20 +31,18 @@ public class RpcStatus {
         max = (max <= 0) ? Integer.MAX_VALUE : max;
         RpcStatus appStatus = getStatus(url);
         RpcStatus methodStatus = getStatus(url, methodName);
-        if (methodStatus.active.get() == max) {
-            return false;
-        }
+
         while (true) {// cas+轮询，每次进来必须查询，获取内存最新值 sao
             int count = methodStatus.active.get();
             if (count == max) {
                 return false;
             }
             if (methodStatus.active.compareAndSet(count, count + 1)) {
-                break;
+                appStatus.active.incrementAndGet();
+                return true;
             }
         }
-        appStatus.active.incrementAndGet();
-        return true;
+
     }
 
     public static void endCount(URL url, String methodName, long elapsed, boolean succeeded) {

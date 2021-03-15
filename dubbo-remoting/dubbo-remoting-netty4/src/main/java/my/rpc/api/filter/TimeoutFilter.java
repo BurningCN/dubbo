@@ -27,6 +27,7 @@ public class TimeoutFilter implements Filter, Filter.Listener {
         if (obj != null) {
             TimeoutCountDown timeoutCountDown = (TimeoutCountDown) obj;
             if (timeoutCountDown.isExpired()) {
+                // 结果清空
                 ((AppResponse) appResponse).clear();
                 System.out.println("invoke timed out. method: " + invocation.getMethodName() + " arguments: " +
                         Arrays.toString(invocation.getArguments()) + " , url is " + invoker.getURL() +

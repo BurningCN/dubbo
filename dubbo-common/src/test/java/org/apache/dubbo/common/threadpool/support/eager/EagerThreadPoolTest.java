@@ -56,6 +56,7 @@ public class EagerThreadPoolTest {
         ThreadPoolExecutor executor = (ThreadPoolExecutor) threadPool.getExecutor(url);
         assertThat(executor, instanceOf(EagerThreadPoolExecutor.class));
         assertThat(executor.getCorePoolSize(), is(1));
+        assertThat(executor.getPoolSize(), is(0));
         assertThat(executor.getMaximumPoolSize(), is(2));
         assertThat(executor.getKeepAliveTime(TimeUnit.MILLISECONDS), is(1000L));
         assertThat(executor.getQueue().remainingCapacity(), is(1));
@@ -73,6 +74,7 @@ public class EagerThreadPoolTest {
                 latch.countDown();
             }
         });
+        assertThat(executor.getPoolSize(), is(1));
 
         latch.await();
         assertThat(latch.getCount(), is(0L));

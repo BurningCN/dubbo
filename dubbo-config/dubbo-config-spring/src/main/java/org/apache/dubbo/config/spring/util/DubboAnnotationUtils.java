@@ -102,6 +102,7 @@ public class DubboAnnotationUtils {
 
             if (hasText(interfaceClassName)) {
                 if (ClassUtils.isPresent(interfaceClassName, classLoader)) {
+                    // 加载类
                     interfaceClass = resolveClassName(interfaceClassName, classLoader);
                 }
             }

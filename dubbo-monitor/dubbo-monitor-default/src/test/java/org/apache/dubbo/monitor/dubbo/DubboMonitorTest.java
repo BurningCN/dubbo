@@ -53,6 +53,7 @@ import static org.mockito.Mockito.verify;
 /**
  * DubboMonitorTest
  */
+// OK
 public class DubboMonitorTest {
 
     private final Invoker<MonitorService> monitorInvoker = new Invoker<MonitorService>() {
@@ -94,6 +95,9 @@ public class DubboMonitorTest {
 
     @Test
     public void testCount() throws Exception {
+        // 链路和使用方式。外界通过new DubboMonitor(monitorInvoker, monitorService) 拿到DubboMonitor
+        // monitorService相当于监听器，即获取这些服务运行指标的，产生指标的调用方只需要调用DubboMonitor#collect方法即可，collect内部会对同一类型指标进行累加
+        // DubboMonitor内部有定时调度线程调用send方法，将指标发送给monitorService并将指标reset清零重置
         DubboMonitor monitor = new DubboMonitor(monitorInvoker, monitorService);
         URL statistics = new URLBuilder(DUBBO_PROTOCOL, "10.20.153.10", 0)
                 .addParameter(MonitorService.APPLICATION, "morgan")
@@ -148,7 +152,8 @@ public class DubboMonitorTest {
         ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
         MonitorFactory monitorFactory = ExtensionLoader.getExtensionLoader(MonitorFactory.class).getAdaptiveExtension();
 
-        Exporter<MonitorService> exporter = protocol.export(proxyFactory.getInvoker(monitorService, MonitorService.class, URL.valueOf("dubbo://127.0.0.1:17979/" + MonitorService.class.getName())));
+        Exporter<MonitorService> exporter = protocol.export(proxyFactory.getInvoker(monitorService, MonitorService.class,
+                URL.valueOf("dubbo://127.0.0.1:17979/" + MonitorService.class.getName())));
         try {
             Monitor monitor = null;
             long start = System.currentTimeMillis();
@@ -211,6 +216,7 @@ public class DubboMonitorTest {
         given(invoker.getUrl()).willReturn(URL.valueOf("dubbo://127.0.0.1:7070?interval=20"));
         DubboMonitor dubboMonitor = new DubboMonitor(invoker, monitorService);
 
+        // 内部对statistics识别为一个，所以会对这些指标累加
         dubboMonitor.collect(statistics);
         dubboMonitor.collect(statistics.addParameter(MonitorService.SUCCESS, 3).addParameter(MonitorService.CONCURRENT, 2)
                 .addParameter(MonitorService.INPUT, 1).addParameter(MonitorService.OUTPUT, 2));

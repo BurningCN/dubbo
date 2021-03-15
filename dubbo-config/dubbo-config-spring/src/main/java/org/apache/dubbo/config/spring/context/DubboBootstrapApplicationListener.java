@@ -32,6 +32,7 @@ import org.springframework.core.Ordered;
  *
  * @since 2.7.5
  */
+// OK
 public class DubboBootstrapApplicationListener extends OnceApplicationContextEventListener implements Ordered {
 
     /**

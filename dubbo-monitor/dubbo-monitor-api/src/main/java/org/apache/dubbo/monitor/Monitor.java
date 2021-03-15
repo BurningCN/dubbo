@@ -23,6 +23,8 @@ import org.apache.dubbo.common.Node;
  *
  * @see org.apache.dubbo.monitor.MonitorFactory#getMonitor(org.apache.dubbo.common.URL)
  */
+// OK
+// 又是一个Node ，Invoker、Registry、Monitor、Directory。空方法，存储是为了Node 好听点，和 Registry+RegistryService 一样
 public interface Monitor extends Node, MonitorService {
 
 }

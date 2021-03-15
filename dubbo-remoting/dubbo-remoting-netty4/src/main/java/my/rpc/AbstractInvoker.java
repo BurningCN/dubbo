@@ -20,6 +20,7 @@ import static my.common.constants.CommonConstants.TIMEOUT_KEY;
  * @author geyu
  * @date 2021/2/4 13:56
  */
+// 该invoker是给消费端使用的invoker
 public abstract class AbstractInvoker<T> implements Invoker<T> {
 
     private final Class<T> type;
@@ -38,6 +39,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         this.attachments = attachments == null ? null : Collections.unmodifiableMap(attachments);
     }
 
+    // 在消费端使用
     public AbstractInvoker(Class<T> type, URL url, String[] keys) {
         this.type = type;
         this.url = url;
@@ -95,15 +97,16 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         }
         Map<String, Object> rpcAttachments = RpcContext.getContext().getAttachments();
         if (CollectionUtils.isNotEmptyMap(rpcAttachments)) {
-            invocation.addObjectAttachments(rpcAttachments); // 2
+            invocation.addObjectAttachments(rpcAttachments); // 3
         }
-        invocation.setInvokeMode(RpcUtils.getInvokeMode(invocation)); // 3
+        invocation.setInvokeMode(RpcUtils.getInvokeMode(invocation)); // 4
 
         RpcUtils.attachInvocationIdIfAsync(url, invocation);
 
         inv.setObjectAttachment(GROUP_KEY, getURL().getParameter(GROUP_KEY));// 这部分内容本来是子类的， 我挪到这里了，为了统一在一处处理
         inv.setObjectAttachment(PATH_KEY, getURL().getPath());
         inv.setObjectAttachment(VERSION_KEY, getURL().getParameter(VERSION_KEY, "0.0.0")); // 注意！这里和createServiceKey的0.0.0对应，用于没有给url指定version的情况
+
         String methodName = RpcUtils.getMethodName(invocation);
         int timeout = calculateTimeout(invocation, methodName);
         invocation.setObjectAttachment(TIMEOUT_ATTACHMENT_KEY, timeout);
@@ -130,7 +133,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
 
     private int calculateTimeout(Invocation invocation, String methodName) {
         Object countdown = RpcContext.getContext().get(TIME_COUNTDOWN_KEY);
-        int timeout = DEFAULT_TIMEOUT;
+        int timeout;
         if (countdown == null) {
             timeout = (int) RpcUtils.getTimeout(getURL(), methodName, RpcContext.getContext(), DEFAULT_TIMEOUT);
             if (getURL().getParameter(ENABLE_TIMEOUT_COUNTDOWN_KEY, false)) {

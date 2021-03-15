@@ -34,18 +34,26 @@ import static org.springframework.context.annotation.AnnotationConfigUtils.regis
  * @see #registerDefaultFilters()
  * @since 2.5.7
  */
+
+// OK
 public class DubboClassPathBeanDefinitionScanner extends ClassPathBeanDefinitionScanner {
 
 
     public DubboClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry, boolean useDefaultFilters, Environment environment,
                                                ResourceLoader resourceLoader) {
 
+        /**
+         * ClassPathBeanDefinitionScanner内部 发现 useDefaultFilters = true
+         * 会注册spring扫描类过滤器，加了特定注解的类会被扫描到
+         * 带有@Component、@Repository、@Service、@Controller、@ManagedBean、@Named
+         */
         super(registry, useDefaultFilters);
 
         setEnvironment(environment);
 
         setResourceLoader(resourceLoader);
 
+        // 注册后置处理器
         registerAnnotationConfigProcessors(registry);
 
     }
@@ -56,14 +64,16 @@ public class DubboClassPathBeanDefinitionScanner extends ClassPathBeanDefinition
         this(registry, false, environment, resourceLoader);
 
     }
-
+    // todo need pr 下面两个方法没用，多此一举
     @Override
     public Set<BeanDefinitionHolder> doScan(String... basePackages) {
+        // 扫描指定的包，并注册beanDefinition
         return super.doScan(basePackages);
     }
 
     @Override
     public boolean checkCandidate(String beanName, BeanDefinition beanDefinition) throws IllegalStateException {
+        // 检查registry是否存在（内部通过beanName 或 beanDefinition，返回true 表示不存在）
         return super.checkCandidate(beanName, beanDefinition);
     }
 

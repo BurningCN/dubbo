@@ -29,6 +29,7 @@ import static org.springframework.util.TypeUtils.isAssignable;
  *
  * @since 2.7.9
  */
+// OK
 public class DubboApplicationListenerRegistrar implements ApplicationContextAware {
 
     /**

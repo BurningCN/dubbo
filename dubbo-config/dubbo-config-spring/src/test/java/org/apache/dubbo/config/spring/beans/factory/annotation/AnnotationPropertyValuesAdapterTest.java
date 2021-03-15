@@ -17,13 +17,17 @@
 package org.apache.dubbo.config.spring.beans.factory.annotation;
 
 
+import my.common.utils.Assert;
+import my.common.utils.StringUtils;
 import org.apache.dubbo.common.utils.CollectionUtils;
+import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.annotation.Reference;
 import org.apache.dubbo.config.spring.ReferenceBean;
 import org.apache.dubbo.config.spring.api.DemoService;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.PropertyValue;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -33,8 +37,11 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.validation.DataBinder;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.springframework.util.StringUtils.arrayToCommaDelimitedString;
 
@@ -43,6 +50,7 @@ import static org.springframework.util.StringUtils.arrayToCommaDelimitedString;
  *
  * @since 2.5.11
  */
+// OK
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class AnnotationPropertyValuesAdapterTest {
 
@@ -51,7 +59,7 @@ public class AnnotationPropertyValuesAdapterTest {
 
         MockEnvironment mockEnvironment = new MockEnvironment();
 
-        mockEnvironment.setProperty("version", "1.0.0");
+        mockEnvironment.setProperty("version", "1.0.0"); // 和最后面那个注解里面的${url}、${version}对应
 
         mockEnvironment.setProperty("url", "   dubbo://localhost:12345");
 
@@ -65,23 +73,13 @@ public class AnnotationPropertyValuesAdapterTest {
 
         DataBinder dataBinder = new DataBinder(referenceBean);
 
-        dataBinder.setDisallowedFields("application", "module", "consumer", "monitor", "registry");
+        dataBinder.setDisallowedFields("application", "module", "consumer", "monitor", "registry"); // 忽略这几个字段，和后面注解的对应，那几个属性值不会使用
 
         DefaultConversionService conversionService = new DefaultConversionService();
 
-        conversionService.addConverter(new Converter<String[], String>() {
-            @Override
-            public String convert(String[] source) {
-                return arrayToCommaDelimitedString(source);
-            }
-        });
+        conversionService.addConverter((Converter<String[], String>) source -> arrayToCommaDelimitedString(source));
 
-        conversionService.addConverter(new Converter<String[], Map<String, String>>() {
-            @Override
-            public Map<String, String> convert(String[] source) {
-                return CollectionUtils.toStringMap(source);
-            }
-        });
+        conversionService.addConverter((Converter<String[], Map<String, String>>) source -> CollectionUtils.toStringMap(source));
 
 
         dataBinder.setConversionService(conversionService);
@@ -134,13 +132,24 @@ public class AnnotationPropertyValuesAdapterTest {
         Assertions.assertEquals(data, referenceBean.getParameters());
         // Bean compare
         Assertions.assertNull(referenceBean.getRegistry());
+        Assertions.assertNull(referenceBean.getModule());
+        Assertions.assertNull(referenceBean.getConsumer());
+
+        PropertyValue[] valuesPropertyValues = propertyValues.getPropertyValues();
+        HashMap hashMap = new HashMap<String, Object>();
+        Arrays.stream(valuesPropertyValues).forEach(propertyValue -> hashMap.put(propertyValue.getName(), propertyValue.getValue()));
+        System.out.println(hashMap.toString());
+
+//        Assertions.assertNull(application);
+
 
     }
 
     private static class TestBean {
 
         @Reference(
-                interfaceClass = DemoService.class, interfaceName = "com.alibaba.dubbo.config.spring.api.DemoService", version = "${version}", group = "group",
+                interfaceClass = DemoService.class, interfaceName = "com.alibaba.dubbo.config.spring.api.DemoService",
+                version = "${version}", group = "group",
                 url = "${url}  ", client = "client", generic = true, injvm = true,
                 check = false, init = true, lazy = true, stubevent = true,
                 reconnect = "reconnect", sticky = true, proxy = "javassist", stub = "stub",

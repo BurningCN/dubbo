@@ -70,7 +70,11 @@ public interface MonitorService {
      * 1.1 host,application,interface,group,version,method: record source host/application/interface/method
      * 1.2 add provider address parameter if it's data sent from consumer, otherwise, add source consumer's address in parameters
      * 1.3 success,failure,elapsed: record success count, failure count, and total cost for success invocations, average cost (total cost/success calls)
-     *
+     *  收集监控数据
+     *  1。application=foo&method=foo&provider=10.20.153.11:20880&success=12&failure=2&elapsed=135423423
+     *  1.1主机、应用、接口、组、版本、方法:记录源主机/应用/接口/方法
+     *  1.2如果是来自消费者的数据，添加提供商地址参数，否则，在参数中添加源消费者的地址
+     *  1.3成功，失败，经过:记录成功调用的次数，失败次数，成功调用的总成本，平均成本(总成本/成功调用)
      * @param statistics
      */
     void collect(URL statistics);

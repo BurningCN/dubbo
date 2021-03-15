@@ -31,6 +31,9 @@ public final class TimeoutCountDown implements Comparable<TimeoutCountDown> {
     private volatile boolean expired;
 
     // sao 死亡点+convert api+volatile expired
+    // 其实也不是什么sao，只是当前直接计算了死亡点，判定过期的时候直接 和 新的当前时间比较，
+    // 也可以判断是否过期的时候临时比较，即下面的构造方法记录当前时间和timeout即可，过期的时候新的当前时间 - 旧的 是否 > timeout
+    // 所以说过期的判定方式有很多
     private TimeoutCountDown(long timeout, TimeUnit unit) {
         timeoutInMillis = TimeUnit.MILLISECONDS.convert(timeout, unit);// eg 3000 ms
         deadlineInNanos = System.nanoTime() + TimeUnit.NANOSECONDS.convert(timeout, unit);// 死亡点
@@ -42,6 +45,7 @@ public final class TimeoutCountDown implements Comparable<TimeoutCountDown> {
 
     // gx
     public boolean isExpired() {
+        // 用expired减少重复计算判断
         if (!expired) {
             if (deadlineInNanos - System.nanoTime() <= 0) {
                 expired = true;
@@ -88,6 +92,7 @@ public final class TimeoutCountDown implements Comparable<TimeoutCountDown> {
     @Override
     public int compareTo(TimeoutCountDown another) {
         long delta = this.deadlineInNanos - another.deadlineInNanos;
+        // 正常可以直接return this.deadlineInNanos - another.deadlineInNanos;，但是返回的数很大，所以再次判断返回-1 1 0 "小"数
         if (delta < 0) {
             return -1;
         } else if (delta > 0) {

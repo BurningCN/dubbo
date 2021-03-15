@@ -40,15 +40,18 @@ public class ClassLoaderFilterTest {
     public void testInvoke() throws Exception {
         URL url = URL.valueOf("test://test:11/test?accesslog=true&group=dubbo&version=1.1");
 
+        // /Users/gy821075/IdeaProjects/dubbo/dubbo-rpc/dubbo-rpc-api/target/test-classes/
         String path = DemoService.class.getResource("/").getPath();
         // 自定义加载器，URLClassLoader
         final URLClassLoader cl = new URLClassLoader(new java.net.URL[]{new java.net.URL("file:" + path)}) {
             @Override
             public Class<?> loadClass(String name) throws ClassNotFoundException {
                 try {
-                    return findClass(name); // 自定义类加载器一定是重写loadClass，并且！！要调用这个方法findClass，因为该方法内部会抛异常，这样我们补货异常，然后让上层加载器去加载
+                    // 自定义类加载器一定是重写loadClass，并且！！要调用这个方法findClass，因为该方法内部会抛异常，这样我们补货异常，然后让上层加载器去加载
+                    return findClass(name);
                 } catch (ClassNotFoundException e) {
-                    return super.loadClass(name); // 比如下面要加载DemoService的时候，肯定是需要先加载父类Object，但是这个我们的自定义URLClassLoader是无法加载的，就需要走这里的逻辑
+                    // 比如下面要加载DemoService的时候，肯定是需要先加载父类Object，但是这个我们的自定义URLClassLoader是无法加载的，就需要走这里的逻辑
+                    return super.loadClass(name);
                 }
             }
         };

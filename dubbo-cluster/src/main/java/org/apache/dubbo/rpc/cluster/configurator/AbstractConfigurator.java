@@ -68,7 +68,7 @@ public abstract class AbstractConfigurator implements Configurator {
     public URL configure(URL url) {
         // If override url is not enabled or is invalid, just return.
         // enable参数为true或者为null那么就不走下面的if内部逻辑，表示允许（用configuratorUrl的部分参数）覆盖url
-        if (!configuratorUrl.getParameter(ENABLED_KEY, true) ||
+            if (!configuratorUrl.getParameter(ENABLED_KEY, true) ||
                 // host的检查逻辑
                 configuratorUrl.getHost() == null || url == null || url.getHost() == null) {
             return url;

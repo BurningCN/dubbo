@@ -40,6 +40,7 @@ import static org.springframework.beans.factory.BeanFactoryUtils.beansOfTypeIncl
  * @see SmartApplicationListener
  * @since 2.7.5
  */
+// OK
 public class DubboLifecycleComponentApplicationListener extends OnceApplicationContextEventListener {
 
     /**

@@ -55,7 +55,7 @@ public class DefaultExecutorRepository implements ExecutorRepository {
             // 进去
             scheduledExecutors.addItem(scheduler);
         }
-        // reconnectScheduledExecutor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Dubbo-reconnect-scheduler"));
+        reconnectScheduledExecutor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Dubbo-reconnect-scheduler"));
         // 这个是暴露服务的线程，看下getXXX
         serviceExporterExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("Dubbo-exporter-scheduler"));
     }
@@ -164,7 +164,6 @@ public class DefaultExecutorRepository implements ExecutorRepository {
         return scheduledExecutors.pollItem();
     }
 
-    // gx
     @Override
     public ScheduledExecutorService getServiceExporterExecutor() {
         return serviceExporterExecutor;

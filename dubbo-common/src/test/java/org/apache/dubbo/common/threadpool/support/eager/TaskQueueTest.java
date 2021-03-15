@@ -34,7 +34,7 @@ public class TaskQueueTest {
     @Test
     public void testOffer1() throws Exception {
         Assertions.assertThrows(RejectedExecutionException.class, () -> {
-            TaskQueue<Runnable> queue = new TaskQueue<Runnable>(1);
+            TaskQueue queue = new TaskQueue(1);
             // queue没有executor的时候调用offer会抛异常，进去
             queue.offer(mock(Runnable.class));
         });
@@ -42,7 +42,7 @@ public class TaskQueueTest {
 
     @Test
     public void testOffer2() throws Exception {
-        TaskQueue<Runnable> queue = new TaskQueue<Runnable>(1);
+        TaskQueue queue = new TaskQueue(1);
         EagerThreadPoolExecutor executor = mock(EagerThreadPoolExecutor.class);
         Mockito.when(executor.getPoolSize()).thenReturn(2);
         Mockito.when(executor.getSubmittedTaskCount()).thenReturn(1);
@@ -52,7 +52,7 @@ public class TaskQueueTest {
 
     @Test
     public void testOffer3() throws Exception {
-        TaskQueue<Runnable> queue = new TaskQueue<Runnable>(1);
+        TaskQueue queue = new TaskQueue(1);
         EagerThreadPoolExecutor executor = mock(EagerThreadPoolExecutor.class);
         Mockito.when(executor.getPoolSize()).thenReturn(2);
         Mockito.when(executor.getSubmittedTaskCount()).thenReturn(2);
@@ -63,7 +63,7 @@ public class TaskQueueTest {
 
     @Test
     public void testOffer4() throws Exception {
-        TaskQueue<Runnable> queue = new TaskQueue<Runnable>(1);
+        TaskQueue queue = new TaskQueue(1);
         EagerThreadPoolExecutor executor = mock(EagerThreadPoolExecutor.class);
         Mockito.when(executor.getPoolSize()).thenReturn(4);
         Mockito.when(executor.getSubmittedTaskCount()).thenReturn(4);
@@ -75,7 +75,7 @@ public class TaskQueueTest {
     @Test
     public void testRetryOffer1() throws Exception {
         Assertions.assertThrows(RejectedExecutionException.class, () -> {
-            TaskQueue<Runnable> queue = new TaskQueue<Runnable>(1);
+            TaskQueue queue = new TaskQueue(1);
             EagerThreadPoolExecutor executor = mock(EagerThreadPoolExecutor.class);
             Mockito.when(executor.isShutdown()).thenReturn(true);
             queue.setExecutor(executor);
@@ -86,7 +86,7 @@ public class TaskQueueTest {
 
     @Test
     public void testRetryOffer2() throws Exception {
-        TaskQueue<Runnable> queue = new TaskQueue<Runnable>(1);
+        TaskQueue queue = new TaskQueue(1);
         EagerThreadPoolExecutor executor = mock(EagerThreadPoolExecutor.class);
         Mockito.when(executor.isShutdown()).thenReturn(false);
         queue.setExecutor(executor);

@@ -70,12 +70,13 @@ public class EagerThreadPoolExecutorTest {
         long alive = 1000;
 
         // init queue and executor
-        TaskQueue<Runnable> taskQueue = new TaskQueue<Runnable>(queues);
-        final EagerThreadPoolExecutor executor = new EagerThreadPoolExecutor(cores,
-                threads,
-                alive,
+        TaskQueue taskQueue = new TaskQueue(queues);
+        final EagerThreadPoolExecutor executor = new EagerThreadPoolExecutor(
+                cores, // 5
+                threads, // 10
+                alive,// 1000
                 TimeUnit.MILLISECONDS,
-                taskQueue,
+                taskQueue, // 5
                 new NamedThreadFactory(name, true),
                 new AbortPolicyWithReport(name, URL));
         taskQueue.setExecutor(executor);
@@ -87,7 +88,8 @@ public class EagerThreadPoolExecutorTest {
                 @Override
                 public void run() {
                     // 获取线程池当前线程数 和 任务队列的任务数其实就是队列大小--->回到上面看☆☆☆☆的部分
-                    System.out.println("thread number in current pool：" + executor.getPoolSize() + ",  task number in task queue：" + executor.getQueue()
+                    System.out.println("thread number in current pool：" + executor.getPoolSize() + ", " +
+                            " task number in task queue：" + executor.getQueue()
                             .size() + " executor size: " + executor.getPoolSize());
                     try {
                         Thread.sleep(1000);

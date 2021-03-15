@@ -25,12 +25,14 @@ import org.junit.jupiter.api.Test;
 /**
  * StandaloneContainerTest
  */
+// OK
 public class SpringContainerTest {
 
     @Test
     public void testContainer() {
         SpringContainer container = (SpringContainer) ExtensionLoader.getExtensionLoader(Container.class).getExtension("spring");
         container.start();
+        // 根据beanName获取bean
         Assertions.assertEquals(SpringContainer.class, container.context.getBean("container").getClass());
         container.stop();
     }

@@ -55,7 +55,7 @@ public class EagerThreadPool implements ThreadPool {
         int alive = url.getParameter(ALIVE_KEY, DEFAULT_ALIVE);
 
         // init queue and executor
-        TaskQueue<Runnable> taskQueue = new TaskQueue<Runnable>(queues <= 0 ? 1 : queues);
+        TaskQueue taskQueue = new TaskQueue(queues <= 0 ? 1 : queues);
         // 其他的Pool类到这里直接new ThreadPoolExecutor了，这里用了自定义的ThreadPoolExecutor的子类EagerThreadPoolExecutor，进去
         // 并且还用自定义的任务队列TaskQueue
         EagerThreadPoolExecutor executor = new EagerThreadPoolExecutor(cores,
