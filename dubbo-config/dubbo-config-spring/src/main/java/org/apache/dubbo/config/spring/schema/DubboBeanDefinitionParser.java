@@ -141,7 +141,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             }
             // <dubbo:service/>标签
         } else if (ServiceBean.class.equals(beanClass)) {
-            // 获取class属性（service-class.xml+testProperty）
+            // 获取class属性（service-class.xml+DubboNamespaceHandlerTest#testProperty）
             String className = resolveAttribute(element, "class", parserContext);
             if (StringUtils.isNotEmpty(className)) {
                 // 构建配置的class的BeanDefinition
@@ -232,6 +232,8 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                                  * 1. Spring, check existing bean by id, see{@link ServiceBean#afterPropertiesSet()}; then try to use id to find configs defined in remote Config Center
                                  * 2. API, directly use id to find configs defined in remote Config Center; if all config instances are defined locally, please use {@link ServiceConfig#setRegistries(List)}
                                  */
+                                // 比如<dubbo:service protocol="dubbo" registry="zk">就可以配置protocol、registry 、provider属性，
+                                // 就能走到这个分支，比如protocolIds = "dubbo"，注意前面<dubbo:service 里的protocol的值是先前配置dubbo:protocol的name值
                                 beanDefinition.getPropertyValues().addPropertyValue(beanProperty + "Ids", value);
                             } else {
                                 Object reference;
@@ -292,7 +294,9 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             // eg:customize-parameter.xml文件里的<dubbo:protocol p:protocol-paramA="protocol-paramA"/>
             Node node = attributes.item(i);
             String name = node.getLocalName();// p:protocol-paramA
-            if (!props.contains(name)) { // 如果不包含，说明没处理过，props里面已经填充了beanClass里面的各个set/get方法对应的属性名了，但是用户在dubbo:xx标签配置的时候可能加入了自己的一些属性，也会在这里处理填充到props
+            // 如果不包含，说明没处理过，props里面已经填充了beanClass里面的各个set/get方法对应的属性名了，但是用户在dubbo:xx标签配置的时候
+            // 可能加入了自己的一些属性，也会在这里处理填充到props
+            if (!props.contains(name)) {
                 if (parameters == null) {
                     parameters = new ManagedMap();
                 }
@@ -390,6 +394,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
         ManagedMap parameters = null;
         // 如果子节点不为null，遍历子节点
         for (int i = 0; i < nodeList.getLength(); i++) {
+            // 注意这里 xml父标签和子标签之间的空格也是一个item，所以我们要过滤这些不是Element的item
             if (!(nodeList.item(i) instanceof Element)) {
                 continue;
             }

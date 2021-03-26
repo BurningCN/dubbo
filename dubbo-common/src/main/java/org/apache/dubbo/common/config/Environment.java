@@ -32,7 +32,8 @@ import java.util.Map;
 import java.util.Optional;
 
 // OK
-// 主要是存放各种Configuration的
+// 主要是存放各种Configuration的 模仿spring的Environment ，这里没必要实现接口，都继承了LifecycleAdapter todo need pr
+// 上面说的是错误的，之所以需要实现的原因是因为父接口只是一个标记接口，可被识别为SPI
 public class Environment extends LifecycleAdapter implements FrameworkExt {
     // SPI扩展名
     public static final String NAME = "environment";

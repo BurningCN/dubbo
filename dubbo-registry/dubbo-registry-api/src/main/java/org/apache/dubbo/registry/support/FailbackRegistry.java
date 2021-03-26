@@ -97,6 +97,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     // gx
     private void addFailedRegistered(URL url) {
+        // 有任务正在执行直接返回
         FailedRegisteredTask oldOne = failedRegistered.get(url);
         if (oldOne != null) {
             return;

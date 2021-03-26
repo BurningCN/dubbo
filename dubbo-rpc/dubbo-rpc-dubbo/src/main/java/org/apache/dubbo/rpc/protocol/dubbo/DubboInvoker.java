@@ -56,6 +56,7 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 /**
  * DubboInvoker
  */
+// 给消费方使用的
 // OK
 public class DubboInvoker<T> extends AbstractInvoker<T> {
 
@@ -67,6 +68,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
 
     private final ReentrantLock destroyLock = new ReentrantLock();
 
+    // 每个invoker(比如这个DubboInvoker本身)都含有一个包含所有invoker的集合 属性，即下面这个----这个和DubboExporter里面的exporterMap效果是一样的，都是本身 含有了 包含其他所有成员（含自己）的集合/map
     private final Set<Invoker<?>> invokers;
 
     public DubboInvoker(Class<T> serviceType, URL url, ExchangeClient[] clients) {
@@ -124,6 +126,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 AsyncRpcResult result = new AsyncRpcResult(appResponseFuture, inv);
                 result.setExecutor(executor);
                 return result;
+                // 返回给上层后，上游对AsyncRpcResult进行get（AsyncToSyncInvoker）
             }
         } catch (TimeoutException e) {
             throw new RpcException(RpcException.TIMEOUT_EXCEPTION, "Invoke remote method timeout. method: " + invocation.getMethodName() + ", provider: " + getUrl() + ", cause: " + e.getMessage(), e);

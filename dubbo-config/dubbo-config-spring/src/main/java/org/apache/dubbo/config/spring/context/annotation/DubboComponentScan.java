@@ -43,7 +43,7 @@ import java.lang.annotation.Target;
 public @interface DubboComponentScan {
 
     /**
-     * Alias for the {@link #basePackages()} attribute. Allows for more concise annotation
+     * Alias for the {@link #basePackages()} attribute. Allows for more concise(简洁的) annotation
      * declarations e.g.: {@code @DubboComponentScan("org.my.pkg")} instead of
      * {@code @DubboComponentScan(basePackages="org.my.pkg")}.
      *
@@ -59,6 +59,9 @@ public @interface DubboComponentScan {
      * package names.
      *
      * @return the base packages to scan
+     *
+        用于扫描带注释的@Service类的基本包。{@link #value()}是该属性的别名(并与之互斥)。
+        使用{@link # basepackagclasses()}作为基于字符串的包名的类型安全替代。
      */
     String[] basePackages() default {};
 
@@ -67,6 +70,7 @@ public @interface DubboComponentScan {
      * scan for annotated @Service classes. The package of each class specified will be
      * scanned.
      *
+     * 类型安全替代{@link # baseppackages()}，用于指定要扫描带注释的@Service类的包。指定的每个类的包将被扫描。
      * @return classes from the base packages to scan
      */
     Class<?>[] basePackageClasses() default {};

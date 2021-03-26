@@ -91,6 +91,7 @@ import static org.springframework.util.ClassUtils.resolveClassName;
 //  即实现postProcessBeanDefinitionRegistry方法，可以修改增加BeanDefinition。
 //  此特性可以用来动态生成bean，比如读取某个配置项，然后根据配置项动态生成bean
 //  BeanClassLoaderAware接口和BeanFactoryAware接口同理，可以分别获取Bean的类装载器和bean工厂
+// ServiceClassPostProcessor implements BeanDefinitionRegistryPostProcessor，实现该接口的两个方法，postProcessBeanFactory方法空实现，关键看postProcessBeanDefinitionRegistry，这个方法的作用是注册更多的bean到spring容器中，因为该方法有一个BeanDefinitionRegistry类型参数，BeanDefinitionRegistry提供了丰富的方法来操作bean定义，判断、注册、反注册等方法都准备好了，我们在编写postProcessBeanDefinitionRegistry方法的内容时，就能直接使用入参registry的这些方法来完成判断和注册、反注册等操作（当然ServiceClassPostProcessor这个bean要保证被注册到spring容器（以@Bean、xml都可以），才会调这个postProcessBeanDefinitionRegistry）。
 public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProcessor, EnvironmentAware,
         ResourceLoaderAware, BeanClassLoaderAware {
 
@@ -155,6 +156,10 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
      */
     private void registerServiceBeans(Set<String> packagesToScan, BeanDefinitionRegistry registry) {
 
+        // 先创建DubboClassPathBeanDefinitionScanner，一会调用其scan进行包扫描并注册BeanDefinition。
+            // 注意：我们在使用ServiceClassPostProcessorTest测试程序的时候，其指定了package为org.apache.dubbo.config.spring.context.annotation.provider
+            // 但是这里面的bean还是加了spring 的 @Service注解，其实是没必要的，因为 DubboClassPathBeanDefinitionScanner 这个扫描器内部传递给父类的
+            // useDefaultFilters值为false，表示并不会处理这些带有spring原生注解的类，而下面我们通过addIncludeFilter指定了要扫描的（dubbo相关的注解）注解。
         DubboClassPathBeanDefinitionScanner scanner =
                 new DubboClassPathBeanDefinitionScanner(registry, environment, resourceLoader);
 
@@ -165,6 +170,7 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
         scanner.setBeanNameGenerator(beanNameGenerator);
 
         // refactor @since 2.7.7
+        // 然后scanner.addIncludeFilter设置哪些注解可以被扫描并处理。这些注解就是@DubboService、@Service、阿里@Service，正好我们使用的DubboClassPathBeanDefinitionScanner构造函数内部useDefaultFilters=false，即并不会处理原生的那些@Component、@Repository、@Service、@Controller、@ManagedBean、@Named注解。
         serviceAnnotationTypes.forEach(annotationType -> {
             // 内部有一个List<TypeFilter> includeFilters属性，扫描的时候用includeFilters 去过滤时，会找到并处理这4个注解的类
             scanner.addIncludeFilter(new AnnotationTypeFilter(annotationType));
@@ -176,7 +182,8 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
             // Registers @Service Bean first
             scanner.scan(packageToScan);
 
-            // 查找@Service的所有BeanDefinitionHolders，无论@ComponentScan是否扫描
+            // 查找@Service的所有BeanDefinitionHolders，这里的@Service不是单单那个注解，而是泛指上面 scanner.addIncludeFilter 的 serviceAnnotationTypes
+            // 这里是获取到上面scan扫描并注册的beanDefinitionHolder，然后需要按照我们的格式再次注册一次（后面的registerServiceBean）
             Set<BeanDefinitionHolder> beanDefinitionHolders =
                     findServiceBeanDefinitionHolders(scanner, packageToScan, registry, beanNameGenerator);
 
@@ -311,6 +318,7 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
         // ServiceBean Bean name
         String beanName = generateServiceBeanName(serviceAnnotationAttributes, interfaceClass);
 
+        // 返回true 表示可以进行注册，false表示已经有了
         if (scanner.checkCandidate(beanName, serviceBeanDefinition)) { // check duplicated candidate bean
             registry.registerBeanDefinition(beanName, serviceBeanDefinition);
 
@@ -338,6 +346,10 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
      * @return <code>null</code> if not found
      * @since 2.7.3
      */
+    /*
+    findMergedAnnotation是spring的AnnotatedElementUtils类的方法，该方法的作用是在beanClass上查询annotationType类型注解，将查询出
+    的多个annotationType类型注解属性合并到查询的第一个注解中，就是多个相同注解合并（一般beanClass上很少有多个相同类型注解，比如beanClass有多个@Service注解）。
+    Objects::nonNull是rt.jar的，该方法就是找到beanClass上第一个（findFirst）在serviceAnnotationTypes出现的注解。*/
     private Annotation findServiceAnnotation(Class<?> beanClass) {
         return serviceAnnotationTypes
                 .stream()
@@ -391,6 +403,8 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
      * @return
      * @since 2.7.3
      */
+    // 根据注解扫描到的"原bean"，生成对应的ServiceBean-BeanDefinition注册到容器，至于ServiceBean的属性填充就是来自"原bean"。
+    // 之所以需要这个ServiceBean，是因为他是我们进行export的关键！（我们在讲述xml配置方式的时候已经说了这个ServiceBean）
     private AbstractBeanDefinition buildServiceBeanDefinition(Annotation serviceAnnotation,
                                                               AnnotationAttributes serviceAnnotationAttributes,
                                                               Class<?> interfaceClass,
@@ -418,6 +432,39 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
         if (!methodConfigs.isEmpty()) {
             builder.addPropertyValue("methods", methodConfigs);
         }
+
+        // ====================================================================
+
+        // 如下代码是处理各个bean依赖，即处理的是这个ServiceBean里面非基本数据类型的的实体引用，且这些实体也是bean。这些信息都会保存在前面的propertyValues，
+        // 自己可以打断点看一下，只需要注意每一个entry的value部分是基本数据类型，还是其他bean，如下案例
+
+        // propertyValueList = {ArrayList@3477}  size = 8
+        // 0 = {PropertyValue@3553} "bean property 'methods'"
+        // 1 = {PropertyValue@3487} "bean property 'version'"
+        // 2 = {PropertyValue@3508} "bean property 'interface'"
+        //  name = "interface"
+        //  value = "my.config.spring.api.DemoService"
+        // ......
+        //  attributes = {LinkedHashMap@3796}  size = 0
+        // 3 = {PropertyValue@3509} "bean property 'parameters'"
+        // 4 = {PropertyValue@3574} "bean property 'ref'"
+        // 5 = {PropertyValue@3674} "bean property 'application'"
+        //  name = "application"
+        //  value = {RuntimeBeanReference@3681} "<dubbo-demo-application>"
+        // 6 = {PropertyValue@3721} "bean property 'registries'"
+        //  name = "registries"
+        //  value = {ManagedList@3692}  size = 1
+        //   0 = {RuntimeBeanReference@3806} "<my-registry>"
+
+        // ====================================================================
+
+        // 还有一个注意的点，比如该代码后面给加了一个这个属性（以这个为例）   addPropertyReference(builder, "application", applicationConfigBeanName)
+        // 而applicationConfigBeanName的值为 DemoServiceImpl类上 application = "${demo.service.application}" ，
+        // 而 ${demo.service.application} 在default.properties文件的内容为dubbo-demo-application，正好
+        // 和ServiceAnnotationTestConfiguration2测试程序注册的@Bean("dubbo-demo-application") 一致 。
+        // 还有protocol、registry属性等都是这样的。
+
+        // ====================================================================
 
         // References "ref" property to annotated-@Service Bean
         addPropertyReference(builder, "ref", annotatedServiceBeanName);

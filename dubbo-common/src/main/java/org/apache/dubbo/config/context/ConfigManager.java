@@ -582,7 +582,7 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
     }
 
     private static void checkDuplicate(AbstractConfig oldOne, AbstractConfig newOne) throws IllegalStateException {
-        // todo 疑问点，这里equals的比较应该没有!吧
+        // todo need pr 疑问点，这里equals的比较应该没有!吧
         if (oldOne != null && !oldOne.equals(newOne)) {
             String configName = oldOne.getClass().getSimpleName();
             // 重复的话没啥特别操作，只是记录了警告日志

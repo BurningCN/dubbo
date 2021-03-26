@@ -43,7 +43,7 @@ public class Application {
         // 进去
         reference.setInterface(DemoService.class);
         // 进去
-        reference.setGeneric("true");
+       //  reference.setGeneric("true");
         // 不需要向Provider对应Application那样指定实现
 
 

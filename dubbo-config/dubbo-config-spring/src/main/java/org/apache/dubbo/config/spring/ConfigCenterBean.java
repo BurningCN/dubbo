@@ -36,6 +36,8 @@ import java.util.Map;
  * Start from 2.7.0+, export and refer will only be executed when Spring is fully initialized, and each Config bean will get refreshed on the start of the export and refer process.
  * So it's ok for this bean not to be the first Dubbo Config bean being initialized.
  * <p>
+ * 从2.7.0+开始，export和refer只会在Spring完全初始化时执行，每个配置bean都会在export和refer过程开始时刷新。
+ * 所以这个bean不是第一个被初始化的Dubbo配置bean是可以的。
  */
 public class ConfigCenterBean extends ConfigCenterConfig implements ApplicationContextAware, DisposableBean, EnvironmentAware {
 

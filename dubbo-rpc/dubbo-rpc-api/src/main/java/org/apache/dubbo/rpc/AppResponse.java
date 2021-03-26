@@ -46,8 +46,8 @@ import java.util.function.Function;
  * AsyncRpcResult is a future representing an unfinished RPC call, while AppResponse is the actual return type of this call.
  * In theory, AppResponse does'n have to implement the {@link Result} interface, this is done mainly for compatibility purpose.
  *
- *  AsyncRpcResult是一个表示未完成RPC调用的future，而apsponse是这个调用的实际返回类型。
- *  理论上，appsponse不需要实现{@link Result}接口，这样做主要是为了兼容。
+ *  AsyncRpcResult是一个表示未完成RPC调用的future，而AppResponse是这个调用的实际返回类型。
+ *  理论上，AppResponse不需要实现{@link Result}接口，这样做主要是为了兼容。
  *
  * @serial Do not change the class name and properties.
  */
@@ -62,6 +62,7 @@ public class AppResponse implements Result {
 
     private Map<String, Object> attachments = new HashMap<>();
 
+    // 最根源的触发点在 AbstractProxyInvoker 的invoker
     public AppResponse() {
     }
 
@@ -76,7 +77,9 @@ public class AppResponse implements Result {
     @Override
     public Object recreate() throws Throwable {
         if (exception != null) {
-            // fix issue#619
+            // 服务端抛运行时异常，消费端无堆栈信息打印 #5189
+            // fix issue#619 https://github.com/apache/dubbo/issues/619 https://github.com/apache/dubbo/issues/619
+            // 下面的操作主要是给堆栈填信息，因为jvm如果发现一个异常一直抛出，则只会列出比如NPE不会打印堆栈，下面就强行至少有一个栈信息，详情看上面链接
             try {
                 // get Throwable class
                 Class clazz = exception.getClass();

@@ -29,6 +29,8 @@ public class AtomicPositiveInteger extends Number {
     private static final AtomicIntegerFieldUpdater<AtomicPositiveInteger> INDEX_UPDATER =
             AtomicIntegerFieldUpdater.newUpdater(AtomicPositiveInteger.class, "index");
 
+    // 之所以volatile修饰的原因 是比如外界多线程调用AtomicPositiveInteger对象的getAndIncrement，并发cas，肯定需要保证可见性
+    // 而这个属性是我们指定的，所以需要声明，我们平时用 比如AtomicInteger的时候，其内部有一个volatile修饰的变量，是其自己维护的。
     @SuppressWarnings("unused")
     private volatile int index = 0;
 

@@ -43,6 +43,7 @@ import static com.alibaba.spring.util.BeanFactoryUtils.getOptionalBean;
  * @see AnnotationAttributes
  * @since 2.7.3
  */
+// OK
 public abstract class AnnotatedInterfaceConfigBeanBuilder<C extends AbstractInterfaceConfig> {
 
     protected final Log logger = LogFactory.getLog(getClass());

@@ -37,6 +37,7 @@ class InjvmInvoker<T> extends AbstractInvoker<T> {
 
     private final Map<String, Exporter<?>> exporterMap;
 
+    // 和DUbboInvoker的结构不一样，传进来的是exporterMap
     InjvmInvoker(Class<T> type, URL url, String key, Map<String, Exporter<?>> exporterMap) {
         super(type, url);
         this.key = key;

@@ -52,7 +52,7 @@ class EnvironmentConfigurationTest {
             setEnv(map);
             EnvironmentConfiguration configuration = new EnvironmentConfiguration();
             // this UT maybe only works on particular platform, assert only when value is not null.
-            // 内部会将dubbo.key转化为DUBBO_KEY
+            // 内部先用dubbo.key查找，查找不到的话会会将dubbo.key转化为DUBBO_KEY再去查找，而上面put 了，所以能查到
             Assertions.assertEquals(MOCK_VALUE, configuration.getInternalProperty("dubbo.key"));
             // 内部会将dubbo.key转化为DUBBO_KEY
             Assertions.assertEquals(MOCK_VALUE, configuration.getInternalProperty("key"));
@@ -92,7 +92,7 @@ class EnvironmentConfigurationTest {
             //{ProcessEnvironment$Variable@1628} "LOGNAME" -> {ProcessEnvironment$Value@1629} "gy821075"
             //{ProcessEnvironment$Variable@1630} "JAVA_MAIN_CLASS_19689" -> {ProcessEnvironment$Value@1631} "com.intellij.rt.junit.JUnitStarter"
             //{ProcessEnvironment$Variable@1632} "LC_CTYPE" -> {ProcessEnvironment$Value@1633} "en_US.UTF-8"
-            //{ProcessEnvironment$Variable@1634} "PWD" -> {ProcessEnvironment$Value@1635} "/Users/gy821075/IdeaProjects/dubbo/dubbo-common"
+            //{ProcessEnvironment$Variable@1634} "PWD" -> {ProcessEnvironment$Value@1635} "/Users/gy821075/IdeaProjects/dubbo/dubbo-common"  -------- 注意
             //{ProcessEnvironment$Variable@1636} "XPC_SERVICE_NAME" -> {ProcessEnvironment$Value@1637} "com.jetbrains.intellij.12904"
             //{ProcessEnvironment$Variable@1638} "HOME" -> {ProcessEnvironment$Value@1639} "/Users/gy821075"
 

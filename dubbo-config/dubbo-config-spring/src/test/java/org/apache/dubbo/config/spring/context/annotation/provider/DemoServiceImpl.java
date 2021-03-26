@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
         registry = "${demo.service.registry}",
         methods = @Method(timeout = 100,name = "sayName")
 )
-@Service
+@Service // todo need pr 这里不需要@Service，原因详见 registerServiceBeans 方法内的开始注释
 @Transactional
 public class DemoServiceImpl implements DemoService {
 

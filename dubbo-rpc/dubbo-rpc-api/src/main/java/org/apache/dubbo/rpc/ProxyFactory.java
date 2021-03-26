@@ -27,6 +27,8 @@ import static org.apache.dubbo.rpc.Constants.PROXY_KEY;
  * ProxyFactory. (API/SPI, Singleton, ThreadSafe)
  */
 // OK
+// getProxy是给消费端使用的，getInvoker是给服务端使用的
+// proxyFactory.getProxy(protocol.refer())  ----  protocol.export(proxyFactory.getInvoker())
 @SPI("javassist")
 public interface ProxyFactory {
 

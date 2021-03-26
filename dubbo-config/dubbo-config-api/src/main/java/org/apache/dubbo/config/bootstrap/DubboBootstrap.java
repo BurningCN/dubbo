@@ -704,7 +704,7 @@ public class DubboBootstrap extends GenericEventListener {
      * For compatibility purpose, use registry as the default config center when
      * there's no config center specified explicitly and
      * useAsConfigCenter of registryConfig is null or true
-     *
+     * <p>
      * 为了兼容，当没有明确指定配置中心，并且registryConfig的useAsConfigCenter为null或true时，使用registry作为默认的配置中心
      */
     private void useRegistryAsConfigCenterIfNecessary() {
@@ -799,7 +799,7 @@ public class DubboBootstrap extends GenericEventListener {
 
     /**
      * Is used the specified registry as a center infrastructure
-     *
+     * <p>
      * 是否使用指定的注册表作为中心基础设施
      *
      * @param registryConfig       the {@link RegistryConfig}
@@ -820,7 +820,7 @@ public class DubboBootstrap extends GenericEventListener {
             // api(和intValue一样)
             supported = configuredValue.booleanValue();
 
-        // Or check the extension existence
+            // Or check the extension existence
         } else {
             // 比如registry配置的是zookeeper://ip:port , 那么getProtocol = zookeeper
             String protocol = registryConfig.getProtocol();
@@ -1436,7 +1436,6 @@ public class DubboBootstrap extends GenericEventListener {
 
     // gx
     private void shutdown() {
-        // 这个线程池貌似没有用到
         if (!executorService.isShutdown()) {
             // Shutdown executorService
             executorService.shutdown();

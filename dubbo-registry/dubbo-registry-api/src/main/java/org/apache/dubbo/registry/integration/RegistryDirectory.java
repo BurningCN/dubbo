@@ -84,7 +84,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.ROUTER_KEY;
 // RegistryDirectory 是一种动态服务目录，实现了 NotifyListener 接口。当注册中心服务配置发生变化后，RegistryDirectory 可收到与当前服务相关的变化。
 // 收到变更通知后，RegistryDirectory 可根据配置变更信息刷新 Invoker 列表。RegistryDirectory 中有几个比较重要的逻辑，第一是 Invoker 的列举逻辑，
 // 第二是接收服务配置变更的逻辑，第三是 Invoker 列表的刷新逻辑。接下来按顺序对这三块逻辑
-    // Invoker 列举逻辑封装在 doList 方法中
+// Invoker 列举逻辑封装在 doList 方法中
 public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyListener {
     private static final Logger logger = LoggerFactory.getLogger(RegistryDirectory.class);
 
@@ -151,12 +151,12 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
 
         // 获取 category 参数
         Map<String, List<URL>> categoryUrls = urls.stream()
-                .filter(Objects::nonNull)
+                .filter(Objects::nonNull) // 这种用法和Optional.ofNullable(list).ifPresent效果一致
                 .filter(this::isValidCategory)
                 .filter(this::isNotCompatibleFor26x)
                 .collect(Collectors.groupingBy(this::judgeCategory)); // 进去
 
-        // 定义三个集合，分别用于存放服务提供者 url，路由 url，配置器 url
+        // 定义三个集合，分别用于存放服务提供者 url，路由 url，配置器 url（configurators、routers、providers）
         // 根据 category 参数将 url 分别放到不同的列表中
 
         List<URL> configuratorURLs = categoryUrls.getOrDefault(CONFIGURATORS_CATEGORY, Collections.emptyList());
@@ -174,7 +174,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
         List<AddressListener> supportedListeners = addressListenerExtensionLoader.getActivateExtension(getUrl(), (String[]) null);
         if (supportedListeners != null && !supportedListeners.isEmpty()) {
             for (AddressListener addressListener : supportedListeners) {
-                providerURLs = addressListener.notify(providerURLs, getConsumerUrl(),this);
+                providerURLs = addressListener.notify(providerURLs, getConsumerUrl(), this);
             }
         }
         // 刷新 Invoker 列表
@@ -196,7 +196,8 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
     }
 
     // refreshInvoker 方法是保证 RegistryDirectory 随注册中心变化而变化的关键所在。这一块逻辑比较多，接下来一一进行分析。
-    private void refreshOverrideAndInvoker(List<URL> urls) { // 这个方法是就用来针对每个服务提供者来生成Invoker的。
+    // 这个方法是就用来针对每个服务提供者来生成Invoker的。
+    private void refreshOverrideAndInvoker(List<URL> urls) {
         // mock zookeeper://xxx?mock=return null
         overrideConsumerUrl();
         refreshInvoker(urls);
@@ -211,6 +212,10 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
      * <li>If the list of incoming invokerUrl is empty, It means that the rule is only a override rule or a route
      * rule, which needs to be re-contrasted to decide whether to re-reference.</li>
      * </ol>
+     * <p>
+     * 如果URL已被转换为invoker，它将不再被重新引用，并直接从缓存中获得，注意URL中的任何参数更改都将被重新引用。
+     * 如果传入的调用者列表不是空的，则意味着它是最新的调用者列表。
+     * 如果传入的invokerUrl列表为空，则意味着该规则只是一个覆盖规则或路由规则，需要对其进行重新对比，以决定是否重新引用
      *
      * @param invokerUrls this parameter can't be null
      */
@@ -307,6 +312,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
             for (List<Invoker<T>> groupList : groupMap.values()) {
                 StaticDirectory<T> staticDirectory = new StaticDirectory<>(groupList);
                 staticDirectory.buildRouterChain();
+                // 将每个组内的所有invoker形成一个ClusterInvoker
                 mergedInvokers.add(CLUSTER.join(staticDirectory));
             }
         } else {
@@ -350,6 +356,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
     /**
      * Turn urls into invokers, and if url has been refer, will not re-reference.
      * 将urls转换为invokers，如果url已被引用，则不会重新引用。
+     *
      * @param urls
      * @return invokers
      */
@@ -407,7 +414,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
                         enabled = url.getParameter(ENABLED_KEY, true); // 获取 enable 配置，并赋值给 enable 变量
                     }
                     if (enabled) {
-                        // 调用 refer 获取 Invoker
+                        // 调用 refer 获取 Invoker 这里是核心，内部会client和服务端建立连接
                         invoker = new InvokerDelegate<>(protocol.refer(serviceType, url), url, providerUrl);
                     }
                 } catch (Throwable t) {
@@ -552,6 +559,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
         }
     }
 
+    // doList逻辑和父类的一模一样，下面可以删掉
     @Override
     public List<Invoker<T>> doList(Invocation invocation) {
         if (forbidden) {
@@ -675,6 +683,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
 
     /**
      * The delegate class, which is mainly used to store the URL address sent by the registry,and can be reassembled on the basis of providerURL queryMap overrideMap for re-refer.
+     * 委托类主要用于存储注册中心发送的URL地址，可以在providerURL queryMap overrideMap的基础上重新组装，以便重新引用。
      *
      * @param <T>
      */
@@ -691,6 +700,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
         }
     }
 
+    // service服务级别的，"service-name.configurators"
     private static class ReferenceConfigurationListener extends AbstractConfiguratorListener {
         private RegistryDirectory directory;
         private URL url;
@@ -712,6 +722,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
         }
     }
 
+    // app应用级别的，"app-name.configurators"   (app含有多个service)
     private static class ConsumerConfigurationListener extends AbstractConfiguratorListener {
         List<RegistryDirectory> listeners = new ArrayList<>();
 

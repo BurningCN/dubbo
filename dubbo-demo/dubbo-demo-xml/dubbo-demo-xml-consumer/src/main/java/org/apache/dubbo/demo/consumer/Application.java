@@ -31,6 +31,7 @@ public class Application {
     public static void main(String[] args) throws Exception {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring/dubbo-consumer.xml");
         context.start();
+        // 注意Bootstrap的start方法内部的referServices的时候，判定shouldInit都是false的，所以不会立马引用，而是通过下面的getBean，内部会走ReferenceBean的FactoryBean#getObject方法
         DemoService demoService = context.getBean("demoService", DemoService.class);
         GreetingService greetingService = context.getBean("greetingService", GreetingService.class);
 

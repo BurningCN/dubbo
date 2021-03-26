@@ -28,8 +28,10 @@ import java.util.function.Function;
 /**
  * support multiple config center, simply iterating each concrete config center.
  */
+// OK
 public class CompositeDynamicConfiguration implements DynamicConfiguration {
 
+    // 该属性无调用点
     public static final String NAME = "COMPOSITE";
 
     private Set<DynamicConfiguration> configurations = new HashSet<>();

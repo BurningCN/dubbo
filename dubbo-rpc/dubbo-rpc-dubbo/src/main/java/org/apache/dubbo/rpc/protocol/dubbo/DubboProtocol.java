@@ -91,6 +91,7 @@ import static org.apache.dubbo.rpc.protocol.dubbo.Constants.SHARE_CONNECTIONS_KE
  * dubbo protocol support.
  */
 // OK
+// 其export方法是给提供者使用的，refer是给消费者使用的
 public class DubboProtocol extends AbstractProtocol {
 
     public static final String NAME = "dubbo";
@@ -148,6 +149,7 @@ public class DubboProtocol extends AbstractProtocol {
             RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
             // 通过 Invoker 调用具体的服务（去跟 JavassistProxyFactory 的AbstractProxyInvoker里的doInvoke方法 以及AbstractProxyInvoker本类的invoke方法）
             Result result = invoker.invoke(inv);
+            // result将作为Response的Object result属性值(HeaderExchangeHandler)
             return result.thenApply(Function.identity());// AsyncRpcResult thenApply 进去
 
             // 以上逻辑用于获取与指定服务对应的 Invoker 实例，并通过 Invoker 的 invoke 方法调用服务逻辑。invoke 方法定义在 AbstractProxyInvoker 中，代码如下。
@@ -211,6 +213,7 @@ public class DubboProtocol extends AbstractProtocol {
          * FIXME channel.getUrl() always binds to a fixed service, and this service is random.
          * we can choose to use a common service to carry onConnect event if there's no easy way to get the specific
          * service this connection is binding to.
+         * 我们可以选择使用一个公共服务来进行onConnect事件，如果没有简单的方法来获得这个连接绑定到的特定服务。
          * @param channel
          * @param url
          * @param methodKey
@@ -360,6 +363,7 @@ public class DubboProtocol extends AbstractProtocol {
             // 访问缓存（多个提供者url如果他们的ip:port一致，那么公用一个NettyServer/HeaderExchangeServer/NettyProtocolServer）
             ProtocolServer server = serverMap.get(key);
             if (server == null) {
+                // 这里的双重检查可以直接使用putIfAbsent，因为chm的该方法是原子的，线程安全的（普通的HashMap不是安全的）
                 synchronized (this) {
                     server = serverMap.get(key);
                     if (server == null) {// 双重检查
@@ -538,7 +542,7 @@ public class DubboProtocol extends AbstractProtocol {
             return clients;
         }
 
-        locks.putIfAbsent(key, new Object()); // "分段锁" 同一个address的公用一个锁
+        locks.putIfAbsent(key, new Object()); // 分段锁 ，用以每个value的双重检查(同一个address之间的竞争)
         synchronized (locks.get(key)) {
             clients = referenceClientMap.get(key);
             // double check

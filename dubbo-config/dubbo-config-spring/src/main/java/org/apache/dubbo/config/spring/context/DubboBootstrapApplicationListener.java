@@ -33,6 +33,7 @@ import org.springframework.core.Ordered;
  * @since 2.7.5
  */
 // OK
+// 容器事件监听器，主要是在容器启动、关闭的时候调用DubboBootstrap的start或stop
 public class DubboBootstrapApplicationListener extends OnceApplicationContextEventListener implements Ordered {
 
     /**
@@ -49,6 +50,7 @@ public class DubboBootstrapApplicationListener extends OnceApplicationContextEve
         this.dubboBootstrap = DubboBootstrap.getInstance();
     }
 
+    // 监听容器事件的，容器的刷新、关闭事件
     @Override
     public void onApplicationContextEvent(ApplicationContextEvent event) {
         if (event instanceof ContextRefreshedEvent) {

@@ -31,6 +31,7 @@ import java.util.Set;
  * @since 2.5.8
  * @deprecated Recommend {@link ServiceClassPostProcessor} as the substitute
  */
+// OK
 @Deprecated
 public class ServiceAnnotationBeanPostProcessor extends ServiceClassPostProcessor {
 

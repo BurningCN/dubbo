@@ -59,7 +59,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(
         classes = {
-                ServiceAnnotationTestConfiguration.class,
+                ServiceAnnotationTestConfiguration.class, // 1.注意这个是第一步，会进 ServiceBeanPostProcessor 的 构造方法逻辑 以及postProcessBeanDefinitionRegistry逻辑
                 ReferenceAnnotationBeanPostProcessorTest.class,
                 ReferenceAnnotationBeanPostProcessorTest.TestAspect.class
         })
@@ -70,6 +70,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 })
 @EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+// 一些关键调用触发顺序，我用数字标记了，自己注意下 1.~n.
+// 以及注意#1~#n，这几个标记了@Reference注解的触发实际，因为其中注解里面的属性值都一致，断点进doGetInjectedBean不是很能区分到底是哪个位置注解触发的，可以在加一个属性值比如owner="x"。x指定为1 2 3 等
 public class ReferenceAnnotationBeanPostProcessorTest {
 
     @BeforeAll
@@ -84,12 +86,14 @@ public class ReferenceAnnotationBeanPostProcessorTest {
 
     private static final String AOP_SUFFIX = "(based on AOP)";
 
+    // 学一下注解方式的切面配置
     @Aspect
     @Component
     public static class TestAspect {
 
         @Around("execution(* org.apache.dubbo.config.spring.context.annotation.provider.DemoServiceImpl.*(..))")
         public Object aroundApi(ProceedingJoinPoint pjp) throws Throwable {
+            // 执行目标方法，虽然是环绕通知，但是并没有做环绕处理，直接调用目标方法了
             return pjp.proceed() + AOP_SUFFIX;
         }
     }
@@ -99,6 +103,10 @@ public class ReferenceAnnotationBeanPostProcessorTest {
         return new TestBean();
     }
 
+    // 2.进ReferenceAnnotationBeanPostProcessor的构造方法。注意这个构造完成之后不会立即调用这个类里的
+    // doGetInjectedBean方法，而是遇到构造函数指定的那几个注解才会触发该方法。可以见3. ，上面在注入TestBean bean的时候，其父类的父类AncestorBean
+    // 我特地加了一个static，说明先进的这个，即验证了前面说的"ReferenceAnnotationBeanPostProcessor构造完成之后不会立即调用这个类里的doGetInjectedBean方法"
+    // （区别于ServiceBeanPostProcessor，其 是构造完成之后立马调用的 postProcessBeanDefinitionRegistry ）,再去看 3.
     @Bean(BEAN_NAME)
     public ReferenceAnnotationBeanPostProcessor referenceAnnotationBeanPostProcessor() {
         return new ReferenceAnnotationBeanPostProcessor();
@@ -107,6 +115,8 @@ public class ReferenceAnnotationBeanPostProcessorTest {
     @Autowired
     private ConfigurableApplicationContext context;
 
+    // 注意这里Qualifier的用法，provider包下有两个HelloService的实现类，而@@Autowired 是根据类型注入的，所以spring不知道你要哪个实现类实例bean
+    // 所以这里使用@Qualifier注解来指定beanName，这样类型+名称就唯一确定了要注入的bean（或者可以在实现类上加一个@Primary注解，该注解可以看@Primary-在spring中的使用.md）
     @Autowired
     @Qualifier("defaultHelloService")
     private HelloService defaultHelloService;
@@ -125,6 +135,34 @@ public class ReferenceAnnotationBeanPostProcessorTest {
 
     @Test
     public void test() throws Exception {
+
+        /*
+        context的beanName 如下：
+        0 = "org.springframework.context.annotation.internalConfigurationAnnotationProcessor"
+        1 = "org.springframework.context.annotation.internalAutowiredAnnotationProcessor"
+        2 = "org.springframework.context.annotation.internalCommonAnnotationProcessor"
+        3 = "org.springframework.context.event.internalEventListenerProcessor"
+        4 = "org.springframework.context.event.internalEventListenerFactory"
+        5 = "serviceAnnotationTestConfiguration"
+        6 = "referenceAnnotationBeanPostProcessorTest"
+        7 = "referenceAnnotationBeanPostProcessorTest.TestAspect"
+        8 = "dubbo-demo-application"
+        9 = "my-registry"
+        10 = "dubbo"
+        11 = "platformTransactionManager"
+        12 = "serviceAnnotationBeanPostProcessor"
+        13 = "testBean"
+        14 = "referenceAnnotationBeanPostProcessor"
+        15 = "org.springframework.aop.config.internalAutoProxyCreator"
+        16 = "dubboBootstrapApplicationListener"
+        17 = "defaultHelloService"
+        18 = "demoServiceImpl"
+        19 = "helloServiceImpl"
+        20 = "ServiceBean:org.apache.dubbo.config.spring.api.HelloService"
+        21 = "ServiceBean:org.apache.dubbo.config.spring.api.DemoService:2.5.7"
+                 */
+        // 看到上面并没有这个helloService，为啥能通过呢？肯定是别名的原因！！在 registerReferenceBean 方法中，有一个 registerAlias 逻辑，
+        // 针对 #5 ，他给provider下的beanName为 demoServiceImpl 的起了别名为 helloService
 
         assertTrue(context.containsBean("helloService"));
 
@@ -247,8 +285,11 @@ public class ReferenceAnnotationBeanPostProcessorTest {
     //        }
     //    }
 
-    private static class AncestorBean {
+    private static class AncestorBean {// 祖先
 
+        static {
+            int i=0;
+        }
         private DemoService demoServiceFromAncestor;
 
         @Autowired
@@ -258,7 +299,7 @@ public class ReferenceAnnotationBeanPostProcessorTest {
             return demoServiceFromAncestor;
         }
 
-        // #1 ReferenceBean (Method Injection #1)
+        // #3 ReferenceBean (Method Injection #1)
         @Reference(id = "my-reference-bean", version = "2.5.7", url = "dubbo://127.0.0.1:12345?version=2.5.7")
         public void setDemoServiceFromAncestor(DemoService demoServiceFromAncestor) {
             this.demoServiceFromAncestor = demoServiceFromAncestor;
@@ -272,7 +313,7 @@ public class ReferenceAnnotationBeanPostProcessorTest {
 
     private static class ParentBean extends AncestorBean {
 
-        // #2 ReferenceBean (Field Injection #1)
+        // #1 ReferenceBean (Field Injection #1) // 3.这个会触发ReferenceAnnotationBeanPostProcessor的doGetInjectedBean
         @Reference(version = "${consumer.version}", url = "${consumer.url}")
         private DemoService demoServiceFromParent;
 
@@ -296,7 +337,7 @@ public class ReferenceAnnotationBeanPostProcessorTest {
             return demoService;
         }
 
-        // #3 ReferenceBean (Method Injection #2)
+        // #2 ReferenceBean (Method Injection #2)
         @com.alibaba.dubbo.config.annotation.Reference(version = "2.5.7", url = "dubbo://127.0.0.1:12345?version=2.5.7")
         public void setDemoService(DemoService demoService) {
             this.demoService = demoService;

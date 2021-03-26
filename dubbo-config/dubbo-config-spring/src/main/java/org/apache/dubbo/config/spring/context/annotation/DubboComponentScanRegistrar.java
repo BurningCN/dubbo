@@ -48,6 +48,8 @@ import static org.springframework.beans.factory.support.BeanDefinitionBuilder.ro
  * @see ReferenceAnnotationBeanPostProcessor
  * @since 2.5.7
  */
+// OK
+// ImportBeanDefinitionRegistrar动态注册bean.md
 public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistrar {
 
     @Override
@@ -71,6 +73,7 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
     private void registerServiceAnnotationBeanPostProcessor(Set<String> packagesToScan, BeanDefinitionRegistry registry) {
 
         BeanDefinitionBuilder builder = rootBeanDefinition(ServiceAnnotationBeanPostProcessor.class);
+        // AnnotationBeanDefinitionParser也是这样使用的
         builder.addConstructorArgValue(packagesToScan);
         builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
         AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
@@ -79,6 +82,8 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
     }
 
     private Set<String> getPackagesToScan(AnnotationMetadata metadata) {
+        // 获取DubboComponentScan注解里面的属性值，转化为扫描的包集合
+
         AnnotationAttributes attributes = AnnotationAttributes.fromMap(
                 metadata.getAnnotationAttributes(DubboComponentScan.class.getName()));
         String[] basePackages = attributes.getStringArray("basePackages");

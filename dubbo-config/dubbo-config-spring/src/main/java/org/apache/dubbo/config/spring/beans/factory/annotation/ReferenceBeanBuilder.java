@@ -47,6 +47,7 @@ import static org.springframework.util.StringUtils.commaDelimitedListToStringArr
  *
  * @since 2.5.7
  */
+// OK
 class ReferenceBeanBuilder extends AnnotatedInterfaceConfigBeanBuilder<ReferenceBean> {
 
     // Ignore those fields
@@ -154,6 +155,7 @@ class ReferenceBeanBuilder extends AnnotatedInterfaceConfigBeanBuilder<Reference
     @Override
     protected void postConfigureBean(AnnotationAttributes attributes, ReferenceBean bean) throws Exception {
 
+        // 手动调用ReferenceBean的相关方法 setApplicationContext、afterPropertiesSet，原模式是直接加载bean自动触发的
         bean.setApplicationContext(applicationContext);
 
         configureInterface(attributes, bean);

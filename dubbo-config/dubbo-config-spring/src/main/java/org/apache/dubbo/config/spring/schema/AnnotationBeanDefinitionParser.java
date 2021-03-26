@@ -36,7 +36,9 @@ import static org.springframework.util.StringUtils.trimArrayElements;
  */
 
 // OK
-// 这个和DubboBeanDefinitionParser作用是一样的，自定义的BeanDefinition解析器，只不过这个是处理注解的
+// 这个和DubboBeanDefinitionParser作用是一样的，自定义的BeanDefinition解析器，都是用来用来解析 XSD 文件的。
+// 前者是直接实现BeanDefinitionParser接口，该类是继承AbstractSingleBeanDefinitionParser，其实都差不多。
+// 该类是处理xsd文件中 <dubbo:annotation package="" /> 这个标签的内容值，拿到packagesToScan，进行注解扫描
 public class AnnotationBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 
     /**
@@ -54,10 +56,13 @@ public class AnnotationBeanDefinitionParser extends AbstractSingleBeanDefinition
 
         String packageToScan = element.getAttribute("package");
 
+        // 按照,分割成string数组，然后trim去除两边空格
         String[] packagesToScan = trimArrayElements(commaDelimitedListToStringArray(packageToScan));
 
+        // 给构造函数传递参数，根据下面重写的getBeanClass方法，就是传递给ServiceAnnotationBeanPostProcessor类的构造方法，就拿到package了
         builder.addConstructorArgValue(packagesToScan);
 
+        // 这一行代码，设置beanDefinition的role就是BeanDefinition.ROLE_INFRASTRUCTURE，所以会触发AOP的功能。
         builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 
         /**

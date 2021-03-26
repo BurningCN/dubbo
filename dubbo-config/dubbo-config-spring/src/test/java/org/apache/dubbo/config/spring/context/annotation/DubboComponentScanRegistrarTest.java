@@ -56,6 +56,7 @@ public class DubboComponentScanRegistrarTest {
 
         AnnotationConfigApplicationContext providerContext = new AnnotationConfigApplicationContext();
 
+        // 注册。去看下该类上的DubboComponentScan注解
         providerContext.register(ProviderConfiguration.class);
 
         providerContext.refresh();
@@ -66,6 +67,7 @@ public class DubboComponentScanRegistrarTest {
 
         Assertions.assertEquals("Hello,Mercy", value);
 
+        // 获取目标对象类信息
         Class<?> beanClass = AopUtils.getTargetClass(demoService);
 
         // DemoServiceImpl with @Transactional
@@ -75,6 +77,8 @@ public class DubboComponentScanRegistrarTest {
         Assertions.assertNotNull(findAnnotation(beanClass, Transactional.class));
 
         AnnotationConfigApplicationContext consumerContext = new AnnotationConfigApplicationContext();
+
+        // ====================================================================
 
         consumerContext.register(ConsumerConfiguration.class);
 

@@ -187,7 +187,7 @@ public abstract class AbstractConfig implements Serializable {
                     } else if (parameter != null && parameter.required()) {
                         throw new IllegalStateException(config.getClass().getSimpleName() + "." + key + " == null");
                     }
-                    // 如果前面不是getXX方法，判断是不是getParameters方法，进去看下怎么判断的
+                    // 如果前面不是getXX方法，判断是不是getParameters方法，进去看下怎么判断的,没必要new Object[0]
                 } else if (isParametersGetter(method)) {
                     Map<String, String> map = (Map<String, String>) method.invoke(config, new Object[0]);
                     // 做一下转化（key加prefix前缀、-变成.），进去
@@ -295,7 +295,7 @@ public abstract class AbstractConfig implements Serializable {
     }
 
     // gx 和refresh有关，方法主要是从clazz类setter方法名称中提取属性名称，并做一些处理用以生成最后的key（Configuration的key）
-    // 方法整体还是很easy的
+    // 方法整体还是很easy的 只需要要找到getter，是因为上面含有@Parameter注解，注解里面有key
     private static String extractPropertyName(Class<?> clazz, Method setter) throws Exception {
         String propertyName = setter.getName().substring("set".length());
         Method getter = null;
@@ -546,6 +546,9 @@ public abstract class AbstractConfig implements Serializable {
             Method[] methods = getClass().getMethods();
             // 遍历所有的SetXx方法和setParameters方法
             for (Method method : methods) {
+                if(method.getName().equals("setEscape")){
+                    int i = 0;
+                }
                 // SetXx方法
                 if (MethodUtils.isSetter(method)) {
                     try {
@@ -681,12 +684,14 @@ public abstract class AbstractConfig implements Serializable {
      * @see ConfigManager#addConfig(AbstractConfig)
      * @since 2.7.5
      */
-    // 作用看上面
+    // 作用看上面 这个方法非常重要！！！主要是用于spring的场景，我们通过xml或者注解的方式，比如xml，利用自定义的parser创建bean实例的时候，
+    // 比如ServiceBean的构造方法得到触发，就会调用这里，这样DubboBootStrap在启动的就能从ConfigManager拿到要暴露/引用的服务
     @PostConstruct
     public void addIntoConfigManager() {
         ApplicationModel.getConfigManager().addConfig(this);
     }
 
+    // nb 正常每个hashcode在子类中，但是这个父类很强，能适应所有子类，因为其hashcode的字段值是通过反射动态获取的
     @Override
     public int hashCode() {
         int hashCode = 1;

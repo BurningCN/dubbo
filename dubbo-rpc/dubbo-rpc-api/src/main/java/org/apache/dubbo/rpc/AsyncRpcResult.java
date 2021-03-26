@@ -45,15 +45,15 @@ import static org.apache.dubbo.common.utils.ReflectUtils.defaultReturn;
  * AsyncRpcResult does not contain any concrete value (except the underlying value bring by CompletableFuture), consider it as a status transfer node.
  * {@link #getValue()} and {@link #getException()} are all inherited from {@link Result} interface, implementing them are mainly
  * for compatibility consideration. Because many legacy {@link Filter} implementation are most possibly to call getValue directly.
- *
+ * <p>
  * 这个类代表一个未完成的RPC调用，它将为这个调用保留一些上下文信息，例如RpcContext和Invocation，当
  * 这样，调用结束并返回结果时，就可以保证在任何回调调用之前恢复的所有上下文与调用时一样
- * < p >
+ * <p>
  * 如果保持对调用的引用是合理的，甚至是正确的，那么应该做什么呢?
- * < p >
+ * <p>
  * 由于{@link Result}实现了CompletionStage， {@link AsyncRpcResult}允许你轻松地构建一个状态为的异步过滤链
  * 完全由底层RPC调用的状态驱动。
- * < p >
+ * <p>
  * AsyncRpcResult不包含任何具体的值(除了CompletableFuture带来的底层值)，将其视为状态转移节点。
  * {@link #getValue()}和{@link #getException()}都继承自{@link Result}接口，它们的实现主要是
  * 为了兼容性的考虑。因为许多遗留的{@link Filter}实现最有可能直接调用getValue。
@@ -66,7 +66,7 @@ public class AsyncRpcResult implements Result {
     /**
      * RpcContext may already have been changed when callback happens, it happens when the same thread is used to execute another RPC call.
      * So we should keep the reference of current RpcContext instance and restore it before callback being executed.
-     *
+     * <p>
      * 当回调发生时，RpcContext可能已经被改变，它发生在同一个线程被用来执行另一个RPC调用。
      * 因此，我们应该保留当前RpcContext实例的引用，并在回调执行之前恢复它。
      */
@@ -98,17 +98,18 @@ public class AsyncRpcResult implements Result {
     /**
      * CompletableFuture can only be completed once, so try to update the result of one completed CompletableFuture will
      * has no effect. To avoid this problem, we check the complete status of this future before update it's value.
-     *
+     * <p>
      * But notice that trying to give an uncompleted CompletableFuture a new specified value may face a race condition,
      * because the background thread watching the real result will also change the status of this CompletableFuture.
      * The result is you may lose the value you expected to set.
-     *
+     * <p>
      * CompletableFuture只能完成一次，所以尝试更新一个completed CompletableFuture will的结果
      * 没有效果。为了避免这个问题，我们在更新它的值之前检查这个future的完整状态。
-     *
+     * <p>
      * 但是请注意，尝试给一个未完成的CompletableFuture一个新的指定值可能会面临一个竞争条件，
      * 因为后台线程观看真实的结果也会改变这个完整的未来的状态。
      * 结果是您可能会失去期望设置的值。
+     *
      * @param value
      */
     @Override
@@ -143,7 +144,7 @@ public class AsyncRpcResult implements Result {
                 responseFuture.get().setException(t);
             } else {
                 AppResponse appResponse = new AppResponse();
-                appResponse.setException(t);
+                appResponse.setException(t); // 这里是setException
                 responseFuture.complete(appResponse);
             }
         } catch (Exception e) {
@@ -195,6 +196,7 @@ public class AsyncRpcResult implements Result {
      * @throws InterruptedException
      * @throws ExecutionException
      */
+    // ThreadlessExecutor 注意去看下官方md文档，消费端拿到结果后旧版本是交给消费端的线程池，但是对线程池有影响，所以有了这个，相比于老的线程池模型，由业务线程自己负责监测并解析返回结果，免去了额外的消费端线程池开销。
     @Override
     public Result get() throws InterruptedException, ExecutionException {
         if (executor != null && executor instanceof ThreadlessExecutor) {
@@ -218,7 +220,7 @@ public class AsyncRpcResult implements Result {
     public Object recreate() throws Throwable {
         // invocation在invoker的invoke方法通过该类的构造方法传参过来赋值的
         RpcInvocation rpcInvocation = (RpcInvocation) invocation;
-        //
+        // 注意RpcContext.getContext().setFuture()的调用点
         if (InvokeMode.FUTURE == rpcInvocation.getInvokeMode()) {
             return RpcContext.getContext().getFuture();
         }

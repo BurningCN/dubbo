@@ -43,7 +43,7 @@ public class ConfigUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(ConfigUtils.class);
     private static Pattern VARIABLE_PATTERN = Pattern.compile(
-            "\\$\\s*\\{?\\s*([\\._0-9a-zA-Z]+)\\s*\\}?");
+            "\\$\\s*\\{?\\s*([\\._0-9a-zA-Z]+)\\s*\\}?"); // ${}
     private static volatile Properties PROPERTIES;
     private static int PID = -1;
 
@@ -166,6 +166,7 @@ public class ConfigUtils {
         // PROPERTIES是private static volatile
         // 使用volatile+syn确保PROPERTIES的单例 （ 实现了延迟加载的功能，因为加载文件内容涉及到io操作，相对耗时）
         if (PROPERTIES == null) {
+            // 因为是静态属性，双重检查加锁必须要加类锁
             synchronized (ConfigUtils.class) {
                 if (PROPERTIES == null) {
                     // 获取系统属性key为dubbo.properties.file的值

@@ -44,7 +44,7 @@ public class DubboShutdownHook extends Thread {
     // 线程对象单例模式（饿汉），进去
     private static final DubboShutdownHook DUBBO_SHUTDOWN_HOOK = new DubboShutdownHook("DubboShutdownHook");
 
-    // 回调对象单例模式（饿汉），进去
+    // 回调对象单例模式（饿汉），进去  注意这里没有static修饰，上面的有，想想为什么
     private final ShutdownHookCallbacks callbacks = ShutdownHookCallbacks.INSTANCE;
 
     /**

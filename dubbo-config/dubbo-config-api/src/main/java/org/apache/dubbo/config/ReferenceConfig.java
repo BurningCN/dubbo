@@ -229,6 +229,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         dispatch(new ReferenceConfigDestroyedEvent(this));
     }
 
+    // 和ServiceConfig的doExport一样，都是加锁的
     public synchronized void init() {
         if (initialized) {
             return;

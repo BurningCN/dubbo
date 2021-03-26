@@ -71,7 +71,7 @@ public class ServiceAnnotationTestConfiguration2 {
     }
 
     /**
-     * Current protocol configuration, to replace XML config:
+     * Current protocol configurafillServiceBeanDefinitionHolderstion, to replace XML config:
      * <prev>
      * &lt;dubbo:protocol name="dubbo" port="12345"/&gt;
      * </prev>

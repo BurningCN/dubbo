@@ -404,10 +404,12 @@ public class RegistryProtocol implements Protocol {
         return registryFactory.getRegistry(registryUrl);
     }
 
+    // 这个是服务端提供者专用的（export方法），注意看子类重写的
     protected URL getRegistryUrl(Invoker<?> originInvoker) {
         return originInvoker.getUrl();
     }
 
+    // 这个是消费者专用的（refer方法），注意看子类重写的
     protected URL getRegistryUrl(URL url) {
         if (SERVICE_REGISTRY_PROTOCOL.equals(url.getProtocol())) {
             return url;
@@ -417,7 +419,7 @@ public class RegistryProtocol implements Protocol {
 
     /**
      * Return the url that is registered to the registry and filter the url parameter once
-     * 返回注册到注册中心的url并过滤url参数一次
+     * 返回注册到注册中心的url并过滤url参数一次 。提供者专用，export方法使用的，即provider注册到Registry需要做一下处理，将处理后的url注册到Registry
      *
      * @param providerUrl
      * @return url to registry.

@@ -112,7 +112,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      * 随机端口缓存，没有指定端口的不同协议有不同的随机端口
      */
     // gx
-    private static final Map<String, Integer> RANDOM_PORT_MAP = new HashMap<String, Integer>();
+    private static final Map<String/*protocolName*/, Integer/*port*/> RANDOM_PORT_MAP = new HashMap<String, Integer>();
 
     /**
      * A delayed exposure service timer
@@ -169,7 +169,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     // gx
     public void unexport() {
-        // 如果该服务还没有暴露过，直接给他返回。
+        // 如果该服务还没有暴露过，直接给他返回。 这就是设计两个标记的意义，就知道为啥既有start也有stop 了，因为如果没有暴露过的话，压根就不需要unexport
         if (!exported) {
             return;
         }
@@ -198,6 +198,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         dispatch(new ServiceConfigUnexportedEvent(this));
     }
 
+    // 加锁 并发只允许一个线程进行暴露
     public synchronized void export() {
         if (bootstrap == null) {
             // 通过静态方法（可以理解为工厂方法）获取bootstrap实例，内部用了单例模式，进去
@@ -238,7 +239,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     }
 
     public void exported() {
-        // 爷爷的方法
+        // 爷爷AbstractInterfaceConfig的方法
         List<URL> exportedURLs = this.getExportedUrls();
         exportedURLs.forEach(url -> {
             Map<String, String> parameters = getApplication().getParameters();
@@ -442,7 +443,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (metadataReportConfig != null && metadataReportConfig.isValid()) {
             map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);// "metadata-type" -> "remote"
         }
-        // 前面也有这个填充map的类似过程，即loadRegistries的时候
+        // 前面也有这个填充map的类似过程，即 loadRegistries 的时候
 
         // 此时map如下：
         //"side" -> "provider"
@@ -534,7 +535,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 map.put(METHODS_KEY, StringUtils.join(new HashSet<String>(Arrays.asList(methods)), ","));
             }
         }
-
+        // ====================================================================
         /**
          * Here the token value configured by the provider is used to assign the value to ServiceConfig#token
          */
@@ -549,6 +550,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 map.put(TOKEN_KEY, token);
             }
         }
+        // ====================================================================
         // init serviceMetadata attachments
         serviceMetadata.getAttachments().putAll(map);
         // export service
@@ -572,7 +574,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         //    registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&registry=zookeeper&timestamp=1609849127050
         //       dubbo://30.25.58.102:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=30.25.58.102&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=9682&release=&side=provider&timestamp=1609906152829
         // url生成了，就开始暴露服务了，接着往下看
-// -----------------------------------✨✨分割线✨✨---------------------------------------------------------------------
+        // -----------------------------------✨✨分割线✨✨---------------------------------------------------------------------
         String scope = url.getParameter(SCOPE_KEY); // SCOPE_KEY = "scope"
         // don't export when none is configured
         if (!SCOPE_NONE.equalsIgnoreCase(scope)) { // SCOPE_NONE = "none"

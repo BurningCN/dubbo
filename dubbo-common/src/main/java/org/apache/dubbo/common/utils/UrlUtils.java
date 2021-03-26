@@ -393,22 +393,28 @@ public class UrlUtils {
     public static boolean isMatch(URL consumerUrl, URL providerUrl) {
         String consumerInterface = consumerUrl.getServiceInterface();
         String providerInterface = providerUrl.getServiceInterface();
+
         //FIXME accept providerUrl with '*' as interface name, after carefully thought about all possible scenarios I think it's ok to add this condition.
+
+        // 首先比较interface
         if (!(ANY_VALUE.equals(consumerInterface)
                 || ANY_VALUE.equals(providerInterface)
                 || StringUtils.isEquals(consumerInterface, providerInterface))) {
             return false;
         }
 
+        // 在比较provider的category是否包含在consumer的categories中
         if (!isMatchCategory(providerUrl.getParameter(CATEGORY_KEY, DEFAULT_CATEGORY),
                 consumerUrl.getParameter(CATEGORY_KEY, DEFAULT_CATEGORY))) {
             return false;
         }
+        // 如果provider的enabled为false，consumer的enabled不是 *
         if (!providerUrl.getParameter(ENABLED_KEY, true)
                 && !ANY_VALUE.equals(consumerUrl.getParameter(ENABLED_KEY))) {
             return false;
         }
 
+        // 比较组、版本号、分类器
         String consumerGroup = consumerUrl.getParameter(GROUP_KEY);
         String consumerVersion = consumerUrl.getParameter(VERSION_KEY);
         String consumerClassifier = consumerUrl.getParameter(CLASSIFIER_KEY, ANY_VALUE);

@@ -229,7 +229,7 @@ public class AbstractConfigTest {
     @Test
     public void checkName() throws Exception {
         Assertions.assertThrows(IllegalStateException.class, () ->
-        // 通配符不满足
+                // 通配符不满足
                 ConfigValidationUtils.checkName("hello", "world%"));
     }
 
@@ -297,6 +297,7 @@ public class AbstractConfigTest {
         }
     }
 
+    // 注意filter是"f1, f2" ，不是{"f1","f2"}
     @Test
     @Config(interfaceClass = Greeting.class, filter = {"f1, f2"}, listener = {"l1, l2"},
             parameters = {"k1", "v1", "k2", "v2"})
@@ -368,6 +369,8 @@ public class AbstractConfigTest {
             // 前面refresh内部触发了对应的setXx方法，将属性赋了值，但是注意Configuration的优先级，先前声明的key被后面声明（但是优先级更高的）同名key覆盖掉
             // 就比如代码最开始先声明overrideConfig.address属性的值肯定是"override-config://127.0.0.1:2181"，但是SystemConfiguration的优先级比
             // ConfigConfigurationAdapter的高，所以address的值肯定是dubbo.override.address
+            // fix 上面说的不对，而是Sys的靠前，在CompositeConfiguration内部遍历到一个满足会直接break，而SysCfg靠前所以先取到，然后赋值
+
             Assertions.assertEquals("system://127.0.0.1:2181", overrideConfig.getAddress());
             Assertions.assertEquals("system", overrideConfig.getProtocol());
             Assertions.assertEquals("override-config://", overrideConfig.getEscape());
@@ -426,6 +429,7 @@ public class AbstractConfigTest {
             overrideConfig.setProtocol("override-config");
             overrideConfig.setEscape("override-config://");
 
+            // todo need pr 下面可以删掉，上面第一行内部就加载了/dubbo.properties
             Properties properties = new Properties();
             properties.load(this.getClass().getResourceAsStream("/dubbo.properties"));
             ConfigUtils.setProperties(properties);
@@ -438,6 +442,7 @@ public class AbstractConfigTest {
             //Assertions.assertEquals("properties", overrideConfig.getUseKeyAsProperty());
         } finally {
             ApplicationModel.getEnvironment().clearExternalConfigs();
+            // todo need pr 下面可以删掉
             ConfigUtils.setProperties(null);
         }
     }
@@ -553,7 +558,7 @@ public class AbstractConfigTest {
             Assertions.assertEquals("value4", overrideConfig.getParameters().get("key4"));
             // 注意了InmemoryConfiguration的parameters参数还是会取的，所以下面通过，我们说SystemConfiguration的优先级更高是体现在，前后
             // 两种Configuration有key值相同的情况取优先级更高的val
-            Assertions.assertEquals("value5",overrideConfig.getParameters().get("key2"));
+            Assertions.assertEquals("value5", overrideConfig.getParameters().get("key2"));
         } finally {
             System.clearProperty("dubbo.override.parameters");
             ApplicationModel.getEnvironment().clearExternalConfigs();
@@ -567,7 +572,9 @@ public class AbstractConfigTest {
             overrideConfig.setNotConflictKey("value-from-config");
 
             Map<String, String> external = new HashMap<>();
-            external.put("notConflictKey", "value-from-external");
+            external.put("notConflictKey", "value-from-external");// 没有 prefix前缀
+            ApplicationModel.getEnvironment().setExternalConfigMap(external);
+            ApplicationModel.getEnvironment().initialize();
 
             try {
                 Map<String, String> map = new HashMap<>();
@@ -578,8 +585,6 @@ public class AbstractConfigTest {
                 // ignore
                 e.printStackTrace();
             }
-
-            ApplicationModel.getEnvironment().setExternalConfigMap(external);
 
             overrideConfig.refresh();
 
@@ -618,7 +623,7 @@ public class AbstractConfigTest {
         ApplicationConfig application2 = new ApplicationConfig();
         application1.setName("app1");
         application2.setName("app2");
-        // 不等，因为equals内部必须要保证name相同
+        // 不等，因为equals内部必须要保证name(所有属性值)相同（如果有parameter注解，要保证excluded=false才会比较）
         Assertions.assertNotEquals(application1, application2);
 
 

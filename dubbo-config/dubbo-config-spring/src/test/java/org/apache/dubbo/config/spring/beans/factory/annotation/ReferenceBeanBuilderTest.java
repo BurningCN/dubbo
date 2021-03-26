@@ -50,6 +50,7 @@ import static org.springframework.util.ReflectionUtils.findField;
  * @see Reference
  * @since 2.6.4
  */
+// OK
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ReferenceBeanBuilderTest.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)

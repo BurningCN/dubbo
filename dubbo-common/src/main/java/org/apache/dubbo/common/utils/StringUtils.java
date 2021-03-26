@@ -67,7 +67,6 @@ public final class StringUtils {
     private static final int PAD_LIMIT = 8192;
     private static final byte[] HEX2B;
 
-
     /**
      * @since 2.7.5
      */

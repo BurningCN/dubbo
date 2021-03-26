@@ -40,6 +40,13 @@ public interface RegistryFactory {
      * 5. Support the timeout=1000 request timeout setting.<br>
      * 6. Support session=60000 session timeout or expiration settings.<br>
      *
+     * * 1。当设置了check=false时，不检查连接，否则当disconnect <br>时抛出异常
+     * * 2。支持URL上的用户名:密码授权认证
+     * * 3。支持backup=10.20.153.10候选注册表集群地址
+     * * 4。支持文件=注册表。缓存本地磁盘文件缓存
+     * * 5。支持timeout=1000请求超时设置
+     * * 6。支持session=60000会话超时或过期设置
+     *
      * @param url Registry address, is not allowed to be empty
      * @return Registry reference, never return empty value
      */

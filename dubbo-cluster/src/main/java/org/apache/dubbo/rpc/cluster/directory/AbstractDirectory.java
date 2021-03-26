@@ -42,7 +42,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
  * Abstract implementation of Directory: Invoker list returned from this Directory's list method have been filtered by Routers
  *
  */
-// AbstractDirectory有RegistryDirectory、StaticDirectory两种实现
+//  AbstractDirectory有RegistryDirectory、StaticDirectory两种实现
 //  RegistryDirectory实现了NotifyListener接口，而NotifyListener接口的notify回调方法会在注册中心中提供者发生变化时被调用，从而达到通知RegistryDirectory更新Invoker列表的效果，它是能根据注册中心动态变化的核心所在。
 //  StaticDirectory没有实现NotifyListener接口，它是Directory的静态列表实现，即将传入的Invoker列表封装成静态的Directory对象，里面的列表不会改变。StaticDirectory的逻辑非常简单，在构造方法中需要传入Invoker列表，doList方法则直接返回初始化时传入的列表。
 public abstract class AbstractDirectory<T> implements Directory<T> {

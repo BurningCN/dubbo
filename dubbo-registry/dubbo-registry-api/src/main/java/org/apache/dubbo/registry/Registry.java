@@ -26,6 +26,7 @@ import org.apache.dubbo.common.URL;
  * @see org.apache.dubbo.registry.support.AbstractRegistry
  */
 // OK
+// 该结构和Monitor、MontiorService结构一致，业务逻辑都在xxService中，xx仅用来继承Node接口，表示一个Node标记
 public interface Registry extends Node, RegistryService {
     default void reExportRegister(URL url) {
         register(url);

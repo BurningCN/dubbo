@@ -41,7 +41,13 @@ import java.util.concurrent.TimeoutException;
  通过execute(Runnable)方法提交给这个执行器的任务不会被调度到特定线程，而其他的Executor就把Runnable交给线程去执行了。
  这些任务存储在阻塞队列中，只有当thead调用waitAndDrain()方法时才会真正执行。简单来说就是，执行task的thead与调用waitAndDrain()方法的thead完全相同。
  */
-// OK
+/*(1)消费端发起调用的时候，首 先DefaultInvoker#doInvoke的else分支 ->getCallbackExecutor ->SYNC->ThreadlessExecutor executor
+-> client.getChannel().request -> DefaultFuture#newFuture 存入该executor。
+
+(2)上面发起rpc之后，AsyncToSyncInvoker#invoke判定是SYNC，则会调用AsyncRpcResult#get->threadlessExecutor.waitAndDrain();在阻塞队列take阻塞
+
+(3) 消费端拿到对端的响应数据的时候，Client这端的AllChannelHandler触发received方法，调用getPreferredExecutorService方法，
+拿到先前保存在DefaultFuture的 ThreadlessExecutor executor对象，调用其execute方法，put任务到阻塞队列。步骤2解除阻塞，执行 ChannelEventRunnable任务，进行解码逻辑*/
 public class ThreadlessExecutor extends AbstractExecutorService {
     private static final Logger logger = LoggerFactory.getLogger(ThreadlessExecutor.class.getName());
 
@@ -76,6 +82,7 @@ public class ThreadlessExecutor extends AbstractExecutorService {
     /**
      * Waits until there is a task, executes the task and all queued tasks (if there're any). The task is either a normal
      * response or a timeout response.
+     * 等待，直到有任务，执行任务和所有排队的任务(如果有的话)。该任务要么是正常响应，要么是超时响应。
      */
     public void waitAndDrain() throws InterruptedException {
         /**
@@ -86,6 +93,15 @@ public class ThreadlessExecutor extends AbstractExecutorService {
          * There's no need to worry that {@link #finished} is not thread-safe. Checking and updating of
          * 'finished' only appear in waitAndDrain, since waitAndDrain is binding to one RPC call (one thread), the call
          * of it is totally sequential.
+         *
+         * 通常，{@link #waitAndDrain()}只会被调用一次。它第一次阻塞响应，一旦响应(任务)到达并被执行，waitAndDrain将返回，整个请求过程就会结束。
+         * 后续对{@link #waitAndDrain()}的调用(如果有的话)应该立即返回。
+         * 没有必要担心{@link #finished}不是线程安全的。检查和更新'finished'只会出现在waitAndDrain中，因为waitAndDrain绑定到一个RPC调用(一个线程)，
+         * 所以对它的调用完全是顺序的。
+         *
+         * 这里补充一句，上面说不要担心线程安全，是因为该类对象构造方法是每次现new的（DubboInvoker#doInvoke的else逻辑的getCallbackExecutor）
+         * 每次new完之后，调用waitAndDrain处理的时候，最后将finished置为true。
+         *
          */
         if (finished) {
             return;

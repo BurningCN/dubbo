@@ -29,7 +29,7 @@ import static org.springframework.util.TypeUtils.isAssignable;
  *
  * @since 2.7.9
  */
-// OK
+// OK 主要是给容器注册2个监听器
 public class DubboApplicationListenerRegistrar implements ApplicationContextAware {
 
     /**

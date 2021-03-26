@@ -49,7 +49,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         // eg:dubbo/test:1.1  由{group}/{interfaceName}:{version}组成 进去
         String serviceKey = this.url.getServiceKey();
         // eg:dubbo/test:1.1:test 由serviceKey+Protocol组成，进去
-        this.protocolServiceKey = this.url.getProtocolServiceKey();
+        this.protocolServiceKey = this.url.getServiceKey() + ":" +  this.url.getProtocol();
         if (serviceKey != null) {
             this.consumerModel = ApplicationModel.getConsumerModel(serviceKey);
         }
@@ -68,7 +68,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         Class<?>[] parameterTypes = method.getParameterTypes();
         // 如果方法没有参数
         if (parameterTypes.length == 0) {
-            // 调用invoker相关方法  --- > 和以往method.invoke(invoker,args)不同，这里是直接对象.方法
+            // 调用invoker相关方法  --- > 和以往通过反射调用方式，即method.invoke(invoker,args)不同，这里是直接对象.方法
             if ("toString".equals(methodName)) {
                 return invoker.toString();
             } else if ("$destroy".equals(methodName)) { // 因为客户端的代理类的生成是实现了内置的AbstractProxyFactory.Destroyable。这个是有该方法的

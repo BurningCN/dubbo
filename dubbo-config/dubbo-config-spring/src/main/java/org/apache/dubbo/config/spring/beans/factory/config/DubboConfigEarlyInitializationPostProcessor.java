@@ -84,11 +84,13 @@ public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPost
                 logger.warn("CommonAnnotationBeanPostProcessor is not registered yet, " +
                         "the method addIntoConfigManager() will be invoked directly");
             }
+            // 手动填充到ConfigManager
             config.addIntoConfigManager();
         }
     }
 
     private DefaultListableBeanFactory unwrap(Object registry) {
+        // BeanFactory的默认实现
         if (registry instanceof DefaultListableBeanFactory) {
             return (DefaultListableBeanFactory) registry;
         }
@@ -102,6 +104,7 @@ public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPost
                 logger.info("BeanFactory is about to be initialized, trying to resolve the Dubbo Config Beans early " +
                         "initialization");
             }
+            // 给BeanFactory添加PostProcessor的方式，直接调api
             beanFactory.addBeanPostProcessor(this);
         }
     }

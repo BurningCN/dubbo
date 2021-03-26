@@ -91,7 +91,7 @@ public abstract class AbstractRegistry implements Registry {
     private final AtomicInteger savePropertiesRetryTimes = new AtomicInteger();
     private final Set<URL> registered = new ConcurrentHashSet<>();
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<>();
-    private final ConcurrentMap<URL, Map<String/*category*/, List<URL>>> notified = new ConcurrentHashMap<>();
+    private final ConcurrentMap<URL/*consumerUrl*/, Map<String/*category*/, List<URL>/**provider urls*/>> notified = new ConcurrentHashMap<>();
     private URL registryUrl;
     // Local disk cache file
     private File file;

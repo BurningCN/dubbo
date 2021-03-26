@@ -47,6 +47,7 @@ public interface DubboBeanUtils {
      */
     static void registerCommonBeans(BeanDefinitionRegistry registry) {
 
+        // 注册ReferenceAnnotationBeanPostProcessor 处理@Reference相关注解的
         // Since 2.5.7 Register @Reference Annotation Bean Processor as an infrastructure Bean
         registerInfrastructureBean(registry, ReferenceAnnotationBeanPostProcessor.BEAN_NAME,
                 ReferenceAnnotationBeanPostProcessor.class);

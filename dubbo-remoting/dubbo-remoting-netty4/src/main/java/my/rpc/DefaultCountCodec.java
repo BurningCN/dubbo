@@ -21,6 +21,7 @@ public class DefaultCountCodec implements Codec2 {
         defaultCodec.encode(buffer, msg);
     }
 
+    // 该类主要做一个批量解码，好让下一个handler能批量处理（NettyClient/ServerHandler），减少频繁交互
     @Override
     public Object decode(ChannelBuffer buffer) throws Exception {
         int save = buffer.readerIndex();
@@ -61,12 +62,14 @@ public class DefaultCountCodec implements Codec2 {
         }
         if (result instanceof Request) {
             try {
+                // DecodeableRpcInvocation
                 ((RpcInvocation) ((Request) result).getData()).setAttachment("input", String.valueOf(bytes));
             } catch (Throwable e) {
                 /* ignore */
             }
         } else if (result instanceof Response) {
             try {
+                // DecodeableRpcResult
                 ((AppResponse) ((Response) result).getResult()).setObjectAttachment("output", String.valueOf(bytes));
             } catch (Throwable e) {
                 /* ignore */

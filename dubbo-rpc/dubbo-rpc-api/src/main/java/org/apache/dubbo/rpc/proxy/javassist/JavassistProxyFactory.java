@@ -29,6 +29,8 @@ import org.apache.dubbo.rpc.proxy.InvokerInvocationHandler;
  */
 public class JavassistProxyFactory extends AbstractProxyFactory {
 
+    // getProxy方法是给消费者使用的，getInvoker是给提供者使用的
+
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getProxy(Invoker<T> invoker, Class<?>[] interfaces) {

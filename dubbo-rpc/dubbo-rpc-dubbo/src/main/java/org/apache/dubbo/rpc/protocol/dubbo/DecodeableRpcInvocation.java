@@ -49,6 +49,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.protocol.dubbo.CallbackServiceCodec.decodeInvocationArgument;
 
+// OK
 public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Decodeable {
 
     private static final Logger log = LoggerFactory.getLogger(DecodeableRpcInvocation.class);
@@ -73,8 +74,11 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
         this.serializationType = id;
     }
 
+    // decode的逻辑可以在netty的io线程中进行(DubbCodec)，也可以在派发线程池中执行(DecodeHandler <- 该handler是是AllChannelHandler里
+    // 面使用线程提交ChannelEventRunnable)
     @Override
     public void decode() throws Exception {
+        // todo need pr 这里应该 使用AtomicBoolean 类型 且结合cas，否则依然会导致重复decode
         if (!hasDecoded && channel != null && inputStream != null) {
             try {
                 decode(channel, inputStream);// 进去
@@ -187,7 +191,9 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
             // #### 2.3.2 调用服务
             //
-            //解码器将数据包解析成 Request 对象后，NettyHandler 的 messageReceived 方法紧接着会收到这个对象，并将这个对象继续向下传递。这期间该对象会被依次传递给 NettyServer、MultiMessageHandler、HeartbeatHandler 以及 AllChannelHandler。最后由 AllChannelHandler 将该对象封装到 Runnable 实现类对象中，并将 Runnable 放入线程池中执行后续的调用逻辑。整个调用栈如下：
+            // 解码器将数据包解析成 Request 对象后，NettyHandler 的 messageReceived 方法紧接着会收到这个对象，并将这个对象继续向下传递。
+            // 这期间该对象会被依次传递给 NettyServer、MultiMessageHandler、HeartbeatHandler 以及 AllChannelHandler。
+            // 最后由 AllChannelHandler 将该对象封装到 Runnable 实现类对象中，并将 Runnable 放入线程池中执行后续的调用逻辑。整个调用栈如下：
             //
             //NettyHandler#messageReceived(ChannelHandlerContext, MessageEvent)   ----> 进 NettyServerHandler 的 channelRead
             //  —> AbstractPeer#received(Channel, Object)

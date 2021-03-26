@@ -114,6 +114,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         }
     }
 
+    // 这个不应该叫这个名字，应该叫getOrCreateRegistry
     @Override
     public Registry getRegistry(URL url) {
         if (destroyed.get()) {

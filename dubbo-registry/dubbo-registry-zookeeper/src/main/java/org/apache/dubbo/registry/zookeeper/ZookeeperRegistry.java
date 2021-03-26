@@ -182,6 +182,10 @@ public class ZookeeperRegistry extends FailbackRegistry {
             } else {
                 List<URL> urls = new ArrayList<>();
                 for (String path : toCategoriesPath(url)) { // 进去
+                    // subscribe方法已经存储了url->Set<NotifyListener>的映射，这里又做了一次映射，不过是 url -> [{NotifyListener,ChildListener},...]的映射
+                    // 之所以需要做映射的原因是CuratorWatcherImpl#process调用的是ChildListener#childChanged方法，直接交互的是ChildListener，
+                    // 而不是我们业务方的NotifyListener。所以需要和ChildListener做一次映射，即节点变更后 调用 ChildListener#childChanged方法，
+                    // 其内部调用notify(url, listener, urls);（这里的listener是NotifyListener）
                     ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
                     // ChildListener接口去看下，其方法是两个参数无返回值，所以k->右边两个参数
                     ChildListener zkListener = listeners.computeIfAbsent(listener, k -> (parentPath, currentChilds) -> ZookeeperRegistry.this.notify(url, k, toUrlsWithEmpty(url, parentPath, currentChilds)));
@@ -319,7 +323,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
      * When zookeeper connection recovered from a connection loss, it need to fetch the latest provider list.
      * re-register watcher is only a side effect and is not mandate.
      * zookeeper连接丢失后恢复，需要获取最新的提供商列表。
-     * *重新注册观察者只是一个副作用，不是强制的。
+     * *重新注册观察者只是一个副作用，不是强制的。 订阅方法内部除了订阅本身的作用外，还会向zk取数据，并调用notify
      */
 
     private void fetchLatestAddresses() {

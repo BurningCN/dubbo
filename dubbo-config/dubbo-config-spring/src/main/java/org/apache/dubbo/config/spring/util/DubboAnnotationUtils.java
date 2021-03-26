@@ -87,6 +87,7 @@ public class DubboAnnotationUtils {
      * @return the {@link Class class} of Dubbo Service interface
      * @throws IllegalArgumentException if can't resolved
      */
+    // 第一个参数是map的子类
     public static Class<?> resolveServiceInterfaceClass(AnnotationAttributes attributes, Class<?> defaultInterfaceClass)
             throws IllegalArgumentException {
 
@@ -94,7 +95,7 @@ public class DubboAnnotationUtils {
 
         Class<?> interfaceClass = getAttribute(attributes, "interfaceClass");
 
-        if (void.class.equals(interfaceClass)) { // default or set void.class for purpose.
+        if (void.class.equals(interfaceClass)) { // default or set void.class for purpose. 指定默认值或设置void.class。
 
             interfaceClass = null;
 
@@ -110,7 +111,7 @@ public class DubboAnnotationUtils {
         }
 
         if (interfaceClass == null && defaultInterfaceClass != null) {
-            // Find all interfaces from the annotated class
+            // Find all interfaces from the annotated class  找到该类实现的所有接口列表
             // To resolve an issue : https://github.com/apache/dubbo/issues/3251
             Class<?>[] allInterfaces = getAllInterfacesForClass(defaultInterfaceClass);
 

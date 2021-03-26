@@ -53,6 +53,7 @@ public abstract class AbstractMethodConfig extends AbstractConfig {
     /**
      * Whether to async
      * note that: it is an unreliable asynchronism that ignores return values and does not block threads.
+     * 注意:忽略返回值并且不阻塞线程是不可靠的异步。
      */
     protected Boolean async;
 
@@ -66,6 +67,8 @@ public abstract class AbstractMethodConfig extends AbstractConfig {
      * <p>
      * note that: the mock doesn't support on the provider side，and the mock is executed when a non-business exception
      * occurs after a remote service call
+     *  当服务执行失败时调用的模拟类的名称
+     *  请注意:mock在提供者端不支持，当远程服务调用后发生非业务异常时，将执行mock
      */
     protected String mock;
 

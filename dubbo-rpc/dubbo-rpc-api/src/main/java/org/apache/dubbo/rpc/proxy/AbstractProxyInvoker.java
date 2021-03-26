@@ -36,6 +36,7 @@ import java.util.concurrent.CompletionException;
  * This Invoker works on provider side, delegates RPC to interface implementation.
  */
 // OK
+// 看上面的描述，非常重要！！！这个是服务端的某个接口实现类的靠根源的地方了，而AbstractInvoker是给消费端使用的，注意这两个类区别
 public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
     Logger logger = LoggerFactory.getLogger(AbstractProxyInvoker.class);
 
@@ -88,6 +89,8 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
             // 这里的proxy其实是目标对象，根据invocation的信息调用目标方法
             Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
 			CompletableFuture<Object> future = wrapWithFuture(value);
+			//whenComplete接收的是BiConsumer,handler接收的是BiFunction;
+            //顾名思义,BiConsumer是直接消费的,而BiFunction是有返回值的
             CompletableFuture<AppResponse> appResponseFuture = future.handle((obj, t) -> {
                 AppResponse result = new AppResponse();
                 if (t != null) {
@@ -114,6 +117,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
 
 	private CompletableFuture<Object> wrapWithFuture(Object value) {
         if (RpcContext.getContext().isAsyncStarted()) {
+            // 如果是异步(开始)的，那么直接返回先前的AsyncContext实例
             return ((AsyncContextImpl)(RpcContext.getContext().getAsyncContext())).getInternalFuture();
         } else if (value instanceof CompletableFuture) {
             return (CompletableFuture<Object>) value;

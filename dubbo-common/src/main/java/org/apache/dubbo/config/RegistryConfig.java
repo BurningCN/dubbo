@@ -77,11 +77,15 @@ public class RegistryConfig extends AbstractConfig {
     /**
      * Affects how traffic distributes among registries, useful when subscribing multiple registries, available options:
      * 1. zone-aware, a certain type of traffic always goes to one Registry according to where the traffic is originated.
+     *
+     * *影响流量如何分布在注册表，有用时订阅多个注册表，可用选项:
+     * * 1。区域感知，某种类型的流量总是根据流量的来源进入一个注册表。
      */
     private String cluster;
 
     /**
      * The region where the registry belongs, usually used to isolate traffics
+     * 注册表所在的区域，通常用于隔离流量
      */
     private String zone;
 

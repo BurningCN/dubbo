@@ -40,6 +40,10 @@ import java.util.Map;
  *
  * @since 2.7.7
  */
+// @ContextConfiguration 主要是加载配置文件或者加载配置类，这里我们是加载配置类。这两个配置类的里面@Bean注解都会注册相关bean到spring容器。
+//
+//@TestPropertySource，主要是给spring context添加了两个kv配置属性（就像以往application.properties那样），注意packagesToScan属性值为${provider.package}，Environment能解析出来。
+    // 有一个ConfigurableListableBeanFactory属性，这个就是spring bean容器，后面的test测试程序需要通过这个来（根据bean类型）拿到相关的bean。
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(
         classes = {
@@ -97,6 +101,9 @@ public class ServiceClassPostProcessorTest {
 
         Map<String, ServiceBean> serviceBeansMap = beanFactory.getBeansOfType(ServiceBean.class);
 
+        // ServiceBean类型的实例bean只有两个，是根据DefaultHelloService和DemoServiceImpl生成的，而 HelloServiceImpl 和DefaultHelloService
+        // 都是实现HelloService接口，且他们都没有配置group+version，而且interfaceClassName还是一致的，所以HelloServiceImpl的ServiceBean不会注册成功。
+        // 除非你去加一个group、version区分一下
         Assertions.assertEquals(2, serviceBeansMap.size());
 
         ServiceBean demoServiceBean = serviceBeansMap.get("ServiceBean:org.apache.dubbo.config.spring.api.DemoService:2.5.7");

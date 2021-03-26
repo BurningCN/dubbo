@@ -64,7 +64,7 @@ public class DubboClassPathBeanDefinitionScanner extends ClassPathBeanDefinition
         this(registry, false, environment, resourceLoader);
 
     }
-    // todo need pr 下面两个方法没用，多此一举
+    // 下面两个方法之所以需要重写的原因是因为父类的方法是protected修饰的，外界无法访问，所以这里完全是为了改访问限制 - public
     @Override
     public Set<BeanDefinitionHolder> doScan(String... basePackages) {
         // 扫描指定的包，并注册beanDefinition

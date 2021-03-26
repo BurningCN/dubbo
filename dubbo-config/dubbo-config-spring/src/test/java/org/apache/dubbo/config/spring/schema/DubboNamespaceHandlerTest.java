@@ -16,17 +16,12 @@
  */
 package org.apache.dubbo.config.spring.schema;
 
-import org.apache.dubbo.config.ApplicationConfig;
-import org.apache.dubbo.config.ModuleConfig;
-import org.apache.dubbo.config.MonitorConfig;
-import org.apache.dubbo.config.ProtocolConfig;
-import org.apache.dubbo.config.ProviderConfig;
+import org.apache.dubbo.config.*;
 import org.apache.dubbo.config.spring.ConfigTest;
 import org.apache.dubbo.config.spring.ServiceBean;
 import org.apache.dubbo.config.spring.api.DemoService;
 import org.apache.dubbo.config.spring.impl.DemoServiceImpl;
 import org.apache.dubbo.rpc.model.ApplicationModel;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,11 +36,8 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -72,9 +64,10 @@ public class DubboNamespaceHandlerTest {
     @Test
     public void testProviderXmlOnConfigurationClass() {
         // 三步骤 就能把XmlConfiguration配置类对应的xml内容相关的bean注入到容器
-        // AnnotationConfigApplicationContext是IOC容器ApplicationContext的一种实现，处理注解式的，就是上面的XmlConfiguration
+        // AnnotationConfigApplicationContext是IOC容器ApplicationContext的一种实现，处理注解式的，就是上面的XmlConfiguration（该类上面正好一大帮注解）
         AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
         applicationContext.register(XmlConfiguration.class);
+        // refresh后会调用DubboNamespaceHandler的init方法，并紧接着调用DubboBeanDefinitionParser的parse方法
         applicationContext.refresh();
 
         // 上面执行后demo-provider.xml相关的bean就注入了IOC，下面测试方法进去
@@ -84,12 +77,14 @@ public class DubboNamespaceHandlerTest {
 
     @Test
     public void testProviderXml() {
-        // 和上面AnnotationConfigApplicationContext类比，ClassPathXmlApplicationContext也是ApplicationContext的一种实现
+        // 和上面AnnotationConfigApplicationContext类比，ClassPathXmlApplicationContext也是ApplicationContext的一种实现，前面
+        // 是注解式处理（通过注解标记properties文件和xml文件位置），这里是纯xml配置处理，实现的效果是一样的
 
         // org/apache/dubbo/config/spring/demo-provider.xml
         // org/apache/dubbo/config/spring/demo-provider-properties.xml
         ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(
                 ConfigTest.class.getPackage().getName().replace('.', '/') + "/demo-provider.xml",
+                // 注意这个文件，这个文件引入了一个 PropertySourcesPlaceholderConfigurer ，这是一个BeanFactoryPostProcessor，内部使用location指定了properties文件的路径
                 ConfigTest.class.getPackage().getName().replace('.', '/') + "/demo-provider-properties.xml"
         );
         ctx.start();

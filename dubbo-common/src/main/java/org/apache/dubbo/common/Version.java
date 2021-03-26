@@ -158,6 +158,9 @@ public final class Version {
         return "";
     }
 
+    public static void main(String[] args) {
+        getVersion();
+    }
     public static String getVersion(Class<?> cls, String defaultVersion) {
         try {
             // find version info from MANIFEST.MF first

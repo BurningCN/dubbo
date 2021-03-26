@@ -155,7 +155,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     protected String tag;
 
-    private  Boolean auth;
+    private Boolean auth;
 
 
     /**
@@ -208,7 +208,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     /**
      * Check whether the remote service interface and the methods meet with Dubbo's requirements.it mainly check, if the
      * methods configured in the configuration file are included in the interface of remote service
-     *
+     * <p>
      * 检查远程服务接口和方法是否符合Dubbo的要求。主要检查配置文件中配置的方法是否包含在远程服务的接口中
      *
      * @param interfaceClass the interface of remote service
@@ -248,15 +248,14 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     }
 
 
-
     /**
      * Legitimacy check of stub, note that: the local will deprecated, and replace with <code>stub</code>
-     *
+     * <p>
      * 检查stub的合法性，注意:local将弃用，并替换为<code>stub</code>
      *
      * @param interfaceClass for provider side, it is the {@link Class} of the service that will be exported; for consumer
      *                       side, it is the {@link Class} of the remote service interface
-     * 对于提供者端，它是将被导出的服务的Class;对于消费者端，它是远程服务接口的Class
+     *                       对于提供者端，它是将被导出的服务的Class;对于消费者端，它是远程服务接口的Class
      */
 
     // 方法主要检查local和stub是不是interfaceClass的实现类，以及是否含有interfaceClass类型参数的构造器
@@ -267,16 +266,16 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         verifyStubAndLocal(local, "Local", interfaceClass);
         verifyStubAndLocal(stub, "Stub", interfaceClass);
     }
-    
-    public void verifyStubAndLocal(String className, String label, Class<?> interfaceClass){
-    	if (ConfigUtils.isNotEmpty(className)) {
-    	    // 根据全限定名加载class
+
+    public void verifyStubAndLocal(String className, String label, Class<?> interfaceClass) {
+        if (ConfigUtils.isNotEmpty(className)) {
+            // 根据全限定名加载class
             Class<?> localClass = ConfigUtils.isDefault(className) ?
                     // forName进去
                     ReflectUtils.forName(interfaceClass.getName() + label) : ReflectUtils.forName(className);
             // 校验，进去
             verify(interfaceClass, localClass);
-            }
+        }
     }
 
     private void verify(Class<?> interfaceClass, Class<?> localClass) {
@@ -381,7 +380,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             }
         }
     }
-    
+
     protected void computeValidRegistryIds() {
         if (StringUtils.isEmpty(getRegistryIds())) {
             // 如果当前getRegistryIds为空，那么从ApplicationConfig获取registryIds
