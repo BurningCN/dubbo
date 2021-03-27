@@ -98,7 +98,7 @@ public interface Configurator extends Comparable<Configurator> {
                 continue;
             }
             // 根据工厂获取具体Configurator（两种具体产品），内部会从url取参数值来确定使用哪种产品（具体看ConfiguratorFactory$Adaptive.java）
-            configurators.add(configuratorFactory.getConfigurator(url));// 比如url为override:// 那么就是OverrideConfigurator
+            configurators.add(configuratorFactory.getConfigurator(url));// 比如url为override:// 那么就是OverrideConfigurator，或者为absent://
         }
         // 排序，去看下面的compareTo
         Collections.sort(configurators);

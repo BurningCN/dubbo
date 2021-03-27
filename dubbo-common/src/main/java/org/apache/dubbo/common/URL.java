@@ -1257,6 +1257,7 @@ class URL implements Serializable {
         if (CollectionUtils.isEmptyMap(parameters)) {
             return this;
         }
+        // 所谓的addParametersIfAbsent实现原理很简单，完全就是利用map的key不重复的信息，相同key后者覆盖前者
         Map<String, String> map = new HashMap<>(parameters);
         map.putAll(getParameters());
         return new URL(getProtocol(), username, password, host, port, path, map);

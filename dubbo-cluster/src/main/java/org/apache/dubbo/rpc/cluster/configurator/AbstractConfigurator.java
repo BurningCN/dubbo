@@ -144,7 +144,7 @@ public abstract class AbstractConfigurator implements Configurator {
                         || configApplication.equals(currentApplication)) {
 
                     Set<String> conditionKeys = new HashSet<String>();
-                    // 填充处1 固定的值填充
+                    // 填充处1 固定的值填充 这些参数将从configuratorUrl移除（如果后续的for里面的if条件穿过的话）
                     conditionKeys.add(CATEGORY_KEY);
                     conditionKeys.add(Constants.CHECK_KEY);
                     conditionKeys.add(DYNAMIC_KEY);
@@ -156,12 +156,12 @@ public abstract class AbstractConfigurator implements Configurator {
                     conditionKeys.add(CONFIG_VERSION_KEY);
                     conditionKeys.add(COMPATIBLE_CONFIG_KEY);
                     conditionKeys.add(INTERFACES);
-
+                    // todo need pr 1.上面集合的填充处可以完全放在下面的for循环后面，防止下面for循环内部if直接return，导致无效add。2.还有一点就是下面Application的判定前面已经判断了，可以直接去除
                     for (Map.Entry<String, String> entry : configuratorUrl.getParameters().entrySet()) {
                         String key = entry.getKey();
                         String value = entry.getValue();
                         if (key.startsWith("~") || APPLICATION_KEY.equals(key) || SIDE_KEY.equals(key)) {
-                            // 填充处2 configuratorUrl的所有参数中能满足上述条件的参数填充
+                            // 填充处2 configuratorUrl的所有参数中能满足上述条件的参数填充 ---> 其实这里压根不需要重复add（后两个已经add了），只需要对~xx的进行add就行了 ----> 这点已经发起issue并被改正
                             conditionKeys.add(key);
                             // 两个url的参数值比较，如果不等，直接返回url本身，注意是仅限于上面三种参数(~、application、side)的值比较
                             if (value != null && !ANY_VALUE.equals(value)
