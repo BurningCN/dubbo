@@ -1229,6 +1229,7 @@ class URL implements Serializable {
         }
 
         boolean hasAndEqual = true;
+        // 找到两者有一个key不同就直接break。
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             String value = getParameters().get(entry.getKey());
             if (value == null) {
@@ -1243,6 +1244,7 @@ class URL implements Serializable {
                 }
             }
         }
+        // 为true，表示所有的key相同，直接返回即可
         // return immediately if there's no change
         if (hasAndEqual) {
             return this;
