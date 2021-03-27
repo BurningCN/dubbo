@@ -40,10 +40,13 @@ public abstract class AbstractCluster implements Cluster {
         List<ClusterInterceptor> interceptors = ExtensionLoader.getExtensionLoader(ClusterInterceptor.class).getActivateExtension(clusterInvoker.getUrl(), key);
         // 根据需要包装ClusterInvoker, 使用切面的方式进行拦截器接入，按先后依次强入拦截器
         if (!interceptors.isEmpty()) {
+            // 从后往前遍历
             for (int i = interceptors.size() - 1; i >= 0; i--) {
                 final ClusterInterceptor interceptor = interceptors.get(i);
                 final AbstractClusterInvoker<T> next = last;
-                // 使用内部类进行包装拦截器
+                // 使用内部类进行包装拦截器。每个InterceptorInvokerNode的第一个参数都是同一个，这个是目标invoker，之所以需要这个是因为
+                // InterceptorInvokerNode本身是继承AbstractClusterInvoker，实现的方法需要直接委托第一个参数
+
                 // 先后顺序如: beforeC -> beforeB -> beforeA (spring中还有Around) -> afterA -> afterB -> afterC (spring中还有afterReturn)
                 last = new InterceptorInvokerNode<>(clusterInvoker, interceptor, next);
             }
@@ -87,6 +90,9 @@ public abstract class AbstractCluster implements Cluster {
         public boolean isAvailable() {
             return clusterInvoker.isAvailable();
         }
+
+        // 假设顺序是 ConsumerContextClusterInterceptor -> ZoneAwareClusterInterceptor -> FailbackClusterInvoker
+        // 记作abc，外界拿到AbstractClusterInvoker调用invoke的时候(记作a.invoke)，走如下代码，然后b.before
 
         @Override
         public Result invoke(Invocation invocation) throws RpcException {

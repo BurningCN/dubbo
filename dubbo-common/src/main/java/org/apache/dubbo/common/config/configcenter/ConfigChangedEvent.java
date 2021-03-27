@@ -38,6 +38,7 @@ public class ConfigChangedEvent extends EventObject {
     private final ConfigChangeType changeType;
 
     public ConfigChangedEvent(String key, String group, String content) {
+        // 默认事件类型
         this(key, group, content, ConfigChangeType.MODIFIED);
     }
 

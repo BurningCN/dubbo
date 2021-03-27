@@ -78,6 +78,7 @@ public interface GovernanceRuleRepository {
      * @return target configuration mapped to the given key and the given group
      */
     default String getRule(String key, String group) {
+        // todo need pr 这里-1完全可以用静态常量表示
         // 进去
         return getRule(key, group, -1L);
     }

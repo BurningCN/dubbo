@@ -25,6 +25,8 @@ import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.cluster.support.AbstractClusterInvoker;
 
 // 消费端集群调用，处理上下文的拦截器
+//* ConsumerContextFilter set current RpcContext with invoker,invocation, local host, port
+// * for consumer invoker.It does it to make the requires info available to execution thread's RpcContext.
 // OK
 @Activate
 public class ConsumerContextClusterInterceptor implements ClusterInterceptor, ClusterInterceptor.Listener {
