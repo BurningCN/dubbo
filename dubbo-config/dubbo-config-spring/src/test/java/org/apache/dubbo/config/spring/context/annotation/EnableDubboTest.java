@@ -91,6 +91,7 @@ public class EnableDubboTest {
     @Test
     public void testConsumer() {
 
+        // 可以同时注册多个
         context.register(TestProviderConfiguration.class, TestConsumerConfiguration.class);
 
         context.refresh();
@@ -148,9 +149,15 @@ public class EnableDubboTest {
 
     }
 
+
+
+    // 注意非常重要的一点，下面的测试类，没有添加像 ServiceAnnotationTestConfiguration2 那样加了一些provider包下的类需要的那些依赖bean（applicationConfig、registryConfig、protocolConfig等）
+    // 那么是怎么实现注入的呢？这是因为EnableDubbo里面有一个元注解EnableDubboConfig，这个注解通过DubboConfigConfigurationRegistrar，注册了
+    // DubboConfigConfiguration.Single和Multiple，这两个东西能把prefix开头的和AbstractConfig的对应子类进行映射（具体规则去看Single和Multiple）
+    // 而我们下面PropertySource的配置文件里面正好就这些满足的prefix，因此就能生成provider包下的类需要的那些依赖bean！！！！
     // 核心
     @EnableDubbo(scanBasePackages = "org.apache.dubbo.config.spring.context.annotation.provider")
-    // 下面是spring自身的
+    // 下面是spring自身的()
     @ComponentScan(basePackages = "org.apache.dubbo.config.spring.context.annotation.provider")
     @PropertySource("classpath:/META-INF/dubbo-provider.properties")
     @EnableTransactionManagement

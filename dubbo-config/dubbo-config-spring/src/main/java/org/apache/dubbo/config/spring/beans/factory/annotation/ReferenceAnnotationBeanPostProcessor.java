@@ -141,6 +141,10 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
 
         // 除了setXx对该注解进行注入以来的bean，还有直接属性的方式，详见对应测试类的 private DemoService demoServiceFromParent;
 
+        // 在测试DubboComponentScanRegistrarTest测试程序的时候，其register 了 ConsumerConfiguration，test打断点进来的时候，发现beanName
+        // 有两个值，第一个是ConsumerConfiguration类上注解@Configuration(xx)的xx值，而injectedType就是其#1标记的属性，意思就是说这个beanName为
+        // consumerConfiguration 需要注入一个injectedType类型为DemoService.class的值。然后在触发#2的时候，此时beanName为c（对应public Child c() {，其上正好有一个@Bean注解）
+        // 此时就触发#2，表示需要给beanName为c的bean注入一个.....其injectedType类型.....
         String referencedBeanName = buildReferencedBeanName(attributes, injectedType);
 
 

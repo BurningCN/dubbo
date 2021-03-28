@@ -34,6 +34,15 @@ import static org.springframework.util.StringUtils.hasText;
  *
  * @since 2.7.5
  */
+// OK
+// 这个主要体现 在 BeanPostProcessor#postProcessAfterInitialization 逻辑，DubboConfigAliasPostProcessor在DubboBeanUtils进行注册
+// 每个bean注册完成后（context.refresh），就会走postPxx逻辑，这个逻辑的作用就是判定如果注册的bean类型为AbstractConfig的话
+// 那么看他生成的beanName和AbstractConfig.id是否一致，不一致的话，则给beanName其一个别名，别名为id！！
+
+// 这种情况一般发生在我们在properties文件中直接配置application、registry、protocol 的方式，比如文件 classpath:/META-INF/dubbo-provider.properties，
+// 可以看EnableDubboTest第一条测试程序，断点打在该类最后一个方法（注意结合DubboConfigConfigurationRegistrar、DubboConfigConfiguration）
+// 在这种情况下，比如properties文件配置了比如dubbo.protocol.name=dubbo这条，那么 DubboConfigConfiguration会检测到该符合配置的前缀，会生成ProtocolConfig bean，
+// 给该bean生成的baneName为 org.apache.dubbo.config.ProtocolConfig#0 ，通过别名映射，将name映射到前者，这样更简洁。
 public class DubboConfigAliasPostProcessor implements BeanDefinitionRegistryPostProcessor, BeanPostProcessor {
 
     /**
@@ -50,7 +59,7 @@ public class DubboConfigAliasPostProcessor implements BeanDefinitionRegistryPost
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        // DO NOTHING
+
     }
 
     @Override
