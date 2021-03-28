@@ -44,7 +44,7 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
     // url = {URL@1936} "test://test:11/test?group=dubbo&version=1.1"
     @Override
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) {
-        // TODO 包装器不能正确处理这个场景:类名包含'$'
+        // TODO 包装器不能正确处理这个场景:类名包含'$' ---> 是这样的，有的类本身是经过了一层代理的，比如spring的jdk代理（测试程序DubboComponentScanRegistrarTest 在处理DemoServiceImpl实现类的时候），他的类名是$ProxyXX的，所以需要如果判定类是$开头的，直接使用type接口的限定名
         // 为目标类创建 Wrapper 进去
         final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
         // 创建匿名 Invoker 类对象，并实现 doInvoke 方法。

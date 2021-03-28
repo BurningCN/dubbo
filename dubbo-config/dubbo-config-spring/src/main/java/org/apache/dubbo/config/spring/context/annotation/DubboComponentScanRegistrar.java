@@ -55,8 +55,12 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 
-        Set<String> packagesToScan = getPackagesToScan(importingClassMetadata);
+        // registerServiceAnnotationBeanPostProcessor +  registerCommonBeans（我在看spring揭秘的时候也提到原生的component-scan本身就爱多管闲事，
+        // 除了注册了原生@Component注解相关的处理器，还注册了和@Autowired和@Resource相关的beanPostProcessor，分别是AutowiredAnnotationBP，CommonAnnotationBP等
+        // 所以这个DubboComponentScanRegistrar也喜欢多管闲事，注册了这多）
 
+
+        Set<String> packagesToScan = getPackagesToScan(importingClassMetadata);
         registerServiceAnnotationBeanPostProcessor(packagesToScan, registry);
 
         // @since 2.7.6 Register the common beans
@@ -74,7 +78,7 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
 
         BeanDefinitionBuilder builder = rootBeanDefinition(ServiceAnnotationBeanPostProcessor.class);
         // AnnotationBeanDefinitionParser也是这样使用的
-        builder.addConstructorArgValue(packagesToScan);
+        builder.addConstructorArgValue(packagesToScan); // 进 ServiceAnnotationBeanPostProcessor 的带有 Set<String>参数的构造函数
         builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
         AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
         BeanDefinitionReaderUtils.registerWithGeneratedName(beanDefinition, registry);
@@ -82,7 +86,7 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
     }
 
     private Set<String> getPackagesToScan(AnnotationMetadata metadata) {
-        // 获取DubboComponentScan注解里面的属性值，转化为扫描的包集合
+        // 获取 DubboComponentScan 注解里面的属性值，转化为扫描的包集合（@DubboComponentScan(xxx)或者@EnableDubbo(xxx)的方式配置包路径）
 
         AnnotationAttributes attributes = AnnotationAttributes.fromMap(
                 metadata.getAnnotationAttributes(DubboComponentScan.class.getName()));

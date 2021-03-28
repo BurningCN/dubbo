@@ -75,6 +75,7 @@ public class DubboConfigConfiguration {
     /**
      * Multiple Dubbo {@link AbstractConfig Config} Bean Binding
      */
+    // 注意这里带有s结尾，比如 dubbo.application[s]，且最后带有一个multiple=true，前面没有说明默认是false
     @EnableConfigurationBeanBindings({
             @EnableConfigurationBeanBinding(prefix = "dubbo.applications", type = ApplicationConfig.class, multiple = true),
             @EnableConfigurationBeanBinding(prefix = "dubbo.modules", type = ModuleConfig.class, multiple = true),

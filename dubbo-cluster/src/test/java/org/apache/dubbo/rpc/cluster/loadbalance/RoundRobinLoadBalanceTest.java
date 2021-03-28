@@ -31,7 +31,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-@Disabled
 public class RoundRobinLoadBalanceTest extends LoadBalanceBaseTest {
 
     private void assertStrictWRRResult(int loop, Map<Invoker, InvokeResult> resultMap) {

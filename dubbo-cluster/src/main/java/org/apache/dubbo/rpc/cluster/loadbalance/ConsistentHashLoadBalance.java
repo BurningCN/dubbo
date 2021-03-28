@@ -52,6 +52,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         String methodName = RpcUtils.getMethodName(invocation);
+        // 这里key的计算和加权轮询法里的key计算是一样的，也就是说这些invokers都是同类型下的，同一个服务/path/serviceKey。只是他们的ip、port不一致而已，接口和方法名都是一致的！
         String key = invokers.get(0).getUrl().getServiceKey() + "." + methodName;
         // using the hashcode of list to compute the hash only pay attention to the elements in the list
         // 获取 invokers 原始的 hashcode
@@ -61,7 +62,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
         // 此时 selector.identityHashCode != identityHashCode 条件成立
         if (selector == null || selector.identityHashCode != invokersHashCode) {
             // 创建新的 ConsistentHashSelector
-            selectors.put(key, new ConsistentHashSelector<T>(invokers, methodName, invokersHashCode));
+            selectors.put(key, new ConsistentHashSelector<>(invokers, methodName, invokersHashCode));
             selector = (ConsistentHashSelector<T>) selectors.get(key);
         }
         // 调用 ConsistentHashSelector 的 select 方法选择 Invoker
@@ -82,7 +83,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
         private final int[] argumentIndex;
 
         ConsistentHashSelector(List<Invoker<T>> invokers, String methodName, int identityHashCode) {
-            this.virtualInvokers = new TreeMap<Long, Invoker<T>>();
+            this.virtualInvokers = new TreeMap<>();
             this.identityHashCode = identityHashCode;
             URL url = invokers.get(0).getUrl();
             // 获取虚拟节点数，默认为160
@@ -96,7 +97,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
             for (Invoker<T> invoker : invokers) {
                 String address = invoker.getUrl().getAddress();
                 for (int i = 0; i < replicaNumber / 4; i++) {
-                    // 对 address + i 进行 md5 运算，得到一个长度为16的字节数组
+                    // 对 address + i 进行 md5 运算，得到一个长度为16的字节数组(16个字节)
                     byte[] digest = Bytes.getMD5(address + i);
                     // 对 digest 部分字节进行4次 hash 运算，得到四个不同的 long 型正整数
                     for (int h = 0; h < 4; h++) {
@@ -140,14 +141,30 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
             return entry.getValue();    // 返回 Invoker
             // 如上，选择的过程相对比较简单了。首先是对参数进行 md5 以及 hash 运算，得到一个 hash 值。然后再拿这个值到 TreeMap 中查找目标 Invoker 即可。
         }
-
         private long hash(byte[] digest, int number) {
-            return (((long) (digest[3 + number * 4] & 0xFF) << 24)
+            return (((long) (digest[3 + number * 4] & 0xFF) << 24) // ***
                     | ((long) (digest[2 + number * 4] & 0xFF) << 16)
                     | ((long) (digest[1 + number * 4] & 0xFF) << 8)
                     | (digest[number * 4] & 0xFF))
                     & 0xFFFFFFFFL;// &是位运算符，而0xFFFFFFFFL转换为四字节表现后，其低32位全是1，所以保证了哈希环的范围是[0,Integer.MAX_VALUE]：
+            // 当number为0，对第三个字节 按照 上面***处理的过程是这样的，如下
+            /*
+                byte b = digest[3 + number * 4];
+                int b2 = (digest[3 + number * 4] & 0xFF);
+                int i = (digest[3 + number * 4] & 0xFF) << 24;
+                long i1 = ((long) (digest[3 + number * 4] & 0xFF) << 24);
+                0b11100111
+                0b11100111
+                0b11100111_00000000_00000000_00000000
+                0b11100111_00000000_00000000_00000000
+            */
+            // 最后 3 2 1 0 这四个字节每个字节按照各自的运算再结合 | 或运算就形成了 32位 二进制 ，再和0XFF...进行与运算，防止超过hash环最大值
+            // 然后number为1，对 7 6 5 4 这四个字节计算出32位的二进制，number一直到3...
         }
+        // 3 2 1 0
+        // 7 6 5 4
+        // 11 10 9 8
+        // 15 14 13 12
     }
 
 }

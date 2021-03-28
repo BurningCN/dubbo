@@ -47,6 +47,7 @@ import static org.springframework.core.annotation.AnnotationUtils.findAnnotation
  *
  * @since 2.5.8
  */
+// OK
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class EnableDubboTest {
 
@@ -147,7 +148,9 @@ public class EnableDubboTest {
 
     }
 
+    // 核心
     @EnableDubbo(scanBasePackages = "org.apache.dubbo.config.spring.context.annotation.provider")
+    // 下面是spring自身的
     @ComponentScan(basePackages = "org.apache.dubbo.config.spring.context.annotation.provider")
     @PropertySource("classpath:/META-INF/dubbo-provider.properties")
     @EnableTransactionManagement

@@ -61,9 +61,30 @@ public class DubboConfigConfigurationTest {
         context.register(DubboConfigConfiguration.Single.class);
         context.refresh();
 
-        // application
+        // application 一个疑问，不知道在properties配置的dubbo.application.id是怎么就变成了bean name，就是根据prefix后的id值！！！同时这个id还会赋值给AbstractConfig的id
+        // 如果我把dubbo.application.id去掉，那么就是org.apache.dubbo.config.ApplicationConfig#0"
+        /*
+            0 = "org.springframework.context.annotation.internalConfigurationAnnotationProcessor"
+            1 = "org.springframework.context.annotation.internalAutowiredAnnotationProcessor"
+            2 = "org.springframework.context.annotation.internalCommonAnnotationProcessor"
+            3 = "org.springframework.context.event.internalEventListenerProcessor"
+            4 = "org.springframework.context.event.internalEventListenerFactory"
+            5 = "dubboConfigConfiguration.Single"
+
+            6 = "applicationBean"
+            7 = "configurationBeanBindingPostProcessor"
+            8 = "moduleBean"
+            9 = "org.apache.dubbo.config.RegistryConfig#0"
+            10 = "org.apache.dubbo.config.ProtocolConfig#0"
+            11 = "org.apache.dubbo.config.MonitorConfig#0"
+            12 = "org.apache.dubbo.config.ProviderConfig#0"
+            13 = "org.apache.dubbo.config.ConsumerConfig#0"
+        */
         ApplicationConfig applicationConfig = context.getBean("applicationBean", ApplicationConfig.class);
         Assertions.assertEquals("dubbo-demo-application", applicationConfig.getName());
+        System.out.println(applicationConfig.getId());
+        System.out.println( applicationConfig.getPrefix());
+
 
         // module
         ModuleConfig moduleConfig = context.getBean("moduleBean", ModuleConfig.class);
@@ -84,7 +105,20 @@ public class DubboConfigConfigurationTest {
 
         context.register(DubboConfigConfiguration.Multiple.class);
         context.refresh();
-
+        // 这里的bean的name就是prefix后的
+        /*
+                1 = "org.springframework.context.annotation.internalAutowiredAnnotationProcessor"
+                2 = "org.springframework.context.annotation.internalCommonAnnotationProcessor"
+                3 = "org.springframework.context.event.internalEventListenerProcessor"
+                4 = "org.springframework.context.event.internalEventListenerFactory"
+                5 = "dubboConfigConfiguration.Multiple"
+                6 = "applicationBean3"
+                7 = "applicationBean"
+                8 = "applicationBean2"
+                9 = "configurationBeanBindingPostProcessor"
+                10 = "thrift"
+                11 = "rest"
+          */
         // application
         ApplicationConfig applicationConfig = context.getBean("applicationBean", ApplicationConfig.class);
         Assertions.assertEquals("dubbo-demo-application", applicationConfig.getName());

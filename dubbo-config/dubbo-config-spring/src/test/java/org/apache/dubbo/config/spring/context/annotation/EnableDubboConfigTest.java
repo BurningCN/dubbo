@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.5.8
  */
+// 如下代码和 DubboConfigConfigurationTest 测试程序基本一致
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class EnableDubboConfigTest {
 
@@ -82,6 +83,7 @@ public class EnableDubboConfigTest {
         ConsumerConfig consumerConfig = context.getBean(ConsumerConfig.class);
         Assertions.assertEquals("netty", consumerConfig.getClient());
 
+        // 注意这里别名 ,没有zookeeper别名
         // asserts aliases
         assertFalse(hasAlias(context, "org.apache.dubbo.config.RegistryConfig#0", "zookeeper"));
         assertFalse(hasAlias(context, "org.apache.dubbo.config.MonitorConfig#0", "zookeeper"));

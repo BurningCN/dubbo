@@ -30,6 +30,7 @@ import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+// 这个注解的属性值，在@DubboComponentScan的元注解@Import(DubboComponentScanRegistrar.class)，这个DubboComponentScanRegistrar#registerBeanDefinitions内部就能拿到这个属性值
 @DubboComponentScan(basePackages = "org.apache.dubbo.config.spring.context.annotation.provider")
 @PropertySource("classpath:/META-INF/default.properties")
 @EnableTransactionManagement

@@ -38,6 +38,7 @@ import static org.springframework.core.annotation.AnnotationUtils.findAnnotation
  *
  * @since 2.5.8
  */
+// OK
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class DubboComponentScanRegistrarTest {
 
@@ -76,10 +77,17 @@ public class DubboComponentScanRegistrarTest {
         // Test @Transactional is present or not
         Assertions.assertNotNull(findAnnotation(beanClass, Transactional.class));
 
+        // 上面provider的信息，主要是被DubboComponentScanRegistrar#registerBeanDefinitions --> registerServiceAnnotationBeanPostProcessor方法 注册的
+        // ServiceAnnotationBeanPostProcessor -> ServiceClassBeanPostProcessor扫描包并填充到容器
+        // ====================================================================
+        // 下面是consumer的信息，
+
+
         AnnotationConfigApplicationContext consumerContext = new AnnotationConfigApplicationContext();
 
-        // ====================================================================
-
+        // 看下ConsumerConfiguration ，注意其DubboComponentScan注解的内容，类中关于@Reference注解都被
+        // DubboComponentScanRegistrar#registerBeanDefinitions  ---> registerCommonBeans方法内部注册的 ReferenceAnnotationBeanPostProcessor
+        // 扫描和@Reference相关的注解并填充相关BeanDefinition到容器
         consumerContext.register(ConsumerConfiguration.class);
 
         consumerContext.refresh();

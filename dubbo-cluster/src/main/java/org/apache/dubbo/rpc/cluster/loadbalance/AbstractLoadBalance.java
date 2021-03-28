@@ -95,7 +95,7 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         if (REGISTRY_SERVICE_REFERENCE_PATH.equals(url.getServiceInterface())) {
             weight = url.getParameter(REGISTRY_KEY + "." + WEIGHT_KEY, DEFAULT_WEIGHT);
         } else {
-            // 从 url 中获取权重 weight 配置值
+            // 从 url 中获取权重 weight 配置值，最小是基于方法级别的权重
             weight = url.getMethodParameter(invocation.getMethodName(), WEIGHT_KEY, DEFAULT_WEIGHT);
             if (weight > 0) {
                 // 获取服务提供者启动时间戳

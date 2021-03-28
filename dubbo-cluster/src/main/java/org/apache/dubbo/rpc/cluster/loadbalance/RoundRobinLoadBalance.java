@@ -94,6 +94,9 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         return null;
     }
 
+    // 以[5,2,1]举例
+    // [-3,2,1]
+    // [2,2,1]
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         // key = 全限定类名 + "." + 方法名，比如 com.xxx.DemoService.sayHello // 获取轮询key  服务名+方法名
@@ -107,7 +110,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         WeightedRoundRobin selectedWRR = null;
         // 下面这个循环主要用于查找最大和最小权重，计算权重总和等
         for (Invoker<T> invoker : invokers) {
-            String identifyString = invoker.getUrl().toIdentityString();
+            String identifyString = invoker.getUrl().toIdentityString();// eg test1://127.0.0.1:11/DemoService
             int weight = getWeight(invoker, invocation);//获取权重值
             WeightedRoundRobin weightedRoundRobin = map.computeIfAbsent(identifyString, k -> {
                 WeightedRoundRobin wrr = new WeightedRoundRobin();
@@ -129,9 +132,14 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
             totalWeight += weight;
         }
         if (invokers.size() != map.size()) {
+            // 移除最老的 没被参与到轮询选举的invoker。
+            // 存在 methodWeightMap 里的 （与invoker对应的）weightedRoundRobin 如果能从map缓存中取出，上面循环都会更新此invoker对应的
+            // weightedRoundRobin的时间戳，如果长时间没有更新，说明这个他很久没被调用了（从methodWeightMap缓存很久没被取出），所以可以移除他
             map.entrySet().removeIf(item -> now - item.getValue().getLastUpdate() > RECYCLE_PERIOD);
         }
         if (selectedInvoker != null) {
+            // sel减去总和 这是保证轮询顺序的的核心。前面for循环内部的if (cur > maxCurrent) 是考虑权重的核心，合起来就是 加权 + 轮询
+            // 可以打断点调试看 methodWeightMap 的各个权重值，就理解这个机制了。我截取了部分数据放到了最后（断点停在  selectedWRR.sel(totalWeight); 还没有sel）
             selectedWRR.sel(totalWeight);
             return selectedInvoker;
         }
@@ -140,3 +148,120 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
     }
 
 }
+//key = "DemoService.test"
+//map = {ConcurrentHashMap@2974}  size = 4
+// "test4://127.0.0.1:9999/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@2978}
+//  key = "test4://127.0.0.1:9999/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@2978}
+//   weight = 11
+//   current = {AtomicLong@3008} "-16"   ------ > 这里该invoker是最大权重 被选择出来，然后 11 - 27  = -16
+//   lastUpdate = 1616859832448
+// "test1://127.0.0.1:11/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3002}
+//  key = "test1://127.0.0.1:11/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3002}
+//   weight = 1
+//   current = {AtomicLong@3010} "1"
+//   lastUpdate = 1616859832448
+// "test2://127.0.0.1:12/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3004}
+//  key = "test2://127.0.0.1:12/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3004}
+//   weight = 9
+//   current = {AtomicLong@3012} "9"
+//   lastUpdate = 1616859832448
+// "test3://127.0.0.1:13/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3006}
+//  key = "test3://127.0.0.1:13/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3006}
+//   weight = 6
+//   current = {AtomicLong@3014} "6"
+//   lastUpdate = 1616859832448
+//
+//
+//
+//
+//
+//key = "DemoService.test"
+//map = {ConcurrentHashMap@2974}  size = 4
+// "test1://127.0.0.1:11/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3002}
+// "test4://127.0.0.1:9999/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@2978}
+// "test2://127.0.0.1:12/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3004}
+// "test3://127.0.0.1:13/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3006}
+//  key = "test1://127.0.0.1:11/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3002}
+//  key = "test4://127.0.0.1:9999/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@2978}
+//  key = "test2://127.0.0.1:12/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3004}
+//  key = "test3://127.0.0.1:13/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3006}
+//   weight = 1
+//   current = {AtomicLong@3010} "2"   ------ > 1+1 = 2
+//   lastUpdate = 1616859861607
+//   weight = 11
+//   current = {AtomicLong@3008} "-5"  ------ > -16+11 = -5
+//   lastUpdate = 1616859861607
+//   weight = 9
+//   current = {AtomicLong@3012} "-9"  ------ > 9+9 - 27 = -9 最大权重 被选出 ，正好排在 前面的11 后面（11 9 6 1）
+//   lastUpdate = 1616859861607
+//   weight = 6
+//   current = {AtomicLong@3014} "12" ------ > 6+ 6 =12
+//   lastUpdate = 1616859861607
+//
+//
+//
+//key = "DemoService.test"
+//map = {ConcurrentHashMap@2974}  size = 4
+// "test4://127.0.0.1:9999/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@2978}
+//  key = "test4://127.0.0.1:9999/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@2978}
+//   weight = 11
+//   current = {AtomicLong@3008} "6"  ------ > -5+11 = 6
+//   lastUpdate = 1616859866217
+// "test1://127.0.0.1:11/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3002}
+//  key = "test1://127.0.0.1:11/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3002}
+//   weight = 1
+//   current = {AtomicLong@3010} "3"  ------ > 2+1 =3
+//   lastUpdate = 1616859866217
+// "test2://127.0.0.1:12/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3004}
+//  key = "test2://127.0.0.1:12/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3004}
+//   weight = 9
+//   current = {AtomicLong@3012} "0"   ------ > -9+9 = 0
+//   lastUpdate = 1616859866217
+// "test3://127.0.0.1:13/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3006}
+//  key = "test3://127.0.0.1:13/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3006}
+//   weight = 6
+//   current = {AtomicLong@3014} "-9" ------ > 12 + 6 - 27 = -9  最大权重 被选出 ，正好排在 前面的9 后面（11 9 6 1）
+//   lastUpdate = 1616859866217
+//
+//
+//
+//
+//
+//key = "DemoService.test"
+//map = {ConcurrentHashMap@2974}  size = 4
+// "test4://127.0.0.1:9999/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@2978}
+//  key = "test4://127.0.0.1:9999/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@2978}
+//   weight = 11
+//   current = {AtomicLong@3008} "-10"
+//   lastUpdate = 1616859873769
+// "test1://127.0.0.1:11/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3002}
+//  key = "test1://127.0.0.1:11/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3002}
+//   weight = 1
+//   current = {AtomicLong@3010} "4"
+//   lastUpdate = 1616859873769
+// "test2://127.0.0.1:12/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3004}
+//  key = "test2://127.0.0.1:12/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3004}
+//   weight = 9
+//   current = {AtomicLong@3012} "9"
+//   lastUpdate = 1616859873769
+// "test3://127.0.0.1:13/DemoService" -> {RoundRobinLoadBalance$WeightedRoundRobin@3006}
+//  key = "test3://127.0.0.1:13/DemoService"
+//  value = {RoundRobinLoadBalance$WeightedRoundRobin@3006}
+//   weight = 6
+//   current = {AtomicLong@3014} "-3"
+//   lastUpdate = 1616859873769

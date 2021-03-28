@@ -39,6 +39,7 @@ import static org.apache.dubbo.config.spring.util.DubboBeanUtils.registerCommonB
  * @see Ordered
  * @since 2.5.8
  */
+// OK
 public class DubboConfigConfigurationRegistrar implements ImportBeanDefinitionRegistrar, ApplicationContextAware {
 
     private ConfigurableApplicationContext applicationContext;
@@ -46,6 +47,7 @@ public class DubboConfigConfigurationRegistrar implements ImportBeanDefinitionRe
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 
+        // 获得EnableDubboConfig注解对象的multiple值是啥（@EnableDubboConfig(multiple=true)或者@EnableDubbo(multipleConfig=true)）
         AnnotationAttributes attributes = AnnotationAttributes.fromMap(
                 importingClassMetadata.getAnnotationAttributes(EnableDubboConfig.class.getName()));
 

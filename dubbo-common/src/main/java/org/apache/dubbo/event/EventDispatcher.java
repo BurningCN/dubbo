@@ -29,7 +29,7 @@ import java.util.concurrent.Executor;
  * @see DirectEventDispatcher
  * @since 2.7.5
  */
-// OK
+// OK todo need pr 可以和LoadBalance一样使用常量，而不是直接字面量
 @SPI("direct")
 public interface EventDispatcher extends Listenable<EventListener<?>> {
 

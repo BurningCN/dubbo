@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
 
 /**
  * Enables Dubbo components as Spring Beans, equals
- * {@link DubboComponentScan} and {@link EnableDubboConfig} combination.
+ * {@link DubboComponentScan} and {@link EnableDubboConfig} combination. ---> 注意这句话
  * <p>
  * Note : {@link EnableDubbo} must base on Spring Framework 4.2 and above
  *
@@ -41,8 +41,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@EnableDubboConfig
-@DubboComponentScan
+@EnableDubboConfig  // 注意
+@DubboComponentScan // 注意
+// 这个类主要是封装上两个元注解，并给这两个元注解的属性和当前EnableDubbo注解的属性 映射别名
 public @interface EnableDubbo {
 
     /**
@@ -54,6 +55,8 @@ public @interface EnableDubbo {
      * @return the base packages to scan
      * @see DubboComponentScan#basePackages()
      */
+    // 下面的作用比如 @EnableDubbo(scanBasePackages = "xxx")，那么就会把xxx赋值给DubboComponentScan的basePackages，相当于这样@DubboComponentScan(basePackages="xxx")
+    // 这就是别名的作用，相当于是一个
     @AliasFor(annotation = DubboComponentScan.class, attribute = "basePackages")
     String[] scanBasePackages() default {};
 

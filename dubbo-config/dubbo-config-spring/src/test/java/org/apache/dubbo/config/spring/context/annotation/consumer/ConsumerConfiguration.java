@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
+// 起一个名称？
 @Configuration("consumerConfiguration")
 @DubboComponentScan(
         basePackageClasses = ConsumerConfiguration.class

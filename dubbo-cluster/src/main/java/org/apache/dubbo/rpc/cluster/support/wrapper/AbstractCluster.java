@@ -92,7 +92,8 @@ public abstract class AbstractCluster implements Cluster {
         }
 
         // 假设顺序是 ConsumerContextClusterInterceptor -> ZoneAwareClusterInterceptor -> FailbackClusterInvoker
-        // 记作abc，外界拿到AbstractClusterInvoker调用invoke的时候(记作a.invoke)，走如下代码，然后b.before
+        // 记作abc，外界拿到AbstractClusterInvoker调用invoke的时候(记作a.invoke)，走如下代码，然后b.before，然后b.intercept
+        // ->c.invoke->b.after->a.after
 
         @Override
         public Result invoke(Invocation invocation) throws RpcException {
@@ -112,6 +113,7 @@ public abstract class AbstractCluster implements Cluster {
             } finally {
                 interceptor.after(next, invocation);
             }
+            // 注意传入的BiConsumer，注意这里是直接调用了whenCompleteWithContext方法，biConsumer的调用时机在AsyncRPCResult
             return asyncResult.whenCompleteWithContext((r, t) -> {
                 // onResponse callback
                 if (interceptor instanceof ClusterInterceptor.Listener) {
