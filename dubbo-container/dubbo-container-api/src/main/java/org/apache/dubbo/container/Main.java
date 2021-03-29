@@ -80,7 +80,7 @@ public class Main {
                                 logger.error(t.getMessage(), t);
                             }
                             try {
-                                // jvm关闭的时候，唤醒下面在STOP处await的线程
+                                // jvm关闭的时候，唤醒下面在STOP处await的线程。注意条件变量进行等待或者唤醒必须先持有锁
                                 LOCK.lock();
                                 STOP.signal();
                             } finally {
