@@ -54,6 +54,7 @@ public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPost
 
     private DefaultListableBeanFactory beanFactory;
 
+    // 下两个方法是BeanDefinitionRegistryPostProcessor的，前者是直接的，后者是爷爷BeanFactoryPostProcessor的方法
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
         this.beanFactory = unwrap(registry);

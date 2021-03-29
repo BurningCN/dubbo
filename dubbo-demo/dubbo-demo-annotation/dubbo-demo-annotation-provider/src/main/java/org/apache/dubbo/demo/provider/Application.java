@@ -31,7 +31,7 @@ public class Application {
         System.in.read();
     }
 
-    @Configuration
+    @Configuration("providerConfiguration") // providerConfiguration就是beanName
     @EnableDubbo(scanBasePackages = "org.apache.dubbo.demo.provider")
     @PropertySource("classpath:/spring/dubbo-provider.properties")
     static class ProviderConfiguration {

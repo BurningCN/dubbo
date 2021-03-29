@@ -33,6 +33,7 @@ import org.springframework.context.annotation.PropertySource;
         basePackageClasses = ConsumerConfiguration.class
 )
 @PropertySource("META-INF/default.properties")
+// 注意每个@Reference被解析的顺序，以及DubboComponentScan内部在注册ReferenceAnnotationBeanPostProcessor#doGetInjectedBean的逻辑
 public class ConsumerConfiguration {
 
     private static final String remoteURL = "injvm://127.0.0.1?version=2.5.7";
@@ -70,6 +71,9 @@ public class ConsumerConfiguration {
     @Autowired
     private DemoService autowiredDemoService;
 
+
+
+    // #1
     @Reference(version = "2.5.7", url = remoteURL)
     private DemoService demoService;
 
@@ -109,6 +113,7 @@ public class ConsumerConfiguration {
             return demoServiceFromParent;
         }
 
+        // #3
         @Reference(version = "2.5.7", url = remoteURL)
         public void setDemoServiceFromParent(DemoService demoServiceFromParent) {
             this.demoServiceFromParent = demoServiceFromParent;
@@ -121,6 +126,7 @@ public class ConsumerConfiguration {
         @Autowired
         private DemoService demoService;
 
+        // #2
         @Reference(version = "2.5.7", url = remoteURL)
         private DemoService demoServiceFromChild;
 
