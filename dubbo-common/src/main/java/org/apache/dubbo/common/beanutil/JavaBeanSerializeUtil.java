@@ -49,13 +49,13 @@ public final class JavaBeanSerializeUtil {
         TYPES.put(float.class.getName(), float.class);
         TYPES.put(double.class.getName(), double.class);
         TYPES.put(void.class.getName(), void.class);
-        TYPES.put("Z", boolean.class);
+        TYPES.put("Z", boolean.class); // 注意
         TYPES.put("B", byte.class);
         TYPES.put("C", char.class);
         TYPES.put("D", double.class);
         TYPES.put("F", float.class);
         TYPES.put("I", int.class);
-        TYPES.put("J", long.class);
+        TYPES.put("J", long.class);  // 注意
         TYPES.put("S", short.class);
     }
 
