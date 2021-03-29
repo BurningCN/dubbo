@@ -41,7 +41,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@EnableDubboConfig  // 注意
+@EnableDubboConfig  // 注意 按照书写顺序，这个先触发，内部的Register先调用
 @DubboComponentScan // 注意
 // 这个类主要是封装上两个元注解，并给这两个元注解的属性和当前EnableDubbo注解的属性 映射别名
 public @interface EnableDubbo {

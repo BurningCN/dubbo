@@ -466,7 +466,7 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
 
         // ====================================================================
 
-        // References "ref" property to annotated-@Service Bean
+        // References "ref" property to annotated-@Service Bean （生成的ServiceBean的ref的值为原BeanDefinition的beanName，比如demoServiceImpl）
         addPropertyReference(builder, "ref", annotatedServiceBeanName);
 
         /**

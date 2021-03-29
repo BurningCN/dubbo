@@ -38,10 +38,14 @@ public class Application {
         System.out.println("result :" + hello);
     }
 
-    @Configuration
+    // 这个会作为bean，beanName为ConsumerConfiguration，且注意@Configuration注解就是@Component注解，可以点进去看看
+    @Configuration("ConsumerConfiguration")
+
     @EnableDubbo(scanBasePackages = "org.apache.dubbo.demo.consumer.comp")
+
     @PropertySource("classpath:/spring/dubbo-consumer.properties")
-    // 这里必须要加这个，因为comp下的实现类带有@Component注解，需要被spring识别，而正好前面main方法第三行getBean需要取出该bean
+
+    // 这里必须要加ComponentScan这个，因为comp下的实现类带有@Component注解，需要被spring识别，而正好前面main方法第三行getBean需要取出该bean
     @ComponentScan(value = {"org.apache.dubbo.demo.consumer.comp"})
     static class ConsumerConfiguration {
 

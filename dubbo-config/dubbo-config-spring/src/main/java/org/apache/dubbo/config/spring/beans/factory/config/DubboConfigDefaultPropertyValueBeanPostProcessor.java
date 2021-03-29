@@ -72,7 +72,7 @@ public class DubboConfigDefaultPropertyValueBeanPostProcessor extends GenericBea
 
         if (propertyDescriptor != null) { // the property is present
 
-            // 获取get方法，getId、getName
+            // 获取get方法，即getId、getName
             Method getterMethod = propertyDescriptor.getReadMethod();
 
             if (getterMethod == null) { // if The getter method is absent
@@ -87,7 +87,7 @@ public class DubboConfigDefaultPropertyValueBeanPostProcessor extends GenericBea
                 return;
             }
 
-            // 前面getxx方法调用后返回值为null，我们获取setter方法，准备将beanName赋值进去
+            // 前面getxx方法调用后返回值为null，我们获取setter方法（setId），准备将beanName赋值进去
             Method setterMethod = propertyDescriptor.getWriteMethod();
             if (setterMethod != null) { // the getter and setter methods are present
                 if (Arrays.equals(of(String.class), setterMethod.getParameterTypes())) { // the param type is String

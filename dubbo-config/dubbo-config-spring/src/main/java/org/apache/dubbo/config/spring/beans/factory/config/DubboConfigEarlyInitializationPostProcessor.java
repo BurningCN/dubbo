@@ -45,6 +45,7 @@ import javax.annotation.PostConstruct;
  * @see GenericBeanPostProcessorAdapter
  * @since 2.7.9
  */
+// 注意继承的GenericBeanPostProcessorAdapter，这个是实现BeanPostProcessor接口的，主要是限定了泛型，在后面的processBeforeInitialization可以直接拿到的就是AbstractConfig类型的
 public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPostProcessorAdapter<AbstractConfig>
         implements BeanDefinitionRegistryPostProcessor, PriorityOrdered {
 
@@ -57,6 +58,7 @@ public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPost
     // 下两个方法是BeanDefinitionRegistryPostProcessor的，前者是直接的，后者是爷爷BeanFactoryPostProcessor的方法
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+        // 拿到beanFactory的意义在于两个：1.将本类这种BeanPostProcessor注入到容器。2.后面会获取所有的BeanPostProcessor
         this.beanFactory = unwrap(registry);
         initBeanFactory();
     }
@@ -80,6 +82,10 @@ public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPost
 
         // If CommonAnnotationBeanPostProcessor is already registered,  the method addIntoConfigManager()
         // will be invoked in Bean life cycle.
+
+        // CommonAnnotationBeanPostProcessor是处理@PreDestroy、@PostConstruct、@Resource注解的，而AbstractConfig#addIntoConfigManager
+        // 方法是标记@PostConstruct注解的，所以如果已经注册了CommonAnnotationBeanPostProcessor，addIntoConfigManager()方法将在Bean
+        // 生命周期中被自动调用。如果没有注册，我们手动调用！！ --- > 这就是该BeanPostProcessor的作用，在processBeforeInitialization做拦截处理
         if (!hasRegisteredCommonAnnotationBeanPostProcessor()) {
             if (logger.isWarnEnabled()) {
                 logger.warn("CommonAnnotationBeanPostProcessor is not registered yet, " +
@@ -122,6 +128,22 @@ public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPost
             }
         }
         return false;
+        /* beanFactory.getBeanPostProcessors()的数据如下（demo-annotation模块provider对应的Application）
+        result = {CopyOnWriteArrayList@1675}  size = 11
+                 0 = {ApplicationContextAwareProcessor@5657}
+                 1 = {ConfigurationClassPostProcessor$ImportAwareBeanPostProcessor@5667}
+                 2 = {PostProcessorRegistrationDelegate$BeanPostProcessorChecker@5673}
+                *3 = {DubboConfigEarlyInitializationPostProcessor@1367}  // 注意
+                 4 = {ConfigurationBeanBindingPostProcessor@5674}  // 注意 这个是DubboConfigConfiguration注入的
+                *5 = {DubboConfigAliasPostProcessor@1636}   // 注意
+                *6 = {DubboConfigDefaultPropertyValueBeanPostProcessor@5675}   // 注意
+                 7 = {CommonAnnotationBeanPostProcessor@5676}  // 注意 这个是处理@PreDestroy、@PostConstruct、@Resource注解的
+                 8 = {ReferenceAnnotationBeanPostProcessor@5677} // 注意
+                 9 = {AutowiredAnnotationBeanPostProcessor@5678}  // 注意  这个是处理@Autowired注解的
+                 10 = {ApplicationListenerDetector@5679}
+
+                 // 且注入上面的顺序，内部会挨个按照顺序调用每个BeanPostProcessor的processBeforeInitialization方法， 然后按顺序调用processAfterInitialization方法
+        */
     }
 
     @Override

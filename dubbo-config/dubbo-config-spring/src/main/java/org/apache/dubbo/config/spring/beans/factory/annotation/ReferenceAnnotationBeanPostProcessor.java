@@ -155,9 +155,6 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
         // 注意区分，上面带 ed 结尾，这里不带。
         String referenceBeanName = getReferenceBeanName(attributes, injectedType);
 
-        if(referenceBeanName.equals("helloService")){
-            int i = 1;
-        }
         // 创建ReferenceBean实例
         ReferenceBean referenceBean = buildReferenceBeanIfAbsent(referenceBeanName, attributes, injectedType);
 
@@ -219,7 +216,9 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
             // 注册别名，给 serviceBeanName起一个别名为beanName({ "demoServiceImpl" : "@Reference(url=dubbo://127.0.0.1:12345?version=2.5.7,version=2.5.7)"})，
             // 这样以后getBean()传入这两个都能拿到ref这个实现类对象bean，目的就是上面英文注释，减少重复的beans，这样通过@Reference就能拿到ServiceBean的ref实现类了
             beanFactory.registerAlias(serviceBeanName, beanName);
-        } else { // Remote @Service Bean 在这个是远端，上面是本地
+        } else {
+            // Remote @Service Bean 在这个是远端，上面是本地。上面本地的说明消费端自己注册了ServiceBean（以及暴露），所以直接给ref赋值即可。
+            // 而这里是远端，ref不能直接赋值，所以先把RB本身创建好并注册好
             if (!beanFactory.containsBean(beanName)) {
                 beanFactory.registerSingleton(beanName, referenceBean);
             }
@@ -294,6 +293,8 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
         // 检查容器是否已经存在了该ServiceBean，结合该大类的测试类，其 setDemoServiceFromAncestor(DemoService x)，的这个x已经被注入过
         // 这个注入的bean名称为ServiceBean:org.apache.dubbo.config.spring.api.DemoService:2.5.7
         // 至于为何被注入了，原因请看doGetInjectedBean方法内的第一段注释没落，所以下面检查肯定通过
+
+        // 这是区别是否是远端服务的关键，如果下面检查不通过，即当前消费端没有该referencedBeanName对应ServiceBean，说明这个肯定是远端的！
         return applicationContext.containsBean(referencedBeanName) &&
                 applicationContext.isTypeMatch(referencedBeanName, ServiceBean.class);
 

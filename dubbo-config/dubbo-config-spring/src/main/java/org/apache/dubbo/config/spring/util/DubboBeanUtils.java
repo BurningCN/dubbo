@@ -45,9 +45,12 @@ public interface DubboBeanUtils {
      * @see DubboLifecycleComponentApplicationListener
      * @see DubboBootstrapApplicationListener
      */
+    // 注意三处调用处。整体分两个派系，一个是注解派系：EnableDubbo里的@EnableDubboConfig + @DubboComponentScan，这两个元注解里对应的Register相关方法都会调用该方法
+    // 一个是xml配置派系，被DubboNamespaceHandler#parse方法内部调用
+    // todo need pr 这里在注解派系会被调用两次，可以加一个registered标记，避免重复注册
     static void registerCommonBeans(BeanDefinitionRegistry registry) {
 
-        // 注册ReferenceAnnotationBeanPostProcessor 处理@Reference相关注解的
+        // 注册ReferenceAnnotationBeanPostProcessor 处理@Reference相关注解的，这里没有直接注册ServiceAnnotationBeanPostProcessor，这个逻辑是放在了@DubboComponentScan对应的Register里面注册的
         // Since 2.5.7 Register @Reference Annotation Bean Processor as an infrastructure Bean
         registerInfrastructureBean(registry, ReferenceAnnotationBeanPostProcessor.BEAN_NAME,
                 ReferenceAnnotationBeanPostProcessor.class);
@@ -77,5 +80,6 @@ public interface DubboBeanUtils {
         // Since 2.7.9 Register DubboConfigEarlyInitializationPostProcessor as an infrastructure Bean
         registerInfrastructureBean(registry, DubboConfigEarlyInitializationPostProcessor.BEAN_NAME,
                 DubboConfigEarlyInitializationPostProcessor.class);
+
     }
 }
