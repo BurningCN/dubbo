@@ -41,6 +41,7 @@ public class Application {
     @Configuration
     @EnableDubbo(scanBasePackages = "org.apache.dubbo.demo.consumer.comp")
     @PropertySource("classpath:/spring/dubbo-consumer.properties")
+    // 这里必须要加这个，因为comp下的实现类带有@Component注解，需要被spring识别，而正好前面main方法第三行getBean需要取出该bean
     @ComponentScan(value = {"org.apache.dubbo.demo.consumer.comp"})
     static class ConsumerConfiguration {
 
