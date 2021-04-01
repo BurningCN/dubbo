@@ -103,6 +103,8 @@ public class ConfigParser {
             urlBuilder.append("&category=").append(DYNAMIC_CONFIGURATORS_CATEGORY);
             urlBuilder.append("&configVersion=").append(config.getConfigVersion());
 
+            // eg(ServiceNoApp.yml) : override://127.0.0.1:20880/serviceKey?category=dynamicconfigurators&weight=222&enabled=true&category=dynamicconfigurators&configVersion=v2.7
+
             List<String> apps = item.getApplications();
             if (CollectionUtils.isNotEmpty(apps)) {
                 apps.forEach(app -> urls.add(URL.valueOf(urlBuilder.append("&application=").append(app).toString())));
@@ -146,7 +148,7 @@ public class ConfigParser {
 
     private static String toParameterString(ConfigItem item) {
         StringBuilder sb = new StringBuilder();
-        sb.append("category=");
+        sb.append("category="); // todo 这里重复填充了
         sb.append(DYNAMIC_CONFIGURATORS_CATEGORY);
         if (item.getSide() != null) {
             sb.append("&side=");
@@ -176,6 +178,7 @@ public class ConfigParser {
     }
 
     private static String appendService(String serviceKey) {
+        // serviceKey最全的话就是group/servicePath:version，最短的就是直接servicePath
         StringBuilder sb = new StringBuilder();
         if (StringUtils.isEmpty(serviceKey)) {
             throw new IllegalStateException("service field in configuration is null.");
@@ -197,6 +200,7 @@ public class ConfigParser {
             sb.append("&");
             interfaceName = interfaceName.substring(0, j);
         }
+        // path拼接后开始拼参数，所以这里 + ? ，insert这个api第一次见
         sb.insert(0, interfaceName + "?");
 
         return sb.toString();
@@ -205,7 +209,7 @@ public class ConfigParser {
     private static void parseEnabled(ConfigItem item, ConfiguratorConfig config, StringBuilder urlBuilder) {
         urlBuilder.append("&enabled=");
         if (item.getType() == null || ConfigItem.GENERAL_TYPE.equals(item.getType())) {
-            urlBuilder.append(config.getEnabled());
+            urlBuilder.append(config.getEnabled());// config.getEnabled()默认为true
         } else {
             urlBuilder.append(item.getEnabled());
         }

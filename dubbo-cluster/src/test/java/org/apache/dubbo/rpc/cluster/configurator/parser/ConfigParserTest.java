@@ -62,6 +62,24 @@ public class ConfigParserTest {
             Yaml yaml = new Yaml(constructor);
             ConfiguratorConfig config = yaml.load(yamlStream);
             System.out.println(config);
+            //config = {ConfiguratorConfig@1814}
+            // configVersion = "v2.7"
+            // scope = "service"
+            // key = "serviceKey"
+            // enabled = {Boolean@1820} true
+            // configs = {ArrayList@1821}  size = 1
+            //  0 = {ConfigItem@1823}
+            //   type = null
+            //   enabled = null
+            //   addresses = {ArrayList@1824}  size = 2
+            //    0 = "127.0.0.1:20880"
+            //    1 = "0.0.0.0:20881"
+            //   providerAddresses = null
+            //   services = null
+            //   applications = null
+            //   parameters = {LinkedHashMap@1825}  size = 1
+            //    "weight" -> "222"
+            //   side = null
         }
     }
 
