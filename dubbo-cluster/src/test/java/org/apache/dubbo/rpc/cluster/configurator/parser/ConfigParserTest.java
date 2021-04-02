@@ -162,6 +162,8 @@ public class ConfigParserTest {
             Assertions.assertEquals(6666, url.getParameter(TIMEOUT_KEY, 0));
             Assertions.assertEquals("random", url.getParameter(LOADBALANCE_KEY));
             Assertions.assertEquals(url.getParameter(APPLICATION_KEY), "demo-consumer");
+            //0 = {URL@1966} "override://127.0.0.1/*?application=demo-consumer&category=appdynamicconfigurators&cluster=failfast&configVersion=v2.7&enabled=true&loadbalance=random&timeout=6666"
+            //1 = {URL@1967} "override://0.0.0.0/*?application=demo-consumer&category=appdynamicconfigurators&cluster=failfast&configVersion=v2.7&enabled=true&loadbalance=random&timeout=6666"
         }
     }
 
@@ -173,6 +175,7 @@ public class ConfigParserTest {
             Assertions.assertEquals(1, urls.size());
             URL url = urls.get(0);
             Assertions.assertEquals("127.0.0.1", url.getAddress());
+            // parseConfigurators 内部判定没有services的时候回给path赋值为*
             Assertions.assertEquals("*", url.getServiceInterface());
             Assertions.assertEquals(6666, url.getParameter(TIMEOUT_KEY, 0));
             Assertions.assertEquals("random", url.getParameter(LOADBALANCE_KEY));
