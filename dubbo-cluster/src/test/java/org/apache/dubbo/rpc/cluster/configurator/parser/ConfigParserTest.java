@@ -92,6 +92,8 @@ public class ConfigParserTest {
             URL url = urls.get(0);
             Assertions.assertEquals(url.getAddress(), "127.0.0.1:20880");
             Assertions.assertEquals(url.getParameter(WEIGHT_KEY, 0), 222);
+            //0 = {URL@2099} "override://127.0.0.1:20880/serviceKey?category=dynamicconfigurators&configVersion=v2.7&enabled=true&weight=222"
+            //1 = {URL@2108} "override://0.0.0.0:20881/serviceKey?category=dynamicconfigurators&configVersion=v2.7&enabled=true&weight=222"
         }
     }
 
@@ -132,6 +134,7 @@ public class ConfigParserTest {
 
     @Test
     public void parseConfiguratorsAppMultiServicesTest() throws IOException {
+        // 注意yml文件此时scope为application，且configs的内容为services:[] 了，之前的测试程序是scope为service，configs的内容为applications:[]
         try (InputStream yamlStream = this.getClass().getResourceAsStream("/AppMultiServices.yml")) {
             String yamlFile = streamToString(yamlStream);
             List<URL> urls = ConfigParser.parseConfigurators(yamlFile);

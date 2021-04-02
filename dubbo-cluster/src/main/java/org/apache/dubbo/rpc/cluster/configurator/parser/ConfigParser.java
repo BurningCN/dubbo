@@ -106,6 +106,7 @@ public class ConfigParser {
             // eg(ServiceNoApp.yml) : override://127.0.0.1:20880/serviceKey?category=dynamicconfigurators&weight=222&enabled=true&category=dynamicconfigurators&configVersion=v2.7
 
             List<String> apps = item.getApplications();
+            // 再对app进行遍历，也就是n个address * n个app的关系（address、apps都是configItem的两个list属性）
             if (CollectionUtils.isNotEmpty(apps)) {
                 apps.forEach(app -> urls.add(URL.valueOf(urlBuilder.append("&application=").append(app).toString())));
             } else {
@@ -130,6 +131,8 @@ public class ConfigParser {
                 services.add("*");
             }
             for (String s : services) {
+                // todo need pr 这里有bug，第二次循环的时候没有初始化urlBuilder，导致接着上次的后面拼接，如下结果
+                // override://127.0.0.1/service1?category=dynamicconfigurators&loadbalance=random&cluster=failfast&timeout=6666&application=demo-consumer&enabled=true&category=appdynamicconfigurators&configVersion=v2.7   ======  service2?category=dynamicconfigurators&loadbalance=random&cluster=failfast&timeout=6666&application=demo-consumer&enabled=true&category=appdynamicconfigurators&configVersion=v2.7
                 urlBuilder.append(appendService(s));
                 urlBuilder.append(toParameterString(item));
 
@@ -148,14 +151,15 @@ public class ConfigParser {
 
     private static String toParameterString(ConfigItem item) {
         StringBuilder sb = new StringBuilder();
-        sb.append("category="); // todo 这里重复填充了
+        sb.append("category="); // todo 这里重复填充了 fix
         sb.append(DYNAMIC_CONFIGURATORS_CATEGORY);
         if (item.getSide() != null) {
             sb.append("&side=");
             sb.append(item.getSide());
         }
         Map<String, String> parameters = item.getParameters();
-        if (CollectionUtils.isEmptyMap(parameters)) { // 至少有1个参数
+        // 至少有1个参数 如果yml没有配置参数，则直接报错
+        if (CollectionUtils.isEmptyMap(parameters)) {
             throw new IllegalStateException("Invalid configurator rule, please specify at least one parameter " +
                     "you want to change in the rule.");
         }
