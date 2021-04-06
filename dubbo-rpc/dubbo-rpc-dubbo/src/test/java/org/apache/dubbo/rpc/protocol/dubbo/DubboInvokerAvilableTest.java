@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * Check available status for dubboInvoker
  */
 // OK
-public class DubboInvokerAvilableTest { // todo need pr 名称拼写错误
+public class DubboInvokerAvilableTest { // todo need pr-fixed 名称拼写错误
     private static DubboProtocol protocol;
     private static ProxyFactory proxy = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
 

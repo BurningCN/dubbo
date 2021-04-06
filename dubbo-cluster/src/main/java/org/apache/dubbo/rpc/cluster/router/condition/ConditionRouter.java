@@ -55,7 +55,7 @@ public class ConditionRouter extends AbstractRouter {
     public static final String NAME = "condition";
 
     private static final Logger logger = LoggerFactory.getLogger(ConditionRouter.class);
-    // 正则验证路由规则
+    // 正则验证路由规则 两个括号两个部分，前者是匹配$ ! = ,后者是匹配这三个字符之外的
     protected static final Pattern ROUTE_PATTERN = Pattern.compile("([&!=,]*)\\s*([^&!=,\\s]+)");
     protected Map<String, MatchPair> whenCondition;
     protected Map<String, MatchPair> thenCondition;
@@ -91,8 +91,8 @@ public class ConditionRouter extends AbstractRouter {
             // 提供者地址匹配条件
             String thenRule = i < 0 ? rule.trim() : rule.substring(i + 2).trim();
             // 解析消费者路由规则
-            Map<String, MatchPair> when = StringUtils.isBlank(whenRule) || "true".equals(whenRule) ? new HashMap<String, MatchPair>() : parseRule(whenRule);
-            // 解析提供者路由规则
+            Map<String, MatchPair> when = StringUtils.isBlank(whenRule) || "true".equals(whenRule) ? new HashMap<>() : parseRule(whenRule);
+            // 解析提供者路由规则 这里和上面的不一样，这里是为空或false的时候使用null赋值，前面的是使用new HashMap
             Map<String, MatchPair> then = StringUtils.isBlank(thenRule) || "false".equals(thenRule) ? null : parseRule(thenRule);
             // NOTE: It should be determined on the business level whether the `When condition` can be empty or not. 应该在业务级别上确定“When条件”是否为空
             this.whenCondition = when;
@@ -327,6 +327,7 @@ public class ConditionRouter extends AbstractRouter {
             if (invocation != null && (METHOD_KEY.equals(key) || METHODS_KEY.equals(key))) {
                 // 从 invocation 获取被调用方法的名称
                 sampleValue = invocation.getMethodName();
+                // address和host的区别就是，address是ip:port，host就是ip
             } else if (ADDRESS_KEY.equals(key)) {
                 sampleValue = url.getAddress();
             } else if (HOST_KEY.equals(key)) {

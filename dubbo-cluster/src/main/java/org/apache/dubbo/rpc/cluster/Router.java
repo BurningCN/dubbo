@@ -80,6 +80,7 @@ public interface Router extends Comparable<Router> {
      * To decide whether this router should take effect when none of the invoker can match the router rule, which
      * means the {@link #route(List, URL, Invocation)} would be empty. Most of time, most router implementation would
      * default this value to false.
+     * 决定当没有一个调用者可以匹配router规则时，该路由器是否应该生效，这意味着{@link #route(List, URL, Invocation)}将为空。大多数时候，大多数路由器实现都会将此值默认为false。
      *
      * @return true to execute if none of invokers matches the current router
      */

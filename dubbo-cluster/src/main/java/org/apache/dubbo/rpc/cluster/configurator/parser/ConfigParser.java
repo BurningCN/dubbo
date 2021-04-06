@@ -131,7 +131,7 @@ public class ConfigParser {
                 services.add("*");
             }
             for (String s : services) {
-                // todo need pr 这里有bug，第二次循环的时候没有初始化urlBuilder，导致接着上次的后面拼接，如下结果 已发起pr
+                // todo need pr-fixed 这里有bug，第二次循环的时候没有初始化urlBuilder，导致接着上次的后面拼接，
                 // override://127.0.0.1/service1?category=dynamicconfigurators&loadbalance=random&cluster=failfast&timeout=6666&application=demo-consumer&enabled=true&category=appdynamicconfigurators&configVersion=v2.7   ======  service2?category=dynamicconfigurators&loadbalance=random&cluster=failfast&timeout=6666&application=demo-consumer&enabled=true&category=appdynamicconfigurators&configVersion=v2.7
                 urlBuilder.append(appendService(s));
                 urlBuilder.append(toParameterString(item));

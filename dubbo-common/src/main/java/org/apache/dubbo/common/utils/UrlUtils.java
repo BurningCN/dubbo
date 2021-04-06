@@ -429,8 +429,10 @@ public class UrlUtils {
 
     public static boolean isMatchGlobPattern(String pattern, String value, URL param) {
         if (param != null && pattern.startsWith("$")) {
-            pattern = param.getRawParameter(pattern.substring(1));// 引用服务消费者参数，param 参数为服务消费者 url
-        }// 调用重载方法继续比较
+            // 引用服务消费者参数，param 参数为服务消费者 url
+            pattern = param.getRawParameter(pattern.substring(1));
+        }
+        // 调用重载方法继续比较
         return isMatchGlobPattern(pattern, value);
     }
 

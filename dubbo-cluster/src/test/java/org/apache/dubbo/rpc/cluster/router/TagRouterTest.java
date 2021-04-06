@@ -26,7 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled("FIXME This is not a formal UT")
+//@Disabled("FIXME This is not a formal UT")
 public class TagRouterTest {
     private static CuratorFramework client;
 

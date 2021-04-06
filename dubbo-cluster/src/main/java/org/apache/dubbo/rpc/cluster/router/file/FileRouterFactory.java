@@ -39,7 +39,7 @@ public class FileRouterFactory implements RouterFactory {
 
     private RouterFactory routerFactory;
 
-    public void setRouterFactory(RouterFactory routerFactory) {
+    public void setRouterFactory(RouterFactory routerFactory)  {
         this.routerFactory = routerFactory;
     }
 
@@ -62,6 +62,7 @@ public class FileRouterFactory implements RouterFactory {
             // FIXME: this code looks useless
             boolean runtime = url.getParameter(RUNTIME_KEY, false);
             URL script = URLBuilder.from(url)
+                    // 这里拼成的url比如 script:// xxx 而且注入的routerFactory为自适应的，根据RouteFactory的#routerFactory的@Adaptive(protocol)正好拿到扩展名...
                     .setProtocol(protocol)
                     .addParameter(TYPE_KEY, type)
                     .addParameter(RUNTIME_KEY, runtime)

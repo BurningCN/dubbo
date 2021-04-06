@@ -35,7 +35,7 @@ public class AttachmentsAdapter {
         // 构造方法 gx
         public ObjectToStringMap(Map<String, Object> attachments) {
             for (Entry<String, Object> entry : attachments.entrySet()) {
-                // todo need pr 拼写错误
+                // todo need pr-fixed 拼写错误
                 // convert进去
                 String converResult = convert(entry.getValue());
                 if (converResult != null) {

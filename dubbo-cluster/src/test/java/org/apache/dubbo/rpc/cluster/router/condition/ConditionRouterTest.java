@@ -83,6 +83,7 @@ public class ConditionRouterTest {
         router = new ConditionRouterFactory().getRouter(getRouteUrl("host = 2.2.2.2,1.1.1.*,3.3.3.3 & host != 1.1.1.2 => host = 1.2.3.4"));
         matchWhen = ((ConditionRouter) router).matchWhen(URL.valueOf("consumer://1.1.1.1/com.foo.BarService"), invocation);
         Assertions.assertTrue(matchWhen);
+        // todo need pr 这里应该再添加两个测试用例， *.1.1.1 和 1.*.1.1
     }
 
     @Test
@@ -189,6 +190,7 @@ public class ConditionRouterTest {
 
     @Test
     public void testRoute_ReturnFalse() {
+        // 构造方法处理thenCondition直接赋值为null
         Router router = new ConditionRouterFactory().getRouter(getRouteUrl("host = " + LOCAL_HOST + " => false"));
         List<Invoker<String>> invokers = new ArrayList<Invoker<String>>();
         invokers.add(new MockInvoker<String>());
@@ -200,6 +202,7 @@ public class ConditionRouterTest {
 
     @Test
     public void testRoute_ReturnEmpty() {
+        // 和前面测试案例一样，thenCondition为null，在route方法中判定为null直接返回空集合，表明对指定的服务消费者禁用服务，也就是服务消费者在黑名单中
         Router router = new ConditionRouterFactory().getRouter(getRouteUrl("host = " + LOCAL_HOST + " => "));
         List<Invoker<String>> invokers = new ArrayList<Invoker<String>>();
         invokers.add(new MockInvoker<String>());
@@ -254,6 +257,7 @@ public class ConditionRouterTest {
 
     @Test
     public void testRoute_False_HostFilter() {
+        // 注意true（两个特殊值：消费者true，提供者false。前者表示不检查消费者，都通过；后者表示消费者没有提供方可以使用，消费者列入黑名单）
         Router router = new ConditionRouterFactory().getRouter(getRouteUrl("true => " + " host = " + LOCAL_HOST));
         List<Invoker<String>> invokers = new ArrayList<Invoker<String>>();
         Invoker<String> invoker1 = new MockInvoker<String>(URL.valueOf("dubbo://10.20.3.3:20880/com.foo.BarService"));
@@ -270,6 +274,7 @@ public class ConditionRouterTest {
 
     @Test
     public void testRoute_Placeholder() {
+        // 注意=>右侧部分，即提供者匹配规则，后面调用route方法的时候，在进行mathThen的时候，发现值为$host，在UrlUtils#isMatchGlobPattern的时候会取消费者的host参数值
         Router router = new ConditionRouterFactory().getRouter(getRouteUrl("host = " + LOCAL_HOST + " => " + " host = $host"));
         List<Invoker<String>> invokers = new ArrayList<Invoker<String>>();
         Invoker<String> invoker1 = new MockInvoker<String>(URL.valueOf("dubbo://10.20.3.3:20880/com.foo.BarService"));
@@ -294,6 +299,7 @@ public class ConditionRouterTest {
         invokers.add(invoker1);
         invokers.add(invoker2);
         invokers.add(invoker3);
+        // 默认force = false，如果提供者match之后为空，且force = false的话，直接返回传递给route方法的第一个参数invokers
         List<Invoker<String>> filteredInvokers = router.route(invokers, URL.valueOf("consumer://" + LOCAL_HOST + "/com.foo.BarService"), new RpcInvocation());
         Assertions.assertEquals(invokers, filteredInvokers);
     }

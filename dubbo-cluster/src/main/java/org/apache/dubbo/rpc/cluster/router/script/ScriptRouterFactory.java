@@ -17,8 +17,12 @@
 package org.apache.dubbo.rpc.cluster.router.script;
 
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.rpc.cluster.Router;
 import org.apache.dubbo.rpc.cluster.RouterFactory;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * ScriptRouterFactory
@@ -31,6 +35,7 @@ import org.apache.dubbo.rpc.cluster.RouterFactory;
  * <li> script://C:/path/to/routerfile.js?type=js&rule=xxxx
  * </ol>
  * The host value in URL points out the address of the source content of the Script Router，Registry、File etc
+ * URL中的host值指出脚本路由器、注册表、文件等的源内容的地址
  *
  */
 // OK
@@ -43,4 +48,25 @@ public class ScriptRouterFactory implements RouterFactory {
         return new ScriptRouter(url);
     }
 
+    // 下面演示了有的spi扩展实例没有@Activate修饰，有的有，他们在使用不同的api方法才产生区别的，如下
+    public static void main(String[] args) {
+        Set<String> supportedExtensions = ExtensionLoader.getExtensionLoader(RouterFactory.class).getSupportedExtensions();
+        List<RouterFactory> xx = ExtensionLoader.getExtensionLoader(RouterFactory.class).getActivateExtension(URL.valueOf("test:///xxx"), "xx");
+        // supportedExtensions = {Collections$UnmodifiableSet@905}  size = 7
+        // 0 = "app"
+        // 1 = "condition"
+        // 2 = "file"
+        // 3 = "mock"
+        // 4 = "script"
+        // 5 = "service"
+        // 6 = "tag"
+        //
+        //
+        //
+        //xx = {ArrayList@911}  size = 4
+        // 0 = {MockRouterFactory@921}
+        // 1 = {TagRouterFactory@922}
+        // 2 = {AppRouterFactory@923}
+        // 3 = {ServiceRouterFactory@924}
+    }
 }
