@@ -45,7 +45,7 @@ import static org.apache.dubbo.common.utils.StringUtils.isNotEmpty;
 // OK
 public interface MethodUtils {
 
-    // todo need pr 下面的public不需要
+    // todo need pr-pr 下面的public不需要
     /**
      * Return {@code true} if the provided method is a set method.
      * Otherwise, return {@code false}.
@@ -192,7 +192,7 @@ public interface MethodUtils {
     }
 
     /**
-     * Get all public {@link Method methods} of the declared class, including the inherited methods. todo need pr 这里应该是not including
+     * Get all public {@link Method methods} of the declared class, including the inherited methods. todo need pr-pr 这里应该是not including
      *
      * @param declaringClass  the declared class
      * @param methodsToFilter (optional) the methods to be filtered

@@ -46,7 +46,7 @@ public class TagRouterRule extends AbstractRouterRule {
     private Map<String, List<String>> addressToTagnames = new HashMap<>();
     private Map<String, List<String>> tagnameToAddresses = new HashMap<>();
 
-    private List<String> addresses; // todo need pr 原版没有这俩字段，后面的getAddresses 、 getTagNames每次都是现场计算，这里加缓存了
+    private List<String> addresses; // todo need pr 原来都是重复计算
     private List<String> tagNames;
 
     public void init() {
@@ -62,22 +62,20 @@ public class TagRouterRule extends AbstractRouterRule {
             });
         });
 
+        addresses = tags.stream()
+                .filter(tag -> CollectionUtils.isNotEmpty(tag.getAddresses()))
+                .flatMap(tag -> tag.getAddresses().stream())
+                .collect(Collectors.toList());
+
+        tagNames = tags.stream().map(Tag::getName).collect(Collectors.toList());
+
     }
 
     public List<String> getAddresses() {
-        if (addresses == null) {
-            addresses = tags.stream()
-                    .filter(tag -> CollectionUtils.isNotEmpty(tag.getAddresses()))
-                    .flatMap(tag -> tag.getAddresses().stream())
-                    .collect(Collectors.toList());
-        }
         return addresses;
     }
 
     public List<String> getTagNames() {
-        if (tagNames == null) {
-            tagNames = tags.stream().map(Tag::getName).collect(Collectors.toList());
-        }
         return tagNames;
     }
 

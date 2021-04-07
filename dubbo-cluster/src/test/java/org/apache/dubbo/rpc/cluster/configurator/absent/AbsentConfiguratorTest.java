@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
- * todo need pr 下面的注释不对
+ * todo need pr-pr 下面的注释不对
  * OverrideConfiguratorTest
  */
 // OK
