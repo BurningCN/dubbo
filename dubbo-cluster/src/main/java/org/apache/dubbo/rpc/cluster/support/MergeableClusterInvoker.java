@@ -62,7 +62,9 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
     protected Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         checkInvokers(invokers, invocation);
         String merger = getUrl().getMethodParameter(invocation.getMethodName(), MERGER_KEY);
-        if (ConfigUtils.isEmpty(merger)) { // If a method doesn't have a merger, only invoke one Group
+        // If a method doesn't have a merger, only invoke one Group
+        if (ConfigUtils.isEmpty(merger)) {
+            // 循环对每个可用的invoker发起调用，谁成功就直接返回，谁失败直接抛异常，结束循环
             for (final Invoker<T> invoker : invokers) {
                 if (invoker.isAvailable()) {
                     try {
@@ -76,8 +78,11 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
                     }
                 }
             }
+            // 如果上面没有可用的invoker，选择第一个调用
             return invokers.iterator().next().invoke(invocation);
         }
+
+        // 如果url含有merger参数，走下面的逻辑
 
         Class<?> returnType;
         try {
@@ -87,6 +92,7 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
             returnType = null;
         }
 
+        // 循环异步调用，将结果缓存到results
         Map<String, Result> results = new HashMap<>();
         for (final Invoker<T> invoker : invokers) {
             RpcInvocation subInvocation = new RpcInvocation(invocation, invoker);
@@ -94,10 +100,10 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
             results.put(invoker.getUrl().getServiceKey(), invoker.invoke(subInvocation));
         }
 
-        Object result = null;
+        Object result;
 
+        // 遍历缓存results的values，每个进行get阻塞获取值，将没有异常的结果填充到resultList
         List<Result> resultList = new ArrayList<Result>(results.size());
-
         for (Map.Entry<String, Result> entry : results.entrySet()) {
             Result asyncResult = entry.getValue();
             try {
@@ -114,6 +120,7 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
         }
 
+        // 如果结果为空，返回空结果，否则返回第一个结果
         if (resultList.isEmpty()) {
             return AsyncRpcResult.newDefaultAsyncResult(invocation);
         } else if (resultList.size() == 1) {
@@ -124,11 +131,14 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
             return AsyncRpcResult.newDefaultAsyncResult(invocation);
         }
 
-        //分组以.开头则只返回一个结果值
+        //分组以.开头则只进行合并返回一个结果值
         if (merger.startsWith(".")) {
             merger = merger.substring(1);
             Method method;
             try {
+                // 这里比较难理解,merger就是方法名了
+                // 参考测试程序假设invocation调用的方法为 MenuService#getMenu方法，该方法返回值为Menu，那么returnType就是Menu.class
+                // 假设Menu里面有一个方法   xx merge(Menu p)，而这里的merger就是merge
                 method = returnType.getMethod(merger, returnType);
             } catch (NoSuchMethodException e) {
                 throw new RpcException("Can not merge result because missing method [ " + merger + " ] in class [ " +
@@ -139,12 +149,15 @@ public class MergeableClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
             result = resultList.remove(0).getValue();
             try {
+                // 比如前面的例子xx就是void.class，不走下面逻辑
                 if (method.getReturnType() != void.class
+                        // 这里是关键
                         && method.getReturnType().isAssignableFrom(result.getClass())) {
                     for (Result r : resultList) {
                         result = method.invoke(result, r.getValue());
                     }
                 } else {
+                    // 对移除了第0个元素的剩余元素遍历，调用Menu#merge方法进行结果合并，合并的值会放到第一个元素中
                     for (Result r : resultList) {
                         method.invoke(result, r.getValue());
                     }

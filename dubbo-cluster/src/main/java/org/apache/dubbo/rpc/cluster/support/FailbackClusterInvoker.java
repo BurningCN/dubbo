@@ -51,7 +51,7 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(FailbackClusterInvoker.class);
 
-    private static final long RETRY_FAILED_PERIOD = 5;
+    private static final long RETRY_FAILED_PERIOD = 5; // 5s一次
 
     private final int retries;
 
@@ -62,6 +62,7 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
     public FailbackClusterInvoker(Directory<T> directory) {
         super(directory);
 
+        // todo need pr 这里应该是获取method级别的参数值，和Failover一致
         int retriesConfig = getUrl().getParameter(RETRIES_KEY, DEFAULT_FAILBACK_TIMES);
         if (retriesConfig <= 0) {
             retriesConfig = DEFAULT_FAILBACK_TIMES;
@@ -87,7 +88,8 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
             }
         }
         RetryTimerTask retryTimerTask = new RetryTimerTask(loadbalance, invocation, invokers, lastInvoker, retries, RETRY_FAILED_PERIOD);
-        try {      // 对失败的调用进行重试
+        try {
+            // 对失败的调用进行重试
             failTimer.newTimeout(retryTimerTask, RETRY_FAILED_PERIOD, TimeUnit.SECONDS);
         } catch (Throwable e) {
             logger.error("Failback background works error,invocation->" + invocation + ", exception: " + e.getMessage());
@@ -105,14 +107,18 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
         try {
 
             checkInvokers(invokers, invocation);
-            invoker = select(loadbalance, invocation, invokers, null);  // 选择 Invoker
-            return invoker.invoke(invocation); // 进行调用
+            // 选择 Invoker
+            invoker = select(loadbalance, invocation, invokers, null);
+            // 进行调用
+            return invoker.invoke(invocation);
         } catch (Throwable e) {
             // 如果调用过程中发生异常，此时仅打印错误日志，不抛出异常
             logger.error("Failback to invoke method " + invocation.getMethodName() + ", wait for retry in background. Ignored exception: "
                     + e.getMessage() + ", ", e);
-            addFailed(loadbalance, invocation, invokers, invoker); // 记录调用信息
-            return AsyncRpcResult.newDefaultAsyncResult(null, null, invocation);    // 返回一个空结果给服务消费者
+            // 记录调用信息 注意传入的最后一个参数为失败的invoker
+            addFailed(loadbalance, invocation, invokers, invoker);
+            // 返回一个空结果给服务消费者
+            return AsyncRpcResult.newDefaultAsyncResult(null, null, invocation);
         }
     }
 
@@ -131,23 +137,24 @@ public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
         private final Invocation invocation;
         private final LoadBalance loadbalance;
         private final List<Invoker<T>> invokers;
-        private final int retries;
-        private final long tick;
+        private final int retries; // 最大重试次数
+        private final long tick; // 间隔
         private Invoker<T> lastInvoker;
-        private int retryTimes = 0;
+        private int retryTimes = 0; // 已经重试的次数
 
         RetryTimerTask(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, Invoker<T> lastInvoker, int retries, long tick) {
             this.loadbalance = loadbalance;
             this.invocation = invocation;
             this.invokers = invokers;
-            this.retries = retries;
-            this.tick = tick;
+            this.retries = retries;// 最大重试次数
+            this.tick = tick;// 重试间隔
             this.lastInvoker=lastInvoker;
         }
 
         @Override
         public void run(Timeout timeout) {
             try {
+                // 最后一个参数，规避上次失败的invoker
                 Invoker<T> retryInvoker = select(loadbalance, invocation, invokers, Collections.singletonList(lastInvoker));
                 lastInvoker = retryInvoker;
                 retryInvoker.invoke(invocation);

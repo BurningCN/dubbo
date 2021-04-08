@@ -27,6 +27,8 @@ import org.apache.dubbo.rpc.cluster.support.wrapper.AbstractCluster;
 // OK
 public class BroadcastCluster extends AbstractCluster {
 
+    // 少一个 NAME 配置
+
     @Override
     public <T> AbstractClusterInvoker<T> doJoin(Directory<T> directory) throws RpcException {
         return new BroadcastClusterInvoker<>(directory);

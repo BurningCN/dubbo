@@ -61,15 +61,20 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         List<Invoker<T>> copyInvokers = invokers;
         checkInvokers(copyInvokers, invocation);
+
         String methodName = RpcUtils.getMethodName(invocation);
         // 获取重试次数
-        int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1; // +1是 原本的调用 算一次，比如调某个invoker，如果失败最多failover2次，那么总共就循环3次
+        // +1是 原本的调用 算一次，比如调某个invoker，如果失败最多failover2次，那么总共就循环3次
+        int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
         if (len <= 0) {
             len = 1;
         }
+
         // retry loop.
         RpcException le = null; // last exception.
+        // 存放每次选择出来的invoker todo need pr 如下的默认长度应该是len，因为最多len次
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
+        // 存放调用失败的invoker的address（后面打日志用）
         Set<String> providers = new HashSet<String>(len);
         // 循环调用，失败重试
         for (int i = 0; i < len; i++) {
@@ -82,7 +87,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 // check again 对 copyinvokers 进行判空检查
                 checkInvokers(copyInvokers, invocation);
             }
-            // 通过负载均衡选择 Invoker
+            // 通过负载均衡选择 Invoker，注意传入的最后一个invoked参数，这样就能规避先前调用失败的invoker，也就实现了Failover
             Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
             // 添加到 invoker 到 invoked 列表中
             invoked.add(invoker);

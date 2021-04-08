@@ -25,12 +25,14 @@ public class ArrayMerger implements Merger<Object[]> {
 
     public static final ArrayMerger INSTANCE = new ArrayMerger();
 
+    // 将多个Object[]合并为一个Object[]
     @Override
     public Object[] merge(Object[]... items) {
         if (ArrayUtils.isEmpty(items)) {
             return new Object[0];
         }
 
+        // 找到第一个不为null的下标
         int i = 0;
         while (i < items.length && items[i] == null) {
             i++;
@@ -43,10 +45,14 @@ public class ArrayMerger implements Merger<Object[]> {
         Class<?> type = items[i].getClass().getComponentType();
 
         int totalLen = 0;
+
         for (; i < items.length; i++) {
+            // i一开始记录的第一个不null的，但是其后面也是可能为null的。不过这里的i不应该从i开始遍历，而是i+1位置
+            // 上面后半句是错误的，因为后面需要计算长度
             if (items[i] == null) {
                 continue;
             }
+            // 确保所有数组的元素类型要一致
             Class<?> itemType = items[i].getClass().getComponentType();
             if (itemType != type) {
                 throw new IllegalArgumentException("Arguments' types are different");

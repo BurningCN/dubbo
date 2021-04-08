@@ -46,14 +46,15 @@ import static org.apache.dubbo.common.constants.RegistryConstants.ZONE_KEY;
  * 3. Evenly balance traffic between all registries based on each registry's weight.
  * 4. Pick anyone that's available.
  * / * *
- * *当有多个注册表的订阅。
+ * *当有多个registry的订阅。
  * *这个扩展提供了一个策略，以决定如何在他们之间分配流量:
- * * 1。标记为'preferred=true'的注册表具有最高的优先级。
- * * 2。检查当前请求所属的区域，首先选择具有相同区域的注册表。
- * * 3。根据每个注册表的权重，在所有注册表之间均衡流量。
- * * 4。随便挑一个。
+ * * 1。标记为'preferred=true'的registry具有最高的优先级。
+ * * 2。检查当前请求所属的区域，优先选择具有相同区域的registry。
+ * * 3。基于每个registry的权重，在所有registry之间均衡流量。
+ * * 4。随便挑一个可用的。
  * * /
  */
+// ZoneAware区域感知
 public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ZoneAwareClusterInvoker.class);
@@ -62,28 +63,32 @@ public class ZoneAwareClusterInvoker<T> extends AbstractClusterInvoker<T> {
         super(directory);
     }
 
+    // 第二个参数为 ClusterInvoker list，每个ClusterInvoker内部含有一个Dic 也就代表了一个Registry
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
         // First, pick the invoker (XXXClusterInvoker) that comes from the local registry, distinguish by a 'preferred' key.
         for (Invoker<T> invoker : invokers) {
             ClusterInvoker<T> clusterInvoker = (ClusterInvoker<T>) invoker;
+            // clusterInvoker.getRegistryUrl() --> 实际调用 dic.getUrl() ，获取注册中心url
             if (clusterInvoker.isAvailable() && clusterInvoker.getRegistryUrl()
+                    // 类头上注释的第一个准则：标记为'preferred=true'的registry具有最高的优先级。
                     .getParameter(PREFERRED_KEY, false)) {
                 return clusterInvoker.invoke(invocation);
             }
         }
 
         // providers in the registry with the same zone
-        String zone = invocation.getAttachment(REGISTRY_ZONE);
+        String zone = invocation.getAttachment(REGISTRY_ZONE); // "registry_zone"
         if (StringUtils.isNotEmpty(zone)) {
             for (Invoker<T> invoker : invokers) {
                 ClusterInvoker<T> clusterInvoker = (ClusterInvoker<T>) invoker;
+                // 2。检查当前请求所属的区域，优先选择具有相同区域的registry。
                 if (clusterInvoker.isAvailable() && zone.equals(clusterInvoker.getRegistryUrl().getParameter(ZONE_KEY))) {
                     return clusterInvoker.invoke(invocation);
                 }
             }
-            String force = invocation.getAttachment(REGISTRY_ZONE_FORCE);
+            String force = invocation.getAttachment(REGISTRY_ZONE_FORCE); //  "registry_zone_force"
             if (StringUtils.isNotEmpty(force) && "true".equalsIgnoreCase(force)) {
                 throw new IllegalStateException("No registry instance in zone or no available providers in the registry, zone: "
                         + zone

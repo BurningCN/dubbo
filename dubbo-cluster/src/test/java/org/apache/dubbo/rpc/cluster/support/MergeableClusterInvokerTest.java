@@ -65,6 +65,7 @@ public class MergeableClusterInvokerTest {
 
     private Map<String, List<String>> secondMenuMap = new HashMap<String, List<String>>() {
         {
+            // 注意这里的2和上面的相同，为了后面演示合并用的
             put("2", Arrays.asList(list3));
             put("3", Arrays.asList(list4));
         }
@@ -102,11 +103,11 @@ public class MergeableClusterInvokerTest {
         // setup
         url = url.addParameter(MERGER_KEY, ".merge");
 
+        // MenuService#getMenu
         given(invocation.getMethodName()).willReturn("getMenu");
         given(invocation.getParameterTypes()).willReturn(new Class<?>[]{});
         given(invocation.getArguments()).willReturn(new Object[]{});
-        given(invocation.getObjectAttachments()).willReturn(new HashMap<>())
-                ;
+        given(invocation.getObjectAttachments()).willReturn(new HashMap<>());
         given(invocation.getInvoker()).willReturn(firstInvoker);
 
         firstInvoker = (Invoker) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{Invoker.class}, (proxy, method, args) -> {
@@ -144,7 +145,7 @@ public class MergeableClusterInvokerTest {
         });
         given(directory.getUrl()).willReturn(url);
         given(directory.getConsumerUrl()).willReturn(url);
-        given(directory.getConsumerUrl()).willReturn(url);
+        given(directory.getConsumerUrl()).willReturn(url);// todo need pr 重复
         given(directory.getInterface()).willReturn(MenuService.class);
 
         mergeableClusterInvoker = new MergeableClusterInvoker<MenuService>(directory);
@@ -153,13 +154,36 @@ public class MergeableClusterInvokerTest {
         Result result = mergeableClusterInvoker.invoke(invocation);
         Assertions.assertTrue(result.getValue() instanceof Menu);
         Menu menu = (Menu) result.getValue();
+        // 合并的结果如下
+        //menu = {Menu@2853}
+        // menus = {HashMap@2854}  size = 3
+        //  "1" -> {ArrayList@2907}  size = 3
+        //   key = "1"
+        //   value = {ArrayList@2907}  size = 3
+        //    0 = "10"
+        //    1 = "11"
+        //    2 = "12"
+        //  "2" -> {ArrayList@2908}  size = 6
+        //   key = "2"
+        //   value = {ArrayList@2908}  size = 6
+        //    0 = "20"
+        //    1 = "21"
+        //    2 = "22"
+        //    3 = "23"
+        //    4 = "24"
+        //    5 = "25"
+        //  "3" -> {ArrayList@2909}  size = 3
+        //   key = "3"
+        //   value = {ArrayList@2909}  size = 3
+        //    0 = "30"
+        //    1 = "31"
+        //    2 = "32"
         Map<String, List<String>> expected = new HashMap<String, List<String>>();
         merge(expected, firstMenuMap);
         merge(expected, secondMenuMap);
         assertEquals(expected.keySet(), menu.getMenus().keySet());
         for (Map.Entry<String, List<String>> entry : expected.entrySet()) {
-            // FIXME: cannot guarantee the sequence of the merge result, check implementation in
-            // MergeableClusterInvoker#invoke
+            // FIXME: cannot guarantee the sequence of the merge result, check implementation in MergeableClusterInvoker#invoke
             List<String> values1 = new ArrayList<String>(entry.getValue());
             List<String> values2 = new ArrayList<String>(menu.getMenus().get(entry.getKey()));
             Collections.sort(values1);
@@ -183,7 +207,7 @@ public class MergeableClusterInvokerTest {
         given(invocation.getParameterTypes()).willReturn(
                 new Class<?>[]{String.class, List.class});
         given(invocation.getArguments()).willReturn(new Object[]{menu, menuItems})
-                ;
+                ;// todo need pr 这里的；可以去掉
         given(invocation.getObjectAttachments()).willReturn(new HashMap<>())
                 ;
         given(invocation.getInvoker()).willReturn(firstInvoker);
@@ -210,13 +234,15 @@ public class MergeableClusterInvokerTest {
             }
         });
         given(directory.getUrl()).willReturn(url);
+        // 注意这里的consumerUrl没有添加merger参数，会走MergeableClusterInvoker#doInvoke的merger为空逻辑（逻辑就是 循环对每个可用的invoker发起调用，谁成功就直接返回，谁失败直接抛异常，结束循环）
         given(directory.getConsumerUrl()).willReturn(url);
-        given(directory.getConsumerUrl()).willReturn(url);
+        given(directory.getConsumerUrl()).willReturn(url);// todo need pr 重复
         given(directory.getInterface()).willReturn(MenuService.class);
 
         mergeableClusterInvoker = new MergeableClusterInvoker<MenuService>(directory);
 
         Result result = mergeableClusterInvoker.invoke(invocation);
+        // 返回的result就是前面的new AppResponse()，其value部分为null
         Assertions.assertNull(result.getValue());
 
     }

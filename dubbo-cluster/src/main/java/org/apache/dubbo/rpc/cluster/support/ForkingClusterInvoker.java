@@ -55,7 +55,8 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
      * Use {@link NamedInternalThreadFactory} to produce {@link org.apache.dubbo.common.threadlocal.InternalThread}
      * which with the use of {@link org.apache.dubbo.common.threadlocal.InternalThreadLocal} in {@link RpcContext}.
      */
-    private final ExecutorService executor = Executors.newCachedThreadPool( // 使用该线程的原因是，需要为每个invoker调用都指派一个线程去执行
+    // 使用该线程的原因是，需要为每个invoker调用都指派一个线程去执行
+    private final ExecutorService executor = Executors.newCachedThreadPool(
             new NamedInternalThreadFactory("forking-cluster-timer", true));
 
     public ForkingClusterInvoker(Directory<T> directory) {

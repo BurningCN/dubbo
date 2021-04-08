@@ -114,6 +114,7 @@ public /**final**/ class RpcException extends RuntimeException {
     }
 
     public boolean isNoInvokerAvailableAfterFilter() {
+        // 注意这个code的赋值处
         return code == NO_INVOKER_AVAILABLE_AFTER_FILTER;
     }
 

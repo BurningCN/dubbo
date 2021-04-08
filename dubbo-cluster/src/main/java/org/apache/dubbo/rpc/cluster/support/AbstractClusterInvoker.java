@@ -258,6 +258,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected, boolean availablecheck) throws RpcException {
 
         //Allocating one in advance, this list is certain to be used. 提前分配一个，这个列表肯定会被使用。
+        // 这里预设长度之所以为-1的原因是因为（个人猜测），doSelect里面调用lb.select方法返回的invoker是不行才会进reSelect的，所以这里肯定会少一个
         List<Invoker<T>> reselectInvokers = new ArrayList<>(
                 invokers.size() > 1 ? (invokers.size() - 1) : invokers.size());
 
@@ -283,6 +284,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
         // 这里从 selected 列表中查找可用的 Invoker，并将其添加到 reselectInvokers 集合中
         if (selected != null) {
             for (Invoker<T> invoker : selected) {
+                // 这里不会先进行 availablecheck &&的判断
                 if ((invoker.isAvailable())
                         && !reselectInvokers.contains(invoker)) {
                     reselectInvokers.add(invoker);
