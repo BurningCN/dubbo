@@ -86,7 +86,7 @@ final public class MockInvoker<T> implements Invoker<T> {
 
             // 进去 判断是否是数字
         } else if (StringUtils.isNumeric(mock, false)) {
-            value = JSON.parse(mock);
+            value = JSON.parse(mock); // 注意parson和下面的parseObject
         } else if (mock.startsWith("{")) {
             // 识别为json，转化为 map
             value = JSON.parseObject(mock, Map.class);
@@ -94,6 +94,7 @@ final public class MockInvoker<T> implements Invoker<T> {
             // 识别为json，转化为 list
             value = JSON.parseObject(mock, List.class);
         } else {
+            // 字符串类型直接赋值
             value = mock;
         }
         if (ArrayUtils.isNotEmpty(returnTypes)) {
@@ -107,7 +108,7 @@ final public class MockInvoker<T> implements Invoker<T> {
         if (invocation instanceof RpcInvocation) {
             ((RpcInvocation) invocation).setInvoker(this);
         }
-        String mock = null;
+        String mock = null; // todo need pr下面两个if直接可以换成  mock = getUrl().getMethodParameter(invocation.getMethodName(), MOCK_KEY);
         // url?test.async=true，test就是方法，url.valueOf会保存在parameterMethod map 中:test:{async:true}},{},{}
         if (getUrl().hasMethodParameter(invocation.getMethodName())) {
             // 取值，上面的例子就是返回true  ---- 取值处1
@@ -145,6 +146,7 @@ final public class MockInvoker<T> implements Invoker<T> {
         } else if (mock.startsWith(THROW_PREFIX)) {
             mock = mock.substring(THROW_PREFIX.length()).trim();
             if (StringUtils.isBlank(mock)) {
+                // service degradation就是服务降级的意思
                 throw new RpcException("mocked exception for service degradation.");
             } else { // user customized class
                 Throwable t = getThrowable(mock);
@@ -161,6 +163,7 @@ final public class MockInvoker<T> implements Invoker<T> {
         }
     }
 
+    // throwstr是自定义异常的全限定名称（字符串表示）
     public static Throwable getThrowable(String throwstr) {
         Throwable throwable = THROWABLE_MAP.get(throwstr);
         if (throwable != null) {
@@ -216,6 +219,7 @@ final public class MockInvoker<T> implements Invoker<T> {
             mockClass = ReflectUtils.forName(mockService);
         } catch (Exception e) {
             if (!isDefault) {// does not check Spring bean if it is default config.
+                // 从实例工厂找
                 ExtensionFactory extensionFactory =
                         ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension();
                 Object obj = extensionFactory.getExtension(serviceType, mockService);
@@ -261,7 +265,7 @@ final public class MockInvoker<T> implements Invoker<T> {
      */
     public static String normalizeMock(String mock) {
         if (mock == null) {
-            return mock;
+            return null;
         }
 
         mock = mock.trim();
@@ -270,7 +274,7 @@ final public class MockInvoker<T> implements Invoker<T> {
             return mock;
         }
 
-        if (RETURN_KEY.equalsIgnoreCase(mock)) {
+        if (RETURN_KEY.equalsIgnoreCase(mock)) { // 如果只有"return"，拼一个null
             return RETURN_PREFIX + "null";
         }
 
@@ -278,14 +282,15 @@ final public class MockInvoker<T> implements Invoker<T> {
             return "default";
         }
 
-        if (mock.startsWith(FAIL_PREFIX)) {
+        if (mock.startsWith(FAIL_PREFIX)) { // "fail:"
             mock = mock.substring(FAIL_PREFIX.length()).trim();
         }
 
-        if (mock.startsWith(FORCE_PREFIX)) {
+        if (mock.startsWith(FORCE_PREFIX)) { // "force:"
             mock = mock.substring(FORCE_PREFIX.length()).trim();
         }
 
+        // "return "
         if (mock.startsWith(RETURN_PREFIX) || mock.startsWith(THROW_PREFIX)) {
             mock = mock.replace('`', '"');
         }

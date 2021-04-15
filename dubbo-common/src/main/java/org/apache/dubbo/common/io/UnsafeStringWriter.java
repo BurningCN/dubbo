@@ -23,9 +23,11 @@ import java.io.Writer;
  * Thread-unsafe StringWriter.
  */
 public class UnsafeStringWriter extends Writer {
+    // 都委托给这个了
     private StringBuilder mBuffer;
 
     public UnsafeStringWriter() {
+        // 注意这里的lock 是Writer类的属性，还有这种连等的写法
         lock = mBuffer = new StringBuilder();
     }
 
@@ -47,6 +49,7 @@ public class UnsafeStringWriter extends Writer {
         mBuffer.append(cs, 0, cs.length);
     }
 
+    // 这个是必须重写的（调用的相关方法可以传入字符串、字符数组、字符序列）
     @Override
     public void write(char[] cs, int off, int len) throws IOException {
         if ((off < 0) || (off > cs.length) || (len < 0) ||
@@ -69,9 +72,12 @@ public class UnsafeStringWriter extends Writer {
         mBuffer.append(str, off, off + len);
     }
 
+    // write的重载方法传入的都是字符串，append的重载...都是字符序列CharSequence
+    // 且后者实际调用的还是write方法
     @Override
     public Writer append(CharSequence csq) {
         if (csq == null) {
+            // 调用write方法
             write("null");
         } else {
             write(csq.toString());
@@ -81,6 +87,7 @@ public class UnsafeStringWriter extends Writer {
 
     @Override
     public Writer append(CharSequence csq, int start, int end) {
+        // 保存"null"
         CharSequence cs = (csq == null ? "null" : csq);
         write(cs.subSequence(start, end).toString());
         return this;

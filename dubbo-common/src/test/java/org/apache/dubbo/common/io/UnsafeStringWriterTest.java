@@ -30,8 +30,8 @@ public class UnsafeStringWriterTest {
         UnsafeStringWriter writer = new UnsafeStringWriter();
         writer.write("a");
         writer.write("abc", 1, 1);
-        writer.write(99);
-        writer.flush();
+        writer.write(99); // 99的字符表示为c
+        writer.flush();// 内部空操作
         writer.close();
 
         assertThat(writer.toString(), is("abc"));
@@ -48,7 +48,7 @@ public class UnsafeStringWriterTest {
     public void testAppend() {
         UnsafeStringWriter writer = new UnsafeStringWriter();
         writer.append("a");
-        writer.append("abc", 1, 2);
+        writer.append("abc", 1, 2);// 不包含index=2
         writer.append('c');
         writer.flush();
         writer.close();

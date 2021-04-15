@@ -61,6 +61,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
     // 缓存 注册中心对象使用  key就是注册中心url的一个toServiceString， value是注册中心对象
     protected static final Map<String, Registry> REGISTRIES = new HashMap<>();
 
+    // todo need pr 这里大写比较好
     private static final AtomicBoolean destroyed = new AtomicBoolean(false);
 
     /**

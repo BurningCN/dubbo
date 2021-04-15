@@ -34,9 +34,9 @@ public interface RegistryService {
      * <p>
      * Registering is required to support the contract:<br>
      * 1. When the URL sets the check=false parameter. When the registration fails, the exception is not thrown and retried in the background. Otherwise, the exception will be thrown.<br>
-     * 2. When URL sets the dynamic=false parameter, it needs to be stored persistently, otherwise, it should be deleted automatically when the registrant has an abnormal exit.<br>
+     * 2. When URL sets the dynamic=false parameter, it needs to be stored persistently, otherwise, it should be deleted automatically when the registrant（n. 登记者，注册人） has an abnormal exit.<br>
      * 3. When the URL sets category=routers, it means classified storage, the default category is providers, and the data can be notified by the classified section. <br>
-     * 4. When the registry is restarted, network jitter, data can not be lost, including automatically deleting data from the broken line.<br>
+     * 4. When the registry is restarted, network jitter, data can not be lost, including automatically deleting data from the broken line（断线）.<br>
      * 5. Allow URLs which have the same URL but different parameters to coexist,they can't cover each other.<br>
      *
      * @param url  Registration information , is not allowed to be empty, e.g: dubbo://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
@@ -44,12 +44,12 @@ public interface RegistryService {
 
     /**
      *
-     *注册数据，如:提供商服务、消费者地址、路由规则、覆盖规则等数据。
+     *注册数据，如:provider service, consumer address, route rule, override rule and other data.
      * < p >
-     *注册需要支持合同:<br>
-     * 1。当URL设置check=false参数时。当注册失败时，异常不会被抛出并在后台重试。否则，将抛出异常。<br>
-     * 2。URL设置动态= false参数时,需要持久地存储,否则,应自动删除当注册人异常退出。< br >
-     * 3。当URL设置category=路由器时，它表示分类存储，默认的类别是提供者，数据可以由分类部分通知。< br >
+     *注册需要支持规约:<br>
+     * 1。当URL设置check=false参数时。当注册失败时，不会抛出异常且在后台重试。否则，将抛出异常。<br>
+     * 2。URL设置dynamic=false参数时,需要持久地存储,否则,registrant应自动删除当注册异常退出。< br >
+     * 3。当URL设置category=routers时，它表示分类存储，默认的类别是providers，数据可以由分类器进行通知。< br >
      * 4。当注册表重新启动时，网络抖动，数据不能丢失，包括自动从折线中删除数据。<br>
      * 5。允许具有相同URL但不同参数的URL共存，它们不能相互覆盖
      *
@@ -79,7 +79,8 @@ public interface RegistryService {
     void unregister(URL url);
 
     /**
-     * Subscribe to eligible registered data and automatically push when the registered data is changed.
+     * Subscribe to eligible（符合条件的） registered data and automatically push when the registered data is changed.
+     * 订阅符合条件的注册数据，并在注册数据发生更改时自动推送。
      * <p>
      * Subscribing need to support contracts:<br>
      * 1. When the URL sets the check=false parameter. When the registration fails, the exception is not thrown and retried in the background. <br>
@@ -94,16 +95,14 @@ public interface RegistryService {
      * @param listener A listener of the change event, not allowed to be empty
      */
     /**
-     * 订阅服务.
-     *
      * 订阅需处理契约：<br>
      * 1. 当URL设置了check=false时，订阅失败后不报错，在后台定时重试。<br>
-     * 2. 当URL设置了category=overrides，只通知指定分类的数据，多个分类用逗号分隔，并允许星号通配，表示订阅所有分类数据。<br>
+     * 2. 当URL设置了category=routers，只通知指定分类的数据，多个分类用逗号分隔，并允许星号通配，表示订阅所有分类数据。<br>
      * 3. 允许以interface,group,version,classifier作为条件查询，如：interface=com.alibaba.foo.BarService&version=1.0.0<br>
      * 4. 并且查询条件允许星号通配，订阅所有接口的所有分组的所有版本，或：interface=*&group=*&version=*&classifier=*<br>
      * 5. 当注册中心重启，网络抖动，需自动恢复订阅请求。<br>
      * 6. 允许URI相同但参数不同的URL并存，不能覆盖。<br>
-     * 7. 必须阻塞订阅过程，等第一次通知完后再返回。<br>
+     * 7. 必须阻塞订阅过程，等第一次通知完后再返回。<br> ----> 注意这句话非常重要， 订阅内部最后一定会调用notify
      *
      * @param url 订阅条件，不允许为空，如：consumer://10.20.153.10/com.alibaba.foo.BarService?version=1.0.0&application=kylin
      * @param listener 变更事件监听器，不允许为空

@@ -216,23 +216,25 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             logger.info("URL " + url + " will not be registered to Registry. Registry " + url + " does not accept service of this protocol type.");
             return;
         }
-        // 进去
+        // 注册到内存先 进去
         super.register(url);
         // 移除正在重试的（如果有的话），进去
         removeFailedRegistered(url);
         removeFailedUnregistered(url);
 
         try {
-            // 模板方法，由子类实现
+            // 实际的注册，比如注册到zk，模板方法，由子类实现
             // Sending a registration request to the server side
             doRegister(url);
         } catch (Exception e) {
             Throwable t = e;
-            // 获取 check 参数，若 check = true 将会直接抛出异常
+            // 获取 check 参数，若 check = true 将会直接抛出异常（url或者registryURL任一含有check参数）
+            // 如果要注册的url不是consumer://协议，那么check = true。也是要抛异常的，这就说明注册的只能是consumer://协议
             // If the startup detection is opened, the Exception is thrown directly.
             boolean check = getUrl().getParameter(Constants.CHECK_KEY, true)
                     && url.getParameter(Constants.CHECK_KEY, true)
                     && !CONSUMER_PROTOCOL.equals(url.getProtocol());
+            // 跳过failback，即不要重试，给我抛异常
             boolean skipFailback = t instanceof SkipFailbackWrapperException;
             if (check || skipFailback) {
                 if (skipFailback) {
@@ -322,18 +324,23 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         removeFailedSubscribed(url, listener);// 进去
         try {
             // Sending a subscription request to the server side 向服务器端发送订阅请求
-            doSubscribe(url, listener);// 进去，doSubscribe是抽象方法，子类实现，看zk的
+            // 进去，doSubscribe是抽象方法，子类实现，看zk的
+            doSubscribe(url, listener);
         } catch (Exception e) {
             Throwable t = e;
-            // 进去
+            // 这是和其他三个方法的特殊之处 进去
             List<URL> urls = getCacheUrls(url);
             if (CollectionUtils.isNotEmpty(urls)) {
+                // 注意订阅后必须发起notify，这是异常情况下的通知，前面doSubscribe内部实现也会notify
                 notify(url, listener, urls);
                 logger.error("Failed to subscribe " + url + ", Using cached list: " + urls + " from cache file: "
                         + getUrl().getParameter(FILE_KEY, System.getProperty("user.home")
                         + "/dubbo-registry-" + url.getHost() + ".cache") + ", cause: " + t.getMessage(), t);
             } else {
+                // 如果前面的urls为空，那么就需要走正常的Failback重试逻辑
+
                 // If the startup detection is opened, the Exception is thrown directly.
+                // 这里没有对consume://协议的判定
                 boolean check = getUrl().getParameter(Constants.CHECK_KEY, true)
                         && url.getParameter(Constants.CHECK_KEY, true);
                 boolean skipFailback = t instanceof SkipFailbackWrapperException;
@@ -347,7 +354,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
                 }
             }
 
-            // Record a failed registration request to a failed list, retry regularly
+            // Record a failed registration request to a failed list, retry regularly（定期重试，定期地；有规律地；整齐地；匀称地）
             addFailedSubscribed(url, listener);
         }
     }
@@ -364,6 +371,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             Throwable t = e;
 
             // If the startup detection is opened, the Exception is thrown directly.
+            // 这里没有对consume://协议的判定
             boolean check = getUrl().getParameter(Constants.CHECK_KEY, true)
                     && url.getParameter(Constants.CHECK_KEY, true);
             boolean skipFailback = t instanceof SkipFailbackWrapperException;
@@ -409,12 +417,13 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     @Override
     protected void recover() throws Exception {
         // register
-        Set<URL> recoverRegistered = new HashSet<URL>(getRegistered());
+        Set<URL> recoverRegistered = new HashSet<>(getRegistered());
         if (!recoverRegistered.isEmpty()) {
             if (logger.isInfoEnabled()) {
                 logger.info("Recover register url " + recoverRegistered);
             }
             for (URL url : recoverRegistered) {
+                // 只有这个和父类不同，其他逻辑和父类一模一样
                 addFailedRegistered(url);
             }
         }
@@ -427,6 +436,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             for (Map.Entry<URL, Set<NotifyListener>> entry : recoverSubscribed.entrySet()) {
                 URL url = entry.getKey();
                 for (NotifyListener listener : entry.getValue()) {
+                    // 只有这个和父类不同，其他逻辑和父类一模一样
                     addFailedSubscribed(url, listener);
                 }
             }

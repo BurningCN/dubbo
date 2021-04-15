@@ -140,7 +140,7 @@ public class CuratorZookeeperClientTest {
     @Test
     public void testCreateExistingPath() {
         curatorClient.create("/pathOne", false);
-        // 进去
+        // 进去，会从缓存取
         curatorClient.create("/pathOne", false);
     }
 

@@ -41,6 +41,9 @@ import static org.mockito.Mockito.mock;
 @SuppressWarnings("unchecked")
 public class StickyTest {
 
+    // 不知道干嘛的这个测试类
+
+
     private List<Invoker<StickyTest>> invokers = new ArrayList<Invoker<StickyTest>>();
 
 
@@ -52,6 +55,7 @@ public class StickyTest {
     private StickyClusterInvoker<StickyTest> clusterinvoker = null;
     private URL url = URL.valueOf("test://test:11/test?"
                     + "&loadbalance=roundrobin"
+                    // 注意该参数
                     + "&" + CLUSTER_STICKY_KEY + "=true"
     );
     private int runs = 1;
@@ -113,7 +117,7 @@ public class StickyTest {
     public int testSticky(String methodName, boolean check) {
         if (methodName == null) {
             url = url.addParameter(CLUSTER_STICKY_KEY, String.valueOf(check));
-        } else {
+        } else { // 跟方法添加sticky参数值，比如 test.sticky={check}
             url = url.addParameter(methodName + "." + CLUSTER_STICKY_KEY, String.valueOf(check));
         }
 

@@ -70,11 +70,13 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
                     // 返回的可能是多个地址 eg:127.0.0.1:2181,127.0.0.1:65487,127.0.0.1:65483，进去
                     .connectString(url.getBackupAddress())
+                    // 重试策略，RetryNTimes，间隔1s重试，最大重试1次
                     .retryPolicy(new RetryNTimes(1, 1000))
                     .connectionTimeoutMs(timeout)
                     .sessionTimeoutMs(sessionExpireMs);
             // eg: "us1:pw1" ，就是用户名密码，URL.valueOf("zk://us1:pw1@ip:port")
             String authority = url.getAuthority();
+            // todo need pr 可以用StringUtils
             if (authority != null && authority.length() > 0) {
                 builder = builder.authorization("digest", authority.getBytes());
             }
@@ -140,6 +142,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
     protected void createPersistent(String path, String data) {
         byte[] dataBytes = data.getBytes(CHARSET);
         try {
+            // 默认就是持久的节点，不需要像前面那样加withMode
             client.create().forPath(path, dataBytes);
         } catch (NodeExistsException e) {
             try {
@@ -179,6 +182,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         }
     }
 
+    // 注意仅仅拿到子节点本身名称，不会是全路径
     @Override
     public List<String> getChildren(String path) {
         try {
@@ -299,12 +303,14 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         private volatile DataListener dataListener;
         private String path;
 
+
         public CuratorWatcherImpl(CuratorFramework client, ChildListener listener, String path) {
             this.client = client;
             this.childListener = listener;
             this.path = path;
         }
 
+        // todo need pr client参数没有用
         public CuratorWatcherImpl(CuratorFramework client, DataListener dataListener) {
             this.dataListener = dataListener;
         }
@@ -316,7 +322,8 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             this.childListener = null;
         }
 
-        @Override
+
+        // CuratorWatcher接口的方法
         public void process(WatchedEvent event) throws Exception {
             // if client connect or disconnect to server, zookeeper will queue
             // watched event(Watcher.Event.EventType.None, .., path = null).
@@ -325,11 +332,12 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             }
 
             if (childListener != null) {
-                // 调用业务方指定的回调，第二个参数是取path下的所有子节点
+                // 调用业务方指定的回调，第二个参数是取path下的所有子节点，注意usingWatcher(this)需要重复注册
                 childListener.childChanged(path, client.getChildren().usingWatcher(this).forPath(path));
             }
         }
 
+        // TreeCacheListener 接口的方法
         @Override
         public void childEvent(CuratorFramework client, TreeCacheEvent event) throws Exception {
             if (dataListener != null) {

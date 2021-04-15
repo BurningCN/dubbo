@@ -1091,6 +1091,7 @@ class URL implements Serializable {
     }
 
     public boolean isAnyHost() {
+        // host为0.0.0.0 或者 含有anyhost=true参数
         return ANYHOST_VALUE.equals(host) || getParameter(ANYHOST_KEY, false);
     }
 

@@ -1072,7 +1072,7 @@ public final class ReflectUtils {
             return false;
         }
         if (returnType == char.class || returnType == Character.class) {
-            return '\0';
+            return '\0'; // 注意
         }
         if (returnType == byte.class || returnType == Byte.class) {
             return (byte) 0;
@@ -1084,17 +1084,19 @@ public final class ReflectUtils {
             return 0;
         }
         if (returnType == long.class || returnType == Long.class) {
-            return 0L;
+            return 0L; // 注意
         }
         if (returnType == float.class || returnType == Float.class) {
-            return 0F;
+            return 0F; // 注意
         }
         if (returnType == double.class || returnType == Double.class) {
-            return 0D;
+            return 0D; // 注意
         }
+        // 注意
         if (returnType.isArray()) {
             return Array.newInstance(returnType.getComponentType(), 0);
         }
+        // 注意
         if (returnType.isAssignableFrom(ArrayList.class)) {
             return new ArrayList<>(0);
         }
@@ -1107,23 +1109,29 @@ public final class ReflectUtils {
         if (String.class.equals(returnType)) {
             return "";
         }
+        // 注意
         if (returnType.isInterface()) {
             return null;
         }
 
+        // 其他类型。引用类型
         try {
+            // 搞一个缓存的作用是这样的：当前类和父类有相同类型的字段，那么就不需要重新生成了，直接从缓存取（不过该缓存不存基本类型（上面遇到的））
             Object value = emptyInstances.get(returnType);
             if (value == null) {
                 value = returnType.newInstance();
                 emptyInstances.put(returnType, value);
             }
             Class<?> cls = value.getClass();
+
+            // 下面两重循环的作用就是给这个类的属性包括该类的父类的属性、父类的父类的属性...所有有属性的地方都生成默认值/空值（默认值的生成规则就是递归调用getEmptyObject方法）
             while (cls != null && cls != Object.class) {
                 Field[] fields = cls.getDeclaredFields();
                 for (Field field : fields) {
                     if (field.isSynthetic()) {
                         continue;
                     }
+                    // 比如对应测试程序EmptyClass的一个字段为EmptyProperty，进行递归
                     Object property = getEmptyObject(field.getType(), emptyInstances, level + 1);
                     if (property != null) {
                         try {
@@ -1135,6 +1143,7 @@ public final class ReflectUtils {
                         }
                     }
                 }
+                // 递归父类
                 cls = cls.getSuperclass();
             }
             return value;

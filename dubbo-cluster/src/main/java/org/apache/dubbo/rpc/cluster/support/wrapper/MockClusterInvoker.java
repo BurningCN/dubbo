@@ -86,7 +86,7 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
     // 用户文档-用法示例-服务降级.md
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
-        Result result = null;
+        Result result;
 
         // 获取 mock 配置值
         String value = getUrl().getMethodParameter(invocation.getMethodName(), MOCK_KEY, Boolean.FALSE.toString()).trim();
@@ -103,7 +103,8 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
         } else {
             // fail:xxx 表示消费方对调用服务失败后，再执行 mock 逻辑，不抛出异常
             try {
-                // 调用其他 Invoker 对象的 invoke 方法
+                // 调用其他 Invoker 对象的 invoke 方法，该invoker为AbstractClusterInvoker，比如FailoverClusterInvoker，
+                // 且注意AbstractClusterInvoker#invoke方法内部在list的时候只会筛选出不含有mock协议的invoker
                 result = this.invoker.invoke(invocation);
 
                 //fix:#4585
@@ -139,8 +140,10 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
         Result result = null;
         Invoker<T> minvoker;
 
+        // 筛选出 MockInvoker类型的那些invokers（用户可能提前塞到了dir）
         List<Invoker<T>> mockInvokers = selectMockInvoker(invocation);
         if (CollectionUtils.isEmpty(mockInvokers)) {
+            // 如果没有，现new
             minvoker = (Invoker<T>) new MockInvoker(getUrl(), directory.getInterface());
         } else {
             minvoker = mockInvokers.get(0);
@@ -159,6 +162,7 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
         return result;
     }
 
+    // 注意一个是本类invoke方法产生的异常。一个是MockInvoker#invoke发生的异常
     private String getMockExceptionMessage(Throwable t, Throwable mt) {
         String msg = "mock error : " + mt.getMessage();
         if (t != null) {
@@ -172,7 +176,10 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
      * Contract：
      * directory.list() will return a list of normal invokers if Constants.INVOCATION_NEED_MOCK is present in invocation, otherwise, a list of mock invokers will return.
      * if directory.list() returns more than one mock invoker, only one of them will be used.
-     *
+     * 返回MockInvoker
+     * 合同:
+     * 如果调用中出现 "invocation.need.mock" ，则directory.list()将返回普通调用者列表，否则，将返回模拟调用者列表。
+     * 如果directory.list()返回多个模拟调用程序，则只会使用其中一个。
      * @param invocation
      * @return
      */
@@ -181,9 +188,11 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
         //TODO generic invoker？
         if (invocation instanceof RpcInvocation) {
             //Note the implicit contract (although the description is added to the interface declaration, but extensibility is a problem. The practice placed in the attachment needs to be improved)
-            ((RpcInvocation) invocation).setAttachment(INVOCATION_NEED_MOCK, Boolean.TRUE.toString());
+            invocation.setAttachment(INVOCATION_NEED_MOCK, Boolean.TRUE.toString());
             //directory will return a list of normal invokers if Constants.INVOCATION_NEED_MOCK is present in invocation, otherwise, a list of mock invokers will return.
             try {
+                // list内部有一个MockInvokerSelector router，其发现inv含有INVOCATION_NEED_MOCK = true的时候（上一步我们故意加上此参数）
+                // 则会选出那些mock://协议的MockInvoker
                 invokers = directory.list(invocation);
             } catch (RpcException e) {
                 if (logger.isInfoEnabled()) {

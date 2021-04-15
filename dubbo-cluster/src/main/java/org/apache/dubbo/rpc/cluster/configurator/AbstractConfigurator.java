@@ -156,7 +156,7 @@ public abstract class AbstractConfigurator implements Configurator {
                     conditionKeys.add(CONFIG_VERSION_KEY);
                     conditionKeys.add(COMPATIBLE_CONFIG_KEY);
                     conditionKeys.add(INTERFACES);
-                    // todo need pr 1.上面集合的填充处可以完全放在下面的for循环后面，防止下面for循环内部if直接return，导致无效add。2.还有一点就是下面Application的判定前面已经判断了，可以直接去除
+                    // todo need pr-pr 1.上面集合的填充处可以完全放在下面的for循环后面，防止下面for循环内部if直接return，导致无效add。2.还有一点就是下面Application的判定前面已经判断了，可以直接去除
                     for (Map.Entry<String, String> entry : configuratorUrl.getParameters().entrySet()) {
                         String key = entry.getKey();
                         String value = entry.getValue();

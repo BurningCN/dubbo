@@ -105,31 +105,38 @@ public class MockInvokerTest {
         RpcInvocation invocation = new RpcInvocation();
         invocation.setMethodName("getSomething");
         Assertions.assertThrows(RpcException.class,
-                // 进去
+                // 进去 抛异常是因为mock值只是throw，后面没有异常的全限定名称，内部判断为空直接抛异常
                 () -> mockInvoker.invoke(invocation));
     }
 
     @Test
     public void testGetThrowable() {
         Assertions.assertThrows(RpcException.class,
-                // 进去，内部加载这个throwstr加载不到，抛异常
+                // 进去，内部加载这个throwstr加载不到，抛异常，把这个变成"java.lang.Exception"就没有问题了
                 () -> MockInvoker.getThrowable("Exception.class"));
+
+
+
     }
 
     @Test
     public void testGetMockObject() {
+        // getMockObject方法的第一个参数为mock值，代表的是某个类的全兴定名称（第二个参数的子类）
         Assertions.assertEquals("",
                 // 进去
                 MockInvoker.getMockObject("java.lang.String", String.class));
 
         Assertions.assertThrows(IllegalStateException.class, () -> MockInvoker
-                .getMockObject("true", String.class));
+                .getMockObject("true", String.class)); // true在内部识别为default，不过没有java.lang.StringMock子类
+
         Assertions.assertThrows(IllegalStateException.class, () -> MockInvoker
-                .getMockObject("default", String.class));
+                .getMockObject("default", String.class));// 同上
+
         Assertions.assertThrows(IllegalStateException.class, () -> MockInvoker
-                .getMockObject("java.lang.String", Integer.class));
+                .getMockObject("java.lang.String", Integer.class));// 不满足isAssignableFrom
+
         Assertions.assertThrows(IllegalStateException.class, () -> MockInvoker
-                .getMockObject("java.io.Serializable", Serializable.class));
+                .getMockObject("java.io.Serializable", Serializable.class)); // 满足isAssignableFrom，不过这个接口没有构造方法，mockClass.newInstance();失败
     }
 
     @Test

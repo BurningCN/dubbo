@@ -59,23 +59,29 @@ public class MockClusterInvokerTest {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName());
         url = url.addParameter(MOCK_KEY, "fail")
                 .addParameter(REFER_KEY, URL.encode(PATH_KEY + "=" + IHelloService.class.getName()));
+
         Invoker<IHelloService> cluster = getClusterInvoker(url);// 进去
+
         URL mockUrl = URL.valueOf("mock://localhost/" + IHelloService.class.getName()
                 + "?getSomething.mock=return aa");
-
         Protocol protocol = new MockProtocol();
+        // 内部生成MockInvoker
         Invoker<IHelloService> mInvoker1 = protocol.refer(IHelloService.class, mockUrl);
         invokers.add(mInvoker1);
 
         //Configured with mock
         RpcInvocation invocation = new RpcInvocation();
         invocation.setMethodName("getSomething");
+        // 这里的cluster就是 MockClusterInvoker（注意mock值的来源为 MockClusterInvoker 内部调用dic.getUrl，dic的url在前面getClusterInvoker方法内部构造的）
+        // 且注意invoke能正常调用，不会触发moke
         Result ret = cluster.invoke(invocation);
+        // HelloService#getSomething的返回值就是something
         Assertions.assertEquals("something", ret.getValue());
 
         // If no mock was configured, return null directly
         invocation = new RpcInvocation();
         invocation.setMethodName("sayHello");
+        // HelloService#sayHello没有返回值
         ret = cluster.invoke(invocation);
         Assertions.assertNull(ret.getValue());
     }
@@ -83,11 +89,28 @@ public class MockClusterInvokerTest {
     /**
      * Test if mock policy works fine: fail-mock
      */
+
+    /*
+
+    (1) 首先注意url和mockUrl，url在getClusterInvokerMock中会作为dir的url，且注意两个url的mock参数值是不一样的，getClusterInvokerMock往
+    dir填充了两个invoker，分别是根据两个url生成的，一个是普通的提供者invoker，一个是MockInvoker
+
+    (2) 发起getSomething调用的时候，MockClusterInvoker内部getUrl(dir.getUrl)获取到的mock值为fail:return null，表示先调用，调用失败return null
+    而url是含有invoke_return_error参数的，在getClusterInvokerMock生成的AbstractClusterInvoker#doInvoke会抛异常，这样就会走
+    MockClusterInvoker#doMockInvoke的逻辑，首先给inv添加一个 "invocation.need.mock"参数，这样在dir.list的时候，有一个MockInvokerSelector
+    的router就会从invokers集合中拿到mockUrl生成的MockInvoker实例，其invoke方法，首先从mockUrl拿到getSomething.mock的参数值，是能拿到的，值为
+    return aa，然后截取return后面的aa，且判定getSomething的返回类型为string，所以会转化为String "aa" 作为mock的返回结果。
+
+    (3) 发起getSomething2调用的时候。。。。。逻辑和2一致。。。走到MockInvoker#invoke的时候，mockUrl.getMethodParameter("getSomething2.mock")，
+    url内部处理发现是没有getSomething2.mock参数值的，url内部会再次从url直接获取mock参数值，是有的（注意mockUrl最后addParameters(url.getParameters())），
+    参数值为fail:return null ，经过normalize后 return null
+    */
     @Test
     public void testMockInvokerInvoke_failmock() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
                 .addParameter(MOCK_KEY, "fail:return null")
                 .addParameter(REFER_KEY, URL.encode(PATH_KEY + "=" + IHelloService.class.getName()))
+                // 注意这个参数。该url在 后续调用的getClusterInvokerMock 方法中，会根据此url生成AbstractClusterInvoker，其doInvoke方法判断invoker.geturl含有该参数的话会抛异常
                 .addParameter("invoke_return_error", "true");
         URL mockUrl = URL.valueOf("mock://localhost/" + IHelloService.class.getName()
                 + "?getSomething.mock=return aa").addParameters(url.getParameters());
@@ -119,15 +142,16 @@ public class MockClusterInvokerTest {
     /**
      * Test if mock policy works fine: force-mock
      */
+    // 大部分逻辑参考第二段测试程序上的注释
     @Test
     public void testMockInvokerInvoke_forcemock() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName());
-        url = url.addParameter(MOCK_KEY, "force:return null")
+        url = url.addParameter(MOCK_KEY, "force:return null")// 注意
                 .addParameter(REFER_KEY, URL.encode(PATH_KEY + "=" + IHelloService.class.getName()));
 
         URL mockUrl = URL.valueOf("mock://localhost/" + IHelloService.class.getName()
                 + "?getSomething.mock=return aa&getSomething3xx.mock=return xx")
-                .addParameters(url.getParameters());
+                .addParameters(url.getParameters());// 注意url.getParameters()，重点是想要force:return null
 
         Protocol protocol = new MockProtocol();
         Invoker<IHelloService> mInvoker1 = protocol.refer(IHelloService.class, mockUrl);
@@ -136,6 +160,7 @@ public class MockClusterInvokerTest {
         //Configured with mock
         RpcInvocation invocation = new RpcInvocation();
         invocation.setMethodName("getSomething");
+        // 前面url的mock为force:xx，则直接走mock逻辑
         Result ret = cluster.invoke(invocation);
         Assertions.assertEquals("aa", ret.getValue());
 
@@ -160,7 +185,7 @@ public class MockClusterInvokerTest {
 
         Invoker<IHelloService> cluster = getClusterInvoker(url);
         URL mockUrl = URL.valueOf("mock://localhost/" + IHelloService.class.getName()
-                + "?getSomething.mock=return aa&getSomething3xx.mock=return xx&sayHello.mock=return ")
+                + "?getSomething.mock=return aa&getSomething3xx.mock=return xx&sayHello.mock=return ")// 注意这里的sayHello.mock=return
                 .addParameters(url.getParameters());
 
         Protocol protocol = new MockProtocol();
@@ -186,18 +211,24 @@ public class MockClusterInvokerTest {
         //Configured with mock
         RpcInvocation invocation = new RpcInvocation();
         invocation.setMethodName("getSomething");
+        // 内部会获取getSomething.mock的参数值，如果没有则获取mock参数值，显然是有getSomething.mock参数值的，为"fail:return x"
+        // fail表示目标invoker调用失败才会走mock，但是这里调用是成功的。
         Result ret = cluster.invoke(invocation);
         Assertions.assertEquals("something", ret.getValue());
 
         // If no mock was configured, return null directly
         invocation = new RpcInvocation();
         invocation.setMethodName("getSomething2");
+        // getSomething2.mock为force:xx，表示直接走mock，但是MockClusterInvoker内部dir.list返回的invoker为空（因为前面getClusterInvoker只添加了一个提供者invoker）
+        // 没有像前几个测试程序手动加了MockInvoker，那么MockClusterInvoker内部发现dir.list返回null之后会现场创建一个MockInvoker....
+        // 结果肯定就是y了
         ret = cluster.invoke(invocation);
         Assertions.assertEquals("y", ret.getValue());
 
         // If no mock was configured, return null directly
         invocation = new RpcInvocation();
         invocation.setMethodName("getSomething3");
+        // invoke方法内部没有发现mock参数值，直接调用目标invoker的方法，正常调用，返回something3
         ret = cluster.invoke(invocation);
         Assertions.assertEquals("something3", ret.getValue());
 
@@ -211,12 +242,14 @@ public class MockClusterInvokerTest {
     /**
      * Test if mock policy works fine: fail-mock
      */
+    // 这个测试名称叫做 xxxxWithOutDefault，这句话是啥意思，可以先看下一个测试用例的第一处出现的中文注释
     @Test
     public void testMockInvokerFromOverride_Invoke_Fock_WithOutDefault() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
                 .addParameter("getSomething.mock", "fail:return x")
                 .addParameter("getSomething2.mock", "force:return y")
                 .addParameter(REFER_KEY, URL.encode(PATH_KEY + "=" + IHelloService.class.getName()))
+                // 注意，有这个参数，所有提供者invoker#invoke都会抛异常
                 .addParameter("invoke_return_error", "true");
         Invoker<IHelloService> cluster = getClusterInvoker(url);
         //Configured with mock
@@ -235,6 +268,7 @@ public class MockClusterInvokerTest {
         invocation = new RpcInvocation();
         invocation.setMethodName("getSomething3");
         try {
+            // getSomething3无mock参数值，直接调用目标invoker 的invoke方法，抛异常
             ret = cluster.invoke(invocation);
             Assertions.fail();
         } catch (RpcException e) {
@@ -248,6 +282,7 @@ public class MockClusterInvokerTest {
     @Test
     public void testMockInvokerFromOverride_Invoke_Fock_WithDefault() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
+                // 注意 ，这就是方法名称所说的 WithDefault，除了getSomething、getSomething2方法，其他任何方法的mock策略都是 "fail:return null"
                 .addParameter("mock", "fail:return null")
                 .addParameter("getSomething.mock", "fail:return x")
                 .addParameter("getSomething2.mock", "force:return y")
@@ -285,6 +320,7 @@ public class MockClusterInvokerTest {
     @Test
     public void testMockInvokerFromOverride_Invoke_Fock_WithFailDefault() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
+                // 和前一个测试用例一样，WithFailDefault的，策略如下，fail:return z
                 .addParameter("mock", "fail:return z")
                 .addParameter("getSomething.mock", "fail:return x")
                 .addParameter("getSomething2.mock", "force:return y")
@@ -322,6 +358,7 @@ public class MockClusterInvokerTest {
     @Test
     public void testMockInvokerFromOverride_Invoke_Fock_WithForceDefault() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
+                // 默认的策略为 "force:return z"
                 .addParameter("mock", "force:return z")
                 .addParameter("getSomething.mock", "fail:return x")
                 .addParameter("getSomething2.mock", "force:return y")
@@ -356,6 +393,7 @@ public class MockClusterInvokerTest {
     /**
      * Test if mock policy works fine: fail-mock
      */
+    // 这个不看
     @Test
     public void testMockInvokerFromOverride_Invoke_Fock_Default() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
@@ -402,6 +440,7 @@ public class MockClusterInvokerTest {
         invocation = new RpcInvocation();
         invocation.setMethodName("getSomething3");
         try {
+            // 前面url没有配置mock参数值，直接调用invoker#invoke，抛异常
             ret = cluster.invoke(invocation);
             Assertions.fail("fail invoke");
         } catch (RpcException e) {
@@ -412,9 +451,11 @@ public class MockClusterInvokerTest {
     /**
      * Test if mock policy works fine: fail-mock
      */
+    // 重要！！
     @Test
     public void testMockInvokerFromOverride_Invoke_checkCompatible_ImplMock() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
+                // 注意值为true
                 .addParameter("mock", "true")
                 .addParameter(REFER_KEY, URL.encode(PATH_KEY + "=" + IHelloService.class.getName()))
                 .addParameter("invoke_return_error", "true");
@@ -422,6 +463,8 @@ public class MockClusterInvokerTest {
         //Configured with mock
         RpcInvocation invocation = new RpcInvocation();
         invocation.setMethodName("getSomething");
+        // 因为mock参数值不是null，也不是force:xx，属于 MockClusterInvoker#invoke 的 else逻辑处理部分，最后走MockInvoker#invoke逻辑，发现mock值不是return 开头、不是throw开头，那么就是实现类全限定名称
+        // 且true被normalize为default，MockInvoker#getMockObject会加载 IHelloServiceMock 类 ，正好测试程序是有的，然后调用其getSomething方法，返回somethingmock
         Result ret = cluster.invoke(invocation);
         Assertions.assertEquals("somethingmock", ret.getValue());
     }
@@ -432,6 +475,7 @@ public class MockClusterInvokerTest {
     @Test
     public void testMockInvokerFromOverride_Invoke_checkCompatible_ImplMock2() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
+                // 和上面同理，fail 、true 、force 都会在MockInvoker的normalize转化为default，而default就会调用 （加载了的）ServiceType.getName + "Mock" 类 的 xx方法
                 .addParameter("mock", "fail")
                 .addParameter(REFER_KEY, URL.encode(PATH_KEY + "=" + IHelloService.class.getName()))
                 .addParameter("invoke_return_error", "true");
@@ -450,6 +494,7 @@ public class MockClusterInvokerTest {
     public void testMockInvokerFromOverride_Invoke_checkCompatible_ImplMock3() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
                 .addParameter(REFER_KEY, URL.encode(PATH_KEY + "=" + IHelloService.class.getName()))
+                // 同上
                 .addParameter("mock", "force");
         Invoker<IHelloService> cluster = getClusterInvoker(url);
         //Configured with mock
@@ -459,9 +504,11 @@ public class MockClusterInvokerTest {
         Assertions.assertEquals("somethingmock", ret.getValue());
     }
 
+    // easy
     @Test
     public void testMockInvokerFromOverride_Invoke_check_String() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
+                // 注意
                 .addParameter("getSomething.mock", "force:return 1688")
                 .addParameter(REFER_KEY, URL.encode(PATH_KEY + "=" + IHelloService.class.getName()))
                 .addParameter("invoke_return_error", "true");
@@ -471,9 +518,11 @@ public class MockClusterInvokerTest {
         invocation.setMethodName("getSomething");
         Result ret = cluster.invoke(invocation);
         Assertions.assertTrue(ret.getValue() instanceof String, "result type must be String but was : " + ret.getValue().getClass());
+        // 注意
         Assertions.assertEquals("1688", (String) ret.getValue());
     }
 
+    // 和上面一样，只是检测能否返回值类型为int
     @Test
     public void testMockInvokerFromOverride_Invoke_check_int() {
         URL url = URL.valueOf("remote://1.2.3.4/" + IHelloService.class.getName())
@@ -484,6 +533,7 @@ public class MockClusterInvokerTest {
         //Configured with mock
         RpcInvocation invocation = new RpcInvocation();
         invocation.setMethodName("getInt1");
+        // 因为getInt1方法的返回值为int，MockInvoker则会将1688转化为int（parseMockValue方法中StringUtils.isNumeric(mock, false) + JSON.parse(mock);）
         Result ret = cluster.invoke(invocation);
         Assertions.assertTrue(ret.getValue() instanceof Integer, "result type must be integer but was : " + ret.getValue().getClass());
         Assertions.assertEquals(new Integer(1688), (Integer) ret.getValue());
@@ -498,6 +548,8 @@ public class MockClusterInvokerTest {
         Invoker<IHelloService> cluster = getClusterInvoker(url);
         //Configured with mock
         RpcInvocation invocation = new RpcInvocation();
+        // getBoolean1 和 getBoolean2（下面的测试程序） 分别返回的类型为boolean 和 Boolean，
+        // 不过 MokeInvoker#parseMockValue不会搭理这些，在判定值为"true"或"false"，直接就返回了true或false
         invocation.setMethodName("getBoolean1");
         Result ret = cluster.invoke(invocation);
         Assertions.assertTrue(ret.getValue() instanceof Boolean, "result type must be Boolean but was : " + ret.getValue().getClass());
@@ -528,6 +580,7 @@ public class MockClusterInvokerTest {
         Invoker<IHelloService> cluster = getClusterInvoker(url);
         //Configured with mock
         RpcInvocation invocation = new RpcInvocation();
+        // 看 parseMockValue 对   if ("empty".equals(mock)) {的处理
         invocation.setMethodName("getListString");
         Result ret = cluster.invoke(invocation);
         Assertions.assertEquals(0, ((List<String>) ret.getValue()).size());
@@ -675,16 +728,22 @@ public class MockClusterInvokerTest {
         // As `javassist` have a strict restriction of argument types, request will fail if Invocation do not contains complete parameter type information
         // 由于“javassist”对参数类型有严格的限制，如果调用没有包含完整的参数类型信息，请求将会失败
         final URL durl = url.addParameter("proxy", "jdk");
+
         invokers.clear();
         ProxyFactory proxy = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getExtension("jdk");
         Invoker<IHelloService> invoker1 = proxy.getInvoker(new HelloService(), IHelloService.class, durl);
         invokers.add(invoker1);
+
         if (mockInvoker != null) {
             invokers.add(mockInvoker);
         }
 
-        StaticDirectory<IHelloService> dic = new StaticDirectory<IHelloService>(durl, invokers, null);
+        // dic依赖提供者和routerChain
+        StaticDirectory<IHelloService> dic = new StaticDirectory<>(durl, invokers, null);
         dic.buildRouterChain();
+
+        // AbstractClusterInvoker依赖dic
+        // 这里的AbstractClusterInvoker就是简单的，不像Failover那些比较复杂，其doInvoke策略也很简单，就是两个逻辑（if-else），第二个逻辑筛选第一个提供者发起调用
         AbstractClusterInvoker<IHelloService> cluster = new AbstractClusterInvoker(dic) {
             @Override
             protected Result doInvoke(Invocation invocation, List invokers, LoadBalance loadbalance)
@@ -696,6 +755,7 @@ public class MockClusterInvokerTest {
                 }
             }
         };
+        // MockClusterInvoker依赖dic和其他的AbstractClusterInvoker实例（比如FailoverClusterInvoker）
         return new MockClusterInvoker<IHelloService>(dic, cluster);
     }
 

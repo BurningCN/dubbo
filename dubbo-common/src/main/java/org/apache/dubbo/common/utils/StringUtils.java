@@ -597,13 +597,16 @@ public final class StringUtils {
      */
     public static String toString(Throwable e) {
         UnsafeStringWriter w = new UnsafeStringWriter();
+        // 包装下
         PrintWriter p = new PrintWriter(w);
-        p.print(e.getClass().getName());
+        p.print(e.getClass().getName());// print 1
         if (e.getMessage() != null) {
-            p.print(": " + e.getMessage());
+            p.print(": " + e.getMessage()); // print 2
         }
+        // 换行
         p.println();
         try {
+            // 将堆栈输出到p --- 》 w
             e.printStackTrace(p);
             return w.toString();
         } finally {

@@ -52,6 +52,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
      * @param url
      * @return
      */
+    // 三处使用点 ： 可以看先connect调用处
     @Override
     public ZookeeperClient connect(URL url) {
         ZookeeperClient zookeeperClient;

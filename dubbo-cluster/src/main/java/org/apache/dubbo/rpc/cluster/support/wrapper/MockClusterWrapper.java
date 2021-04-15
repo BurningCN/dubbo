@@ -29,6 +29,7 @@ public class MockClusterWrapper implements Cluster {
 
     private Cluster cluster;
 
+    // set 注入
     public MockClusterWrapper(Cluster cluster) {
         this.cluster = cluster;
     }

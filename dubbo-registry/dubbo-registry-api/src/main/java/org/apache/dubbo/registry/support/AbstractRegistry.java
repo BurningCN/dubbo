@@ -270,7 +270,9 @@ public abstract class AbstractRegistry implements Registry {
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             String key = (String) entry.getKey();
             String value = (String) entry.getValue();
+            // 并不要求url完全匹配，只要ServiceKey一致就行
             if (StringUtils.isNotEmpty(key) && key.equals(url.getServiceKey())
+                    // 开头字符 为小写字符或者为_
                     && (Character.isLetter(key.charAt(0)) || key.charAt(0) == '_')
                     && StringUtils.isNotEmpty(value)) {
                 String[] arr = value.trim().split(URL_SPLIT);
@@ -588,6 +590,7 @@ public abstract class AbstractRegistry implements Registry {
         }
 
         // 不为空，按照,分割，看看协议类型是否支持
+        // 优先建议使用 Arrays.stream ，而不是 Stream.of ，后者内部实际调用的还是前者
         return Arrays.stream(COMMA_SPLIT_PATTERN.split(pattern))
                 .anyMatch(p -> p.equalsIgnoreCase(urlToRegistry.getProtocol()));
     }

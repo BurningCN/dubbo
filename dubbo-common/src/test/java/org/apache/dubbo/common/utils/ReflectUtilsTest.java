@@ -420,6 +420,9 @@ public class ReflectUtilsTest {
 
     @Test
     public void testGetEmptyObject() throws Exception {
+
+        // getEmptyObject传入的参数都是返回值类型
+
         assertTrue(ReflectUtils.getEmptyObject(Collection.class) instanceof Collection);
         assertTrue(ReflectUtils.getEmptyObject(List.class) instanceof List);
         assertTrue(ReflectUtils.getEmptyObject(Set.class) instanceof Set);
@@ -434,6 +437,9 @@ public class ReflectUtilsTest {
         assertEquals(ReflectUtils.getEmptyObject(double.class), (double) 0);
         assertEquals(ReflectUtils.getEmptyObject(char.class), '\0');
         assertEquals(ReflectUtils.getEmptyObject(boolean.class), Boolean.FALSE);
+
+        // 以上是基本类型，比较简单，看下面这个EmptyClass
+
         EmptyClass object = (EmptyClass) ReflectUtils.getEmptyObject(EmptyClass.class);
         assertNotNull(object);
         assertNotNull(object.getProperty());

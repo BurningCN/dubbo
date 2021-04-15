@@ -73,8 +73,10 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     private final ZookeeperClient zkClient;
 
+    // 这里的url为registryURL
     public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
         super(url);
+        // todo need pr 下面这个判断应该放在super上面，但是！因为super的语法限定必须在第一行，so..
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
@@ -93,10 +95,12 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 logger.warn("Trying to fetch the latest urls, in case there're provider changes during connection loss.\n" +
                         " Since ephemeral ZNode will not get deleted for a connection lose, " +
                         "there's no need to re-register url of this instance.");
+                // 试图获取最新的url，以防在连接丢失期间provider发生变化,因为临时的ZNode不会因为连接丢失而被删除,不需要重新注册这个实例的url
                 ZookeeperRegistry.this.fetchLatestAddresses();
             } else if (state == StateListener.NEW_SESSION_CREATED) {
                 logger.warn("Trying to re-register urls and re-subscribe listeners of this instance to registry...");
                 try {
+                    // 上面日志，re-register +  re-subscribe 就在recover方法里面
                     ZookeeperRegistry.this.recover();
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);
@@ -134,9 +138,9 @@ public class ZookeeperRegistry extends FailbackRegistry {
     @Override
     public void doRegister(URL url) {
         try {
-            // 通过 Zookeeper 客户端创建节点，节点路径由 toUrlPath 方法生成，路径格式如下:
-            //   /${group}/${serviceInterface}/providers/${url} 比如 /dubbo/org.apache.dubbo.DemoService/providers/dubbo%3A%2F%2F127.0.0.1......
-            // toUrlPath 、create都进去，第二个参数根据url的dynamic参数值判定节点是否是临时节点
+            // 通过 Zookeeper 客户端创建节点，节点路径由 toUrlPath 方法生成，路径格式如下:（注意这个结构非常重要，牢牢记住）
+            //      /${group}/${serviceInterface}/providers/${url} 比如 /dubbo/org.apache.dubbo.DemoService/providers/dubbo%3A%2F%2F127.0.0.1......
+            // toUrlPath 、create都进去，第二个参数根据url的dynamic参数值判定节点是否是临时节点（dynamic=true就是临时节点）
             zkClient.create(toUrlPath(url), url.getParameter(DYNAMIC_KEY, true));
             // 到这里仅仅是provider对应的节点创建好了 ，没有内容（但是节点path含有完整的url，相当于provider的信息都在path上）
         } catch (Throwable e) {
@@ -181,7 +185,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 }
             } else {
                 List<URL> urls = new ArrayList<>();
-                for (String path : toCategoriesPath(url)) { // 进去
+                // 获取要监听的父节点 进去
+                for (String path : toCategoriesPath(url)) {
                     // subscribe方法已经存储了url->Set<NotifyListener>的映射，这里又做了一次映射，不过是 url -> [{NotifyListener,ChildListener},...]的映射
                     // 之所以需要做映射的原因是CuratorWatcherImpl#process调用的是ChildListener#childChanged方法，直接交互的是ChildListener，
                     // 而不是我们业务方的NotifyListener。所以需要和ChildListener做一次映射，即节点变更后 调用 ChildListener#childChanged方法，
@@ -217,6 +222,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     zkClient.removeChildListener(root, zkListener);
                 } else {
                     for (String path : toCategoriesPath(url)) {
+                        // 和前面 subscribe的 zkClient.addChildListener(path, zkListener); 对应
                         zkClient.removeChildListener(path, zkListener);
                     }
                 }
@@ -224,6 +230,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    // 这里是直接从zk获取最新的提供者列表，父类是从缓存中获取
     @Override
     public List<URL> lookup(URL url) {
         if (url == null) {
@@ -294,6 +301,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
         List<URL> urls = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(providers)) {
             for (String provider : providers) {
+                //     String PROTOCOL_SEPARATOR_ENCODED = URL.encode(PROTOCOL_SEPARATOR);
+                // 这里为啥是包含URL.encode("://")呢？这是因为提供者注册到zk的url信息就是encoded的，详见该类的doRegister方法
                 if (provider.contains(PROTOCOL_SEPARATOR_ENCODED)) {
                     URL url = URLStrParser.parseEncodedStr(provider);
                     if (UrlUtils.isMatch(consumer, url)) {
@@ -307,9 +316,11 @@ public class ZookeeperRegistry extends FailbackRegistry {
 
     private List<URL> toUrlsWithEmpty(URL consumer, String path, List<String> providers) {
         List<URL> urls = toUrlsWithoutEmpty(consumer, providers);
+        // todo need pr 下面可以替换为 CollectionUtils.isEmpty(urlList)
         if (urls == null || urls.isEmpty()) {
             int i = path.lastIndexOf(PATH_SEPARATOR);
             String category = i < 0 ? path : path.substring(i + 1);
+            // 构建一个空协议，empty://consumerInfo?xxxx&category=yyy
             URL empty = URLBuilder.from(consumer)
                     .setProtocol(EMPTY_PROTOCOL)
                     .addParameter(CATEGORY_KEY, category)
@@ -327,6 +338,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
      */
 
     private void fetchLatestAddresses() {
+        // 为什么重新订阅就是所谓的 fetchLatestAddresses 呢 ？ 这是因为订阅内部会有获取订阅节点的子节点列表+notify的过程，订阅后会立马获取订阅节点下的childs，这些childs就是提供者列表
         // subscribe
         Map<URL, Set<NotifyListener>> recoverSubscribed = new HashMap<URL, Set<NotifyListener>>(getSubscribed());
         if (!recoverSubscribed.isEmpty()) {
