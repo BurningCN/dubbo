@@ -76,7 +76,6 @@ public class ZookeeperRegistry extends FailbackRegistry {
     // 这里的url为registryURL
     public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
         super(url);
-        // todo need pr 下面这个判断应该放在super上面，但是！因为super的语法限定必须在第一行，so..
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
