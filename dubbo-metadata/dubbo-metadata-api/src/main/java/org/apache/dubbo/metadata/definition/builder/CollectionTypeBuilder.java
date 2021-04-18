@@ -55,6 +55,7 @@ public class CollectionTypeBuilder implements TypeBuilder {
         }
 
         Type actualType = actualTypeArgs[0];
+        // todo need pr 和MapTypeBuilder保持一致最好
         if (actualType instanceof ParameterizedType) {
             // Nested collection or map.
             Class<?> rawType = (Class<?>) ((ParameterizedType) actualType).getRawType();

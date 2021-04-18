@@ -20,6 +20,7 @@ import org.apache.dubbo.common.URL;
 
 import org.junit.jupiter.api.Test;
 
+// OK
 public class MetadataInfoTest {
     @Test
     public void revisionTest() {
@@ -29,6 +30,7 @@ public class MetadataInfoTest {
         URL url = URL.valueOf("dubbo://10.230.11.211:20880/org.apache.dubbo.metadata.DemoService?timeout=1000&testKey=aaa");
         MetadataInfo.ServiceInfo serviceInfo = new MetadataInfo.ServiceInfo(url);
         metadataInfo.addService(serviceInfo);
+
 
         System.out.println(serviceInfo.toDescString());
         System.out.println(metadataInfo.calAndGetRevision());

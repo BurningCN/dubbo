@@ -17,7 +17,6 @@
 package org.apache.dubbo.registry.retry;
 
 import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.timer.Timeout;
 import org.apache.dubbo.registry.support.FailbackRegistry;
 
 /**
@@ -37,7 +36,7 @@ public class ReExportTask extends AbstractRetryTask {
     }
 
     @Override
-    protected void doRetry(URL oldUrl, FailbackRegistry registry, Timeout timeout) {
+    protected void doRetry(URL oldUrl, FailbackRegistry registry) {
         runnable.run();
     }
 }

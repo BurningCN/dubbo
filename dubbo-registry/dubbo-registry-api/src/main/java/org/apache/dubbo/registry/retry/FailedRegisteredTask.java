@@ -18,7 +18,6 @@
 package org.apache.dubbo.registry.retry;
 
 import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.timer.Timeout;
 import org.apache.dubbo.registry.support.FailbackRegistry;
 
 /**
@@ -27,6 +26,7 @@ import org.apache.dubbo.registry.support.FailbackRegistry;
 // OK
 public final class FailedRegisteredTask extends AbstractRetryTask {
 
+    // 赋值给父类的taskName属性，做打印使用的
     private static final String NAME = "retry register";
 
     // gx
@@ -36,7 +36,7 @@ public final class FailedRegisteredTask extends AbstractRetryTask {
 
     // 模板方法，被父类的run方法调用
     @Override
-    protected void doRetry(URL url, FailbackRegistry registry, Timeout timeout) {
+    protected void doRetry(URL url, FailbackRegistry registry) {
         // 再次/重试注册
         registry.doRegister(url);
         // 进去

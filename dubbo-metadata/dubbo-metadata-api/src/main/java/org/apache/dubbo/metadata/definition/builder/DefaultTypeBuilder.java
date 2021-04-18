@@ -36,7 +36,7 @@ public final class DefaultTypeBuilder {
         final String name = clazz.getName();
 
         TypeDefinition td = new TypeDefinition(name);
-        // Try to get a cached definition
+        // Try to get a cached definition  这里做缓存，防止重复构建，比如都是同一类型，直接返回一个TypeDefinition即可
         if (typeCache.containsKey(clazz)) {
             return typeCache.get(clazz);
         }
@@ -46,18 +46,22 @@ public final class DefaultTypeBuilder {
             return td;
         }
 
-        // Custom type
+        // Custom type，和前面的一样
         TypeDefinition ref = new TypeDefinition(name);
         ref.set$ref(name);
         typeCache.put(clazz, ref);
 
+        // todo need pr !isSimpleType(clazz) ，这里如果是原生类型，不需要考虑其字段，因为在TypeDefinitionBuilder有一个步骤发现if (isSimpleType(clazz))则会置属性为null，下面又白计算了
+        //  所以我们可以在下面计算前加上if (!isSimpleType(clazz)) { ，并把TypeDefinitionBuilder#if (isSimpleType(clazz)) {的步骤也一并去掉，详见myMQ
         List<Field> fields = ClassUtils.getNonStaticFields(clazz);
         for (Field field : fields) {
             String fieldName = field.getName();
-            Class<?> fieldClass = field.getType();
+            Class<?> fieldClass = field.getType();//注意这两个api方法
             Type fieldType = field.getGenericType();
 
+            // 对属性也进行构建对应的TypeDefinition
             TypeDefinition fieldTd = TypeDefinitionBuilder.build(fieldType, fieldClass, typeCache);
+            // 在存到td的属性集合中
             td.getProperties().put(fieldName, fieldTd);
         }
 

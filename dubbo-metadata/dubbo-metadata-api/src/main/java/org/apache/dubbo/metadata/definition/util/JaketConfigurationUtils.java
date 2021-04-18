@@ -58,6 +58,7 @@ public class JaketConfigurationUtils {
     }
 
     public static boolean isExcludedInterface(Class<?> clazz) {
+        // todo need pr ArrayUtils.isEmpty(includedInterfacePackages)
         if (includedInterfacePackages == null || includedInterfacePackages.length == 0) {
             return false;
         }
@@ -72,6 +73,7 @@ public class JaketConfigurationUtils {
     }
 
     public static boolean isExcludedType(Class<?> clazz) {
+        // todo need pr ArrayUtils.isEmpty(includedTypePackages)
         if (includedTypePackages == null || includedTypePackages.length == 0) {
             return false;
         }
@@ -86,8 +88,11 @@ public class JaketConfigurationUtils {
     }
 
     public static boolean needAnalyzing(Class<?> clazz) {
+        // 同样是内部类，两个方法返回是不一样的
+        // // my.metadata.api.model.OuterClass.InnerClass ---> getCanonicalName
+        // my.metadata.api.model.OuterClass$InnerClass  ----> getName
         String canonicalName = clazz.getCanonicalName();
-
+        // todo need pr ArrayUtils.isNotEmpty(closedTypes)
         if (closedTypes != null && closedTypes.length > 0) {
             for (String type : closedTypes) {
                 if (canonicalName.startsWith(type)) {

@@ -37,6 +37,7 @@ public class MetadataUtils {
      */
     public static ServiceDefinition generateMetadata(Class<?> interfaceClass) {
         ServiceDefinition sd = new ServiceDefinition();
+
         sd.setCanonicalName(interfaceClass.getCanonicalName());
         sd.setCodeSource(ClassUtils.getCodeSource(interfaceClass));
 

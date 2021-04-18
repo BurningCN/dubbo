@@ -35,7 +35,7 @@ public class TypeDefinition implements Serializable {
 
     private String id;
     private String type;
-    @SerializedName("items")
+    @SerializedName("items")//gson
     private List<TypeDefinition> items;
     @SerializedName("enum")
     private List<String> enums;

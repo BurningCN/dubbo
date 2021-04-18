@@ -39,6 +39,7 @@ public class ArrayTypeBuilder implements TypeBuilder {
     public TypeDefinition build(Type type, Class<?> clazz, Map<Class<?>, TypeDefinition> typeCache) {
         // Process the component type of an array.
         Class<?> componentType = clazz.getComponentType();
+        //Type 和Class都可以接Class，下面调用，不要返回值
         TypeDefinitionBuilder.build(componentType, componentType, typeCache);
 
         final String canonicalName = clazz.getCanonicalName();

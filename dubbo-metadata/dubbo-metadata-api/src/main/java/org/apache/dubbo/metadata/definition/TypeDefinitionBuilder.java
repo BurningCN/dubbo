@@ -52,7 +52,9 @@ public class TypeDefinitionBuilder {
             td = builder.build(type, clazz, typeCache);
             td.setTypeBuilderName(builder.getClass().getName());
         } else {
+            // 使用的默认的builder构建TypeDefinition
             td = DefaultTypeBuilder.build(clazz, typeCache);
+            // 设置builder的名称，表示这个TypeDefinition是由谁构建的
             td.setTypeBuilderName(DefaultTypeBuilder.class.getName());
         }
         if (isSimpleType(clazz)) { // changed since 2.7.6

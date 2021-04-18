@@ -41,6 +41,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.METHODS_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 
+// OK
 public class MetadataInfo implements Serializable {
     public static String DEFAULT_REVISION = "0";
     private String app;
@@ -95,6 +96,7 @@ public class MetadataInfo implements Serializable {
             return DEFAULT_REVISION;
         }
 
+        // todo need pr 我觉得拼接app后得加一个分隔符吧，不然都粘在一起了
         StringBuilder sb = new StringBuilder();
         sb.append(app);
         for (Map.Entry<String, ServiceInfo> entry : services.entrySet()) {
@@ -178,6 +180,7 @@ public class MetadataInfo implements Serializable {
         private String path; // most of the time, path is the same with the interface name.
         private Map<String, String> params;
 
+        // todo need pr 拼写错误 configured
         // params configuried on consumer side,
         private transient Map<String, String> consumerParams;
         // cached method params
@@ -200,6 +203,7 @@ public class MetadataInfo implements Serializable {
             this(url.getServiceInterface(), url.getParameter(GROUP_KEY), url.getParameter(VERSION_KEY), url.getProtocol(), url.getPath(), null);
 
             this.url = url;
+            // 很easy，自己理解下
             Map<String, String> params = new HashMap<>();
             List<MetadataParamsFilter> filters = loader.getActivateExtension(url, "params-filter");
             for (MetadataParamsFilter filter : filters) {
@@ -210,6 +214,7 @@ public class MetadataInfo implements Serializable {
                         if (StringUtils.isNotEmpty(value) && params.get(p) == null) {
                             params.put(p, value);
                         }
+                        //注意这里一个技巧，对null强转了
                         String[] methods = url.getParameter(METHODS_KEY, (String[]) null);
                         if (methods != null) {
                             for (String method : methods) {
@@ -365,16 +370,23 @@ public class MetadataInfo implements Serializable {
         }
 
         public String toDescString() {
+            // 含有服务、服务的所有方法、参数
             return this.getMatchKey() + getMethodSignaturesString() + getParams();
         }
 
         private String getMethodSignaturesString() {
+            // 有序的set，按照方法名称排序
             SortedSet<String> methodStrings = new TreeSet();
 
             Method[] methods = ClassUtils.forName(name).getMethods();
             for (Method method : methods) {
                 methodStrings.add(method.toString());
             }
+            //myRPC的DemoService为例
+            //0 = "public abstract int my.metadata.api.model.DemoService.echo(int)"
+            //1 = "public abstract java.lang.String my.metadata.api.model.DemoService.sayName(java.lang.String)"
+            //2 = "public abstract java.util.List my.metadata.api.model.DemoService.getUsers(java.util.List)"
+            //3 = "public abstract void my.metadata.api.model.DemoService.throwRuntimeException() throws java.lang.RuntimeException"
             return methodStrings.toString();
         }
 

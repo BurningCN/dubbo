@@ -45,12 +45,15 @@ public class MetadataTest {
     public void testInnerClassType() {
         TypeDefinitionBuilder builder = new TypeDefinitionBuilder();
         TypeDefinition td = builder.build(OuterClass.InnerClass.class, OuterClass.InnerClass.class);
+        // gson api
         System.out.println(">> testInnerClassType: " + new Gson().toJson(td));
 
         Assertions.assertEquals("org.apache.dubbo.metadata.definition.common.OuterClass$InnerClass", td.getType());
         Assertions.assertEquals(1, td.getProperties().size());
         Assertions.assertNotNull(td.getProperties().get("name"));
         Assertions.assertEquals(DefaultTypeBuilder.class.getName(), td.getTypeBuilderName());
+
+        // 进去
         ServiceDefinition sd = MetadataUtils.generateMetadata(TestService.class);
         System.out.println(">> testInnerClassType: " + new Gson().toJson(sd));
 

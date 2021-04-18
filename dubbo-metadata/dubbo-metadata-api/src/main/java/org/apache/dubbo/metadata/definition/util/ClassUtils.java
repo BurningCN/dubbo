@@ -34,9 +34,11 @@ public final class ClassUtils {
      * Get the code source file or class path of the Class passed in.
      *
      * @param clazz
-     * @return Jar file name or class path.
+     * @return Jar file name or class path. 来源于jar还是classpath
      */
+    // 记住这种用法
     public static String getCodeSource(Class<?> clazz) {
+
         ProtectionDomain protectionDomain = clazz.getProtectionDomain();
         if (protectionDomain == null || protectionDomain.getCodeSource() == null) {
             return null;

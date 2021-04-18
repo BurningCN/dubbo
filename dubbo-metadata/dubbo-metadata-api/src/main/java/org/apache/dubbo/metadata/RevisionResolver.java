@@ -42,6 +42,7 @@ public class RevisionResolver {
 
     public static String calRevision(String metadata) {
         mdInst.update(metadata.getBytes(UTF_8));
+        // md5 16字节，后面会转化为32个字符
         byte[] md5 = mdInst.digest();
 
         int j = md5.length;
@@ -49,10 +50,12 @@ public class RevisionResolver {
         int k = 0;
         for (int i = 0; i < j; i++) {
             byte byte0 = md5[i];
+            // 和rmq的计算msgID一样
             str[k++] = hexDigits[byte0 >>> 4 & 0xf];
             str[k++] = hexDigits[byte0 & 0xf];
         }
         return new String(str);
+        // eg 18DB55CA09DB45334170107B2965511F
     }
 
 
