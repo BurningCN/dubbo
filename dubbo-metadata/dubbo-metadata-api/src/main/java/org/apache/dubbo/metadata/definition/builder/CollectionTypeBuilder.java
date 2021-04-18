@@ -62,9 +62,11 @@ public class CollectionTypeBuilder implements TypeBuilder {
             TypeDefinitionBuilder.build(actualType, rawType, typeCache);
         } else if (actualType instanceof Class<?>) {
             Class<?> actualClass = (Class<?>) actualType;
+            // 为了给typeCache缓存添加项（比如List<Integer>，让Integer进入缓存）
             TypeDefinitionBuilder.build(null, actualClass, typeCache);
         }
 
+        // 这里type是有泛型化的，其toString的结果比如"java.util.List<java.lang.Integer>"
         return new TypeDefinition(type.toString());
     }
 

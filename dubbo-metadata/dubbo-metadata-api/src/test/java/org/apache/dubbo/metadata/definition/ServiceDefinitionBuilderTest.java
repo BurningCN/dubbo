@@ -31,8 +31,10 @@ import java.util.List;
 /**
  * 2018/11/6
  */
+// OK
 public class ServiceDefinitionBuilderTest {
 
+    // todo need pr 拼写错误 testBuilderComplexObject
     @Test
     public void testBuilderComplextObject() {
         FullServiceDefinition fullServiceDefinition = ServiceDefinitionBuilder.buildFullDefinition(DemoService.class);
@@ -40,6 +42,7 @@ public class ServiceDefinitionBuilderTest {
     }
 
 
+    // todo need pr 拼写错误 checkComplexObjectAsParam
     void checkComplextObjectAsParam(FullServiceDefinition fullServiceDefinition) {
         List<MethodDefinition> methodDefinitions = fullServiceDefinition.getMethods();
         MethodDefinition complexCompute = null;

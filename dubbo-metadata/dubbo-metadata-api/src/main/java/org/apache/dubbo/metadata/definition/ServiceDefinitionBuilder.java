@@ -52,13 +52,21 @@ public final class ServiceDefinitionBuilder {
     }
 
     public static FullServiceDefinition buildFullDefinition(final Class<?> interfaceClass, Map<String, String> params) {
+        // FullServiceDefinition的类结构本身就是 ServiceDefinition + params
         FullServiceDefinition sd = new FullServiceDefinition();
         build(sd, interfaceClass);
         sd.setParameters(params);
         return sd;
     }
 
+    /**
+     * 下面和test程序的{@link MetadataUtils#generateMetadata}处理的代码基本完全一样，可以对比工具看一下
+     * @param sd
+     * @param interfaceClass
+     * @param <T>
+     */
     public static <T extends ServiceDefinition> void build(T sd, final Class<?> interfaceClass) {
+
         sd.setCanonicalName(interfaceClass.getCanonicalName());
         sd.setCodeSource(ClassUtils.getCodeSource(interfaceClass));
 
@@ -68,7 +76,7 @@ public final class ServiceDefinitionBuilder {
             MethodDefinition md = new MethodDefinition();
             md.setName(method.getName());
 
-            // Process parameter types.
+            // 处理参数
             Class<?>[] paramTypes = method.getParameterTypes();
             Type[] genericParamTypes = method.getGenericParameterTypes();
 
@@ -79,7 +87,7 @@ public final class ServiceDefinitionBuilder {
             }
             md.setParameterTypes(parameterTypes);
 
-            // Process return type.
+            // 处理返回
             TypeDefinition td = builder.build(method.getGenericReturnType(), method.getReturnType());
             md.setReturnType(td.getType());
 

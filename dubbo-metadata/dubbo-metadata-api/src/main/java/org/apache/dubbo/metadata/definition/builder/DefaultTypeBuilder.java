@@ -46,7 +46,7 @@ public final class DefaultTypeBuilder {
             return td;
         }
 
-        // Custom type，和前面的一样
+        // Custom type，和前面的一样，todo need pr 这里没有任何卵用，到最后return的上一句，会覆盖掉下面put的
         TypeDefinition ref = new TypeDefinition(name);
         ref.set$ref(name);
         typeCache.put(clazz, ref);
@@ -56,8 +56,8 @@ public final class DefaultTypeBuilder {
         List<Field> fields = ClassUtils.getNonStaticFields(clazz);
         for (Field field : fields) {
             String fieldName = field.getName();
-            Class<?> fieldClass = field.getType();//注意这两个api方法
-            Type fieldType = field.getGenericType();
+            Class<?> fieldClass = field.getType();//注意这两个api方法 --- > interface java.util.Map
+            Type fieldType = field.getGenericType();//  --- > java.util.Map<java.lang.String, java.lang.String>
 
             // 对属性也进行构建对应的TypeDefinition
             TypeDefinition fieldTd = TypeDefinitionBuilder.build(fieldType, fieldClass, typeCache);

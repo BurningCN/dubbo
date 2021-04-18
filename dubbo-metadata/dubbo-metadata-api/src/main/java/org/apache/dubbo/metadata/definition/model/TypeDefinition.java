@@ -92,6 +92,7 @@ public class TypeDefinition implements Serializable {
     }
 
     private static boolean isGenericType(String type) {
+        // eg java.util.Map<java.lang.String, java.lang.String>,这个就是带泛型的
         return type.contains("<") && type.contains(">");
     }
 

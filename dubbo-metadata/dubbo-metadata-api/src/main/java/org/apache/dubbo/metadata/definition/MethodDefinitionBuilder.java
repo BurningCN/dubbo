@@ -49,6 +49,7 @@ public class MethodDefinitionBuilder {
      */
     public MethodDefinition build(Method method) {
 
+        // 下面这段代码和test程序的MetadataUtils#generateMetadata处理method的时候基本一致，只是这里特别处理了MethodDefinition#parameters属性
         MethodDefinition md = new MethodDefinition();
         md.setName(method.getName());
 

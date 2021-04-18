@@ -21,6 +21,7 @@ import java.util.Map;
 /**
  * 2018/10/25
  */
+// 继承ServiceDefinition，扩展了一个parameters属性
 public class FullServiceDefinition extends ServiceDefinition {
 
     private Map<String, String> parameters;

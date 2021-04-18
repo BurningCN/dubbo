@@ -58,6 +58,7 @@ public class MapTypeBuilder implements TypeBuilder {
                             + Arrays.toString(actualTypeArgs), type, actualTypeArgs));
         }
 
+        // eg java.util.Map<java.lang.String, java.lang.String>
         String mapType = type.toString();
 
         TypeDefinition typeDefinition = new TypeDefinition(mapType);
@@ -72,6 +73,7 @@ public class MapTypeBuilder implements TypeBuilder {
             } else if (isClass(actualType)) {
                 item = TypeDefinitionBuilder.build(null, rawType, typeCache);
             }
+            // 往items里面填数据的，EnumTypeBuilder是往enums属性填数据，
             typeDefinition.getItems().add(item);
         }
 
