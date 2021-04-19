@@ -100,6 +100,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
     private AtomicBoolean initialized = new AtomicBoolean(false);
     public MetadataReportRetry metadataReportRetry;
 
+    //下面的过程和AbstractRegistry很像
     public AbstractMetadataReport(URL reportServerURL) {
         setUrl(reportServerURL);
         // Start file save timer
@@ -120,10 +121,12 @@ public abstract class AbstractMetadataReport implements MetadataReport {
         }
         this.file = file;
         loadProperties();
+        // 默认异步保存
         syncReport = reportServerURL.getParameter(SYNC_REPORT_KEY, false);
+        // 100次，3000ms
         metadataReportRetry = new MetadataReportRetry(reportServerURL.getParameter(RETRY_TIMES_KEY, DEFAULT_METADATA_REPORT_RETRY_TIMES),
                 reportServerURL.getParameter(RETRY_PERIOD_KEY, DEFAULT_METADATA_REPORT_RETRY_PERIOD));
-        // cycle report the data switch
+        // cycle report the data switch 默认true
         if (reportServerURL.getParameter(CYCLE_REPORT_KEY, DEFAULT_METADATA_REPORT_CYCLE_REPORT)) {
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("DubboMetadataReportTimer", true));
             scheduler.scheduleAtFixedRate(this::publishAll, calculateStartTime(), ONE_DAY_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
@@ -168,6 +171,11 @@ public abstract class AbstractMetadataReport implements MetadataReport {
                     try (FileOutputStream outputFile = new FileOutputStream(file)) {
                         properties.store(outputFile, "Dubbo metadataReport Cache");
                     }
+                    /*
+                    #Dubbo metadataReport Cache
+                    #Sun Apr 18 22:30:59 CST 2021
+                    my.metadata.api.store.InterfaceNameTestService\:1.0.0\:\:provider\:vic={"parameters"\:{"testPKey"\:"8989","application"\:"vic","version"\:"1.0.0"},"canonicalName"\:"my.metadata.api.store.InterfaceNameTestService","codeSource"\:"file\:/Users/gy821075/IdeaProjects/myRPC/target/test-classes/","methods"\:[{"name"\:"test","parameterTypes"\:[],"returnType"\:"void"}],"types"\:[{"type"\:"void","typeBuilderName"\:"my.metadata.api.definition.builder.DefaultTypeBuilder"}]}
+                    * */
                 } finally {
                     lock.release();
                 }
@@ -247,14 +255,16 @@ public abstract class AbstractMetadataReport implements MetadataReport {
 
     private void storeProviderMetadataTask(MetadataIdentifier providerMetadataIdentifier, ServiceDefinition serviceDefinition) {
         try {
-            if (logger.isInfoEnabled()) {
-                logger.info("store provider metadata. Identifier : " + providerMetadataIdentifier + "; definition: " + serviceDefinition);
-            }
+            logger.info("store provider metadata. Identifier : " + providerMetadataIdentifier + "; definition: " + serviceDefinition);
+
             allMetadataReports.put(providerMetadataIdentifier, serviceDefinition);
             failedReports.remove(providerMetadataIdentifier);
+
             Gson gson = new Gson();
             String data = gson.toJson(serviceDefinition);
+
             doStoreProviderMetadata(providerMetadataIdentifier, data);
+
             saveProperties(providerMetadataIdentifier, data, true, !syncReport);
         } catch (Exception e) {
             // retry again. If failed again, throw exception.
@@ -273,20 +283,21 @@ public abstract class AbstractMetadataReport implements MetadataReport {
         }
     }
 
+    // 看第二个参数，注意和storeProviderMetadataTask方法对比，消费者是 MetadataIdentifier -> Map ，MetadataIdentifier映射的是map，而provider映射的是FullServiceDefinition
     public void storeConsumerMetadataTask(MetadataIdentifier consumerMetadataIdentifier, Map<String, String> serviceParameterMap) {
         try {
-            if (logger.isInfoEnabled()) {
-                logger.info("store consumer metadata. Identifier : " + consumerMetadataIdentifier + "; definition: " + serviceParameterMap);
-            }
+            logger.info("store consumer metadata. Identifier : " + consumerMetadataIdentifier + "; definition: " + serviceParameterMap);
+
             allMetadataReports.put(consumerMetadataIdentifier, serviceParameterMap);
             failedReports.remove(consumerMetadataIdentifier);
 
             Gson gson = new Gson();
             String data = gson.toJson(serviceParameterMap);
+
             doStoreConsumerMetadata(consumerMetadataIdentifier, data);
+
             saveProperties(consumerMetadataIdentifier, data, true, !syncReport);
         } catch (Exception e) {
-            // retry again. If failed again, throw exception.
             failedReports.put(consumerMetadataIdentifier, serviceParameterMap);
             metadataReportRetry.startRetryTask();
             logger.error("Failed to put consumer metadata " + consumerMetadataIdentifier + ";  " + serviceParameterMap + ", cause: " + e.getMessage(), e);
@@ -335,7 +346,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
         return new Gson().fromJson(content, setType);
     }
 
-    String getProtocol(URL url) {
+    public String getProtocol(URL url) {
         String protocol = url.getParameter(SIDE_KEY);
         protocol = protocol == null ? url.getProtocol() : protocol;
         return protocol;
@@ -370,6 +381,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
      */
     void publishAll() {
         logger.info("start to publish all metadata.");
+        // retry方法也调用了这个
         this.doHandleMetadataCollection(allMetadataReports);
     }
 
@@ -380,12 +392,16 @@ public abstract class AbstractMetadataReport implements MetadataReport {
      */
     long calculateStartTime() {
         Calendar calendar = Calendar.getInstance();
+        // 先用变量记录当前时间
         long nowMill = calendar.getTimeInMillis();
+        // 将时间调整为今天的00:00:00
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
+        // 做差，calendar.getTimeInMillis()此时是今天00:00:00的时间戳。
         long subtract = calendar.getTimeInMillis() + ONE_DAY_IN_MILLISECONDS - nowMill;
+        // 感觉计算的有问题，并不是 2:00 am to 6:00 am todo need pr testCalculateStartTime
         return subtract + (FOUR_HOURS_IN_MILLISECONDS / 2) + ThreadLocalRandom.current().nextInt(FOUR_HOURS_IN_MILLISECONDS);
     }
 
@@ -408,9 +424,12 @@ public abstract class AbstractMetadataReport implements MetadataReport {
         }
 
         void startRetryTask() {
+            // todo need pr 多层嵌套优化
+            // 这里双重检查的原因是，该方法可以被多次调用，但是只要第一次调用起作用，调用点比如storeProviderMetadataTask抛异常了
             if (retryScheduledFuture == null) {
                 synchronized (retryCounter) {
                     if (retryScheduledFuture == null) {
+                        // 注意这种用法，不是scheduleAtFixRate，这种可以拿到返回值，并可以随时cancel
                         retryScheduledFuture = retryExecutor.scheduleWithFixedDelay(new Runnable() {
                             @Override
                             public void run() {
@@ -418,6 +437,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
                                 try {
                                     int times = retryCounter.incrementAndGet();
                                     logger.info("start to retry task for metadata report. retry times:" + times);
+                                    // retry() 进行重试
                                     if (retry() && times > retryTimesIfNonFail) {
                                         cancelRetryTask();
                                     }
@@ -428,6 +448,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
                                     logger.error("Unexpected error occur at failed retry, cause: " + t.getMessage(), t);
                                 }
                             }
+                            // 默认3s一次，直到里面满足两个if的一种，走cancelRetryTask，才会结束定时任务
                         }, 500, retryPeriod, TimeUnit.MILLISECONDS);
                     }
                 }

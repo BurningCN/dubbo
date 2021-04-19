@@ -27,13 +27,16 @@ import static org.apache.dubbo.metadata.MetadataConstants.KEY_SEPARATOR;
  */
 public enum KeyTypeEnum {
 
+    // PATH_SEPARATOR、KEY_SEPARATOR就是下面的separator属性
     PATH(PATH_SEPARATOR) {
+        //定义的同时实现build抽象方法
         public String build(String one, String... others) {
             return buildPath(one, others);
         }
     },
 
     UNIQUE_KEY(KEY_SEPARATOR) {
+        //定义的同时实现build抽象方法
         public String build(String one, String... others) {
             StringBuilder keyBuilder = new StringBuilder(one);
             for (String other : others) {

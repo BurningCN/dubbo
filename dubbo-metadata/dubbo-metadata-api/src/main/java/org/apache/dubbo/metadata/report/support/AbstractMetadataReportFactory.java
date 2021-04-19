@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+// 结构没啥可说的，和 AbstractRegistryFactory 很像
 public abstract class AbstractMetadataReportFactory implements MetadataReportFactory {
     private static final String EXPORT_KEY = "export";
     private static final String REFER_KEY = "refer";
@@ -40,6 +41,7 @@ public abstract class AbstractMetadataReportFactory implements MetadataReportFac
                 .removeParameters(EXPORT_KEY, REFER_KEY);
         String key = url.toServiceString();
         // Lock the metadata access process to ensure a single instance of the metadata instance
+        // todo need pr 应该来一个double check，AbstractRegistryFactory也是
         LOCK.lock();
         try {
             MetadataReport metadataReport = SERVICE_STORE_MAP.get(key);

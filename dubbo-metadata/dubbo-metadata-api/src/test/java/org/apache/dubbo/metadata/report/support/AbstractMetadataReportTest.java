@@ -13,7 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *//*
+ */
 
 package org.apache.dubbo.metadata.report.support;
 
@@ -50,7 +50,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-*/
+
+import com.google.gson.Gson;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.utils.NetUtils;
+import org.apache.dubbo.config.ApplicationConfig;
+import org.apache.dubbo.metadata.definition.ServiceDefinitionBuilder;
+import org.apache.dubbo.metadata.definition.model.FullServiceDefinition;
+import org.apache.dubbo.metadata.report.identifier.KeyTypeEnum;
+import org.apache.dubbo.metadata.report.identifier.MetadataIdentifier;
+import org.apache.dubbo.metadata.report.identifier.ServiceMetadataIdentifier;
+import org.apache.dubbo.metadata.report.identifier.SubscriberMetadataIdentifier;
+import org.apache.dubbo.metadata.report.support.AbstractMetadataReport;
+import org.apache.dubbo.rpc.model.ApplicationModel;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * Test {@link MetadataReport#saveExportedURLs(String, String, String)} method
  *
@@ -61,7 +83,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>
  * Test {@link MetadataReport#getExportedURLsContent(String, String)} method
  * @since 2.7.8
- *//*
+ */
 
 public class AbstractMetadataReportTest {
 
@@ -85,6 +107,7 @@ public class AbstractMetadataReportTest {
     @Test
     public void testGetProtocol() {
         URL url = URL.valueOf("dubbo://" + NetUtils.getLocalAddress().getHostName() + ":4444/org.apache.dubbo.TestService?version=1.0.0&application=vic&side=provider");
+        // 先取side参数值，取不到取protocol值
         String protocol = abstractMetadataReport.getProtocol(url);
         assertEquals(protocol, "provider");
 
@@ -121,7 +144,7 @@ public class AbstractMetadataReportTest {
         URL singleUrl = URL.valueOf("redis://" + NetUtils.getLocalAddress().getHostName() + ":4444/org.apache.dubbo.metadata.store.InterfaceNameTestService?version=1.0.0&application=singleTest");
         NewMetadataReport singleMetadataReport = new NewMetadataReport(singleUrl);
 
-        Assertions.assertFalse(singleMetadataReport.localCacheFile.exists());
+        Assertions.assertFalse(singleMetadataReport.file.exists());
 
         String interfaceName = "org.apache.dubbo.metadata.store.InterfaceNameTestService";
         String version = "1.0.0";
@@ -130,7 +153,7 @@ public class AbstractMetadataReportTest {
         MetadataIdentifier providerMetadataIdentifier = storePrivider(singleMetadataReport, interfaceName, version, group, application);
 
         Thread.sleep(2000);
-        assertTrue(singleMetadataReport.localCacheFile.exists());
+        assertTrue(singleMetadataReport.file.exists());
         assertTrue(singleMetadataReport.properties.containsKey(providerMetadataIdentifier.getUniqueKey(KeyTypeEnum.UNIQUE_KEY)));
     }
 
@@ -142,6 +165,7 @@ public class AbstractMetadataReportTest {
         String application = "vic.retry";
         URL storeUrl = URL.valueOf("retryReport://" + NetUtils.getLocalAddress().getHostName() + ":4444/org.apache.dubbo.TestServiceForRetry?version=1.0.0.retry&application=vic.retry");
         RetryMetadataReport retryReport = new RetryMetadataReport(storeUrl, 2);
+        // 控制retryScheduledFuture 400ms 执行一次
         retryReport.metadataReportRetry.retryPeriod = 400L;
         URL url = URL.valueOf("dubbo://" + NetUtils.getLocalAddress().getHostName() + ":4444/org.apache.dubbo.TestService?version=1.0.0&application=vic");
         Assertions.assertNull(retryReport.metadataReportRetry.retryScheduledFuture);
@@ -154,11 +178,14 @@ public class AbstractMetadataReportTest {
         Thread.sleep(150);
 
         assertTrue(retryReport.store.isEmpty());
+        // 这个不是空了，因为storePrivider->doXX抛异常了，失败的元数据add到了failedReports
         Assertions.assertFalse(retryReport.failedReports.isEmpty());
+        // 因为前面异常了，定时任务也被开启了
         Assertions.assertNotNull(retryReport.metadataReportRetry.retryScheduledFuture);
         Thread.sleep(2000L);
         assertTrue(retryReport.metadataReportRetry.retryCounter.get() != 0);
         assertTrue(retryReport.metadataReportRetry.retryCounter.get() >= 3);
+        // 因为RetryMetadataReport抛异常2次，因此failedReports会有两次填充（catch），不过第二次填充的时候failedReports已经是empty了，原因是因为重试调storeProviderMetadataTask方法的时候移除了，具体过程请debug
         Assertions.assertFalse(retryReport.store.isEmpty());
         assertTrue(retryReport.failedReports.isEmpty());
     }
@@ -172,6 +199,7 @@ public class AbstractMetadataReportTest {
         URL storeUrl = URL.valueOf("retryReport://" + NetUtils.getLocalAddress().getHostName() + ":4444/org.apache.dubbo.TestServiceForRetryCancel?version=1.0.0.retrycancel&application=vic.retry");
         RetryMetadataReport retryReport = new RetryMetadataReport(storeUrl, 2);
         retryReport.metadataReportRetry.retryPeriod = 150L;
+        // 注意这里，如果定时任务  if (retry() && times > retryTimesIfNonFail) 则会取消任务，表示重试两次都正常，NonFail的
         retryReport.metadataReportRetry.retryTimesIfNonFail = 2;
 
         storePrivider(retryReport, interfaceName, version, group, application);
@@ -205,6 +233,7 @@ public class AbstractMetadataReportTest {
         tmp.putAll(url.getParameters());
         MetadataIdentifier consumerMetadataIdentifier = new MetadataIdentifier(interfaceName, version, group, CONSUMER_SIDE, application);
 
+        // 消费者是 MetadataIdentifier -> Map ，MetadataIdentifier映射的是map，而provider映射的是FullServiceDefinition
         abstractMetadataReport.storeConsumerMetadata(consumerMetadataIdentifier, tmp);
 
         return consumerMetadataIdentifier;
@@ -232,6 +261,7 @@ public class AbstractMetadataReportTest {
 
         Map<String, String> tmpMap = new HashMap<>();
         tmpMap.put("testKey", "value");
+        //注意消费者存的信息，进去
         MetadataIdentifier consumerMetadataIdentifier = storeConsumer(abstractMetadataReport, interfaceName, version + "_3", group + "_3", application, tmpMap);
         Thread.sleep(1000);
         assertEquals(abstractMetadataReport.allMetadataReports.size(), 3);
@@ -241,6 +271,7 @@ public class AbstractMetadataReportTest {
         assertEquals(tmpMapResult.get("testKey"), "value");
         assertEquals(3, abstractMetadataReport.store.size());
 
+        // 故意清空store
         abstractMetadataReport.store.clear();
 
         assertEquals(0, abstractMetadataReport.store.size());
@@ -248,10 +279,12 @@ public class AbstractMetadataReportTest {
         abstractMetadataReport.publishAll();
         Thread.sleep(200);
 
+        // 因为前面调用了publishAll，会重新存入store，所以又得到了复原
         assertEquals(3, abstractMetadataReport.store.size());
 
         String v = abstractMetadataReport.store.get(providerMetadataIdentifier1.getUniqueKey(KeyTypeEnum.UNIQUE_KEY));
         Gson gson = new Gson();
+        // gson的api gson.fromJson
         FullServiceDefinition data = gson.fromJson(v, FullServiceDefinition.class);
         checkParam(data.getParameters(), application, version);
 
@@ -277,7 +310,6 @@ public class AbstractMetadataReportTest {
         }
     }
 
-    */
 /**
  * Test {@link MetadataReport#saveExportedURLs(String, String, String)} method
  *
@@ -288,9 +320,9 @@ public class AbstractMetadataReportTest {
  * <p>
  * Test {@link MetadataReport#getExportedURLsContent(String, String)} method
  * @since 2.7.8
- *//*
+ */
 
-    @Test
+/*    @Test
     public void testSaveExportedURLs() {
         String serviceName = null;
         String exportedServiceRevision = null;
@@ -301,14 +333,13 @@ public class AbstractMetadataReportTest {
         assertTrue(abstractMetadataReport.saveExportedURLs(exportedServiceRevision, exportedURLs));
         assertTrue(abstractMetadataReport.saveExportedURLs(serviceName, exportedServiceRevision, exportedURLs));
         assertTrue(abstractMetadataReport.saveExportedURLs(serviceName, exportedServiceRevision, exportedURLsContent));
-    }
+    }*/
 
-    */
 /**
  * Test {@link MetadataReport#getExportedURLs(String, String)} method
  *
  * @since 2.7.8
- *//*
+ */
 
     @Test
     public void testGetExportedURLs() {
@@ -317,19 +348,19 @@ public class AbstractMetadataReportTest {
         assertEquals(emptySet(), abstractMetadataReport.getExportedURLs(serviceName, exportedServiceRevision));
     }
 
-    */
+
 /**
  * Test {@link MetadataReport#getExportedURLsContent(String, String)} method
  *
  * @since 2.7.8
- *//*
-
+ */
+/*
     @Test
     public void testGetExportedURLsContent() {
         String serviceName = null;
         String exportedServiceRevision = null;
         assertNull(abstractMetadataReport.getExportedURLsContent(serviceName, exportedServiceRevision));
-    }
+    }*/
 
     private FullServiceDefinition toServiceDefinition(String v) {
         Gson gson = new Gson();
@@ -469,4 +500,3 @@ public class AbstractMetadataReportTest {
 
 
 }
-*/

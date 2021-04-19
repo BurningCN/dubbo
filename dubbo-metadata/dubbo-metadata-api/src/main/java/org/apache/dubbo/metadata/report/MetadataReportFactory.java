@@ -22,7 +22,7 @@ import org.apache.dubbo.common.extension.SPI;
 
 /**
  */
-@SPI("redis")
+@SPI("redis") // todo need pr redis使用静态常量
 public interface MetadataReportFactory {
 
     @Adaptive({"protocol"})

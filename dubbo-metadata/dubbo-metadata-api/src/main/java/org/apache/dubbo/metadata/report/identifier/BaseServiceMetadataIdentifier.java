@@ -29,6 +29,7 @@ import static org.apache.dubbo.metadata.MetadataConstants.KEY_SEPARATOR;
  * <p>
  * 2019-08-09
  */
+// 该类主要是生成一个类似id、Identifier的东西
 public class BaseServiceMetadataIdentifier {
     String serviceInterface;
     String version;

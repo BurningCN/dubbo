@@ -22,7 +22,7 @@ import static org.apache.dubbo.metadata.MetadataConstants.DEFAULT_PATH_TAG;
 import static org.apache.dubbo.metadata.MetadataConstants.KEY_SEPARATOR;
 
 /**
- * The Base class of MetadataIdentifier for service scope
+ * The Base class of MetadataIdentifier for service scope // todo need pr 注释错误 应该是app scope
  * <p>
  * 2019-08-09
  */
@@ -41,6 +41,7 @@ public class BaseApplicationMetadataIdentifier {
     }
 
     private String joinParams(String joinChar, String... params) {
+        // todo need pr 使用ArrayUtils替换
         if (params == null || params.length == 0) {
             return "";
         }
