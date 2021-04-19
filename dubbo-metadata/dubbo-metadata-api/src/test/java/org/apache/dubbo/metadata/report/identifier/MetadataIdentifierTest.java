@@ -37,11 +37,13 @@ public class MetadataIdentifierTest {
         String group = null;
         String application = "vic.zk.md";
         MetadataIdentifier providerMetadataIdentifier = new MetadataIdentifier(interfaceName, version, group, PROVIDER_SIDE, application);
+        // KeyTypeEnum.PATH
         Assertions.assertEquals(providerMetadataIdentifier.getUniqueKey(KeyTypeEnum.PATH),
                 "metadata" + PATH_SEPARATOR + interfaceName + PATH_SEPARATOR +
                         (version == null ? "" : (version + PATH_SEPARATOR))
                         + (group == null ? "" : (group + PATH_SEPARATOR)) + PROVIDER_SIDE
                         + PATH_SEPARATOR + application);
+        // KeyTypeEnum.UNIQUE_KEY
         Assertions.assertEquals(providerMetadataIdentifier.getUniqueKey(KeyTypeEnum.UNIQUE_KEY),
                 interfaceName + MetadataConstants.KEY_SEPARATOR +
                         (version == null ? "" : version) + MetadataConstants.KEY_SEPARATOR

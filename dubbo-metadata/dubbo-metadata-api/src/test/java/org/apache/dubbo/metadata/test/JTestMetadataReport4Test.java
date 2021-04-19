@@ -47,12 +47,6 @@ public class JTestMetadataReport4Test extends AbstractMetadataReport {
     public volatile Map<String, String> store = new ConcurrentHashMap<>();
 
 
-    private static String getProtocol(URL url) {
-        String protocol = url.getParameter(SIDE_KEY);
-        protocol = protocol == null ? url.getProtocol() : protocol;
-        return protocol;
-    }
-
     @Override
     protected void doStoreProviderMetadata(MetadataIdentifier providerMetadataIdentifier, String serviceDefinitions) {
         store.put(providerMetadataIdentifier.getUniqueKey(KeyTypeEnum.UNIQUE_KEY), serviceDefinitions);

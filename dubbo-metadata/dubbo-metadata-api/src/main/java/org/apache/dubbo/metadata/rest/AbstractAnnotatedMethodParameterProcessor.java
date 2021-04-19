@@ -33,8 +33,11 @@ public abstract class AbstractAnnotatedMethodParameterProcessor implements Annot
     @Override
     public void process(Annotation annotation, Parameter parameter, int parameterIndex, Method method,
                         Class<?> serviceType, Class<?> serviceInterfaceClass, RestMethodMetadata restMethodMetadata) {
+        // 获取参数的注解里的值，比如@FormParam("f")的"f"
         String annotationValue = getAnnotationValue(annotation, parameter, parameterIndex);
+        // eg "{0}"，0就是这里的parameterIndex
         String defaultValue = getDefaultValue(annotation, parameter, parameterIndex);
+        // 处理前两个值，看实现方法，比如ParamAnnotationParameterProcessor
         process(annotationValue, defaultValue, annotation, parameter, parameterIndex, method, restMethodMetadata);
     }
 

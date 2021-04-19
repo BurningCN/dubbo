@@ -51,7 +51,7 @@ public final class DefaultTypeBuilder {
         ref.set$ref(name);
         typeCache.put(clazz, ref);
 
-        // todo need pr !isSimpleType(clazz) ，这里如果是原生类型，不需要考虑其字段，因为在TypeDefinitionBuilder有一个步骤发现if (isSimpleType(clazz))则会置属性为null，下面又白计算了
+        // todo need pr-pr !isSimpleType(clazz) ，这里如果是原生类型，不需要考虑其字段，因为在TypeDefinitionBuilder有一个步骤发现if (isSimpleType(clazz))则会置属性为null，下面又白计算了
         //  所以我们可以在下面计算前加上if (!isSimpleType(clazz)) { ，并把TypeDefinitionBuilder#if (isSimpleType(clazz)) {的步骤也一并去掉，详见myMQ
         List<Field> fields = ClassUtils.getNonStaticFields(clazz);
         for (Field field : fields) {

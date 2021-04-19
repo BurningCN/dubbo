@@ -38,10 +38,29 @@ import static org.apache.dubbo.common.utils.StringUtils.isBlank;
  *
  * @since 2.7.6
  */
+/*
+
+jax-rs-service-rest-metadata.json这一段内容
+
+"request": {
+      "method": "POST",
+      "path": "/form",
+      "params": {
+        "f": [
+          "{0}"
+        ]
+      },
+      "headers": {},
+      "consumes": [],
+      "produces": []
+    },
+
+*/
 public class RequestMetadata implements Serializable {
 
     private static final long serialVersionUID = -240099840085329958L;
 
+    // 请求方式
     private String method;
 
     private String path;

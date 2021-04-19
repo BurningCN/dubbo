@@ -27,11 +27,18 @@ import java.lang.reflect.Method;
 /**
  * The abstract {@link AnnotatedMethodParameterProcessor} implementation for JAX-RS's @*Param
  */
+/*
+    这三种方法的参数注解都会进下面的逻辑
+    @QueryParam("param")
+    @FormParam("f")
+    @MatrixParam("xx")
+*/
 public abstract class ParamAnnotationParameterProcessor extends AbstractAnnotatedMethodParameterProcessor {
 
     @Override
     protected void process(String name, String defaultValue, Annotation annotation, Object parameter,
                            int parameterIndex, Method method, RestMethodMetadata restMethodMetadata) {
+        // 比如StandardRestService#form方法参数的注解，形成{"f":["{0}"]}的映射关系
         RequestMetadata requestMetadata = restMethodMetadata.getRequest();
         requestMetadata.addParam(name, defaultValue);
     }

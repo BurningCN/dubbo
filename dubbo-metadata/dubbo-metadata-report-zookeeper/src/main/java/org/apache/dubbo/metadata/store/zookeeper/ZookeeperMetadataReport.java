@@ -50,8 +50,10 @@ import static org.apache.dubbo.common.constants.CommonConstants.PATH_SEPARATOR;
 /**
  * ZookeeperMetadataReport
  */
+// 和 ZookeeperRegistry 差不多
 public class ZookeeperMetadataReport extends AbstractMetadataReport {
 
+    // todo need pr 可以去除
     private final static Logger logger = LoggerFactory.getLogger(ZookeeperMetadataReport.class);
 
     private final String root;
@@ -94,6 +96,7 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
 
     @Override
     protected void doSaveMetadata(ServiceMetadataIdentifier metadataIdentifier, URL url) {
+        // 此时节点path的值为url的信息（storeMetadata方法存储的是serviceDefinition的信息）
         zkClient.create(getNodePath(metadataIdentifier), URL.encode(url.toFullString()), false);
     }
 
@@ -126,11 +129,14 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
         return zkClient.getContent(getNodePath(metadataIdentifier));
     }
 
+    // v就是gson.toJson(serviceDefinition);
     private void storeMetadata(MetadataIdentifier metadataIdentifier, String v) {
         zkClient.create(getNodePath(metadataIdentifier), v, false);
     }
 
+    // toRootDir() 默认为 /dubbo/
     String getNodePath(BaseMetadataIdentifier metadataIdentifier) {
+        // eg /dubbo/metadata/my.metadata.zookeeper.ZookeeperMetadataReport4TstService/1.0.0.zk.md/provider/vic.zk.md
         return toRootDir() + metadataIdentifier.getUniqueKey(KeyTypeEnum.PATH);
     }
 

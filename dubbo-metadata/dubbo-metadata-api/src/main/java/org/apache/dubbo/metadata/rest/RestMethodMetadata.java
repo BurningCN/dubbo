@@ -34,6 +34,46 @@ import static java.util.Collections.emptyList;
  *
  * @since 2.7.6
  */
+/*
+
+jax-rs-service-rest-metadata.json这一段内容
+
+        {
+        "method": {
+          "name": "form",
+          "parameterTypes": [
+            "java.lang.String"
+          ],
+          "returnType": "java.lang.String",
+          "parameters": [
+            {
+              "type": "java.lang.String",
+              "items": [],
+              "enum": [],
+              "properties": {}
+            }
+          ]
+        },
+        "request": {
+          "method": "POST",
+          "path": "/form",
+          "params": {
+            "f": [
+              "{0}"
+            ]
+          },
+          "headers": {},
+          "consumes": [],
+          "produces": []
+        },
+        "indexToName": {
+          "0": [
+            "form"
+          ]
+        }
+      }
+
+*/
 public class RestMethodMetadata implements Serializable {
 
     private static final long serialVersionUID = 2935252016200830694L;
@@ -126,6 +166,7 @@ public class RestMethodMetadata implements Serializable {
             return;
         }
 
+        // 注意这里很重要，每个实例方法的第一个参数名称为arg0，这就是this引用
         if (name.startsWith("arg") && name.endsWith(index.toString())) {
             // Ignore this value because of the Java byte-code without the metadata of method parameters
             return;

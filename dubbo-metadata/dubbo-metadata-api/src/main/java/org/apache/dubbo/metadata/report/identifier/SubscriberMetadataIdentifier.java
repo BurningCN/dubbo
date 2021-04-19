@@ -24,6 +24,15 @@ import static org.apache.dubbo.common.constants.CommonConstants.REVISION_KEY;
 /**
  * 2019-08-12
  */
+/*
+    对比这几个
+
+ public class MetadataIdentifier extends BaseServiceMetadataIdentifier implements BaseMetadataIdentifier {
+
+ public class ServiceMetadataIdentifier extends BaseServiceMetadataIdentifier implements BaseMetadataIdentifier {
+
+ public class SubscriberMetadataIdentifier extends BaseApplicationMetadataIdentifier implements BaseMetadataIdentifier
+ */
 public class SubscriberMetadataIdentifier extends BaseApplicationMetadataIdentifier implements BaseMetadataIdentifier {
 
     private String revision;

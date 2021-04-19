@@ -31,7 +31,7 @@ import static org.apache.dubbo.metadata.DynamicConfigurationServiceNameMapping.D
  *
  * @since 2.7.5
  */
-@SPI("config")
+@SPI("config") // todo need pr 使用静态常量
 public interface ServiceNameMapping {
 
     /**
@@ -61,6 +61,7 @@ public interface ServiceNameMapping {
         return getExtensionLoader(ServiceNameMapping.class).getExtension(name == null ? CONFIG_MAPPING_TYPE : name);
     }
 
+    // todo need pr 下三个参数可以删除
     static String buildGroup(String serviceInterface, String group, String version, String protocol) {
         //        the issue : https://github.com/apache/dubbo/issues/4671
         //        StringBuilder groupBuilder = new StringBuilder(serviceInterface)

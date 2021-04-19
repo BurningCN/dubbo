@@ -41,6 +41,7 @@ import static org.apache.dubbo.metadata.rest.RestMetadataConstants.SERVICE_REST_
  */
 public class ClassPathServiceRestMetadataReader implements ServiceRestMetadataReader {
 
+    // todo need pr 拼写错误
     private final String serviceRestMetadataJsonResoucePath;
 
     public ClassPathServiceRestMetadataReader() {
@@ -59,17 +60,22 @@ public class ClassPathServiceRestMetadataReader implements ServiceRestMetadataRe
         ClassLoader classLoader = getClass().getClassLoader();
 
         execute(() -> {
+            // 注意getResources和getResourcesAsStream的区别，后者是返回一个流，而前者可以先拿到资源列表，然后每个列表可以建一个流
+            // 可以看下 jax-rs-service-rest-metadata.json 文件
             Enumeration<URL> resources = classLoader.getResources(serviceRestMetadataJsonResoucePath);
             Gson gson = new Gson();
             while (resources.hasMoreElements()) {
                 URL resource = resources.nextElement();
                 InputStream inputStream = resource.openStream();
+                // gson 的 api
                 JsonParser parser = new JsonParser();
+                // 字节流转化为字符流，建立流的时候可以指定编解码
                 JsonElement jsonElement = parser.parse(new InputStreamReader(inputStream, METADATA_ENCODING));
                 if (jsonElement.isJsonArray()) {
                     JsonArray jsonArray = jsonElement.getAsJsonArray();
                     for (int i = 0; i < jsonArray.size(); i++) {
                         JsonElement childJsonElement = jsonArray.get(i);
+                        // 每一项转化为ServiceRestMetadata
                         ServiceRestMetadata serviceRestMetadata = gson.fromJson(childJsonElement, ServiceRestMetadata.class);
                         serviceRestMetadataList.add(serviceRestMetadata);
                     }

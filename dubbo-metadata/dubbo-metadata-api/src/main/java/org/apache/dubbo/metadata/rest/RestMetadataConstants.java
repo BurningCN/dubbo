@@ -38,6 +38,8 @@ public interface RestMetadataConstants {
      */
     String SERVICE_REST_METADATA_RESOURCE_PATH = "META-INF/dubbo/service-rest-metadata.json";
 
+    // 下面将 JAX-RS/spring-mvc 注解和对应的处理器类全限定名称进行映射
+
     /**
      * JAX-RS
      */

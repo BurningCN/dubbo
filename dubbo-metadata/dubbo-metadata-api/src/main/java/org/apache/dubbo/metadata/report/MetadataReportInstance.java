@@ -38,13 +38,16 @@ public class MetadataReportInstance {
 
     private static final Map<String, MetadataReport> metadataReports = new HashMap<>();
 
+    // gx
     public static void init(MetadataReportConfig config) {
         if (init.get()) {
             return;
         }
         MetadataReportFactory metadataReportFactory = ExtensionLoader.getExtensionLoader(MetadataReportFactory.class).getAdaptiveExtension();
         URL url = config.toUrl();
+        // metadata:// 协议
         if (METADATA_REPORT_KEY.equals(url.getProtocol())) {
+            // 获取"metadata"参数值， 默认dubbo
             String protocol = url.getParameter(METADATA_REPORT_KEY, DEFAULT_DIRECTORY);
             url = URLBuilder.from(url)
                     .setProtocol(protocol)
@@ -69,6 +72,7 @@ public class MetadataReportInstance {
         checkInit();
         MetadataReport metadataReport = metadataReports.get(registryKey);
         if (metadataReport == null) {
+            // 如果为null，则选择第一个MetadataReport返回
             metadataReport = metadataReports.values().iterator().next();
         }
         return metadataReport;

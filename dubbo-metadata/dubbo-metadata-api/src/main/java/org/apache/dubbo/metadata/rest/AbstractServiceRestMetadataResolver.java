@@ -63,6 +63,9 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
 
     @Override
     public final boolean supports(Class<?> serviceType) {
+        // 1.必须得实现接口
+        // 2.类的头上必须有@DubboService/@Service注解
+        // 3.满足子类实现的supports0方法，比如jaxrs，serviceType的类头上面必须有@Path("/xx")的注解，而spring-mvc则必须有@Controller
         return isImplementedInterface(serviceType) && isServiceAnnotationPresent(serviceType) && supports0(serviceType);
     }
 
@@ -88,7 +91,7 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
 
         ServiceRestMetadata serviceRestMetadata = new ServiceRestMetadata();
 
-        // Process ServiceRestMetadata
+        // Process ServiceRestMetadata（将后者进行解析填充到前者）
         processServiceRestMetadata(serviceRestMetadata, serviceType);
 
         // Process RestMethodMetadata
@@ -110,6 +113,7 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
      */
     protected void processServiceRestMetadata(ServiceRestMetadata serviceRestMetadata, Class<?> serviceType) {
         ServiceAnnotationResolver resolver = new ServiceAnnotationResolver(serviceType);
+        // 填充ServiceRestMetadata的三个普通属性
         serviceRestMetadata.setServiceInterface(resolver.resolveInterfaceClassName());
         serviceRestMetadata.setVersion(resolver.resolveVersion());
         serviceRestMetadata.setGroup(resolver.resolveGroup());
@@ -122,12 +126,17 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
      * @param serviceType         Dubbo Service interface or type
      */
     protected void processAllRestMethodMetadata(ServiceRestMetadata serviceRestMetadata, Class<?> serviceType) {
+        // 加载服务接口类并返回
         Class<?> serviceInterfaceClass = resolveServiceInterfaceClass(serviceRestMetadata, serviceType);
+        // resolveServiceMethodsMap的两个参数一般是实现类和实现类的接口
+        // 返回的结果 映射关系为，实现类方法A : 接口方法A
         Map<Method, Method> serviceMethodsMap = resolveServiceMethodsMap(serviceType, serviceInterfaceClass);
         for (Map.Entry<Method, Method> entry : serviceMethodsMap.entrySet()) {
             // try the overrider method first
             Method serviceMethod = entry.getKey();
             // If failed, it indicates the overrider method does not contain metadata , then try the declared method
+            // 如果失败，则表明覆盖方法不包含元数据，然后尝试声明的方法
+            // 下面的方法一般会返回true，即成功，如果失败则用entry的value部分进行，此时value是接口的方法。注意最后一个是Consumer。
             if (!processRestMethodMetadata(serviceMethod, serviceType, serviceInterfaceClass, serviceRestMetadata.getMeta()::add)) {
                 Method declaredServiceMethod = entry.getValue();
                 processRestMethodMetadata(declaredServiceMethod, serviceType, serviceInterfaceClass,
@@ -156,7 +165,9 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
 
         for (Method declaredServiceMethod : declaredServiceMethods) {
             for (Method serviceMethod : serviceMethods) {
+                // 找到后者实现了前者的方法填充到集合
                 if (overrides(serviceMethod, declaredServiceMethod)) {
+                    // 映射关系为，实现类方法A : 接口方法A
                     serviceMethodsMap.put(serviceMethod, declaredServiceMethod);
                     continue;
                 }
@@ -177,6 +188,7 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
     protected Class<?> resolveServiceInterfaceClass(ServiceRestMetadata serviceRestMetadata, Class<?> serviceType) {
         return execute(serviceType.getClassLoader(), classLoader -> {
             String serviceInterface = serviceRestMetadata.getServiceInterface();
+            // 加载接口
             return forName(serviceInterface, classLoader);
         });
     }
@@ -194,16 +206,19 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
                                                 Class<?> serviceInterfaceClass,
                                                 Consumer<RestMethodMetadata> metadataToProcess) {
 
+        // 验证方法上面是否含有指定注解，看实现类
         if (!isRestCapableMethod(serviceMethod, serviceType, serviceInterfaceClass)) {
             return false;
         }
 
+        // 获取请求路由值，比如StandardRestService#form就是 "/form"，看实现类
         String requestPath = resolveRequestPath(serviceMethod, serviceType, serviceInterfaceClass); // requestPath is required
 
         if (requestPath == null) {
             return false;
         }
 
+        // 获取请求方法，比如jaxrs的@HttpMethod("GET")的"GET"（赋值requestMethod），@GET的元注解注意下
         String requestMethod = resolveRequestMethod(serviceMethod, serviceType, serviceInterfaceClass); // requestMethod is required
 
         if (requestMethod == null) {
@@ -216,15 +231,18 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
         // Set MethodDefinition
         metadata.setMethod(methodDefinition);
 
+        // 处理方法的参数，以及上面的注解
         // process the annotated method parameters
         processAnnotatedMethodParameters(serviceMethod, serviceType, serviceInterfaceClass, metadata);
 
         // process produces
         Set<String> produces = new LinkedHashSet<>();
+        // 处理@Producers注解,将注解里面的值填充到produces集合中
         processProduces(serviceMethod, serviceType, serviceInterfaceClass, produces);
 
         // process consumes
         Set<String> consumes = new LinkedHashSet<>();
+        // 处理@Consumes注解,将注解里面的值填充到集合中
         processConsumes(serviceMethod, serviceType, serviceInterfaceClass, consumes);
 
         // Initialize RequestMetadata
@@ -234,10 +252,10 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
         request.setProduces(produces);
         request.setConsumes(consumes);
 
-        // Post-Process
+        // Post-Process 空实现
         postResolveRestMethodMetadata(serviceMethod, serviceType, serviceInterfaceClass, metadata);
 
-        // Accept RestMethodMetadata
+        // Accept RestMethodMetadata consumer的逻辑，一般是add到集合，比如 serviceRestMetadata.getMeta()::add
         metadataToProcess.accept(metadata);
 
         return true;
@@ -294,11 +312,13 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
     private void processAnnotatedMethodParameters(Method serviceMethod, Class<?> serviceType,
                                                   Class<?> serviceInterfaceClass, RestMethodMetadata metadata) {
         int paramCount = serviceMethod.getParameterCount();
+        // 获取所有参数
         Parameter[] parameters = serviceMethod.getParameters();
         for (int i = 0; i < paramCount; i++) {
             Parameter parameter = parameters[i];
-            // Add indexed parameter name
+            // Add indexed parameter name 下标和参数的映射
             metadata.addIndexToName(i, parameter.getName());
+            // 处理参数的注解信息
             processAnnotatedMethodParameter(parameter, i, serviceMethod, serviceType, serviceInterfaceClass, metadata);
         }
     }
@@ -306,9 +326,15 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
     private void processAnnotatedMethodParameter(Parameter parameter, int parameterIndex, Method serviceMethod,
                                                  Class<?> serviceType, Class<?> serviceInterfaceClass,
                                                  RestMethodMetadata metadata) {
+        // 获取参数上的注解，比如StandardRestService#form方法的参数签名为@FormParam("f") String form
+        // 就是获取这里的@FormParam("f")注解
         Annotation[] annotations = parameter.getAnnotations();
         for (Annotation annotation : annotations) {
+            // eg 上面的@FormParam("f")注解的名称就是"javax.ws.rs.FormParam"，也就是注解的全限定名称
             String annotationType = annotation.annotationType().getName();
+            // parameterProcessorsMap就是开始加载的spi扩展实例，专门处理参数的，这里根据annotationType获取对应的spi实例
+            // 比如上面的"javax.ws.rs.FormParam"对应的spi实例就是 FormParamParameterProcessor/ParamAnnotationParameterProcessor(子父类关系)
+            // StandardRestService#pathVariables，里面的参数注解@PathParam("p1")，对应的 javax.ws.rs.PathParam 是没有对应的spi实例的，下面的会取getOrDefault的default，即emptyList()
             parameterProcessorsMap.getOrDefault(annotationType, emptyList())
                     .forEach(processor -> {
                         processor.process(annotation, parameter, parameterIndex, serviceMethod, serviceType,
@@ -335,6 +361,7 @@ public abstract class AbstractServiceRestMetadataResolver implements ServiceRest
                 .getSupportedExtensionInstances()
                 .forEach(processor -> {
                     List<AnnotatedMethodParameterProcessor> processors =
+                            // 注意填充的key不是spi文件的扩展名，而是调用了getAnnotationType，7个有各自的值（在RestMetadataConstants），自己注意下
                             parameterProcessorsMap.computeIfAbsent(processor.getAnnotationType(), k -> new LinkedList<>());
                     processors.add(processor);
                 });

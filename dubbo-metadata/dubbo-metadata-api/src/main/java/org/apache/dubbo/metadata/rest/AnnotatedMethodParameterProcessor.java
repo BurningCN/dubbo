@@ -26,7 +26,7 @@ import java.lang.reflect.Parameter;
 
 /**
  * The interface to process the annotated method parameter
- *
+ * 处理带注释的方法参数的接口
  * @since 2.7.6
  */
 @SPI

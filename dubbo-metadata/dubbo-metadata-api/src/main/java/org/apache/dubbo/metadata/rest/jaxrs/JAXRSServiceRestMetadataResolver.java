@@ -43,24 +43,30 @@ public class JAXRSServiceRestMetadataResolver extends AbstractServiceRestMetadat
 
     @Override
     protected boolean supports0(Class<?> serviceType) {
+        // serviceType类头上面是否含有@Path注解（@Path的全限定名为PATH_ANNOTATION_CLASS_NAME，即"javax.ws.rs.Path"）
         return isAnnotationPresent(serviceType, PATH_ANNOTATION_CLASS_NAME);
     }
 
     @Override
     protected boolean isRestCapableMethod(Method serviceMethod, Class<?> serviceType, Class<?> serviceInterfaceClass) {
+        // 判断方法上是否含有@HttpMethod注解，比如StandardRestService测试类，一些方法上面含有@GET，而@Get的元注解就是@HttpMethod("GET")
         return isAnnotationPresent(serviceMethod, HTTP_METHOD_ANNOTATION_CLASS_NAME);
     }
 
     @Override
     protected String resolveRequestMethod(Method serviceMethod, Class<?> serviceType, Class<?> serviceInterfaceClass) {
         Annotation httpMethod = findMetaAnnotation(serviceMethod, HTTP_METHOD_ANNOTATION_CLASS_NAME);
+        // 返回@HttpMethod注解的值，比如@Get的元注解@HttpMethod("GET")，getValue的值就是GET
         return getValue(httpMethod);
     }
 
     @Override
     protected String resolveRequestPath(Method serviceMethod, Class<?> serviceType, Class<?> serviceInterfaceClass) {
+        // 先看类上的@Path注解值
         String requestBasePath = resolveRequestPathFromType(serviceType, serviceInterfaceClass);
+        // 再看对应方法上的@Path注解值
         String requestRelativePath = resolveRequestPathFromMethod(serviceMethod);
+        // 两个值拼接，比如StandardRestService#form方法就是 "/" + "form" = "/form"
         return buildPath(requestBasePath, requestRelativePath);
     }
 

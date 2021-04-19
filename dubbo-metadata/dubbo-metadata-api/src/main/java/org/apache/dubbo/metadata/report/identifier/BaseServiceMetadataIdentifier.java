@@ -44,7 +44,7 @@ public class BaseServiceMetadataIdentifier {
     }
 
     String getIdentifierKey(String... params) {
-
+        // eg  // eg my.metadata.api.store.InterfaceNameTestService:1.0.0.zk.md::provider:vic.zk.md
         return serviceInterface
                 + KEY_SEPARATOR + (version == null ? "" : version)
                 + KEY_SEPARATOR + (group == null ? "" : group)
@@ -68,10 +68,12 @@ public class BaseServiceMetadataIdentifier {
     }
 
     private String getFilePathKey(String... params) {
+        // "metadata"
         return getFilePathKey(DEFAULT_PATH_TAG, params);
     }
 
     private String getFilePathKey(String pathTag, String... params) {
+        // eg metadata/my.metadata.api.store.InterfaceNameTestService/1.0.0.zk.md/provider/vic.zk.md
         return pathTag
                 + (StringUtils.isEmpty(toServicePath()) ? "" : (PATH_SEPARATOR + toServicePath()))
                 + (version == null ? "" : (PATH_SEPARATOR + version))

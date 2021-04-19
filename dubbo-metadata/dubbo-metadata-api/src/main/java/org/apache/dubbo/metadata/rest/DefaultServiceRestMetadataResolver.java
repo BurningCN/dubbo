@@ -25,6 +25,7 @@ import java.util.Set;
  *
  * @since 2.7.6
  */
+// 这个类没有用
 public class DefaultServiceRestMetadataResolver extends AbstractServiceRestMetadataResolver {
 
     @Override

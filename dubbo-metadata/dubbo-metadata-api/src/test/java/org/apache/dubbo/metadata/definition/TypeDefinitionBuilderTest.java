@@ -25,6 +25,7 @@ public class TypeDefinitionBuilderTest {
 
     @Test
     public void testSortTypeBuilder(){
+        // priority的值越小，越排在前面，最前面的就是index=0位置
         TypeBuilder tb = TypeDefinitionBuilder.BUILDERS.get(0);
         Assertions.assertTrue(tb instanceof TestTypeBuilder);
 

@@ -38,6 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.9
  */
+
+// 其实不太用看这个测试用例了，主要JAXRSServiceRestMetadataResolverTest看明白就行，下面的逻辑区别就是SpringMvcServiceRestMetadataResolver
+// 处理了spring-mvc的特有注解而已
 public class SpringMvcServiceRestMetadataResolverTest {
 
     private SpringMvcServiceRestMetadataResolver instance = new SpringMvcServiceRestMetadataResolver();

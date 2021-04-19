@@ -39,5 +39,6 @@ public interface ServiceRestMetadataResolver {
      * @param serviceType Dubbo Service interface or type
      * @return
      */
+    // 都爱起resolve这个词
     ServiceRestMetadata resolve(Class<?> serviceType);
 }

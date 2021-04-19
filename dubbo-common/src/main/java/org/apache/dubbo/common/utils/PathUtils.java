@@ -41,6 +41,7 @@ public interface PathUtils {
 
         return normalize(paths.stream()
                 .filter(StringUtils::isNotEmpty)
+                // 注意joining这是jdk8自带的Collector
                 .collect(Collectors.joining(SLASH)));
     }
 
@@ -54,6 +55,7 @@ public interface PathUtils {
      * @param path path to be normalized
      * @return a normalized path if required
      */
+    //  使正常化；使规格化，使标准化，作用看上面注释，很easy
     static String normalize(String path) {
         if (isEmpty(path)) {
             return SLASH;
@@ -64,6 +66,7 @@ public interface PathUtils {
             normalizedPath = normalizedPath.substring(0, index);
         }
 
+        // 将有//的地方都替换为/
         while (normalizedPath.contains("//")) {
             normalizedPath = replace(normalizedPath, "//", "/");
         }

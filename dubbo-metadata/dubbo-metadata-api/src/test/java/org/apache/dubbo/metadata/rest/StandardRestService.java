@@ -34,7 +34,9 @@ import java.util.Map;
 /**
  * JAX-RS {@link RestService}
  */
+// 注意protocol的值
 @DubboService(version = "3.0.0", protocol = {"dubbo", "rest"}, group = "standard")
+// 下面好多是javax.ws.rs的注解----》跑JAXRSServiceRestMetadataResolverTest测试程序的时候注意processAllRestMethodMetadata跟踪下面的每个方法注解是怎么处理的
 @Path("/")
 public class StandardRestService implements RestService {
 

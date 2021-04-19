@@ -44,6 +44,7 @@ public class HeaderParamParameterProcessor extends AbstractAnnotatedMethodParame
                            int parameterIndex, Method method, RestMethodMetadata restMethodMetadata) {
         RequestMetadata requestMetadata = restMethodMetadata.getRequest();
         // Add the placeholder as header value
+        // 比如StandardRestService#headers 形成 {"h",["{0}"]}的值填充到 requestMetadata#headers属性
         requestMetadata.addHeader(headerName, buildDefaultValue(parameterIndex));
     }
 }
