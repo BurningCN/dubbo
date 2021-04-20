@@ -41,7 +41,9 @@ public class LoggingEventListener extends GenericEventListener {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    // 下面的onEvent方法都会保存到父类的容器中
     public void onEvent(ServiceDiscoveryInitializingEvent event) {
+        // 注意info方法
         info("%s is initializing...", event.getServiceDiscovery());
     }
 
@@ -79,6 +81,7 @@ public class LoggingEventListener extends GenericEventListener {
 
     private void info(String pattern, Object... args) {
         if (logger.isInfoEnabled()) {
+            //String.format支持这种语法，直接一个args数组，就能按序匹配
             logger.info(format(pattern, args));
         }
     }

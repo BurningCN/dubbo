@@ -48,29 +48,25 @@ import static org.apache.dubbo.common.function.ThrowableFunction.execute;
  */
 public abstract class GenericEventListener implements EventListener<Event> {
 
-    private final Method onEventMethod;// onEvent方法
+    private final Method onEventMethod;
 
     private final Map<Class<?>, Set<Method>> handleEventMethods;
 
     protected GenericEventListener() {
-        // 进去
         this.onEventMethod = findOnEventMethod();
-        // 进去
         this.handleEventMethods = findHandleEventMethods();
     }
 
-    // 找到onEvent 方法
     private Method findOnEventMethod() {
-        // 先去看下execute方法。this.getClass，假设this为DubboBootstrap实例，listenerClass就是前面getClass的值，然后获取onEvent方法
-        // 当然是公共方法，DubboBootstrap类本身没有，但是其父类即当前类是有的，且是继承给DubboBootstrap的，所以能拿到
+        // 找到子类的 onEvent(Event)方法，其实就是该类的onEvent(Event event)方法
         return execute(getClass(), listenerClass -> listenerClass.getMethod("onEvent", Event.class));
     }
 
     private Map<Class<?>, Set<Method>> findHandleEventMethods() {
+        // 注意下面的注释
         // Event class for key, the eventMethods' Set as value
         Map<Class<?>, Set<Method>> eventMethods = new HashMap<>();
         of(getClass().getMethods())
-                // 进去
                 .filter(this::isHandleEventMethod)
                 .forEach(method -> {
                     Class<?> paramType = method.getParameterTypes()[0];
@@ -82,6 +78,7 @@ public abstract class GenericEventListener implements EventListener<Event> {
 
     public final void onEvent(Event event) {
         Class<?> eventClass = event.getClass();
+        // 找到EventClass的set<methods>集合，挨个调用，相当于同一种event，关注的监听方法都会被调用
         handleEventMethods.getOrDefault(eventClass, emptySet()).forEach(method -> {
             ThrowableConsumer.execute(method, m -> {
                 m.invoke(this, event);
@@ -102,8 +99,6 @@ public abstract class GenericEventListener implements EventListener<Event> {
      * @param method
      * @return
      */
-
-    // 比如LoggingEventListener的 onEvent(DubboServiceDestroyedEvent event)就是满足的
     private boolean isHandleEventMethod(Method method) {
 
         if (onEventMethod.equals(method)) { // not {@link #onEvent(Event)} method

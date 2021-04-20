@@ -41,6 +41,7 @@ public class RestProtocolSubscribedURLsSynthesizer implements SubscribedURLsSynt
 
     @Override
     public boolean supports(URL subscribedURL) {
+        // todo need pr rest使用静态常量
         return "rest".equals(subscribedURL.getProtocol()) ||
                 "rest".equals(subscribedURL.getParameter(PROTOCOL_KEY));
     }

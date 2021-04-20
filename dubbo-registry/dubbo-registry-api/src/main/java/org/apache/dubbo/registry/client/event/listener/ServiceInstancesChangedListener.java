@@ -86,6 +86,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
      *
      * @param event {@link ServiceInstancesChangedEvent}
      */
+    // 加锁了，很多涉及到事件的都加了锁
     public synchronized void onEvent(ServiceInstancesChangedEvent event) {
         logger.info("Received instance notification, serviceName: " + event.getServiceName() + ", instances: " + event.getServiceInstances().size());
         String appName = event.getServiceName();

@@ -16,8 +16,9 @@
  */
 package org.apache.dubbo.registry.client;
 
+import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataUtils.isInstanceUpdated;
+import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataUtils.resetInstanceUpdateKey;
 
-// OK
 public abstract class AbstractServiceDiscovery implements ServiceDiscovery {
 
     protected ServiceInstance serviceInstance;
@@ -28,11 +29,30 @@ public abstract class AbstractServiceDiscovery implements ServiceDiscovery {
     }
 
     @Override
-    public void register(ServiceInstance serviceInstance) throws RuntimeException {
+    public final void register(ServiceInstance serviceInstance) throws RuntimeException {
+        this.serviceInstance = serviceInstance;
+        doRegister(serviceInstance);
     }
 
+    /**
+     * It should be implement in kinds of service discovers.
+     */
+    public abstract void doRegister(ServiceInstance serviceInstance);
+
     @Override
-    public void update(ServiceInstance serviceInstance) throws RuntimeException {
+    public final void update(ServiceInstance serviceInstance) throws RuntimeException {
+        // 想更新的前提是带有"dubbo.instance.revision.updated"参数，且参数值为true
+        if (!isInstanceUpdated(serviceInstance)) {
+            return;
+        }
         this.serviceInstance = serviceInstance;
+        doUpdate(serviceInstance);
+        // 移除"dubbo.instance.revision.updated"参数
+        resetInstanceUpdateKey(serviceInstance);
     }
+
+    /**
+     * It should be implement in kinds of service discovers.
+     */
+    public abstract void doUpdate(ServiceInstance serviceInstance);
 }

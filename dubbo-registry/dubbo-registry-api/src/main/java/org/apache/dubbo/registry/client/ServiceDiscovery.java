@@ -43,10 +43,11 @@ import static org.apache.dubbo.event.EventDispatcher.getDefaultExtension;
  *
  * @since 2.7.5
  */
-// OK
+// todo need pr 常量
 @SPI("zookeeper")
 public interface ServiceDiscovery extends Prioritized {
 
+    // 这个生命周期注释很好
     // ==================================== Lifecycle ==================================== //
 
     /**
@@ -87,7 +88,7 @@ public interface ServiceDiscovery extends Prioritized {
     /**
      * Unregisters an instance of {@link ServiceInstance}.
      *
-     * @param serviceInstance an instance of {@link ServiceInstance} to be deregistered
+     * @param serviceInstance an instance of {@link ServiceInstance} to be unregistered
      * @throws RuntimeException if failed
      */
     void unregister(ServiceInstance serviceInstance) throws RuntimeException;
@@ -117,9 +118,11 @@ public interface ServiceDiscovery extends Prioritized {
      *
      * @param serviceName the service name
      * @return non-null {@link List}
-     * @throws NullPointerException if <code>serviceName</code> is <code>null</code> is <code>null</code>
+     * @throws NullPointerException if <code>serviceName</code> is <code>null</code>
      */
     default List<ServiceInstance> getInstances(String serviceName) throws NullPointerException {
+
+        // 搞了一个分页查询
 
         List<ServiceInstance> allInstances = new LinkedList<>();
 
@@ -148,7 +151,7 @@ public interface ServiceDiscovery extends Prioritized {
      * @param offset      the offset of request , the number "0" indicates first page
      * @param pageSize    the number of request, the {@link Integer#MAX_VALUE max value} indicates the range is unlimited
      * @return non-null {@link Page} object
-     * @throws NullPointerException          if <code>serviceName</code> is <code>null</code> is <code>null</code>
+     * @throws NullPointerException          if <code>serviceName</code> is <code>null</code>
      * @throws IllegalArgumentException      if <code>offset</code> or <code>pageSize</code> is negative number
      * @throws UnsupportedOperationException if not supported
      */
@@ -166,7 +169,7 @@ public interface ServiceDiscovery extends Prioritized {
      * @param pageSize    the number of request, the {@link Integer#MAX_VALUE max value} indicates the range is unlimited
      * @param healthyOnly if <code>true</code> , filter healthy instances only
      * @return non-null {@link Page} object
-     * @throws NullPointerException          if <code>serviceName</code> is <code>null</code> is <code>null</code>
+     * @throws NullPointerException          if <code>serviceName</code> is <code>null</code>
      * @throws IllegalArgumentException      if <code>offset</code> or <code>pageSize</code> is negative number
      * @throws UnsupportedOperationException if not supported
      */
@@ -183,14 +186,16 @@ public interface ServiceDiscovery extends Prioritized {
      * @param requestSize  the number of request, the {@link Integer#MAX_VALUE max value} indicates the range is unlimited
      * @return non-null read-only {@link Map} whose key is the service name and value is
      * the {@link Page pagination} of {@link ServiceInstance service instances}
-     * @throws NullPointerException          if <code>serviceName</code> is <code>null</code> is <code>null</code>
+     * @throws NullPointerException          if <code>serviceName</code> is <code>null</code>
      * @throws IllegalArgumentException      if <code>offset</code> or <code>requestSize</code> is negative number
      * @throws UnsupportedOperationException if not supported
      */
+    // 返回值的含义看上面注释
     default Map<String, Page<ServiceInstance>> getInstances(Iterable<String> serviceNames, int offset, int requestSize) throws
             NullPointerException, IllegalArgumentException {
         Map<String, Page<ServiceInstance>> instances = new LinkedHashMap<>();
         for (String serviceName : serviceNames) {
+            // 还是调用的getInstances方法，只是外层方法第一个参数是serviceNames迭代器，表示支持批量查询
             instances.put(serviceName, getInstances(serviceName, offset, requestSize));
         }
         return unmodifiableMap(instances);
@@ -199,7 +204,7 @@ public interface ServiceDiscovery extends Prioritized {
     /**
      * Add an instance of {@link ServiceInstancesChangedListener} for specified service
      * <p>
-     * Default, Current method will be invoked by {@link ServiceDiscoveryRegistry#subscribe(URL, NotifyListener)
+     * Default, current method will be invoked by {@link ServiceDiscoveryRegistry#subscribe(URL, NotifyListener)
      * the ServiceDiscoveryRegistry on the subscription}, and it's mandatory to
      * {@link EventDispatcher#addEventListener(EventListener) add} the {@link ServiceInstancesChangedListener} argument
      * into {@link EventDispatcher} whether the subclass implements same approach or not, thus this method is used to
@@ -215,6 +220,15 @@ public interface ServiceDiscovery extends Prioritized {
      */
     default void addServiceInstancesChangedListener(ServiceInstancesChangedListener listener)
             throws NullPointerException, IllegalArgumentException {
+    }
+
+    /**
+     * unsubscribe to instances change event.
+     * @param listener
+     * @throws IllegalArgumentException
+     */
+    default void removeServiceInstancesChangedListener(ServiceInstancesChangedListener listener)
+            throws IllegalArgumentException {
     }
 
     /**

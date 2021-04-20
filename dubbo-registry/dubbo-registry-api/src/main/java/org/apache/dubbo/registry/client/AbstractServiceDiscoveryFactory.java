@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentMap;
  * @see ServiceDiscoveryFactory
  * @since 2.7.5
  */
+// 主要是带缓存
 public abstract class AbstractServiceDiscoveryFactory implements ServiceDiscoveryFactory {
 
     private final ConcurrentMap<String, ServiceDiscovery> discoveries = new ConcurrentHashMap<>();

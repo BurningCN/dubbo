@@ -20,7 +20,7 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.registry.client.AbstractServiceDiscoveryFactory;
 import org.apache.dubbo.registry.client.ServiceDiscovery;
 
-// OK
+// OK easy
 public class ZookeeperServiceDiscoveryFactory extends AbstractServiceDiscoveryFactory {
 
     @Override
