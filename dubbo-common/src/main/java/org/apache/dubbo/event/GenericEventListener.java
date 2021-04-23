@@ -113,6 +113,7 @@ public abstract class GenericEventListener implements EventListener<Event> {
             return false;
         }
 
+        // 注意这里异常类型列表的api
         Class[] exceptionTypes = method.getExceptionTypes();
 
         if (exceptionTypes.length > 0) { // no exception declaration

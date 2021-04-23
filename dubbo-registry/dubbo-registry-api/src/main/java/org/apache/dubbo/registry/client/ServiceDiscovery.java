@@ -43,8 +43,8 @@ import static org.apache.dubbo.event.EventDispatcher.getDefaultExtension;
  *
  * @since 2.7.5
  */
-// todo need pr 常量
-@SPI("zookeeper")
+// todo need pr 静态常量代替
+@SPI("zookeeper") // ServiceDiscoveryFactory和ServiceDiscovery都是spi
 public interface ServiceDiscovery extends Prioritized {
 
     // 这个生命周期注释很好
@@ -127,7 +127,7 @@ public interface ServiceDiscovery extends Prioritized {
         List<ServiceInstance> allInstances = new LinkedList<>();
 
         int offset = 0;
-
+        // 100
         int pageSize = getDefaultPageSize();
 
         Page<ServiceInstance> page = getInstances(serviceName, offset, pageSize);

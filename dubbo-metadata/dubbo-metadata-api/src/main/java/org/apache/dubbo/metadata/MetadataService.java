@@ -107,7 +107,7 @@ public interface MetadataService {
      * @see URL#toFullString()
      */
     default SortedSet<String> getExportedURLs() {
-        return getExportedURLs(ALL_SERVICE_INTERFACES);
+        return getExportedURLs(ALL_SERVICE_INTERFACES); // "*"
     }
 
     /**
@@ -163,6 +163,7 @@ public interface MetadataService {
      * @see #toSortedStrings(Stream)
      * @see URL#toFullString()
      */
+    // 最全参数的方法，其他重载都直接或间接调用这个方法了
     SortedSet<String> getExportedURLs(String serviceInterface, String group, String version, String protocol);
 
     /**

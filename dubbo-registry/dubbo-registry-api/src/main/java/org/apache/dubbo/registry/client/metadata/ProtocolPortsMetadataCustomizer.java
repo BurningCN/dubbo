@@ -34,6 +34,7 @@ import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataU
  *
  * @since 2.7.5
  */
+// OK
 public class ProtocolPortsMetadataCustomizer implements ServiceInstanceCustomizer {
 
     @Override
@@ -50,6 +51,7 @@ public class ProtocolPortsMetadataCustomizer implements ServiceInstanceCustomize
                     protocols.put(url.getProtocol(), url.getPort());
                 });
 
+        // 进去
         setEndpoints(serviceInstance, protocols);
     }
 }

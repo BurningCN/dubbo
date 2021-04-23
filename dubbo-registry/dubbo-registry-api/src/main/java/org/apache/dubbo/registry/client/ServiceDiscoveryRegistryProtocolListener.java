@@ -20,6 +20,7 @@ import org.apache.dubbo.registry.integration.RegistryProtocolListener;
 import org.apache.dubbo.rpc.Exporter;
 import org.apache.dubbo.rpc.Invoker;
 
+// OK
 public class ServiceDiscoveryRegistryProtocolListener implements RegistryProtocolListener {
     @Override
     public void onExport(RegistryProtocol registryProtocol, Exporter<?> exporter) {

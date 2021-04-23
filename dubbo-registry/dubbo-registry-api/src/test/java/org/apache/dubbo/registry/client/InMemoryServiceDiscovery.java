@@ -54,22 +54,28 @@ public class InMemoryServiceDiscovery implements ServiceDiscovery {
 
     @Override
     public Page<ServiceInstance> getInstances(String serviceName, int offset, int pageSize, boolean healthyOnly) {
+        // 从缓存取出来
         List<ServiceInstance> instances = new ArrayList<>(repository.computeIfAbsent(serviceName, s -> new LinkedList<>()));
+        // 实际的总个数
         int totalSize = instances.size();
         List<ServiceInstance> data = emptyList();
         if (offset < totalSize) {
+            // toIndex最多到哪个位置。
             int toIndex = offset + pageSize > totalSize - 1 ? totalSize : offset + pageSize;
+            // 截取
             data = instances.subList(offset, toIndex);
         }
         if (healthyOnly) {
             Iterator<ServiceInstance> iterator = data.iterator();
             while (iterator.hasNext()) {
                 ServiceInstance instance = iterator.next();
+                // 不是健康的直接移除
                 if (!instance.isHealthy()) {
                     iterator.remove();
                 }
             }
         }
+        // 封装成page，进去会做一些其他运算
         return new DefaultPage<>(offset, pageSize, data, totalSize);
     }
 
@@ -89,6 +95,7 @@ public class InMemoryServiceDiscovery implements ServiceDiscovery {
 
     @Override
     public void register(ServiceInstance serviceInstance) throws RuntimeException {
+        // 代码很好理解不说了
         this.serviceInstance = serviceInstance;
         String serviceName = serviceInstance.getServiceName();
         List<ServiceInstance> serviceInstances = repository.computeIfAbsent(serviceName, s -> new LinkedList<>());

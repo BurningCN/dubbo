@@ -37,6 +37,7 @@ import static org.apache.dubbo.registry.Constants.REGISTER_KEY;
  *
  * @since 2.7.5
  */
+// OK
 public class RestProtocolSubscribedURLsSynthesizer implements SubscribedURLsSynthesizer {
 
     @Override

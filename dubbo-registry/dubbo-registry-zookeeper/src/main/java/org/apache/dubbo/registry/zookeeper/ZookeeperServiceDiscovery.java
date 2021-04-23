@@ -52,7 +52,7 @@ import static org.apache.dubbo.registry.zookeeper.util.CuratorFrameworkUtils.bui
  * <a href="https://curator.apache.org/curator-x-discovery/index.html">Apache Curator X Discovery</a>
  */
 
-// OK
+// OK 可以看下curator discovery的相关入门文章，简单了解下
 public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -78,6 +78,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
         this.curatorFramework = buildCuratorFramework(registryURL); // 进去
         this.rootPath = ROOT_PATH.getParameterValue(registryURL);// 进去 默认值 /services
         this.serviceDiscovery = buildServiceDiscovery(curatorFramework, rootPath);// 进去
+        // 和buildCuratorFramework一样，建立完成都需要start
         this.serviceDiscovery.start();
     }
 

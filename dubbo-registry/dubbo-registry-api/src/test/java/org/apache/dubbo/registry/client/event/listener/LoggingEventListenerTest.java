@@ -41,6 +41,7 @@ import static org.apache.dubbo.registry.client.DefaultServiceInstanceTest.create
  *
  * @since 2.7.5
  */
+// OK
 public class LoggingEventListenerTest {
 
     private LoggingEventListener listener;
@@ -58,6 +59,8 @@ public class LoggingEventListenerTest {
         ServiceDiscovery serviceDiscovery = new FileSystemServiceDiscovery();
 
         serviceDiscovery.initialize(connectionURL);
+
+        // 注意一类是关于ServiceDiscovery的，一类是关于ServiceInstance的
 
         // ServiceDiscoveryStartingEvent
         listener.onEvent(new ServiceDiscoveryInitializingEvent(serviceDiscovery, serviceDiscovery));

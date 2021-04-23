@@ -22,6 +22,7 @@ import org.apache.dubbo.common.extension.SPI;
 
 import static org.apache.dubbo.common.constants.RegistryConstants.REGISTRY_CLUSTER_TYPE_KEY;
 
+// OK
 @SPI
 public interface RegistryClusterIdentifier {
     String providerKey(URL url);
@@ -31,6 +32,7 @@ public interface RegistryClusterIdentifier {
     static RegistryClusterIdentifier getExtension(URL url) {
         ExtensionLoader<RegistryClusterIdentifier> loader
                 = ExtensionLoader.getExtensionLoader(RegistryClusterIdentifier.class);
+        // 获取"registry-cluster-type参数值，如果没有使用扩展名为"default"的扩展实例，即DefaultRegistryClusterIdentifier
         return loader.getExtension(url.getParameter(REGISTRY_CLUSTER_TYPE_KEY, "default"));
     }
 }

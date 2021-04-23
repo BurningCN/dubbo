@@ -107,6 +107,7 @@ import static java.util.Optional.of;
  * @see ServiceDiscoveryDestroyedEvent
  * @since 2.7.5
  */
+// 主要是处理事件的，工作在ServiceDiscovery的外层
 final class EventPublishingServiceDiscovery implements ServiceDiscovery {
 
     /**
@@ -141,6 +142,7 @@ final class EventPublishingServiceDiscovery implements ServiceDiscovery {
 
     private final ServiceDiscovery serviceDiscovery;
 
+    // gx
     protected EventPublishingServiceDiscovery(ServiceDiscovery serviceDiscovery) {
         if (serviceDiscovery == null) {
             throw new NullPointerException("The ServiceDiscovery argument must not be null!");
@@ -151,9 +153,11 @@ final class EventPublishingServiceDiscovery implements ServiceDiscovery {
     @Override
     public final void register(ServiceInstance serviceInstance) throws RuntimeException {
 
+        // 注册前先检查系统状态是否允许
         assertDestroyed(REGISTER_ACTION);
         assertInitialized(REGISTER_ACTION);
 
+        // 三个动作
         executeWithEvents(
                 of(new ServiceInstancePreRegisteredEvent(serviceDiscovery, serviceInstance)),
                 () -> serviceDiscovery.register(serviceInstance),
@@ -192,6 +196,7 @@ final class EventPublishingServiceDiscovery implements ServiceDiscovery {
         return serviceDiscovery.getServices();
     }
 
+    // 都委托给serviceDiscovery
     @Override
     public List<ServiceInstance> getInstances(String serviceName) throws NullPointerException {
         return serviceDiscovery.getInstances(serviceName);
@@ -245,7 +250,7 @@ final class EventPublishingServiceDiscovery implements ServiceDiscovery {
             return;
         }
 
-        executeWithEvents(
+        executeWithEvents(// Optional.of()
                 of(new ServiceDiscoveryInitializingEvent(this, serviceDiscovery)),
                 () -> serviceDiscovery.initialize(registryURL),
                 of(new ServiceDiscoveryInitializedEvent(this, serviceDiscovery))
@@ -278,6 +283,7 @@ final class EventPublishingServiceDiscovery implements ServiceDiscovery {
         destroyed.compareAndSet(false, true);
     }
 
+    // 前action 、action、后action
     protected final void executeWithEvents(Optional<? extends Event> beforeEvent,
                                            ThrowableAction action,
                                            Optional<? extends Event> afterEvent) {
@@ -285,6 +291,7 @@ final class EventPublishingServiceDiscovery implements ServiceDiscovery {
         try {
             action.execute();
         } catch (Throwable e) {
+            // 异常事件
             dispatchEvent(new ServiceDiscoveryExceptionEvent(this, serviceDiscovery, e));
         }
         afterEvent.ifPresent(this::dispatchEvent);

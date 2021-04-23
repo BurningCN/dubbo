@@ -68,7 +68,7 @@ public class MetadataInfo implements Serializable {
             return;
         }
         this.services.put(serviceInfo.getMatchKey(), serviceInfo);
-        markChanged();
+        markChanged();// services变化了，调用markChanged方法，内部将reported从true置为false，表示还没有报告
     }
 
     public void removeService(ServiceInfo serviceInfo) {
@@ -214,10 +214,10 @@ public class MetadataInfo implements Serializable {
                         if (StringUtils.isNotEmpty(value) && params.get(p) == null) {
                             params.put(p, value);
                         }
-                        //注意这里一个技巧，对null强转了
+                        // 获取"methods"参数值，注意这里一个技巧，对null强转了
                         String[] methods = url.getParameter(METHODS_KEY, (String[]) null);
                         if (methods != null) {
-                            for (String method : methods) {
+                            for (String method : methods) { // 获取方法的参数值
                                 String mValue = url.getMethodParameterStrict(method, p);
                                 if (StringUtils.isNotEmpty(mValue)) {
                                     params.put(method + DOT_SEPARATOR + p, mValue);
@@ -238,8 +238,8 @@ public class MetadataInfo implements Serializable {
             this.path = path;
             this.params = params == null ? new HashMap<>() : params;
 
-            this.serviceKey = URL.buildKey(name, group, version);
-            this.matchKey = buildMatchKey();
+            this.serviceKey = URL.buildKey(name, group, version);// dubbo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0
+            this.matchKey = buildMatchKey();                     // dubbo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo（最后追加:{protocol}）
         }
 
         public String getMatchKey() {

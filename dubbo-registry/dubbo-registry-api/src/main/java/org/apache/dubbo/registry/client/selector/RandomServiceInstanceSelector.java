@@ -29,6 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @see ServiceInstanceSelector
  * @since 2.7.5
  */
+// OK easy
 public class RandomServiceInstanceSelector implements ServiceInstanceSelector {
 
     @Override

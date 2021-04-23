@@ -28,6 +28,7 @@ import java.util.List;
  *
  * @since 2.7.5
  */
+// OK
 @SPI("random")
 public interface ServiceInstanceSelector {
 
@@ -38,6 +39,7 @@ public interface ServiceInstanceSelector {
      * @param serviceInstances the specified {@link ServiceInstance service instances}
      * @return an instance of {@link ServiceInstance} if available, or <code>null</code>
      */
+    // 无调用点
     @Adaptive("service-instance-selector")
     ServiceInstance select(URL registryURL, List<ServiceInstance> serviceInstances);
 }

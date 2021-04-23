@@ -54,7 +54,7 @@ public class RemoteMetadataServiceImpl {
         this.localMetadataService = writableMetadataService;
     }
 
-    public Map<String, MetadataReport> getMetadataReports() {
+    public Map<String/*registryCluster*/, MetadataReport> getMetadataReports() {
         return MetadataReportInstance.getMetadataReports(false);
     }
 
@@ -69,6 +69,7 @@ public class RemoteMetadataServiceImpl {
                 if (metadataReport == null) {
                     metadataReport = getMetadataReports().entrySet().iterator().next().getValue();
                 }
+                // 核心，发布--》app级别
                 metadataReport.publishAppMetadata(identifier, metadataInfo);
                 metadataInfo.markReported();
             }

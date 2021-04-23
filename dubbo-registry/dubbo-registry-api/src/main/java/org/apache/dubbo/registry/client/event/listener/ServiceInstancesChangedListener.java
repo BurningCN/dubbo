@@ -99,7 +99,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
         for (Map.Entry<String, List<ServiceInstance>> entry : allInstances.entrySet()) {
             List<ServiceInstance> instances = entry.getValue();
             for (ServiceInstance instance : instances) {
-                // 进去
+                // 进去 n. [印刷] 修正；复习；修订本
                 String revision = getExportedServicesRevision(instance);
                 if (DEFAULT_REVISION.equals(revision)) {
                     logger.info("Find instance without valid service metadata: " + instance.getAddress());
@@ -113,6 +113,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                     metadata = getMetadataInfo(instance);
                     logger.info("MetadataInfo for instance " + instance.getAddress() + "?revision=" + revision + " is " + metadata);
                     if (metadata != null) {
+                        // 这里重复getMetadataInfo了
                         revisionToMetadata.put(revision, getMetadataInfo(instance));
                     } else {
 

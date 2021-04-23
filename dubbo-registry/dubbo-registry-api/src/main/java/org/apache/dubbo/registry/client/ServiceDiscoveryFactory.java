@@ -28,7 +28,7 @@ import static org.apache.dubbo.common.extension.ExtensionLoader.getExtensionLoad
  * @see ServiceDiscovery
  * @since 2.7.5
  */
-// todo need pr default常量
+// todo need pr default使用静态常量
 @SPI("default")
 public interface ServiceDiscoveryFactory {
 

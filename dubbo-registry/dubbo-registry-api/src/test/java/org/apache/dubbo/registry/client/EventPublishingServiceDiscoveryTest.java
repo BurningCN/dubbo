@@ -39,9 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.5
  */
+// OK
 public class EventPublishingServiceDiscoveryTest {
-
-    private static final URL url = URL.valueOf("zookeeper://127.0.0.1:2181/");
 
     private EventDispatcher eventDispatcher = EventDispatcher.getDefaultExtension();
 
@@ -59,6 +58,7 @@ public class EventPublishingServiceDiscoveryTest {
 
         delegate = new InMemoryServiceDiscovery();
 
+        // EventPublishingServiceDiscovery需要一个真实的ServiceDiscovery实现类实例
         serviceDiscovery = new EventPublishingServiceDiscovery(delegate);
 
         serviceDiscoveryTest = new ServiceDiscoveryTest();

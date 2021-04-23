@@ -1,3 +1,9 @@
+package org.apache.dubbo.registry.support;
+
+/**
+ * @author BurningCN
+ * @date 2021/4/20 17:21
+ */
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,7 +20,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.dubbo.registry.support;
 
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.utils.CollectionUtils;
@@ -50,9 +55,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.5
  */
-public class ServiceOrientedRegistryTest {
+// 和ServiceOrientedRegistryTest类一模一样，只是这里为了演示zkServiceDiscovery，而不是前一个测试InMemoryServiceDiscovery
+public class ServiceOrientedRegistryTest_ZKServiceDiscovery {
 
-    private static final URL registryURL = valueOf("in-memory://localhost:12345")
+    private static final URL registryURL = valueOf("zookeeper://localhost:12345")
             .addParameter(REGISTRY_TYPE_KEY, SERVICE_REGISTRY_TYPE)
             .addParameter(ID_KEY, "org.apache.dubbo.config.RegistryConfig#0")
             .addParameter(SUBSCRIBED_SERVICE_NAMES_KEY, "a, b , c,d,e ,");
@@ -195,3 +201,4 @@ public class ServiceOrientedRegistryTest {
     }
 
 }
+

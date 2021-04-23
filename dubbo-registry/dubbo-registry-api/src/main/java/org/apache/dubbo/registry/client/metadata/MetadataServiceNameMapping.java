@@ -35,6 +35,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.model.ApplicationModel.getName;
 
+// OK
 public class MetadataServiceNameMapping implements ServiceNameMapping {
     private static final List<String> IGNORED_SERVICE_INTERFACES = asList(MetadataService.class.getName());
 
@@ -45,11 +46,15 @@ public class MetadataServiceNameMapping implements ServiceNameMapping {
         String version = url.getParameter(VERSION_KEY);
         String protocol = url.getProtocol();
 
+        // 接口为MetadataService的，忽略
         if (IGNORED_SERVICE_INTERFACES.contains(serviceInterface)) {
             return;
         }
+        // 获取注册集群
         String registryCluster = getRegistryCluster(url);
+        // 根据key从缓存获取MetadataReport,比如 zkMetadataReport
         MetadataReport metadataReport = MetadataReportInstance.getMetadataReport(registryCluster);
+        // 注册registerServiceAppMapping
         metadataReport.registerServiceAppMapping(ServiceNameMapping.buildGroup(serviceInterface, group, version, protocol), getName(), url);
     }
 
@@ -60,10 +65,13 @@ public class MetadataServiceNameMapping implements ServiceNameMapping {
         String version = url.getParameter(VERSION_KEY);
         String protocol = url.getProtocol();
 
+        // "mapping/{serviceInterface}"
         String mappingKey = ServiceNameMapping.buildGroup(serviceInterface, group, version, protocol);
         Set<String> serviceNames = new LinkedHashSet<>();
         String registryCluster = getRegistryCluster(url);
         MetadataReport metadataReport = MetadataReportInstance.getMetadataReport(registryCluster);
+
+        // 进去，注意参数，返回值就是（相对节点）mappingKey的节点值
         Set<String> apps = metadataReport.getServiceAppMapping(
                 mappingKey,
                 mappingListener,
@@ -78,6 +86,7 @@ public class MetadataServiceNameMapping implements ServiceNameMapping {
     protected String getRegistryCluster(URL url) {
         String registryCluster = RegistryClusterIdentifier.getExtension(url).providerKey(url);
         if (registryCluster == null) {
+            // 默认值为"default"
             registryCluster = DEFAULT_KEY;
         }
         int i = registryCluster.indexOf(",");

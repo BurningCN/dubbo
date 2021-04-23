@@ -150,10 +150,12 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
 
     @Override
     public void registerServiceAppMapping(String serviceKey, String application, URL url) {
+        // eg /dubbo/mapping/{serviceInterface}/testApp
         String path = toRootDir() + serviceKey + PATH_SEPARATOR + application;
         if (StringUtils.isBlank(zkClient.getContent(path))) {
             Map<String, String> value = new HashMap<>();
             value.put("timestamp", String.valueOf(System.currentTimeMillis()));
+            // 节点值为当前时间戳，永久节点
             zkClient.create(path, gson.toJson(value), false);
         }
     }
@@ -174,13 +176,18 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
             ChildListener zkListener = new ChildListener() {
                 @Override
                 public void childChanged(String path, List<String> children) {
+                    // 创建事件对象
                     MappingChangedEvent event = new MappingChangedEvent();
                     event.setServiceKey(serviceKey);
+                    // 把节点值存入对象属性
                     event.setApps(null != children ? new HashSet<>(children): null);
+                    // 调用监听器的回调方法
                     listener.onEvent(event);
                 }
             };
+            // 添加监听
             zkClient.addChildListener(path, zkListener);
+            // 映射关系填上
             listenerMap.put(path, zkListener);
         }
 

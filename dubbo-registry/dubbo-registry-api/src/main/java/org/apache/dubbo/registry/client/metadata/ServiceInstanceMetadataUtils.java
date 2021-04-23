@@ -129,6 +129,7 @@ public class ServiceInstanceMetadataUtils {
                 .map(url -> url.removeParameter(TIMESTAMP_KEY))
                 .forEach(url -> {
                     String protocol = url.getProtocol();
+                    // 协议:参数 映射，getParams进去
                     params.put(protocol, getParams(url));
                 });
 
@@ -136,12 +137,15 @@ public class ServiceInstanceMetadataUtils {
             return null;
         }
 
+        // 序列化
         return JSON.toJSONString(params);
     }
 
     private static Map<String, String> getParams(URL providerURL) {
         Map<String, String> params = new LinkedHashMap<>();
+        // 进去
         setDefaultParams(params, providerURL);
+        // 端口
         params.put(PORT_KEY, String.valueOf(providerURL.getPort()));
         return params;
     }
@@ -278,6 +282,7 @@ public class ServiceInstanceMetadataUtils {
      * @param providerURL the provider's {@link URL}
      */
     private static void setDefaultParams(Map<String, String> params, URL providerURL) {
+        // 将providerURL中含有DEFAULT_REGISTER_PROVIDER_KEYS中的参数填充到params
         for (String parameterName : DEFAULT_REGISTER_PROVIDER_KEYS) {
             String parameterValue = providerURL.getParameter(parameterName);
             if (!isBlank(parameterValue)) {

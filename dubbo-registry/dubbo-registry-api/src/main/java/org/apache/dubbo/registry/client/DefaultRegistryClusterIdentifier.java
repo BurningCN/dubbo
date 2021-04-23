@@ -20,9 +20,11 @@ import org.apache.dubbo.common.URL;
 
 import static org.apache.dubbo.common.constants.RegistryConstants.REGISTRY_CLUSTER_KEY;
 
+// OK
 public class DefaultRegistryClusterIdentifier implements RegistryClusterIdentifier {
     @Override
     public String providerKey(URL url) {
+        // 和下面取的key一样啊 获取"REGISTRY_CLUSTER"参数值
         return url.getParameter(REGISTRY_CLUSTER_KEY);
     }
 

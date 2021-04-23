@@ -23,6 +23,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +46,9 @@ public class ServiceInstanceMetadataUtilsTest {
         List<URL> urls = Arrays.asList(url, url2);
 
         String parameter = ServiceInstanceMetadataUtils.getMetadataServiceParameter(urls);
+        // parameter = {"rest":{"version":"1.0.0","dubbo":"2.0.2","release":"2.7.1","port":"20880"},"dubbo":{"version":"1.0.0","dubbo":"2.0.2","release":"2.7.1","port":"20880"}}
 
+        // 反序列化
         JSONObject jsonObject = JSON.parseObject(parameter);
 
         urls.forEach(url -> {
@@ -53,6 +56,7 @@ public class ServiceInstanceMetadataUtilsTest {
             for (Map.Entry<String, String> param : url.getParameters().entrySet()) {
                 String value = map.getString(param.getKey());
                 if (value != null) {
+                    // 比对
                     assertEquals(param.getValue(), value);
                 }
             }
@@ -60,10 +64,10 @@ public class ServiceInstanceMetadataUtilsTest {
 
         assertEquals(VALUE, parameter);
     }
-
-    @Test
-    public void testProtocolPorts() {
-
+//
+//    @Test
+//    public void testProtocolPorts() {
+//
 //        Map<String, String> metadata = new LinkedHashMap<>();
 //
 //        String key = protocolPortMetadataKey("dubbo");
@@ -84,5 +88,5 @@ public class ServiceInstanceMetadataUtilsTest {
 //        expected.put("rest", 8080);
 //
 //        assertEquals(expected, protocolPorts);
-    }
+//    }
 }

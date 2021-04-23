@@ -17,7 +17,6 @@
 package org.apache.dubbo.registry.client;
 
 import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataUtils.isInstanceUpdated;
-import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataUtils.resetInstanceUpdateKey;
 
 public abstract class AbstractServiceDiscovery implements ServiceDiscovery {
 
@@ -48,7 +47,7 @@ public abstract class AbstractServiceDiscovery implements ServiceDiscovery {
         this.serviceInstance = serviceInstance;
         doUpdate(serviceInstance);
         // 移除"dubbo.instance.revision.updated"参数
-        resetInstanceUpdateKey(serviceInstance);
+        // resetInstanceUpdateKey(serviceInstance);
     }
 
     /**

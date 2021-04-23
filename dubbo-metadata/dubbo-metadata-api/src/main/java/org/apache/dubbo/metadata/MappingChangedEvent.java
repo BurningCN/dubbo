@@ -18,6 +18,7 @@ package org.apache.dubbo.metadata;
 
 import java.util.Set;
 
+// OK
 public class MappingChangedEvent {
     private String serviceKey;
     private Set<String> apps;

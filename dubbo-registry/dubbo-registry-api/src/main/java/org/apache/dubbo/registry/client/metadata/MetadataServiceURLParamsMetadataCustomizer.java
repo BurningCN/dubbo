@@ -30,6 +30,7 @@ import static org.apache.dubbo.metadata.WritableMetadataService.getDefaultExtens
 import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataUtils.METADATA_SERVICE_URL_PARAMS_PROPERTY_NAME;
 import static org.apache.dubbo.registry.client.metadata.ServiceInstanceMetadataUtils.getMetadataServiceParameter;
 
+// OK。处理 ServiceInstance#metadata
 public class MetadataServiceURLParamsMetadataCustomizer implements ServiceInstanceCustomizer {
 
     @Override
@@ -45,11 +46,15 @@ public class MetadataServiceURLParamsMetadataCustomizer implements ServiceInstan
         }
     }
 
+
+    // todo need pr 参数无效
     private String resolveMetadataPropertyName(ServiceInstance serviceInstance) {
+        // "dubbo.metadata-service.url-params"
         return METADATA_SERVICE_URL_PARAMS_PROPERTY_NAME;
     }
 
     private String resolveMetadataPropertyValue(ServiceInstance serviceInstance) {
+        // 找到spi接口WritableMetadataService的默认扩展实例 InMemoryWritableMetadataService
         WritableMetadataService writableMetadataService = getDefaultExtension();
 
         String serviceInterface = MetadataService.class.getName();

@@ -50,7 +50,7 @@ public class DefaultServiceInstance implements ServiceInstance {
 
     private transient String address;
     private transient MetadataInfo serviceMetadata;
-    // used at runtime
+    // used at runtime ---- > 支持业务方传递应该是
     private transient Map<String, String> extendParams = new HashMap<>();
 
     public DefaultServiceInstance() {
@@ -69,6 +69,7 @@ public class DefaultServiceInstance implements ServiceInstance {
     }
 
     public DefaultServiceInstance(String serviceName, String host, Integer port) {
+        // id不指定的话默认就是host+port
         this(host + ":" + port, serviceName, host, port);
     }
 

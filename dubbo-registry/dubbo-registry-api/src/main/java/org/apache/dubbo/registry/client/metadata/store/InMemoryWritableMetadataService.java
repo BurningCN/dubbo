@@ -89,6 +89,7 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
      * whose key is the return value of {@link URL#getServiceKey()} method and value is
      * the {@link SortedSet sorted set} of the {@link URL URLs}
      */
+    // 此结构和exportedServiceURLs一致的
     ConcurrentNavigableMap<String, SortedSet<URL>> subscribedServiceURLs = new ConcurrentSkipListMap<>();
 
     ConcurrentNavigableMap<String, String> serviceDefinitions = new ConcurrentSkipListMap<>();
@@ -103,37 +104,37 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
     }
 
     private SortedSet<String> getAllUnmodifiableServiceURLs(Map<String, SortedSet<URL>> serviceURLs) {
-        SortedSet<URL> bizURLs = new TreeSet<>(InMemoryWritableMetadataService.URLComparator.INSTANCE);
+        SortedSet<URL> bizURLs = new TreeSet<>(InMemoryWritableMetadataService.URLComparator.INSTANCE);// 初始化一个treeset，指定排序规则
         for (Map.Entry<String, SortedSet<URL>> entry : serviceURLs.entrySet()) {
             SortedSet<URL> urls = entry.getValue();
             if (urls != null) {
-                for (URL url : urls) {
+                for (URL url : urls) { // 过滤接口为MetadataService的
                     if (!MetadataService.class.getName().equals(url.getServiceInterface())) {
                         bizURLs.add(url);
                     }
                 }
             }
-        }
-        return MetadataService.toSortedStrings(bizURLs);
+        } // 上面是 SortedSet<URL>，返回值是SortedSet<String>，所以需要将URL转化为String，内部就是调用URL::toFullString进行映射
+        return MetadataService.toSortedStrings(bizURLs); // 进去
     }
 
     @Override
     public SortedSet<String> getExportedURLs(String serviceInterface, String group, String version, String protocol) {
-        if (ALL_SERVICE_INTERFACES.equals(serviceInterface)) {
-            return getAllUnmodifiableServiceURLs(exportedServiceURLs);
+        if (ALL_SERVICE_INTERFACES.equals(serviceInterface)) { // 如果是"*"
+            return getAllUnmodifiableServiceURLs(exportedServiceURLs);// getAllUnmodifiableServiceURLs，从该类属性exportedServiceURLs中 获取所有的（除服务接口是MetaService的）进去
         }
         String serviceKey = buildKey(serviceInterface, group, version);
-        return unmodifiableSortedSet(getServiceURLs(exportedServiceURLs, serviceKey, protocol));
+        return unmodifiableSortedSet(getServiceURLs(exportedServiceURLs, serviceKey, protocol));// getServiceURLs 进去
     }
-
+    // exportURL主要是给metadataInfos、exportedServiceURLs属性添加元素
     @Override
-    public boolean exportURL(URL url) {
+    public boolean exportURL(URL url) { // 默认的话，走DefaultRegistryClusterIdentifier#providerKey，即获取url的"REGISTRY_CLUSTER"参数值，比如 org.apache.dubbo.config.RegistryConfig#0
         String registryCluster = RegistryClusterIdentifier.getExtension(url).providerKey(url);
-        String[] clusters = registryCluster.split(",");
+        String[] clusters = registryCluster.split(","); // 可能是多个注册集群，按照逗号分割
         for (String cluster : clusters) {
             MetadataInfo metadataInfo = metadataInfos.computeIfAbsent(cluster, k -> {
-                return new MetadataInfo(ApplicationModel.getName());
-            });
+                return new MetadataInfo(ApplicationModel.getName()); // 传递appName
+            }); // 添加服务，说明MetadataInfo是app级别的，里面有多个services（有个属性就是services）
             metadataInfo.addService(new ServiceInfo(url));
         }
         metadataSemaphore.release();
@@ -155,7 +156,7 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
         return removeURL(exportedServiceURLs, url);
     }
 
-    @Override
+    @Override // 方法结构和exportURL方法最后一步一致
     public boolean subscribeURL(URL url) {
         return addURL(subscribedServiceURLs, url);
     }
@@ -238,7 +239,8 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
     }
 
     boolean addURL(Map<String, SortedSet<URL>> serviceURLs, URL url) {
-        return executeMutually(() -> {
+        return executeMutually(() -> {// value是treeSet
+            // getServiceKey 比如 dubbo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0
             SortedSet<URL> urls = serviceURLs.computeIfAbsent(url.getServiceKey(), this::newSortedURLs);
             // make sure the parameters of tmpUrl is variable
             return urls.add(url);
@@ -261,7 +263,7 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
         });
     }
 
-    private SortedSet<URL> newSortedURLs(String serviceKey) {
+    private SortedSet<URL> newSortedURLs(String serviceKey) {// 注意排序规则（按照url.toFullString）
         return new TreeSet<>(InMemoryWritableMetadataService.URLComparator.INSTANCE);
     }
 
@@ -291,6 +293,7 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
             return emptySortedSet();
         }
 
+        // 过滤处符合protocol协议的
         return MetadataService.toSortedStrings(serviceURLs.stream().filter(url -> isAcceptableProtocol(protocol, url)));
     }
 

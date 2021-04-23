@@ -45,11 +45,11 @@ public class DefaultPage<T> implements Page<T>, Serializable {
     public DefaultPage(int requestOffset, int pageSize, List<T> data, int totalSize) {
         this.requestOffset = requestOffset;
         this.pageSize = pageSize;
-        this.data = data;
-        this.totalSize = totalSize;
+        this.data = data; // 实际的个数
+        this.totalSize = totalSize;// 实际的总个数
         int remain = totalSize % pageSize;
-        this.totalPages = remain > 0 ? (totalSize / pageSize) + 1 : totalSize / pageSize;
-        this.hasNext = totalSize - requestOffset - pageSize > 0;
+        this.totalPages = remain > 0 ? (totalSize / pageSize) + 1 : totalSize / pageSize;// 计算总页数
+        this.hasNext = totalSize - requestOffset - pageSize > 0; // 是否还有后续的
     }
 
     @Override

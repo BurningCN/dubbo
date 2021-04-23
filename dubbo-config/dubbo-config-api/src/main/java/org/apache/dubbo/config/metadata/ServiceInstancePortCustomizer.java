@@ -57,6 +57,7 @@ public class ServiceInstancePortCustomizer implements ServiceInstanceCustomizer 
         if (serviceInstance instanceof DefaultServiceInstance) {
             DefaultServiceInstance instance = (DefaultServiceInstance) serviceInstance;
             if (protocolConfig.getPort() != null) {
+                // 赋值port
                 instance.setPort(protocolConfig.getPort());
             }
         }

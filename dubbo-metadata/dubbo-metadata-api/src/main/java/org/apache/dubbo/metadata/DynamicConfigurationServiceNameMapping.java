@@ -71,7 +71,7 @@ public class DynamicConfigurationServiceNameMapping implements ServiceNameMappin
         });
     }
 
-    @Override
+    @Override // 这里的listener参数没有用，另一个实现类是有用到的
     public Set<String> getAndListen(URL url, MappingListener mappingListener) {
         String serviceInterface = url.getServiceInterface();
         String group = url.getParameter(GROUP_KEY);
@@ -80,7 +80,7 @@ public class DynamicConfigurationServiceNameMapping implements ServiceNameMappin
         DynamicConfiguration dynamicConfiguration = DynamicConfiguration.getDynamicConfiguration();
 
         Set<String> serviceNames = new LinkedHashSet<>();
-        execute(() -> {
+        execute(() -> { // 从 dynamicConfiguration 获取节点值
             Set<String> keys = dynamicConfiguration
                     .getConfigKeys(ServiceNameMapping.buildGroup(serviceInterface, group, version, protocol));
             serviceNames.addAll(keys);

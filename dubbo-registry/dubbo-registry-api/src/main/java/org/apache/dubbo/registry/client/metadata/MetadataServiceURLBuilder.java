@@ -27,6 +27,7 @@ import java.util.List;
  *
  * @since 2.7.5
  */
+// OK
 @SPI
 public interface MetadataServiceURLBuilder {
 

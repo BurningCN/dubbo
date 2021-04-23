@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @since 2.7.5
  */
+// OK
 public class SpringCloudMetadataServiceURLBuilderTest {
 
     private SpringCloudMetadataServiceURLBuilder builder = new SpringCloudMetadataServiceURLBuilder();
@@ -40,6 +41,7 @@ public class SpringCloudMetadataServiceURLBuilderTest {
         List<URL> urls = builder.build(new DefaultServiceInstance("127.0.0.1", "test", 8080));
         assertEquals(0, urls.size());
 
+        // 注意看serviceInstance，注意其 getMetadata().put("dubbo.metadata-service.urls"....
         urls = builder.build(serviceInstance);
         assertEquals(1, urls.size());
         URL url = urls.get(0);

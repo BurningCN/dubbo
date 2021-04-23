@@ -27,7 +27,7 @@ import java.util.Map;
  *
  * @since 2.7.5
  */
-// OK
+// OK 有唯一的实现类DefaultServiceInstance
 public interface ServiceInstance extends Serializable {
 
     /**

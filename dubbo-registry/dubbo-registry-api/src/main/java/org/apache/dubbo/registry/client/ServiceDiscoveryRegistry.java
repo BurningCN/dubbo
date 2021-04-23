@@ -123,10 +123,10 @@ public class ServiceDiscoveryRegistry implements Registry {
 
     public ServiceDiscoveryRegistry(URL registryURL) {
         this.registryURL = registryURL;
-        this.serviceDiscovery = createServiceDiscovery(registryURL);
-        this.subscribedServices = parseServices(registryURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY));
-        this.serviceNameMapping = ServiceNameMapping.getExtension(registryURL.getParameter(MAPPING_KEY));
-        this.writableMetadataService = WritableMetadataService.getDefaultExtension();
+        this.serviceDiscovery = createServiceDiscovery(registryURL);// 创建sd进去
+        this.subscribedServices = parseServices(registryURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY));// 获取 "subscribed-services"参数值,按照逗号分割填充到set集合
+        this.serviceNameMapping = ServiceNameMapping.getExtension(registryURL.getParameter(MAPPING_KEY));// 获取"mapping-type"参数值，ServiceNameMapping#getExtension进去
+        this.writableMetadataService = WritableMetadataService.getDefaultExtension();// 进去 默认InMemoryWritableMetadataService
     }
 
     public ServiceDiscovery getServiceDiscovery() {
@@ -140,13 +140,13 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @return non-null
      */
     protected ServiceDiscovery createServiceDiscovery(URL registryURL) {
-        ServiceDiscovery originalServiceDiscovery = getServiceDiscovery(registryURL);
-        ServiceDiscovery serviceDiscovery = enhanceEventPublishing(originalServiceDiscovery);
-        execute(() -> {
+        ServiceDiscovery originalServiceDiscovery = getServiceDiscovery(registryURL);// 先创建目标sd，比如测试程序的InMemoryServiceDiscovery，进去
+        ServiceDiscovery serviceDiscovery = enhanceEventPublishing(originalServiceDiscovery);// origin/目标sd用 EventPublishingServiceDiscovery 包装下
+        execute(() -> { // 进去 EventPublishingServiceDiscovery#initialize
             serviceDiscovery.initialize(registryURL.addParameter(INTERFACE_KEY, ServiceDiscovery.class.getName())
                     .removeParameter(REGISTRY_TYPE_KEY));
         });
-        return serviceDiscovery;
+        return serviceDiscovery; // 返回EventPublishingServiceDiscovery
     }
 
     private List<SubscribedURLsSynthesizer> initSubscribedURLsSynthesizers() {
@@ -161,9 +161,9 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @param registryURL the {@link URL} to connect the registry
      * @return
      */
-    private ServiceDiscovery getServiceDiscovery(URL registryURL) {
+    private ServiceDiscovery getServiceDiscovery(URL registryURL) { // ServiceDiscoveryFactory#getExtension的方法，获取对应扩展实例，如果没有则使用DefaultServiceDiscoveryFactory
         ServiceDiscoveryFactory factory = getExtension(registryURL);
-        return factory.getServiceDiscovery(registryURL);
+        return factory.getServiceDiscovery(registryURL);// 通过工厂获得ServiceDiscovery
     }
 
     /**
@@ -180,7 +180,7 @@ public class ServiceDiscoveryRegistry implements Registry {
 
         String side = providerURL.getParameter(SIDE_KEY);
 
-        boolean should = PROVIDER_SIDE.equals(side); // Only register the Provider.
+        boolean should = PROVIDER_SIDE.equals(side); // Only register the Provider. --- 注意 只注册provider
 
         if (!should) {
             if (logger.isDebugEnabled()) {
@@ -192,23 +192,23 @@ public class ServiceDiscoveryRegistry implements Registry {
     }
 
     protected boolean shouldSubscribe(URL subscribedURL) {
-        return !shouldRegister(subscribedURL);
+        return !shouldRegister(subscribedURL);// shouldRegister限定只有提供者可以注册，这里取反表示可以订阅，说明只有consumer可以订阅
     }
 
     @Override
     public final void register(URL url) {
-        if (!shouldRegister(url)) { // Should Not Register
+        if (!shouldRegister(url)) { // Should Not Register // 进去
             return;
         }
-        doRegister(url);
+        doRegister(url);// 进去
     }
 
-    public void doRegister(URL url) {
+    public void doRegister(URL url) {// 获取"id"参数值，比如 id -> org.apache.dubbo.config.RegistryConfig#0
         String registryCluster = serviceDiscovery.getUrl().getParameter(ID_KEY);
         if (registryCluster != null && url.getParameter(REGISTRY_CLUSTER_KEY) == null) {
-            url = url.addParameter(REGISTRY_CLUSTER_KEY, registryCluster);
+            url = url.addParameter(REGISTRY_CLUSTER_KEY, registryCluster);// 如果"id"参数值不空，但是"REGISTRY_CLUSTER"参数为空，则将"id"参数值赋值给"REGISTRY_CLUSTER"参数值
         }
-        if (writableMetadataService.exportURL(url)) {
+        if (writableMetadataService.exportURL(url)) { // 暴露提供者url，进去
             if (logger.isInfoEnabled()) {
                 logger.info(format("The URL[%s] registered successfully.", url.toString()));
             }
@@ -245,25 +245,25 @@ public class ServiceDiscoveryRegistry implements Registry {
 
     @Override
     public final void subscribe(URL url, NotifyListener listener) {
-        if (!shouldSubscribe(url)) { // Should Not Subscribe
+        if (!shouldSubscribe(url)) { // Should Not Subscribe // 进去
             return;
         }
         String registryCluster = serviceDiscovery.getUrl().getParameter(ID_KEY);
         if (registryCluster != null && url.getParameter(REGISTRY_CLUSTER_KEY) == null) {
             url = url.addParameter(REGISTRY_CLUSTER_KEY, registryCluster);
         }
-        doSubscribe(url, listener);
+        doSubscribe(url, listener);// 进去
     }
 
     public void doSubscribe(URL url, NotifyListener listener) {
-        writableMetadataService.subscribeURL(url);
+        writableMetadataService.subscribeURL(url);// 将url填充到 InMemoryWritableMetadataService#subscribedServiceURLs 容器中 进去
 
-        Set<String> serviceNames = getServices(url, listener);
+        Set<String> serviceNames = getServices(url, listener);// 获取url对应的服务列表（如果有的话），进去
         if (CollectionUtils.isEmpty(serviceNames)) {
             throw new IllegalStateException("Should has at least one way to know which services this interface belongs to, subscription url: " + url);
         }
 
-        subscribeURLs(url, listener, serviceNames);
+        subscribeURLs(url, listener, serviceNames);// 这里才是真实的订阅，进去
     }
 
     @Override
@@ -310,13 +310,13 @@ public class ServiceDiscoveryRegistry implements Registry {
         String serviceNamesKey = serviceNames.toString();
         // register ServiceInstancesChangedListener
         ServiceInstancesChangedListener serviceListener = serviceListeners.computeIfAbsent(serviceNamesKey,
-                k -> new ServiceInstancesChangedListener(serviceNames, serviceDiscovery));
+                k -> new ServiceInstancesChangedListener(serviceNames, serviceDiscovery));// 进去，注意这里是创建的ServiceInstancesChangedListener，不是那个ServiceInstancesChangedEvent
         serviceListener.setUrl(url);
-        listener.addServiceListener(serviceListener);
+        listener.addServiceListener(serviceListener);// addServiceListener 是 NotifyListener的默认方法，空实现
 
         String protocolServiceKey = url.getServiceKey() + GROUP_CHAR_SEPARATOR + url.getParameter(PROTOCOL_KEY, DUBBO);
-        serviceListener.addListener(protocolServiceKey, listener);
-        registerServiceInstancesChangedListener(url, serviceListener);
+        serviceListener.addListener(protocolServiceKey, listener);// ServiceInstancesChangedListener 内部 会对这两个建立kv映射存到指定的map容器，进去
+        registerServiceInstancesChangedListener(url, serviceListener);// 进去
 
         serviceNames.forEach(serviceName -> {
             List<ServiceInstance> serviceInstances = serviceDiscovery.getInstances(serviceName);
@@ -333,7 +333,7 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @param listener the {@link ServiceInstancesChangedListener}
      */
     private void registerServiceInstancesChangedListener(URL url, ServiceInstancesChangedListener listener) {
-        String listenerId = createListenerId(url, listener);
+        String listenerId = createListenerId(url, listener);// 进去
         if (registeredListeners.add(listenerId)) {
             serviceDiscovery.addServiceInstancesChangedListener(listener);
         }
@@ -354,19 +354,19 @@ public class ServiceDiscoveryRegistry implements Registry {
     protected Set<String> getServices(URL subscribedURL, final NotifyListener listener) {
         Set<String> subscribedServices = new TreeSet<>();
 
-        String serviceNames = subscribedURL.getParameter(PROVIDED_BY);
+        String serviceNames = subscribedURL.getParameter(PROVIDED_BY);// 获取 "provided-by" 参数值
         if (StringUtils.isNotEmpty(serviceNames)) {
             subscribedServices.addAll(parseServices(serviceNames));
         }
 
-        serviceNames = subscribedURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY);
+        serviceNames = subscribedURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY);// 获取 "subscribed-services" 参数值
         if (StringUtils.isNotEmpty(serviceNames)) {
             subscribedServices.addAll(parseServices(serviceNames));
         }
 
-        if (isEmpty(subscribedServices)) {
+        if (isEmpty(subscribedServices)) { // findMappedServices、DefaultMappingListener 进去
             subscribedServices.addAll(findMappedServices(subscribedURL, new DefaultMappingListener(subscribedURL, subscribedServices, listener)));
-            if (isEmpty(subscribedServices)) {
+            if (isEmpty(subscribedServices)) { // 如果还是空，则直接获取getSubscribedServices填充到返回结果，subscribedServices属性的内容是在构造函数里面处理填充的，主要是获取url的"subscribed-services"参数值（按照逗号分割）
                 subscribedServices.addAll(getSubscribedServices());
             }
         }
@@ -375,7 +375,7 @@ public class ServiceDiscoveryRegistry implements Registry {
 
     public static Set<String> parseServices(String literalServices) {
         return isBlank(literalServices) ? emptySet() :
-                unmodifiableSet(of(literalServices.split(","))
+                unmodifiableSet(of(literalServices.split(","))// Stream.of。根据","分割
                         .map(String::trim)
                         .filter(StringUtils::isNotEmpty)
                         .collect(toSet()));
@@ -397,7 +397,7 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @return
      */
     protected Set<String> findMappedServices(URL subscribedURL, MappingListener listener) {
-        return serviceNameMapping.getAndListen(subscribedURL, listener);
+        return serviceNameMapping.getAndListen(subscribedURL, listener);// 进去，默认为DynamicConfigurationServiceNameMapping
     }
 
     /**
@@ -406,7 +406,7 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @param registryURL the {@link URL url} of registry
      * @return <code>null</code> if not supported
      */
-    public static ServiceDiscoveryRegistry create(URL registryURL) {
+    public static ServiceDiscoveryRegistry create(URL registryURL) { // 两个都进去
         return supports(registryURL) ? new ServiceDiscoveryRegistry(registryURL) : null;
     }
 
@@ -416,7 +416,7 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @param registryURL the {@link URL url} of registry
      * @return if supported, return <code>true</code>, or <code>false</code>
      */
-    public static boolean supports(URL registryURL) {
+    public static boolean supports(URL registryURL) { // url含有"registry-type"参数，且值为"service"
         return SERVICE_REGISTRY_TYPE.equalsIgnoreCase(registryURL.getParameter(REGISTRY_TYPE_KEY));
     }
 

@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @since 2.7.5
  */
+// OK
 public class ServiceDiscoveryTest {
 
     private ServiceDiscovery serviceDiscovery;
@@ -56,17 +57,21 @@ public class ServiceDiscoveryTest {
     }
 
     @Test
-    public void testToString() {
+    public void testToString() { // toString 是 ServiceDiscovery接口的方法
         assertEquals("InMemoryServiceDiscovery", serviceDiscovery.toString());
     }
 
+    // 测试三个动作，注册、更新、取消注册
     @Test
     public void testRegisterAndUpdateAndUnregister() {
 
         // register
         DefaultServiceInstance serviceInstance = new DefaultServiceInstance("A", "127.0.0.1", 8080);
+
+        // 进去
         serviceDiscovery.register(serviceInstance);
 
+        // 进去
         List<ServiceInstance> serviceInstances = serviceDiscovery.getInstances("A");
 
         assertEquals(1, serviceInstances.size());
@@ -76,7 +81,7 @@ public class ServiceDiscoveryTest {
         serviceInstance.setHealthy(false);
         serviceInstance.setPort(9090);
 
-        // update
+        // update // 进去
         serviceDiscovery.update(serviceInstance);
 
         serviceInstances = serviceDiscovery.getInstances("A");
@@ -84,7 +89,7 @@ public class ServiceDiscoveryTest {
         assertEquals(1, serviceInstances.size());
         assertEquals(serviceInstances.get(0), serviceInstance);
 
-        // unregister
+        // unregister // 进去
         serviceDiscovery.unregister(serviceInstance);
 
         serviceInstances = serviceDiscovery.getInstances("A");
@@ -94,9 +99,11 @@ public class ServiceDiscoveryTest {
 
     @Test
     public void testGetServices() {
+        // InMemoryServiceDiscovery这个服务发现实例，内部register的逻辑是多次注册以最后的DefaultServiceInstance为准
         serviceDiscovery.register(new DefaultServiceInstance("A", "127.0.0.1", 8080));
         serviceDiscovery.register(new DefaultServiceInstance("B", "127.0.0.1", 8080));
         serviceDiscovery.register(new DefaultServiceInstance("C", "127.0.0.1", 8080));
+        // 进去
         assertEquals(new HashSet<>(asList("A", "B", "C")), serviceDiscovery.getServices());
     }
 
@@ -126,9 +133,10 @@ public class ServiceDiscoveryTest {
         assertEquals(5, page.getPageSize());
         assertEquals(3, page.getTotalSize());
         assertEquals(3, page.getData().size());
-        assertTrue(page.hasData());
+        assertTrue(page.hasData()); // 进去
 
         for (ServiceInstance instance : page.getData()) {
+            // 和一开始的准备数据对照，肯定是包含的
             assertTrue(instances.contains(instance));
         }
 
@@ -203,6 +211,7 @@ public class ServiceDiscoveryTest {
         // requestSize > total elements
         int requestSize = 5;
 
+        // 注意最后一个参数是true，要求检查健康
         Page<ServiceInstance> page = serviceDiscovery.getInstances("A", offset, requestSize, true);
         assertEquals(0, page.getOffset());
         assertEquals(5, page.getPageSize());

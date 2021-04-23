@@ -29,6 +29,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 
+// OK
 public class InstanceAddressURL extends URL {
     private ServiceInstance instance;
     private MetadataInfo metadataInfo;
@@ -40,6 +41,7 @@ public class InstanceAddressURL extends URL {
     public InstanceAddressURL() {
     }
 
+    // gx
     public InstanceAddressURL(
             ServiceInstance instance,
             MetadataInfo metadataInfo

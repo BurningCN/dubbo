@@ -57,7 +57,7 @@ public interface ServiceNameMapping {
         return getExtensionLoader(ServiceNameMapping.class).getDefaultExtension();
     }
 
-    static ServiceNameMapping getExtension(String name) {
+    static ServiceNameMapping getExtension(String name) { // name为null的话，用"config"扩展名，即 DynamicConfigurationServiceNameMapping
         return getExtensionLoader(ServiceNameMapping.class).getExtension(name == null ? CONFIG_MAPPING_TYPE : name);
     }
 

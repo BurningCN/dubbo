@@ -32,6 +32,7 @@ import static org.apache.dubbo.common.extension.ExtensionLoader.getExtensionLoad
  * @see EventPublishingServiceDiscovery
  * @since 2.7.5
  */
+// OK
 public class DefaultServiceDiscoveryFactory extends AbstractServiceDiscoveryFactory {
 
     /**
@@ -42,6 +43,7 @@ public class DefaultServiceDiscoveryFactory extends AbstractServiceDiscoveryFact
      */
     @Override
     protected ServiceDiscovery createDiscovery(URL registryURL) {
+        // 根据协议获值取对应的ServiceDiscovery实例
         String protocol = registryURL.getProtocol();
         ExtensionLoader<ServiceDiscovery> loader = getExtensionLoader(ServiceDiscovery.class);
         return loader.getExtension(protocol);
