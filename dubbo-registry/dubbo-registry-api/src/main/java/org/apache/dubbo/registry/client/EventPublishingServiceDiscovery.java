@@ -309,6 +309,7 @@ final class EventPublishingServiceDiscovery implements ServiceDiscovery {
         return destroyed.get();
     }
 
+    // todo need pr 下面两个方法名称反了
     protected void assertDestroyed(String action) throws IllegalStateException {
         if (!isInitialized()) {
             throw new IllegalStateException("The action[" + action + "] is rejected, because the ServiceDiscovery is not initialized yet.");

@@ -33,6 +33,7 @@ import java.util.function.Function;
 // OK
 public enum CuratorFrameworkParams {
 
+    // 注意最后一个function参数
     /**
      * The root path of Dubbo Service
      */
@@ -79,6 +80,7 @@ public enum CuratorFrameworkParams {
 
     private final Object defaultValue;
 
+    // 注意这里
     private final Function<String, Object> converter;
 
     <T> CuratorFrameworkParams(String name, T defaultValue, Function<String, T> converter) {
@@ -98,6 +100,7 @@ public enum CuratorFrameworkParams {
     // gx
     public <T> T getParameterValue(URL url) {
         String param = url.getParameter(name);
+        // 注意这里apply
         Object value = param != null ? converter.apply(param) : defaultValue;
         return (T) value;
     }

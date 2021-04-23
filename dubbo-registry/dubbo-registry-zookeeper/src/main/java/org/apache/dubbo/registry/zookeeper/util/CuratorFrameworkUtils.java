@@ -40,7 +40,7 @@ import static org.apache.dubbo.registry.zookeeper.util.CuratorFrameworkParams.*;
  *
  * @since 2.7.5
  */
-// OK
+// OK 这里是抽象类，防止实例化 curator的ZookeeperInstance + ServiceInstance（前者是后者的payload）  <---> 和我们自己的ServiceInstance映射
 public abstract class CuratorFrameworkUtils {
 
     // gx
