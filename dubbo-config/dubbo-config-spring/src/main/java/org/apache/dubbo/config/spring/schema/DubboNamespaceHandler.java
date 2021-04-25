@@ -91,7 +91,7 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
         // 解析<dubbo:protocol/>标签   协议
         registerBeanDefinitionParser("protocol", new DubboBeanDefinitionParser(ProtocolConfig.class, true));
 
-        // 解析<dubbo:service/>标签   用于暴露一个服务，定义服务的元信息，一个服务可以用多个协议暴露，一个服务也可以注册到多个注册中心
+        // 解析<dubbo:service/>标签   用于暴露一个服务，定义服务的元信息，一个服务可以用多个协议暴露，一个服务也可以注册到多个注册中心。注意传入的ServiceBean
         registerBeanDefinitionParser("service", new DubboBeanDefinitionParser(ServiceBean.class, true));
 
         // 解析<dubbo:reference/> 标签  用于创建一个远程服务代理，一个引用可以指向多个注册中心
@@ -113,13 +113,15 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
     @Override
     public BeanDefinition parse(Element element, ParserContext parserContext) {
         BeanDefinitionRegistry registry = parserContext.getRegistry();
+        // 进去
         registerAnnotationConfigProcessors(registry);
         /**
          * @since 2.7.8
          * issue : https://github.com/apache/dubbo/issues/6275
          */
+        // 注册自己定义的一些通用组件
         registerCommonBeans(registry);
-        // 解析xml的Element并生成BeanDefinition，内部会调用DubboBeanDefinitionParser的parse方法
+        // 解析xml的Element并生成BeanDefinition，内部会调用DubboBeanDefinitionParser的parse方法。// 进去
         BeanDefinition beanDefinition = super.parse(element, parserContext);
         setSource(beanDefinition);
         return beanDefinition;
@@ -132,6 +134,7 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
      * @see AnnotationConfigUtils
      * @since 2.7.5
      */
+    // 利用spring的api注册一些 Annotation-Driven 相关处理器bean（比如@Autowired的，具体可以进去看）
     private void registerAnnotationConfigProcessors(BeanDefinitionRegistry registry) {
         AnnotationConfigUtils.registerAnnotationConfigProcessors(registry);
     }

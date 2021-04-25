@@ -78,6 +78,7 @@ public class CacheListener implements DataListener {
 
         if (eventType == EventType.INITIALIZED) {
             // 当收到这个事件的时候，就countdown，ZookeeperDynamicConfiguration在initializedLatch.await就解除阻塞了，表示连接完成并初始化完毕
+            // 注意进这里的时候path和value都是null的
             initializedLatch.countDown();
             return;
         }

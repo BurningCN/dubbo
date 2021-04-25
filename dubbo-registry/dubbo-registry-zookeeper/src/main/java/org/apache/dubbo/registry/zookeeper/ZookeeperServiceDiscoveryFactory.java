@@ -23,8 +23,10 @@ import org.apache.dubbo.registry.client.ServiceDiscovery;
 // OK easy
 public class ZookeeperServiceDiscoveryFactory extends AbstractServiceDiscoveryFactory {
 
+    // 参数没有卵用
     @Override
     protected ServiceDiscovery createDiscovery(URL registryURL) {
+       // 直接使用的默认空参构造，没有任何属性赋值。此时并没有进行zk的连接，以及创建curator的ServiceDiscovery，需要内部的initialize方法被调用才会进行
         return new ZookeeperServiceDiscovery();
     }
 }

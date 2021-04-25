@@ -559,7 +559,7 @@ public class DubboBootstrap extends GenericEventListener {
         // 启动元数据中心 进去
         startMetadataCenter();
 
-        // 初始化元数据中心 进去
+        // 初始化元数据中心 进去（前面是Metadata[Center]、这里是Metadata[Service]，注意区分，后者默认实现为InMemoryWritableMetadataService）
         initMetadataService();
 
         // 初始化事件监听器 进去
@@ -573,8 +573,9 @@ public class DubboBootstrap extends GenericEventListener {
 
 
     // 下面又生成了一些xxConfig，并添加到了configManager的缓存中，以demo-api-provider为例，其缓存的内容见文件：demo-api-provider注册到configManger的内存数据.md
+    // 也可看下方法最后大块注释
     private void checkGlobalConfigs() {
-        // check Application
+        // check Application  // 校验某些属性/参数值的合法性，是否含有特殊字符比如
         ConfigValidationUtils.validateApplicationConfig(getApplication());
 
         // check Metadata
@@ -589,7 +590,9 @@ public class DubboBootstrap extends GenericEventListener {
         }
         if (CollectionUtils.isNotEmpty(metadatas)) {
             for (MetadataReportConfig metadataReportConfig : metadatas) {
+                // 同理，一般只是吧prefix属性赋了值，即 prefix = "dubbo.metadata-report"
                 metadataReportConfig.refresh();
+                // 校验某些属性/参数值的合法性，是否含有特殊字符比如
                 ConfigValidationUtils.validateMetadataConfig(metadataReportConfig);
             }
         }
@@ -605,6 +608,7 @@ public class DubboBootstrap extends GenericEventListener {
             });
         }
         for (ProviderConfig providerConfig : configManager.getProviders()) {
+            // 校验某些属性/参数值的合法性，是否含有特殊字符比如
             ConfigValidationUtils.validateProviderConfig(providerConfig);
         }
         // check Consumer
@@ -618,6 +622,7 @@ public class DubboBootstrap extends GenericEventListener {
             });
         }
         for (ConsumerConfig consumerConfig : configManager.getConsumers()) {
+            // 校验某些属性/参数值的合法性，是否含有特殊字符比如
             ConfigValidationUtils.validateConsumerConfig(consumerConfig);
         }
 
@@ -629,11 +634,25 @@ public class DubboBootstrap extends GenericEventListener {
         ConfigValidationUtils.validateModuleConfig(getModule());
         // check Ssl
         ConfigValidationUtils.validateSslConfig(getSsl());
+
+        //configsCache = {HashMap@2458}  size = 12
+        // "registry" -> {HashMap@2814}  size = 1
+        // "protocol" -> {HashMap@2816}  size = 1
+        // "application" -> {HashMap@2818}  size = 1
+        // "provider" -> {HashMap@4456}  size = 1
+        // "service" -> {HashMap@2820}  size = 1
+        // "module" -> {HashMap@4458}  size = 1
+        // "monitor" -> {HashMap@4460}  size = 1
+        // "metrics" -> {HashMap@4462}  size = 1
+        // "metadata-report" -> {HashMap@2822}  size = 1
+        // "ssl" -> {HashMap@4464}  size = 1
+        // "consumer" -> {HashMap@4466}  size = 1
+        // "config-center" -> {HashMap@4166}  size = 1
     }
 
     private void startConfigCenter() {
 
-        // 使用注册作为配置中心，如果有必要的话，进去
+        // 使用注册作为配置中心，如果有必要的话，进去（是否supports、构建ConfigCenterConfig、注册到configManager）
         useRegistryAsConfigCenterIfNecessary();
 
         // 从ConfigManager中获得的所有的ConfigCenterConfig对象
@@ -651,10 +670,12 @@ public class DubboBootstrap extends GenericEventListener {
                 configManager.addConfigCenter(configCenterConfig);
                 configCenters = configManager.getConfigCenters();
             }
+            // 一般是这个分支
         } else {
             for (ConfigCenterConfig configCenterConfig : configCenters) {
-                // 和前面一样，刷新和检查
+                // 和前面一样，刷新和检查（refresh内部会将 prefix = "dubbo.config-center"，原先是null）
                 configCenterConfig.refresh();
+                // 验证参数值是否含有非法字符
                 ConfigValidationUtils.validateConfigCenterConfig(configCenterConfig);
             }
         }
@@ -668,9 +689,12 @@ public class DubboBootstrap extends GenericEventListener {
                 // 比如ZookeeperDynamicConfiguration就是是config center模块的）， prepareEnvironment 进去
                 compositeDynamicConfiguration.addConfiguration(prepareEnvironment(configCenter));
             }
-            // 存到environment
+            // 存到environment,和开头调用useRegistryAsConfigCenterIfNecessary内部的第一行对应
             environment.setDynamicConfiguration(compositeDynamicConfiguration);
         }
+        // 主要还是吧一些prefix值为null的，设置了对应的值，比如
+        //        RegistryConfig  prefix = "dubbo.registries."
+        //        ProtocolConfig  prefix = "dubbo.protocols."
         configManager.refreshAll();
     }
 
@@ -681,10 +705,12 @@ public class DubboBootstrap extends GenericEventListener {
 
         ApplicationConfig applicationConfig = getApplication();
 
+        // 看下类型，有remote和local值，进去
         String metadataType = applicationConfig.getMetadataType();
         // FIXME, multiple metadata config support.
         Collection<MetadataReportConfig> metadataReportConfigs = configManager.getMetadataConfigs();
         if (CollectionUtils.isEmpty(metadataReportConfigs)) {
+            // 如果ConfigManager没有MetadataReportConfig，然后application还有metadataType = remote值，直接抛异常
             if (REMOTE_METADATA_STORAGE_TYPE.equals(metadataType)) {
                 throw new IllegalStateException("No MetadataConfig found, Metadata Center address is required when 'metadata=remote' is enabled.");
             }
@@ -692,10 +718,13 @@ public class DubboBootstrap extends GenericEventListener {
         }
 
         for (MetadataReportConfig metadataReportConfig : metadataReportConfigs) {
+            // 进去，验证，但是内容基本为空
             ConfigValidationUtils.validateMetadataConfig(metadataReportConfig);
+            // 进去
             if (!metadataReportConfig.isValid()) {
                 return;
             }
+            // 核心，进去
             MetadataReportInstance.init(metadataReportConfig);
         }
     }
@@ -904,7 +933,7 @@ public class DubboBootstrap extends GenericEventListener {
 
     // add registry + protocol  to configManager
     private void loadRemoteConfigs() {
-        // registry ids to registry configs
+        // registry ids to registry configs（虽然configManager含有RegistryConfig，但是下面getRegistryIds还是有可能为空的，因为获取id的目的就是为了构建RegistryConfig，但是已经有了都，当然无关乎id了）
         List<RegistryConfig> tmpRegistries = new ArrayList<>();
         Set<String> registryIds = configManager.getRegistryIds();
         registryIds.forEach(id -> {
@@ -922,6 +951,7 @@ public class DubboBootstrap extends GenericEventListener {
 
         // protocol ids to protocol configs
         List<ProtocolConfig> tmpProtocols = new ArrayList<>();
+        // configManager如果有ProtocolConfig，id列表一般为空
         Set<String> protocolIds = configManager.getProtocolIds();
         protocolIds.forEach(id -> {
             if (tmpProtocols.stream().noneMatch(prot -> prot.getId().equals(id))) {
@@ -975,11 +1005,11 @@ public class DubboBootstrap extends GenericEventListener {
             exportServices();
 
             // Not only provider register
-            // 不是仅注册Provider信息或者有其他要暴露的服务（两个都进去）
+            // 不是仅注册Provider信息或者有其他要暴露的服务（两个都进去）（一般provider，使用的是ServiceDiscovery的时候，就会满足第二个条件（第一个不满足））
             if (!isOnlyRegisterProvider() || hasExportedServices()) {
                 // 2. export MetadataService
                 exportMetadataService();
-                // 3. Register the local ServiceInstance if required
+                // 3. Register the local ServiceInstance if required // 进去
                 registerServiceInstance();
             }
 
@@ -1015,7 +1045,7 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private boolean hasExportedServices() {
-        // metadataService的赋值处注意下
+        // metadataService的赋值处注意下。这里一般是InMemoryWritableMetadataService
         return !metadataService.getExportedURLs().isEmpty();
     }
 
@@ -1173,6 +1203,7 @@ public class DubboBootstrap extends GenericEventListener {
      * export {@link MetadataService}
      */
     private void exportMetadataService() {
+        // ConfigurableMetadataServiceExporter 进去 该对象的赋值处注意下
         metadataServiceExporter.export();
     }
 
@@ -1274,23 +1305,32 @@ public class DubboBootstrap extends GenericEventListener {
 
         String serviceName = application.getName();
 
+        // 选择一个MetadataService已经暴露的url
         URL exportedURL = selectMetadataServiceExportedURL();
 
         String host = exportedURL.getHost();
 
         int port = exportedURL.getPort();
 
+        // 创建ServiceInstance。注意这里的ServiceName为前面的AppName
         ServiceInstance serviceInstance = createServiceInstance(serviceName, host, port);
 
+        // 进去
         doRegisterServiceInstance(serviceInstance);
 
-        // scheduled task for updating Metadata and ServiceInstance
         executorRepository.nextScheduledExecutor().scheduleAtFixedRate(() -> {
-            InMemoryWritableMetadataService localMetadataService = (InMemoryWritableMetadataService) WritableMetadataService.getDefaultExtension();
-            localMetadataService.blockUntilUpdated();
-            ServiceInstanceMetadataUtils.refreshMetadataAndInstance();
-        }, 0, ConfigurationUtils.get(METADATA_PUBLISH_DELAY_KEY, DEFAULT_METADATA_PUBLISH_DELAY), TimeUnit.MICROSECONDS);
+            try {
+                InMemoryWritableMetadataService localMetadataService = (InMemoryWritableMetadataService) WritableMetadataService.getDefaultExtension();
+                // 进去
+                localMetadataService.blockUntilUpdated();
+                // 进去
+                ServiceInstanceMetadataUtils.refreshMetadataAndInstance();
+            } catch (Throwable e) {
+                logger.error("refresh metadata and instance failed", e);
+            }
+        }, 0, ConfigurationUtils.get(METADATA_PUBLISH_DELAY_KEY, DEFAULT_METADATA_PUBLISH_DELAY), TimeUnit.MILLISECONDS);
     }
+
 
     private void doRegisterServiceInstance(ServiceInstance serviceInstance) {
         //FIXME
@@ -1299,7 +1339,7 @@ public class DubboBootstrap extends GenericEventListener {
         getServiceDiscoveries().forEach(serviceDiscovery ->
         {
             calInstanceRevision(serviceDiscovery, serviceInstance);
-            // register metadata
+            // register metadata 这里是关键，app级别的注册
             serviceDiscovery.register(serviceInstance);
         });
     }
@@ -1308,6 +1348,7 @@ public class DubboBootstrap extends GenericEventListener {
 //        InMemoryWritableMetadataService localMetadataService = (InMemoryWritableMetadataService)WritableMetadataService.getDefaultExtension();
 //        localMetadataService.blockUntilUpdated();
         RemoteMetadataServiceImpl remoteMetadataService = MetadataUtils.getRemoteMetadataService();
+        // 进去，注意区别MetadataReport的publish机制。注意下面参数取出来是appName
         remoteMetadataService.publishMetadata(serviceInstance.getServiceName());
     }
 

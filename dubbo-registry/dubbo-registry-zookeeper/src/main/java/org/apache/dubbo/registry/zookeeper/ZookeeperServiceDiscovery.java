@@ -72,11 +72,14 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
      */
     private final Map<String, CuratorWatcher> watcherCaches = new ConcurrentHashMap<>();
 
+    // 主要被 EventPublishingServiceDiscovery 调用
     @Override
     public void initialize(URL registryURL) throws Exception {
+        // eg zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.2&id=org.apache.dubbo.config.RegistryConfig&interface=org.apache.dubbo.registry.client.ServiceDiscovery&metadata-type=remote&pid=67248&timestamp=1619165300619
         this.registryURL = registryURL;
         this.curatorFramework = buildCuratorFramework(registryURL); // 进去
-        this.rootPath = ROOT_PATH.getParameterValue(registryURL);// 进去 默认值 /services
+        // 进去 默认值 /services
+        this.rootPath = ROOT_PATH.getParameterValue(registryURL);
         this.serviceDiscovery = buildServiceDiscovery(curatorFramework, rootPath);// 进去
         // 和buildCuratorFramework一样，建立完成都需要start
         this.serviceDiscovery.start();

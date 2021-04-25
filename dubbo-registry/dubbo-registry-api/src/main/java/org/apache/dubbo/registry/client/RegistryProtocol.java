@@ -222,16 +222,16 @@ public class RegistryProtocol implements Protocol {
         // export invoker 内部主要是创建了NettyServer，进去
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);// < ------核心1：服务导出
 
-        // url to registry（eg ZookeeperRegistry）
+        // url to registry（eg ZookeeperRegistry、ZookeeperServiceDiscovery）
         final Registry registry = getRegistry(originInvoker);
-        // 获取已注册的服务提供者 URL，比如：dubbo://172.17.48.52:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&dubbo=2.0.2&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello
+        // 获取将注册的服务提供者URL，比如：dubbo://172.17.48.52:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&dubbo=2.0.2&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello
         final URL registeredProviderUrl = getUrlToRegistry(providerUrl, registryUrl);
 
         // 获取 register 参数
         boolean register = providerUrl.getParameter(REGISTER_KEY, true);
         // 根据 register 的值决定是否注册服务
         if (register) {
-            // 向注册中心注册服务，进去
+            // 向注册中心注册服务，进去 ，实例为ListenerRegistryWrapper（Registry是spi接口，被ListenerRegistryWrapper包装了）
             register(registryUrl, registeredProviderUrl); // < ------核心2：服务注册
         }
 
@@ -244,7 +244,7 @@ public class RegistryProtocol implements Protocol {
         exporter.setSubscribeUrl(overrideSubscribeUrl);
 
         // Deprecated! Subscribe to override rules in 2.6.x or before. 弃用!订阅以覆盖2.6中的规则。x或之前。
-        // 向注册中心进行订阅 override 数据 进去
+        // 向注册中心进行订阅 override 数据 进去 ，这里的registry为ListenerRegistryWrapper
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
 
         // "暴露"事件完毕，通知"RegistryProtocolListener"监听器，
@@ -399,7 +399,7 @@ public class RegistryProtocol implements Protocol {
     protected Registry getRegistry(final Invoker<?> originInvoker) {
         // 进去
         URL registryUrl = getRegistryUrl(originInvoker);
-        // registryFactory 为 RegistryFactory$Adaptive ，其赋值处是在setRegistryFactory的调用，而setXX是怎么调用的，不用猜就是ioc
+        // registryFactory 为 RegistryFactory$Adaptive ，其赋值处是在setRegistryFactory的调用，而setXX是怎么调用的，不用猜就是ioc(具体是谁取决于registryUrl protocol值，是registry://还是service-discovery-registry://)
         // 在RegistryProtocol实例化的时候（ServiceConfig的PROTOCOL.export(wrapperInvoker)处），会inject相关依赖的扩展实例（通过调用set方法）
         return registryFactory.getRegistry(registryUrl);
     }
@@ -425,7 +425,7 @@ public class RegistryProtocol implements Protocol {
      * @return url to registry.
      */
     private URL getUrlToRegistry(final URL providerUrl, final URL registryUrl) {
-        //The address you see at the registry
+        //The address you see at the registry。是否需要简化，即去掉某些参数，默认不需要
         if (!registryUrl.getParameter(SIMPLIFIED_KEY, false)) {
             return providerUrl.removeParameters(getFilteredKeys(providerUrl)).removeParameters(
                     MONITOR_KEY, BIND_IP_KEY, BIND_PORT_KEY, QOS_ENABLE, QOS_HOST, QOS_PORT, ACCEPT_FOREIGN_IP, VALIDATION_KEY,

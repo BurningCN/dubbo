@@ -54,15 +54,18 @@ public class DynamicConfigurationServiceNameMapping implements ServiceNameMappin
             return;
         }
 
+        // 获取动态配置实例，先前注册过，这里的实际类型为CompositeDynamicConfiguration，其内部包含zkDynamicConfiguration
         DynamicConfiguration dynamicConfiguration = DynamicConfiguration.getDynamicConfiguration();
 
         // the Dubbo Service Key as group
         // the service(application) name as key
         // It does matter whatever the content is, we just need a record
+        // appName
         String key = getName();
         String content = valueOf(System.currentTimeMillis());
 
         execute(() -> {
+            // 三个参数比如 ： demo-provider、mapping/samples.servicediscovery.demo.DemoService、时间戳
             dynamicConfiguration.publishConfig(key, ServiceNameMapping.buildGroup(serviceInterface, group, version, protocol), content);
             if (logger.isInfoEnabled()) {
                 logger.info(String.format("Dubbo service[%s] mapped to interface name[%s].",

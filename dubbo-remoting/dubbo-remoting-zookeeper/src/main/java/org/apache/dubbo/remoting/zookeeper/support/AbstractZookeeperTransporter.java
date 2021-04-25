@@ -45,7 +45,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
     private final Map<String, ZookeeperClient> zookeeperClientMap = new ConcurrentHashMap<>();
 
     /**
-     * share connnect for registry, metadata, etc..
+     * share connnect for registry, metadata,config-center, etc..
      * <p>
      * Make sure the connection is connected.
      *

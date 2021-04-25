@@ -79,7 +79,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
         this.required = required;
     }
 
-    // 以demo-provider.xml为参照
+    // 以demo-provider.xml为参照，注意看另一个重载parse的，重载的是自动被调用的，然后调用的下面的
     @SuppressWarnings("unchecked")
     private static RootBeanDefinition parse(Element element, ParserContext parserContext, Class<?> beanClass, boolean required) {
         RootBeanDefinition beanDefinition = new RootBeanDefinition();

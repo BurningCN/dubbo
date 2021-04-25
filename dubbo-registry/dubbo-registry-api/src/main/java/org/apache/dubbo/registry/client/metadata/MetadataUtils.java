@@ -61,13 +61,12 @@ public class MetadataUtils {
         return remoteMetadataService;
     }
 
+    // gx
     public static void publishServiceDefinition(URL url) {
-        // store in local
+        // store in local 将服务定义信息存到本地内存，
         WritableMetadataService.getDefaultExtension().publishServiceDefinition(url);
-        // send to remote
-//        if (REMOTE_METADATA_STORAGE_TYPE.equals(url.getParameter(METADATA_KEY))) {
+        // 在发送/存储到远端（比如zk），getRemoteMetadataService、publishServiceDefinition进去
         getRemoteMetadataService().publishServiceDefinition(url);
-//        }
     }
 
     public static MetadataService getMetadataServiceProxy(ServiceInstance instance, ServiceDiscovery serviceDiscovery) {

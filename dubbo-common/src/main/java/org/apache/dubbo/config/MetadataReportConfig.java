@@ -107,6 +107,7 @@ public class MetadataReportConfig extends AbstractConfig {
         appendParameters(map, this);
         // Normalize the parameters
         map.putAll(convert(map, null));
+        // 注意这里
         // put the protocol of URL as the "metadata"
         map.put("metadata", url.getProtocol());
         return new URL("metadata", url.getUsername(), url.getPassword(), url.getHost(),

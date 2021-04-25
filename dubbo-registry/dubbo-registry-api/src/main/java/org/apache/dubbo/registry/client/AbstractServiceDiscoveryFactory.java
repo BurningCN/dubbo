@@ -36,6 +36,7 @@ public abstract class AbstractServiceDiscoveryFactory implements ServiceDiscover
     @Override
     public ServiceDiscovery getServiceDiscovery(URL registryURL) {
         // toServiceStringWithoutResolving看下，不带parameter和ip
+        // eg zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService
         String key = registryURL.toServiceStringWithoutResolving();
         return discoveries.computeIfAbsent(key, k -> createDiscovery(registryURL));
     }

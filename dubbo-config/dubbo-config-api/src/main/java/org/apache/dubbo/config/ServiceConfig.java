@@ -238,12 +238,14 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         exported();
     }
 
+    // 注意看子类
     public void exported() {
         // 爷爷AbstractInterfaceConfig的方法
         List<URL> exportedURLs = this.getExportedUrls();
         exportedURLs.forEach(url -> {
             Map<String, String> parameters = getApplication().getParameters();
             // 做映射关系，获取具体的扩展实例，然后调用map方法，将指定的Dubbo服务接口、组、版本和协议映射到当前的Dubbo服务名称
+            // 如果parameters为null，则使用默认的扩展实例，扩展名为config，扩展实力为DynamicConfigurationServiceNameMapping
             ServiceNameMapping.getExtension(parameters != null ? parameters.get(MAPPING_KEY) : null).map(url);
         });
         // dispatch a ServiceConfigExportedEvent since 2.7.4
@@ -269,7 +271,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             // 和前面的checkDefault、checkProtocol类似，进去
             checkRegistry();
         }
-        // AbstractConfig的refresh方法
+        // AbstractConfig的refresh方法。主要是prefix的值得到更新，比如prefix = "dubbo.service.samples.servicediscovery.demo.DemoService"
         this.refresh();
 
         // 检测 interfaceName 是否合法（<dubbo:service> 标签的 interface 属性合法性）
@@ -278,7 +280,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             throw new IllegalStateException("<dubbo:service interface=\"\" /> interface not allow null!");
         }
 
-        // 检测 ref 是否为泛化服务类型
+        // 检测 ref 是否为泛化服务类型。ref是具体实现类对象
         if (ref instanceof GenericService) {
             // 设置 interfaceClass 为 GenericService.class
             interfaceClass = GenericService.class;
@@ -407,6 +409,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         // 加载注册中心链接(内部会将多个RegistryConfig转化为多个对应个URL)，进去
         // eg registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&registry=zookeeper&timestamp=1609849127050
+        // eg service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.2&id=org.apache.dubbo.config.RegistryConfig&metadata-type=remote&pid=67248&registry=zookeeper&registry-type=service&timestamp=1619165300619
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
         // Dubbo 允许我们使用不同的协议导出服务，也允许我们向多个注册中心注册服务。Dubbo 在 doExportUrls 方法中对多协议，多注册中心进行了支持。
@@ -428,7 +431,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (StringUtils.isEmpty(name)) {
             name = DUBBO;
         }
-// -----------------------------------✨✨分割线✨✨---------------------------------------------------------------------
+        // -----------------------------------✨✨分割线✨✨---------------------------------------------------------------------
         Map<String, String> map = new HashMap<String, String>();
         map.put(SIDE_KEY, PROVIDER_SIDE); // side -> provider
         ServiceConfig.appendRuntimeParameters(map);
@@ -575,6 +578,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         //       dubbo://30.25.58.102:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=30.25.58.102&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=9682&release=&side=provider&timestamp=1609906152829
         // url生成了，就开始暴露服务了，接着往下看
         // -----------------------------------✨✨分割线✨✨---------------------------------------------------------------------
+        // 这个值一般默认都是null的
         String scope = url.getParameter(SCOPE_KEY); // SCOPE_KEY = "scope"
         // don't export when none is configured
         if (!SCOPE_NONE.equalsIgnoreCase(scope)) { // SCOPE_NONE = "none"

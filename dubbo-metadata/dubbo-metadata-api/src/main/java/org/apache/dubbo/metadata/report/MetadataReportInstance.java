@@ -20,13 +20,13 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.URLBuilder;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.config.MetadataReportConfig;
+import org.apache.dubbo.rpc.model.ApplicationModel;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_DIRECTORY;
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 import static org.apache.dubbo.metadata.report.support.Constants.METADATA_REPORT_KEY;
 
 /**
@@ -36,27 +36,33 @@ public class MetadataReportInstance {
 
     private static AtomicBoolean init = new AtomicBoolean(false);
 
-    private static final Map<String, MetadataReport> metadataReports = new HashMap<>();
+    private static final Map<String/*relatedRegistryId*/, MetadataReport/*ZookeeperMetadataReport*/> metadataReports = new HashMap<>();
 
     // gx
     public static void init(MetadataReportConfig config) {
         if (init.get()) {
             return;
         }
+        //  MetadataReportFactory 的 实现有很多，默认为redis，但是我们用的一般是zk
         MetadataReportFactory metadataReportFactory = ExtensionLoader.getExtensionLoader(MetadataReportFactory.class).getAdaptiveExtension();
+        // 进去，内部会拼metadata://
+        // cofig->url的转化关系比如 <dubbo:metadata-report address="zookeeper://127.0.0.1:2181" /> ----> metadata://127.0.0.1:2181?metadata=zookeeper
         URL url = config.toUrl();
         // metadata:// 协议
         if (METADATA_REPORT_KEY.equals(url.getProtocol())) {
-            // 获取"metadata"参数值， 默认dubbo
+            // 获取"metadata"参数值，比如zookeeper， 默认dubbo
             String protocol = url.getParameter(METADATA_REPORT_KEY, DEFAULT_DIRECTORY);
             url = URLBuilder.from(url)
                     .setProtocol(protocol)
                     .removeParameter(METADATA_REPORT_KEY)
                     .build();
+            // 此时url比如为zookeeper://127.0.0.1:2181
         }
+        // 此时url比如为zookeeper://127.0.0.1:2181?application=demo-provider
+        url = url.addParameterIfAbsent(APPLICATION_KEY, ApplicationModel.getApplicationConfig().getName());
+
         String relatedRegistryId = config.getRegistry() == null ? DEFAULT_KEY : config.getRegistry();
-//        RegistryConfig registryConfig = ApplicationModel.getConfigManager().getRegistry(relatedRegistryId)
-//                .orElseThrow(() -> new IllegalStateException("Registry id " + relatedRegistryId + " does not exist."));
+        // key为默认default，value很重要，就是涉及到远端metadataReport实例的创建了，进去
         metadataReports.put(relatedRegistryId, metadataReportFactory.getMetadataReport(url));
         init.set(true);
     }

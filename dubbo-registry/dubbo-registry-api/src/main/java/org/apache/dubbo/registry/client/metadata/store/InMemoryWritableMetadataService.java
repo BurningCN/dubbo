@@ -49,8 +49,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import static java.util.Collections.emptySortedSet;
 import static java.util.Collections.unmodifiableSortedSet;
 import static org.apache.dubbo.common.URL.buildKey;
-import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
+import static org.apache.dubbo.common.constants.CommonConstants.SIDE_KEY;
 import static org.apache.dubbo.common.utils.CollectionUtils.isEmpty;
 import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
 
@@ -128,16 +128,22 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
     }
     // exportURL主要是给metadataInfos、exportedServiceURLs属性添加元素
     @Override
-    public boolean exportURL(URL url) { // 默认的话，走DefaultRegistryClusterIdentifier#providerKey，即获取url的"REGISTRY_CLUSTER"参数值，比如 org.apache.dubbo.config.RegistryConfig#0
+    public boolean exportURL(URL url) {
+        // 默认的话，走DefaultRegistryClusterIdentifier#providerKey，即获取url的"REGISTRY_CLUSTER"参数值，比如 org.apache.dubbo.config.RegistryConfig#0
         String registryCluster = RegistryClusterIdentifier.getExtension(url).providerKey(url);
         String[] clusters = registryCluster.split(","); // 可能是多个注册集群，按照逗号分割
         for (String cluster : clusters) {
             MetadataInfo metadataInfo = metadataInfos.computeIfAbsent(cluster, k -> {
-                return new MetadataInfo(ApplicationModel.getName()); // 传递appName
-            }); // 添加服务，说明MetadataInfo是app级别的，里面有多个services（有个属性就是services）
+                // 传递appName
+                return new MetadataInfo(ApplicationModel.getName());
+            });
+            // 添加服务，说明MetadataInfo是app级别的，里面有多个services（有个属性就是services）
+            // new ServiceInfo 进去
             metadataInfo.addService(new ServiceInfo(url));
         }
+        // 注意这里，该变量默认许可证为1，如果别处没有acquire过，这里再次调用，则许可证+1 为2
         metadataSemaphore.release();
+        // 将后者url添加到前者这个容器中
         return addURL(exportedServiceURLs, url);
     }
 
@@ -169,17 +175,24 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
     @Override
     public void publishServiceDefinition(URL providerUrl) {
         try {
-            String interfaceName = providerUrl.getParameter(INTERFACE_KEY);
-            if (StringUtils.isNotEmpty(interfaceName)
-                    && !ProtocolUtils.isGeneric(providerUrl.getParameter(GENERIC_KEY))) {
-                Class interfaceClass = Class.forName(interfaceName);
-                ServiceDefinition serviceDefinition = ServiceDefinitionBuilder.build(interfaceClass);
-                Gson gson = new Gson();
-                String data = gson.toJson(serviceDefinition);
-                serviceDefinitions.put(providerUrl.getServiceKey(), data);
+            if (!ProtocolUtils.isGeneric(providerUrl.getParameter(GENERIC_KEY))) {
+                String interfaceName = providerUrl.getParameter(INTERFACE_KEY);
+                if (StringUtils.isNotEmpty(interfaceName)) {
+                    // 从url取出接口全限定名并加载，拿到clz后就可以调用ServiceDefinitionBuilder.build生成ServiceDefinition了 ，然后toJson生成json传保存到内存
+                    Class interfaceClass = Class.forName(interfaceName);
+                    ServiceDefinition serviceDefinition = ServiceDefinitionBuilder.build(interfaceClass);
+                    Gson gson = new Gson();
+                    String data = gson.toJson(serviceDefinition);
+//                    eg:
+//                    {"canonicalName":"samples.servicediscovery.demo.DemoService","codeSource":"file:/Users/gy821075/IdeaProjects/dubbo/dubbo-config/dubbo-config-spring/target/test-classes/","methods":[{"name":"sayHello","parameterTypes":["java.lang.String"],"returnType":"java.lang.String"}],"types":[{"type":"int","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"java.lang.String","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"char","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"}]}
+                    serviceDefinitions.put(providerUrl.getServiceKey(), data);
+                    return;
+                }
+                logger.error("publishProvider interfaceName is empty . providerUrl: " + providerUrl.toFullString());
+            } else if (CONSUMER_SIDE.equalsIgnoreCase(providerUrl.getParameter(SIDE_KEY))) {
+                //to avoid consumer generic invoke style error
                 return;
             }
-            logger.error("publishProvider interfaceName is empty . providerUrl: " + providerUrl.toFullString());
         } catch (ClassNotFoundException e) {
             //ignore error
             logger.error("publishProvider getServiceDescriptor error. providerUrl: " + providerUrl.toFullString(), e);

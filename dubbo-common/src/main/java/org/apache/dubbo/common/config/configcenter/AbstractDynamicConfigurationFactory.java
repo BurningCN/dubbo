@@ -38,7 +38,7 @@ public abstract class AbstractDynamicConfigurationFactory implements DynamicConf
 
     @Override
     public final DynamicConfiguration getDynamicConfiguration(URL url) {
-        // toServiceString把URL对象转化为字符串，进去
+        // toServiceString把URL对象转化为字符串，eg zookeeper://127.0.0.1:2181/dubbo/ConfigCenterConfig 进去
         String key = url == null ? DEFAULT_KEY : url.toServiceString();
         return dynamicConfigurations.computeIfAbsent(key, k -> createDynamicConfiguration(url));
     }

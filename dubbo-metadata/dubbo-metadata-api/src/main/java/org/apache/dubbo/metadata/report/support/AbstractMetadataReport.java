@@ -101,9 +101,11 @@ public abstract class AbstractMetadataReport implements MetadataReport {
     public MetadataReportRetry metadataReportRetry;
 
     //下面的过程和AbstractRegistry很像
+    // url eg zookeeper://127.0.0.1:2181/org.apache.dubbo.metadata.report.MetadataReport?application=demo-provider
     public AbstractMetadataReport(URL reportServerURL) {
         setUrl(reportServerURL);
         // Start file save timer
+        // eg /Users/gy821075/.dubbo/dubbo-metadata-demo-provider-127.0.0.1-2181.cache
         String defaultFilename = System.getProperty("user.home") + "/.dubbo/dubbo-metadata-" + reportServerURL.getParameter(APPLICATION_KEY) + "-" + reportServerURL.getAddress().replaceAll(":", "-") + ".cache";
         String filename = reportServerURL.getParameter(FILE_KEY, defaultFilename);
         File file = null;

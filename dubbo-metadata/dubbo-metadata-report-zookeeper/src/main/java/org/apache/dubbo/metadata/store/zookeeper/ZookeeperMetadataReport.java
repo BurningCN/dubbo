@@ -69,11 +69,14 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
+
         String group = url.getParameter(GROUP_KEY, DEFAULT_ROOT);
         if (!group.startsWith(PATH_SEPARATOR)) {
             group = PATH_SEPARATOR + group;
         }
+        // 默认为/dubbo
         this.root = group;
+        // 这里是很有可能拿到复用的zkClient的，因为config-center以及发起了一次
         zkClient = zookeeperTransporter.connect(url);
     }
 
@@ -136,6 +139,7 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
 
     // toRootDir() 默认为 /dubbo/
     String getNodePath(BaseMetadataIdentifier metadataIdentifier) {
+        // /dubbo/metadata/{interface}/{version}/{side}/{appName}
         // eg /dubbo/metadata/my.metadata.zookeeper.ZookeeperMetadataReport4TstService/1.0.0.zk.md/provider/vic.zk.md
         return toRootDir() + metadataIdentifier.getUniqueKey(KeyTypeEnum.PATH);
     }

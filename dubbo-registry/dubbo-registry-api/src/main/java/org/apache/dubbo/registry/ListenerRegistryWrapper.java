@@ -29,7 +29,7 @@ import java.util.List;
 public class ListenerRegistryWrapper implements Registry {
     private static final Logger logger = LoggerFactory.getLogger(ListenerRegistryWrapper.class);
 
-    // 这个是目标Registry对象，真正的Registry对象，eg zkRegistry
+    // 这个是目标Registry对象，真正的Registry对象，eg zkRegistry、ZookeeperServiceDiscovery
     private final Registry registry;
     private final List<RegistryServiceListener> listeners;
 
@@ -59,6 +59,7 @@ public class ListenerRegistryWrapper implements Registry {
     @Override
     public void register(URL url) {
         try {
+            //真正的Registry对象，eg zkRegistry、ZookeeperServiceDiscovery
             registry.register(url);
         } finally {
             if (CollectionUtils.isNotEmpty(listeners)) {

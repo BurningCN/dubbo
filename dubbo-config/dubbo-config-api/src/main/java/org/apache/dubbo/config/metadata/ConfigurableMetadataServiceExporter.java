@@ -60,6 +60,7 @@ public class ConfigurableMetadataServiceExporter implements MetadataServiceExpor
 
     private volatile ServiceConfig<MetadataService> serviceConfig;
 
+    // gx
     public ConfigurableMetadataServiceExporter(MetadataService metadataService) {
         this.metadataService = metadataService;
     }
@@ -69,6 +70,7 @@ public class ConfigurableMetadataServiceExporter implements MetadataServiceExpor
 
         if (!isExported()) {
 
+            // 构造了一个MetadataService类型的ServiceConfig，并进行暴露
             ServiceConfig<MetadataService> serviceConfig = new ServiceConfig<>();
             serviceConfig.setApplication(getApplicationConfig());
             serviceConfig.setRegistries(getRegistries());

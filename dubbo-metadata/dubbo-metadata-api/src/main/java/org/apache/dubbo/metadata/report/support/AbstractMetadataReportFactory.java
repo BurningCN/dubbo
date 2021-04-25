@@ -39,6 +39,9 @@ public abstract class AbstractMetadataReportFactory implements MetadataReportFac
     public MetadataReport getMetadataReport(URL url) {
         url = url.setPath(MetadataReport.class.getName())
                 .removeParameters(EXPORT_KEY, REFER_KEY);
+        // url eg zookeeper://127.0.0.1:2181/org.apache.dubbo.metadata.report.MetadataReport?application=demo-provider
+
+        // zookeeper://127.0.0.1:2181/org.apache.dubbo.metadata.report.MetadataReport
         String key = url.toServiceString();
         // Lock the metadata access process to ensure a single instance of the metadata instance
         // todo need pr-pr 应该来一个double check，AbstractRegistryFactory也是

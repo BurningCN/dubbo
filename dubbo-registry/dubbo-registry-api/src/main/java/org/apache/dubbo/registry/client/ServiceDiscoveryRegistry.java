@@ -122,11 +122,16 @@ public class ServiceDiscoveryRegistry implements Registry {
     private final Map<String, Map<String, List<URL>>> serviceRevisionExportedURLsCache = new LinkedHashMap<>();
 
     public ServiceDiscoveryRegistry(URL registryURL) {
+        // eg zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.2&id=org.apache.dubbo.config.RegistryConfig&interface=org.apache.dubbo.registry.RegistryService&metadata-type=remote&pid=67248&registry-type=service&timestamp=1619165300619
         this.registryURL = registryURL;
-        this.serviceDiscovery = createServiceDiscovery(registryURL);// 创建sd进去
-        this.subscribedServices = parseServices(registryURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY));// 获取 "subscribed-services"参数值,按照逗号分割填充到set集合
-        this.serviceNameMapping = ServiceNameMapping.getExtension(registryURL.getParameter(MAPPING_KEY));// 获取"mapping-type"参数值，ServiceNameMapping#getExtension进去
-        this.writableMetadataService = WritableMetadataService.getDefaultExtension();// 进去 默认InMemoryWritableMetadataService
+        // 创建sd进去
+        this.serviceDiscovery = createServiceDiscovery(registryURL);
+        // 获取 "subscribed-services"参数值,按照逗号分割填充到set集合
+        this.subscribedServices = parseServices(registryURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY));
+        // 获取"mapping-type"参数值，ServiceNameMapping#getExtension进去
+        this.serviceNameMapping = ServiceNameMapping.getExtension(registryURL.getParameter(MAPPING_KEY));
+        // 进去 默认InMemoryWritableMetadataService
+        this.writableMetadataService = WritableMetadataService.getDefaultExtension();
     }
 
     public ServiceDiscovery getServiceDiscovery() {
@@ -140,9 +145,12 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @return non-null
      */
     protected ServiceDiscovery createServiceDiscovery(URL registryURL) {
-        ServiceDiscovery originalServiceDiscovery = getServiceDiscovery(registryURL);// 先创建目标sd，比如测试程序的InMemoryServiceDiscovery，进去
-        ServiceDiscovery serviceDiscovery = enhanceEventPublishing(originalServiceDiscovery);// origin/目标sd用 EventPublishingServiceDiscovery 包装下
-        execute(() -> { // 进去 EventPublishingServiceDiscovery#initialize
+        // 先创建目标sd，比如测试程序的InMemoryServiceDiscovery（实际场景比如zkSD），进去
+        ServiceDiscovery originalServiceDiscovery = getServiceDiscovery(registryURL);
+        // origin 目标sd用 EventPublishingServiceDiscovery 包装下。这里enhance名字用得好
+        ServiceDiscovery serviceDiscovery = enhanceEventPublishing(originalServiceDiscovery);
+        execute(() -> {
+            // 进去 EventPublishingServiceDiscovery#initialize
             serviceDiscovery.initialize(registryURL.addParameter(INTERFACE_KEY, ServiceDiscovery.class.getName())
                     .removeParameter(REGISTRY_TYPE_KEY));
         });
@@ -161,9 +169,12 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @param registryURL the {@link URL} to connect the registry
      * @return
      */
-    private ServiceDiscovery getServiceDiscovery(URL registryURL) { // ServiceDiscoveryFactory#getExtension的方法，获取对应扩展实例，如果没有则使用DefaultServiceDiscoveryFactory
+    private ServiceDiscovery getServiceDiscovery(URL registryURL) {
+        // ServiceDiscoveryFactory#getExtension的方法，获取对应扩展实例，如果没有则使用DefaultServiceDiscoveryFactory
+        // 如果是实际场景一般比如返回类型为ZookeeperServiceDiscoveryFactory
         ServiceDiscoveryFactory factory = getExtension(registryURL);
-        return factory.getServiceDiscovery(registryURL);// 通过工厂获得ServiceDiscovery
+        // 通过工厂获得ServiceDiscovery。进去，看AbstractServiceDiscoveryFactory
+        return factory.getServiceDiscovery(registryURL);
     }
 
     /**
@@ -203,12 +214,15 @@ public class ServiceDiscoveryRegistry implements Registry {
         doRegister(url);// 进去
     }
 
-    public void doRegister(URL url) {// 获取"id"参数值，比如 id -> org.apache.dubbo.config.RegistryConfig#0
+    public void doRegister(URL url) {
+        // 获取"id"参数值，比如 id -> org.apache.dubbo.config.RegistryConfig#0
+        // 注意参数url是provider url，serviceDiscovery.getUrl()是sd的url，一个是dubbo://，一个是zookeeper://127.0.0.1:2181/。。。
         String registryCluster = serviceDiscovery.getUrl().getParameter(ID_KEY);
         if (registryCluster != null && url.getParameter(REGISTRY_CLUSTER_KEY) == null) {
             url = url.addParameter(REGISTRY_CLUSTER_KEY, registryCluster);// 如果"id"参数值不空，但是"REGISTRY_CLUSTER"参数为空，则将"id"参数值赋值给"REGISTRY_CLUSTER"参数值
         }
-        if (writableMetadataService.exportURL(url)) { // 暴露提供者url，进去
+        // 暴露提供者url（一般是InMemory），进去
+        if (writableMetadataService.exportURL(url)) {
             if (logger.isInfoEnabled()) {
                 logger.info(format("The URL[%s] registered successfully.", url.toString()));
             }
@@ -217,6 +231,7 @@ public class ServiceDiscoveryRegistry implements Registry {
                 logger.info(format("The URL[%s] has been registered.", url.toString()));
             }
         }
+        // 这里发现仅注册到了内存，还没有注册到远端
     }
 
     @Override

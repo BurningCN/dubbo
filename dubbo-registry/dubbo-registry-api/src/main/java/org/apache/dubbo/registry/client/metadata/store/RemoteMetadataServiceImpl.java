@@ -55,6 +55,7 @@ public class RemoteMetadataServiceImpl {
     }
 
     public Map<String/*registryCluster*/, MetadataReport> getMetadataReports() {
+        // 从MetadataReportInstance获取，这个MetadataReportInstance就像一个缓存容器（注意其init方法的调用时机）
         return MetadataReportInstance.getMetadataReports(false);
     }
 
@@ -93,6 +94,7 @@ public class RemoteMetadataServiceImpl {
         String side = url.getParameter(SIDE_KEY);
         if (PROVIDER_SIDE.equalsIgnoreCase(side)) {
             //TODO, the params part is duplicate with that stored by exportURL(url), can be further optimized in the future.
+            //进去
             publishProvider(url);
         } else {
             //TODO, only useful for ops showing the url parameters, this is duplicate with subscribeURL(url), can be removed in the future.
@@ -101,8 +103,8 @@ public class RemoteMetadataServiceImpl {
     }
 
     private void publishProvider(URL providerUrl) throws RpcException {
-        //first add into the list
-        // remove the individual param
+        // first add into the list
+        // remove the individual（个人的；个别的；独特的） param 移除特殊参数，因为暴露到远端FullServiceDefinition必须是公共的
         providerUrl = providerUrl.removeParameters(PID_KEY, TIMESTAMP_KEY, Constants.BIND_IP_KEY,
                 Constants.BIND_PORT_KEY, TIMESTAMP_KEY);
 
@@ -110,10 +112,13 @@ public class RemoteMetadataServiceImpl {
             String interfaceName = providerUrl.getParameter(INTERFACE_KEY);
             if (StringUtils.isNotEmpty(interfaceName)) {
                 Class interfaceClass = Class.forName(interfaceName);
+                //注意两个参数，后者是作为 FullServiceDefinition#parameters属性
                 FullServiceDefinition fullServiceDefinition = ServiceDefinitionBuilder.buildFullDefinition(interfaceClass,
                         providerUrl.getParameters());
+                // getMetadataReports进去，获取远端元数据报告中心，向每个进行报告，其实就是写到zk上
                 for (Map.Entry<String, MetadataReport> entry : getMetadataReports().entrySet()) {
                     MetadataReport metadataReport = entry.getValue();
+                    // 方法的两个参数可以理解为 {唯一id ：具体接口的元数据信息}
                     metadataReport.storeProviderMetadata(new MetadataIdentifier(providerUrl.getServiceInterface(),
                             providerUrl.getParameter(VERSION_KEY), providerUrl.getParameter(GROUP_KEY),
                             PROVIDER_SIDE, providerUrl.getParameter(APPLICATION_KEY)), fullServiceDefinition);

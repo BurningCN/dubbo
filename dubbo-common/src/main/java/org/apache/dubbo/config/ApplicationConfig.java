@@ -432,7 +432,7 @@ public class ApplicationConfig extends AbstractConfig {
         return !StringUtils.isEmpty(name);
     }
 
-    @Parameter(key = METADATA_KEY)
+    @Parameter(key = METADATA_KEY) // xml 配置为 "metadata-type"，不过会映射到metadataType
     public String getMetadataType() {
         return metadataType;
     }

@@ -158,7 +158,7 @@ public class ConfigValidationUtils {
     private static final Pattern PATTERN_PATH = Pattern.compile("[/\\-$._0-9a-zA-Z]+");
 
     /**
-     * The pattern matches a value who has a symbol
+     * The pattern matches a value who has a symbol n. 象征；符号；标志
      */
     private static final Pattern PATTERN_NAME_HAS_SYMBOL = Pattern.compile("[:*,\\s/\\-._0-9a-zA-Z]+");
 
@@ -411,6 +411,7 @@ public class ConfigValidationUtils {
 
     public static void validateConfigCenterConfig(ConfigCenterConfig config) {
         if (config != null) {
+            // 进去
             checkParameterName(config.getParameters());
         }
     }
@@ -436,6 +437,7 @@ public class ConfigValidationUtils {
             }
         }
 
+        // 检查一些参数值的合法性
         checkName(NAME, config.getName());
         checkMultiName(OWNER, config.getOwner());
         checkName(ORGANIZATION, config.getOrganization());
@@ -628,7 +630,9 @@ public class ConfigValidationUtils {
             return;
         }
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
+            // 不检查backup参数
             if (!entry.getKey().equals(BACKUP_KEY)) {
+                // 进去
                 checkNameHasSymbol(entry.getKey(), entry.getValue());
             }
         }
@@ -642,6 +646,7 @@ public class ConfigValidationUtils {
             throw new IllegalStateException("Invalid " + property + "=\"" + value + "\" is longer than " + maxlength);
         }
         if (pattern != null) {
+            // 是否匹配
             Matcher matcher = pattern.matcher(value);
             if (!matcher.matches()) {
                 throw new IllegalStateException("Invalid " + property + "=\"" + value + "\" contains illegal " +

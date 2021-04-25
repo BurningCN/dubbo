@@ -29,10 +29,14 @@ public class ServiceDiscoveryRegistryFactory extends AbstractRegistryFactory {
 
     @Override
     protected Registry createRegistry(URL url) {
+        // url eg service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.2&id=org.apache.dubbo.config.RegistryConfig&interface=org.apache.dubbo.registry.RegistryService&metadata-type=remote&pid=67248&registry=zookeeper&registry-type=service&timestamp=1619165300619
         if (SERVICE_REGISTRY_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
+            // 获取registry参数值，比如zookeeper（默认为dubbo）
             String protocol = url.getParameter(REGISTRY_KEY, DEFAULT_REGISTRY);
+            // 转化为具体的协议开头，比如zookeeper://， 这点和InterfaceCompatibleRegistryProtocol#getRegistryUrl的逻辑一致
             url = url.setProtocol(protocol).removeParameter(REGISTRY_KEY);
         }
+        // 进去
         return new ServiceDiscoveryRegistry(url);
     }
 
