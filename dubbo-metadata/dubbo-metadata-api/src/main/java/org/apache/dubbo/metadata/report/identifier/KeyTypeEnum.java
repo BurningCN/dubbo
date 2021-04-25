@@ -60,6 +60,7 @@ public enum KeyTypeEnum {
      * @return
      * @since 2.7.8
      */
+    // 注意这种用法，枚举里面定义抽象方法第一次见
     public abstract String build(String one, String... others);
 
 }

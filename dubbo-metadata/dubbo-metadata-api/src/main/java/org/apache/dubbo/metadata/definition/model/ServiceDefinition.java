@@ -79,6 +79,7 @@ public class ServiceDefinition implements Serializable {
                 + methods + "]";
     }
 
+    // api注意下
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -94,6 +95,7 @@ public class ServiceDefinition implements Serializable {
                 Objects.equals(getTypes(), that.getTypes());
     }
 
+    // api注意下
     @Override
     public int hashCode() {
         return Objects.hash(getCanonicalName(), getCodeSource(), getMethods(), getTypes());

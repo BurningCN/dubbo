@@ -77,6 +77,7 @@ public class TypeDefinitionBuilder {
         return null;
     }
 
+    // 注意这里
     private Map<Class<?>, TypeDefinition> typeCache = new HashMap<>();
 
     public TypeDefinition build(Type type, Class<?> clazz) {

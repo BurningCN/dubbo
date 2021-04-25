@@ -94,6 +94,7 @@ public class MethodDefinition implements Serializable {
     @Override
     public int hashCode() {
         int result = Objects.hash(getName(), getReturnType(), getParameters());
+        // 注意这里Arrays.hashCode（上面Objects.hash内部用的也是这个）
         result = 31 * result + Arrays.hashCode(getParameterTypes());
         return result;
     }

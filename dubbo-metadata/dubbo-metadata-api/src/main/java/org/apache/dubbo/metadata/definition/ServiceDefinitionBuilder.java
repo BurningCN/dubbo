@@ -65,6 +65,7 @@ public final class ServiceDefinitionBuilder {
      * @param interfaceClass
      * @param <T>
      */
+    // 注意这里泛型的用法
     public static <T extends ServiceDefinition> void build(T sd, final Class<?> interfaceClass) {
 
         sd.setCanonicalName(interfaceClass.getCanonicalName());

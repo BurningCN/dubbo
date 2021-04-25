@@ -60,7 +60,7 @@ public interface MetadataReport {
     }
 
     /**
-     * deprecated or need triage
+     * deprecated or need triage（分类；伤员验伤分类）
      **/
     void storeConsumerMetadata(MetadataIdentifier consumerMetadataIdentifier, Map<String, String> serviceParameterMap);
 

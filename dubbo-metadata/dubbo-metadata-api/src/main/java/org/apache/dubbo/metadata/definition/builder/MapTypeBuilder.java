@@ -53,12 +53,14 @@ public class MapTypeBuilder implements TypeBuilder {
         int actualTypeArgsLength = actualTypeArgs == null ? 0 : actualTypeArgs.length;
 
         if (actualTypeArgsLength != 2) {
+            // 注意MessageFormat.format
             throw new IllegalArgumentException(MessageFormat.format(
                     "[ServiceDefinitionBuilder] Map type [{0}] with unexpected amount of arguments [{1}]."
                             + Arrays.toString(actualTypeArgs), type, actualTypeArgs));
         }
 
         // eg java.util.Map<java.lang.String, java.lang.String>
+        // 在collection那边也是用的toString
         String mapType = type.toString();
 
         TypeDefinition typeDefinition = new TypeDefinition(mapType);

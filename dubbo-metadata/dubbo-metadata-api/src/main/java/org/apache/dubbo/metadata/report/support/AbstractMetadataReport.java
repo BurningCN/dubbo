@@ -117,6 +117,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
                 }
             }
             // if this file exist, firstly delete it.
+            // getAndSet内部会自动cas，返回值为之前的值，比如返回false。
             if (!initialized.getAndSet(true) && file.exists()) {
                 file.delete();
             }
@@ -155,12 +156,15 @@ public abstract class AbstractMetadataReport implements MetadataReport {
         }
         // Save
         try {
+            // 注意这里调用的是getAbsolutePath，也可以是getPath
             File lockfile = new File(file.getAbsolutePath() + ".lock");
             if (!lockfile.exists()) {
                 lockfile.createNewFile();
             }
+            // try-with-resource的()里面可以放多个语句
             try (RandomAccessFile raf = new RandomAccessFile(lockfile, "rw");
                  FileChannel channel = raf.getChannel()) {
+                // tryLock和Lock，非阻塞和阻塞
                 FileLock lock = channel.tryLock();
                 if (lock == null) {
                     throw new IOException("Can not lock the metadataReport cache file " + file.getAbsolutePath() + ", ignore and retry later, maybe multi java process use the file, please config: dubbo.metadata.file=xxx.properties");
@@ -216,6 +220,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
             } else {
                 properties.remove(metadataIdentifier.getUniqueKey(KeyTypeEnum.UNIQUE_KEY));
             }
+            // 版本号递增
             long version = lastCacheChanged.incrementAndGet();
             if (sync) {
                 new SaveProperties(version).run();
@@ -246,6 +251,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
         }
     }
 
+    // metadataReport的异步/同步同时还囊括了远端的保存，而AbstractRegistry的异步仅针对本地缓存文件，不包括远端
     @Override
     public void storeProviderMetadata(MetadataIdentifier providerMetadataIdentifier, ServiceDefinition serviceDefinition) {
         if (syncReport) {
@@ -265,8 +271,11 @@ public abstract class AbstractMetadataReport implements MetadataReport {
             Gson gson = new Gson();
             String data = gson.toJson(serviceDefinition);
 
+            // doXX 存远端
             doStoreProviderMetadata(providerMetadataIdentifier, data);
 
+            // 存本地文件。注意最后取了个反，因为storeProviderMetadataTask是被storeProviderMetadata调用的，如果当前是同步的，为了缓解时长，这里就异步保存。
+            // 如果当前是被异步调用的，即reportCacheExecutor线程调用的，那么!syncReport为true，表示同步保存，即依然在当前reportCacheExecutor线程中进行本地存储操作
             saveProperties(providerMetadataIdentifier, data, true, !syncReport);
         } catch (Exception e) {
             // retry again. If failed again, throw exception.
@@ -375,6 +384,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
             }
 
         }
+        // false表示发生了实际变更
         return false;
     }
 
@@ -422,6 +432,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
 
         public MetadataReportRetry(int retryTimes, int retryPeriod) {
             this.retryPeriod = retryPeriod;
+            // 默认100
             this.retryLimit = retryTimes;
         }
 
@@ -439,7 +450,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
                                 try {
                                     int times = retryCounter.incrementAndGet();
                                     logger.info("start to retry task for metadata report. retry times:" + times);
-                                    // retry() 进行重试
+                                    // retry() 进行重试，如果返回false表示发生了实际的写远端/本地操作，如果返回true表示failedReports一直是空
                                     if (retry() && times > retryTimesIfNonFail) {
                                         cancelRetryTask();
                                     }

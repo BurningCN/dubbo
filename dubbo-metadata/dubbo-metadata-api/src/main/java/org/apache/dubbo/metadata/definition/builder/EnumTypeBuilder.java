@@ -37,14 +37,18 @@ public class EnumTypeBuilder implements TypeBuilder {
 
     @Override
     public TypeDefinition build(Type type, Class<?> clazz, Map<Class<?>, TypeDefinition> typeCache) {
+        // 在ArrayTypeBuilder那边用的也是 clazz.getCanonicalName()
         TypeDefinition td = new TypeDefinition(clazz.getCanonicalName());
 
         try {
+            // 注意这些api
             Method methodValues = clazz.getDeclaredMethod("values");
+            // 注意invoke传入的对象是clazz，且返回值强转了数组
             Object[] values = (Object[]) methodValues.invoke(clazz, new Object[0]);
             int length = values.length;
             for (int i = 0; i < length; i++) {
                 Object value = values[i];
+                // api注意
                 td.getEnums().add(value.toString());
             }
         } catch (Throwable t) {

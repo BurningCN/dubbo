@@ -37,6 +37,7 @@ public final class DefaultTypeBuilder {
 
         TypeDefinition td = new TypeDefinition(name);
         // Try to get a cached definition  这里做缓存，防止重复构建，比如都是同一类型，直接返回一个TypeDefinition即可
+        // todo need pr 下面应该放在开头
         if (typeCache.containsKey(clazz)) {
             return typeCache.get(clazz);
         }

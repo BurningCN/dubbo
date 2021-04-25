@@ -55,6 +55,7 @@ public final class ClassUtils {
         if (path.endsWith(".jar") && path.contains("/")) {
             return path.substring(path.lastIndexOf('/') + 1);
         }
+        // eg  getCodeSource(ClassUtils.class) ---> file:/Users/gy821075/IdeaProjects/dubbo-master-cp/dubbo-metadata/dubbo-metadata-api/target/classes/
         return path;
     }
 
@@ -73,15 +74,18 @@ public final class ClassUtils {
                 break;
             }
 
+            // 查找所有的字段，包括私有
             Field[] fields = target.getDeclaredFields();
             for (Field field : fields) {
                 int modifiers = field.getModifiers();
+                // non-static + non-transient
                 if (Modifier.isStatic(modifiers) || Modifier.isTransient(modifiers)) {
                     continue;
                 }
 
                 result.add(field);
             }
+            // 再找父类
             target = target.getSuperclass();
         }
 
@@ -108,6 +112,7 @@ public final class ClassUtils {
         return result;
     }
 
+    // 禁止实例化，工具类一般都这样
     private ClassUtils() {
     }
 }
