@@ -22,7 +22,7 @@ import static org.apache.dubbo.metadata.MetadataConstants.DEFAULT_PATH_TAG;
 import static org.apache.dubbo.metadata.MetadataConstants.KEY_SEPARATOR;
 
 /**
- * The Base class of MetadataIdentifier for service scope
+ * The Base class of MetadataIdentifier for app scope
  * <p>
  * 2019-08-09
  */

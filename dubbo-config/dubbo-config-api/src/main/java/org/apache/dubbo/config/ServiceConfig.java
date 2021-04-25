@@ -334,110 +334,14 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             name = DUBBO;
         }
 
-        Map<String, String> map = new HashMap<String, String>();
-        map.put(SIDE_KEY, PROVIDER_SIDE);
+        Map<String, String> map = preProcessParamsMap(protocolConfig);
 
-        ServiceConfig.appendRuntimeParameters(map);
-        AbstractConfig.appendParameters(map, getMetrics());
-        AbstractConfig.appendParameters(map, getApplication());
-        AbstractConfig.appendParameters(map, getModule());
-        // remove 'default.' prefix for configs from ProviderConfig
-        // appendParameters(map, provider, Constants.DEFAULT_KEY);
-        AbstractConfig.appendParameters(map, provider);
-        AbstractConfig.appendParameters(map, protocolConfig);
-        AbstractConfig.appendParameters(map, this);
-        MetadataReportConfig metadataReportConfig = getMetadataReportConfig();
-        if (metadataReportConfig != null && metadataReportConfig.isValid()) {
-            map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
-        }
-        if (CollectionUtils.isNotEmpty(getMethods())) {
-            for (MethodConfig method : getMethods()) {
-                AbstractConfig.appendParameters(map, method, method.getName());
-                String retryKey = method.getName() + ".retry";
-                if (map.containsKey(retryKey)) {
-                    String retryValue = map.remove(retryKey);
-                    if ("false".equals(retryValue)) {
-                        map.put(method.getName() + ".retries", "0");
-                    }
-                }
-                List<ArgumentConfig> arguments = method.getArguments();
-                if (CollectionUtils.isNotEmpty(arguments)) {
-                    for (ArgumentConfig argument : arguments) {
-                        // convert argument type
-                        if (argument.getType() != null && argument.getType().length() > 0) {
-                            Method[] methods = interfaceClass.getMethods();
-                            // visit all methods
-                            if (methods.length > 0) {
-                                for (int i = 0; i < methods.length; i++) {
-                                    String methodName = methods[i].getName();
-                                    // target the method, and get its signature
-                                    if (methodName.equals(method.getName())) {
-                                        Class<?>[] argtypes = methods[i].getParameterTypes();
-                                        // one callback in the method
-                                        if (argument.getIndex() != -1) {
-                                            if (argtypes[argument.getIndex()].getName().equals(argument.getType())) {
-                                                AbstractConfig.appendParameters(map, argument, method.getName() + "." + argument.getIndex());
-                                            } else {
-                                                throw new IllegalArgumentException("Argument config error : the index attribute and type attribute not match :index :" + argument.getIndex() + ", type:" + argument.getType());
-                                            }
-                                        } else {
-                                            // multiple callbacks in the method
-                                            for (int j = 0; j < argtypes.length; j++) {
-                                                Class<?> argclazz = argtypes[j];
-                                                if (argclazz.getName().equals(argument.getType())) {
-                                                    AbstractConfig.appendParameters(map, argument, method.getName() + "." + j);
-                                                    if (argument.getIndex() != -1 && argument.getIndex() != j) {
-                                                        throw new IllegalArgumentException("Argument config error : the index attribute and type attribute not match :index :" + argument.getIndex() + ", type:" + argument.getType());
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        } else if (argument.getIndex() != -1) {
-                            AbstractConfig.appendParameters(map, argument, method.getName() + "." + argument.getIndex());
-                        } else {
-                            throw new IllegalArgumentException("Argument config must set index or type attribute.eg: <dubbo:argument index='0' .../> or <dubbo:argument type=xxx .../>");
-                        }
+        processMethods(map);
 
-                    }
-                }
-            } // end of methods for
-        }
+        processGeneric_revision_methodsKey(map);
 
-        if (ProtocolUtils.isGeneric(generic)) {
-            map.put(GENERIC_KEY, generic);
-            map.put(METHODS_KEY, ANY_VALUE);
-        } else {
-            String revision = Version.getVersion(interfaceClass, version);
-            if (revision != null && revision.length() > 0) {
-                map.put(REVISION_KEY, revision);
-            }
+        processToken(map);
 
-            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
-            if (methods.length == 0) {
-                logger.warn("No method found in service interface " + interfaceClass.getName());
-                map.put(METHODS_KEY, ANY_VALUE);
-            } else {
-                map.put(METHODS_KEY, StringUtils.join(new HashSet<String>(Arrays.asList(methods)), ","));
-            }
-        }
-
-        /**
-         * Here the token value configured by the provider is used to assign the value to ServiceConfig#token
-         */
-        if (ConfigUtils.isEmpty(token) && provider != null) {
-            token = provider.getToken();
-        }
-
-        if (!ConfigUtils.isEmpty(token)) {
-            if (ConfigUtils.isDefault(token)) {
-                map.put(TOKEN_KEY, UUID.randomUUID().toString());
-            } else {
-                map.put(TOKEN_KEY, token);
-            }
-        }
         //init serviceMetadata attachments
         serviceMetadata.getAttachments().putAll(map);
 
@@ -509,6 +413,121 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             }
         }
         this.urls.add(url);
+    }
+
+    private void processGeneric_revision_methodsKey(Map<String, String> map) {
+        if (ProtocolUtils.isGeneric(generic)) {
+            map.put(GENERIC_KEY, generic);
+            map.put(METHODS_KEY, ANY_VALUE);
+        } else {
+            String revision = Version.getVersion(interfaceClass, version);
+            if (revision != null && revision.length() > 0) {
+                map.put(REVISION_KEY, revision);
+            }
+
+            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
+            if (methods.length == 0) {
+                logger.warn("No method found in service interface " + interfaceClass.getName());
+                map.put(METHODS_KEY, ANY_VALUE);
+            } else {
+                map.put(METHODS_KEY, StringUtils.join(new HashSet<>(Arrays.asList(methods)), ","));
+            }
+        }
+    }
+
+    private Map<String, String> preProcessParamsMap(ProtocolConfig protocolConfig) {
+        Map<String, String> map = new HashMap<>();
+        map.put(SIDE_KEY, PROVIDER_SIDE);
+
+        ServiceConfig.appendRuntimeParameters(map);
+        AbstractConfig.appendParameters(map, getMetrics());
+        AbstractConfig.appendParameters(map, getApplication());
+        AbstractConfig.appendParameters(map, getModule());
+        // remove 'default.' prefix for configs from ProviderConfig
+        // appendParameters(map, provider, Constants.DEFAULT_KEY);
+        AbstractConfig.appendParameters(map, provider);
+        AbstractConfig.appendParameters(map, protocolConfig);
+        AbstractConfig.appendParameters(map, this);
+        MetadataReportConfig metadataReportConfig = getMetadataReportConfig();
+        if (metadataReportConfig != null && metadataReportConfig.isValid()) {
+            map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
+        }
+        return map;
+    }
+
+    private void processToken(Map<String, String> map) {
+        /**
+         * Here the token value configured by the provider is used to assign the value to ServiceConfig#token
+         */
+        if (ConfigUtils.isEmpty(token) && provider != null) {
+            token = provider.getToken();
+        }
+
+        if (!ConfigUtils.isEmpty(token)) {
+            if (ConfigUtils.isDefault(token)) {
+                map.put(TOKEN_KEY, UUID.randomUUID().toString());
+            } else {
+                map.put(TOKEN_KEY, token);
+            }
+        }
+    }
+
+    private void processMethods(Map<String, String> map) {
+        if (CollectionUtils.isNotEmpty(getMethods())) {
+            for (MethodConfig method : getMethods()) {
+                AbstractConfig.appendParameters(map, method, method.getName());
+                String retryKey = method.getName() + ".retry";
+                if (map.containsKey(retryKey)) {
+                    String retryValue = map.remove(retryKey);
+                    if ("false".equals(retryValue)) {
+                        map.put(method.getName() + ".retries", "0");
+                    }
+                }
+                List<ArgumentConfig> arguments = method.getArguments();
+                if (CollectionUtils.isNotEmpty(arguments)) {
+                    for (ArgumentConfig argument : arguments) {
+                        // convert argument type
+                        if (argument.getType() != null && argument.getType().length() > 0) {
+                            Method[] methods = interfaceClass.getMethods();
+                            // visit all methods
+                            if (methods.length > 0) {
+                                for (int i = 0; i < methods.length; i++) {
+                                    String methodName = methods[i].getName();
+                                    // target the method, and get its signature
+                                    if (methodName.equals(method.getName())) {
+                                        Class<?>[] argtypes = methods[i].getParameterTypes();
+                                        // one callback in the method
+                                        if (argument.getIndex() != -1) {
+                                            if (argtypes[argument.getIndex()].getName().equals(argument.getType())) {
+                                                AbstractConfig.appendParameters(map, argument, method.getName() + "." + argument.getIndex());
+                                            } else {
+                                                throw new IllegalArgumentException("Argument config error : the index attribute and type attribute not match :index :" + argument.getIndex() + ", type:" + argument.getType());
+                                            }
+                                        } else {
+                                            // multiple callbacks in the method
+                                            for (int j = 0; j < argtypes.length; j++) {
+                                                Class<?> argclazz = argtypes[j];
+                                                if (argclazz.getName().equals(argument.getType())) {
+                                                    AbstractConfig.appendParameters(map, argument, method.getName() + "." + j);
+                                                    if (argument.getIndex() != -1 && argument.getIndex() != j) {
+                                                        throw new IllegalArgumentException("Argument config error : the index attribute and type attribute not match :index :" + argument.getIndex() + ", type:" + argument.getType());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (argument.getIndex() != -1) {
+                            AbstractConfig.appendParameters(map, argument, method.getName() + "." + argument.getIndex());
+                        } else {
+                            throw new IllegalArgumentException("Argument config must set index or type attribute.eg: <dubbo:argument index='0' .../> or <dubbo:argument type=xxx .../>");
+                        }
+
+                    }
+                }
+            } // end of methods for
+        }
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

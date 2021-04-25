@@ -14,15 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.dubbo.metadata.report;
+package samples.servicediscovery.provider;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.extension.Adaptive;
-import org.apache.dubbo.common.extension.SPI;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-@SPI("zookeeper")
-public interface MetadataReportFactory {
+import java.util.concurrent.CountDownLatch;
 
-    @Adaptive("protocol")
-    MetadataReport getMetadataReport(URL url);
+public class Application {
+    public static void main(String[] args) throws Exception {
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("samples/servicerdiscovery/dubbo-provider.xml");
+        context.start();
+
+        System.out.println("dubbo service started");
+        new CountDownLatch(1).await();
+    }
 }

@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.metadata.definition.builder;
 
+import org.apache.dubbo.config.support.Parameter;
 import org.apache.dubbo.metadata.definition.TypeDefinitionBuilder;
 import org.apache.dubbo.metadata.definition.model.TypeDefinition;
 
@@ -58,9 +59,7 @@ public class MapTypeBuilder implements TypeBuilder {
                             + Arrays.toString(actualTypeArgs), type, actualTypeArgs));
         }
 
-        String mapType = type.toString();
-
-        TypeDefinition typeDefinition = new TypeDefinition(mapType);
+        TypeDefinition typeDefinition = new TypeDefinition(type.toString());
 
         for (int i = 0; i < actualTypeArgsLength; i++) {
             Type actualType = actualTypeArgs[i];

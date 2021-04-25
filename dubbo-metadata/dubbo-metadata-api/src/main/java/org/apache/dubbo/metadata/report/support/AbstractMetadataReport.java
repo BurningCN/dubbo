@@ -154,8 +154,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
             if (!lockfile.exists()) {
                 lockfile.createNewFile();
             }
-            try (RandomAccessFile raf = new RandomAccessFile(lockfile, "rw");
-                 FileChannel channel = raf.getChannel()) {
+            try (FileChannel channel = new RandomAccessFile(lockfile, "rw").getChannel()) {
                 FileLock lock = channel.tryLock();
                 if (lock == null) {
                     throw new IOException("Can not lock the metadataReport cache file " + file.getAbsolutePath() + ", ignore and retry later, maybe multi java process use the file, please config: dubbo.metadata.file=xxx.properties");
@@ -247,14 +246,16 @@ public abstract class AbstractMetadataReport implements MetadataReport {
 
     private void storeProviderMetadataTask(MetadataIdentifier providerMetadataIdentifier, ServiceDefinition serviceDefinition) {
         try {
-            if (logger.isInfoEnabled()) {
-                logger.info("store provider metadata. Identifier : " + providerMetadataIdentifier + "; definition: " + serviceDefinition);
-            }
+            logger.info("store provider metadata. Identifier : " + providerMetadataIdentifier + "; definition: " + serviceDefinition);
+
             allMetadataReports.put(providerMetadataIdentifier, serviceDefinition);
             failedReports.remove(providerMetadataIdentifier);
+
             Gson gson = new Gson();
             String data = gson.toJson(serviceDefinition);
+
             doStoreProviderMetadata(providerMetadataIdentifier, data);
+
             saveProperties(providerMetadataIdentifier, data, true, !syncReport);
         } catch (Exception e) {
             // retry again. If failed again, throw exception.
@@ -278,12 +279,15 @@ public abstract class AbstractMetadataReport implements MetadataReport {
             if (logger.isInfoEnabled()) {
                 logger.info("store consumer metadata. Identifier : " + consumerMetadataIdentifier + "; definition: " + serviceParameterMap);
             }
+
             allMetadataReports.put(consumerMetadataIdentifier, serviceParameterMap);
             failedReports.remove(consumerMetadataIdentifier);
 
             Gson gson = new Gson();
             String data = gson.toJson(serviceParameterMap);
+
             doStoreConsumerMetadata(consumerMetadataIdentifier, data);
+
             saveProperties(consumerMetadataIdentifier, data, true, !syncReport);
         } catch (Exception e) {
             // retry again. If failed again, throw exception.
@@ -411,22 +415,19 @@ public abstract class AbstractMetadataReport implements MetadataReport {
             if (retryScheduledFuture == null) {
                 synchronized (retryCounter) {
                     if (retryScheduledFuture == null) {
-                        retryScheduledFuture = retryExecutor.scheduleWithFixedDelay(new Runnable() {
-                            @Override
-                            public void run() {
-                                // Check and connect to the metadata
-                                try {
-                                    int times = retryCounter.incrementAndGet();
-                                    logger.info("start to retry task for metadata report. retry times:" + times);
-                                    if (retry() && times > retryTimesIfNonFail) {
-                                        cancelRetryTask();
-                                    }
-                                    if (times > retryLimit) {
-                                        cancelRetryTask();
-                                    }
-                                } catch (Throwable t) { // Defensive fault tolerance
-                                    logger.error("Unexpected error occur at failed retry, cause: " + t.getMessage(), t);
+                        retryScheduledFuture = retryExecutor.scheduleWithFixedDelay(() -> {
+                            // Check and connect to the metadata
+                            try {
+                                int times = retryCounter.incrementAndGet();
+                                logger.info("start to retry task for metadata report. retry times:" + times);
+                                if (retry() && times > retryTimesIfNonFail) {
+                                    cancelRetryTask();
                                 }
+                                if (times > retryLimit) {
+                                    cancelRetryTask();
+                                }
+                            } catch (Throwable t) { // Defensive fault tolerance
+                                logger.error("Unexpected error occur at failed retry, cause: " + t.getMessage(), t);
                             }
                         }, 500, retryPeriod, TimeUnit.MILLISECONDS);
                     }

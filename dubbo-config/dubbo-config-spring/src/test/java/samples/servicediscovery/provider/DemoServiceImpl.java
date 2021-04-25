@@ -14,15 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.dubbo.metadata.report;
+package samples.servicediscovery.provider;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.extension.Adaptive;
-import org.apache.dubbo.common.extension.SPI;
+import org.apache.dubbo.rpc.RpcContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import samples.servicediscovery.demo.DemoService;
 
-@SPI("zookeeper")
-public interface MetadataReportFactory {
+public class DemoServiceImpl implements DemoService {
+    private static final Logger logger = LoggerFactory.getLogger(DemoServiceImpl.class);
 
-    @Adaptive("protocol")
-    MetadataReport getMetadataReport(URL url);
+    @Override
+    public String sayHello(String name) {
+        logger.info("Hello " + name + ", request from consumer: " + RpcContext.getContext().getRemoteAddress());
+        return "Hello " + name;
+    }
+
 }

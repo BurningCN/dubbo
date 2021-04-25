@@ -62,12 +62,8 @@ public class MetadataUtils {
     }
 
     public static void publishServiceDefinition(URL url) {
-        // store in local
         WritableMetadataService.getDefaultExtension().publishServiceDefinition(url);
-        // send to remote
-//        if (REMOTE_METADATA_STORAGE_TYPE.equals(url.getParameter(METADATA_KEY))) {
         getRemoteMetadataService().publishServiceDefinition(url);
-//        }
     }
 
     public static MetadataService getMetadataServiceProxy(ServiceInstance instance, ServiceDiscovery serviceDiscovery) {

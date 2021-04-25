@@ -60,9 +60,9 @@ public class MethodDefinitionBuilder {
         String[] parameterTypes = new String[paramSize];
         List<TypeDefinition> parameters = new ArrayList<>(paramSize);
         for (int i = 0; i < paramSize; i++) {
-            TypeDefinition parameter = builder.build(genericParamTypes[i], paramTypes[i]);
-            parameterTypes[i] = parameter.getType();
-            parameters.add(parameter);
+            TypeDefinition td = builder.build(genericParamTypes[i], paramTypes[i]);
+            parameterTypes[i] = td.getType();
+            parameters.add(td);
         }
 
         md.setParameterTypes(parameterTypes);
