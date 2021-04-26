@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
+import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.metadata.MappingChangedEvent;
 import org.apache.dubbo.metadata.MappingListener;
@@ -183,37 +184,46 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
         }
     }
 
+
+    // 和前面的publishAppMetadata相反，这个是给消费者服务的
     @Override
     public MetadataInfo getAppMetadata(SubscriberMetadataIdentifier identifier, Map<String, String> instanceMetadata) {
         String content = zkClient.getContent(getNodePath(identifier));
         return gson.fromJson(content, MetadataInfo.class);
     }
 
+    // 和前面的registerServiceAppMapping相反，这个是给消费者服务的
     @Override
     public Set<String> getServiceAppMapping(String serviceKey, MappingListener listener, URL url) {
         Set<String>  appNameSet = new HashSet<>();
         String path = toRootDir() + serviceKey;
-        appNameSet.addAll(zkClient.getChildren(path));
+
+        List<String> appNameList;
 
         if (null == listenerMap.get(path)) {
-            ChildListener zkListener = new ChildListener() {
-                @Override
-                public void childChanged(String path, List<String> children) {
-                    // 创建事件对象
-                    MappingChangedEvent event = new MappingChangedEvent();
-                    event.setServiceKey(serviceKey);
-                    // 把节点值存入对象属性
-                    event.setApps(null != children ? new HashSet<>(children): null);
-                    // 调用监听器的回调方法
-                    listener.onEvent(event);
-                }
-            };
-            // 添加监听
-            zkClient.addChildListener(path, zkListener);
-            // 映射关系填上
-            listenerMap.put(path, zkListener);
+            zkClient.create(path, false);
+            appNameList = addServiceMappingListener(path, serviceKey, listener);
+        } else {
+            // 获取path下的所有app名称，因为之前注册的path就是 /dubbo/mapping/{serviceInterface}/testApp 或者 /dubbo/cofing/mapping/{serviceInterface}/testApp
+            appNameList = zkClient.getChildren(path);
+        }
+
+        if (!CollectionUtils.isEmpty(appNameList)) {
+            appNameSet.addAll(appNameList);
         }
 
         return appNameSet;
+    }
+
+    private List<String> addServiceMappingListener(String path, String serviceKey, MappingListener listener) {
+        ChildListener zkListener = (path1, children) -> {
+            MappingChangedEvent event = new MappingChangedEvent();
+            event.setServiceKey(serviceKey);
+            event.setApps(null != children ? new HashSet<>(children) : null);
+            listener.onEvent(event);
+        };
+        List<String> childNodes = zkClient.addChildListener(path, zkListener);
+        listenerMap.put(path, zkListener);
+        return childNodes;
     }
 }

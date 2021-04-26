@@ -619,7 +619,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         }
 
                         // For providers, this is used to enable custom proxy to generate invoker
-                        // 对于providers，这用于启用自定义代理来生成调用程序
+                        // 对于providers，这用于启用自定义代理来生成调用程序。表示客户端是像基于jdk还是javassist生成提供者代理对象，后面PROXY_FACTORY调用getInvoker的时候会根据url的proxy参数调用具体的实例
                         String proxy = url.getParameter(PROXY_KEY);
                         if (StringUtils.isNotEmpty(proxy)) {
                             // 填充url的proxy参数到registryURL
@@ -639,6 +639,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                     }
                 } else {
                     // registryURLs 为空，进这个分支。该分支步骤和前面分支后几行代码基本一致，最大区别就在getInvoker传入的第三个url参数不同
+                    // 表示仅暴露服务，不注册。前面是暴露+注册
 
                     if (logger.isInfoEnabled()) {
                         logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
@@ -691,9 +692,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // 创建 Invoker，并导出服务，这里的 protocol 会在运行时调用 InjvmProtocol 的 export 方法
 
         // 全局搜一下 Protocol$Adaptive 、 ProxyFactory$Adaptive，分别看他们的export和getInvoker，从url取得key是什么（并和上面的
-        // url值做对比）从而确定用的是什么扩展类实例。（1）前面setProtocol(LOCAL_PROTOCOL)，而 Protocol$Adaptive export方法内部有
+        // url值做对比）从而确定用的是什么扩展类实例。
+        // （1）前面setProtocol(LOCAL_PROTOCOL)，而 Protocol$Adaptive export方法内部有
         // String extName = ( url.getProtocol() == null ? "dubbo" : url.getProtocol() ) 所以取出的扩展实例是InjvmProtocol（不
-        // 过需要注意被多个Wrapper包装了）。（2）再比如 ProxyFactory$Adaptive getInvoker方法内部有
+        // 过需要注意被多个Wrapper包装了）。
+        // （2）再比如 ProxyFactory$Adaptive getInvoker方法内部有
         // String extName = url.getParameter("proxy", "javassist")，所以取出的扩展实例是 JavassistProxyFactory（也注意其被StubProxyFactoryWrapper包装了）
         Exporter<?> exporter = PROTOCOL.export(
                 // 这里的local只是前面protocol+provider+service...复合多个对象（代表provider信息）生成的url，没有和Registry的url结合！而前面向注册中心暴露的时候会融合这两个url（上面 ****）
@@ -734,6 +737,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         // 1.先利用protocolConfig构建key然后从环境变量获取
         String hostToBind = getValueFromConfig(protocolConfig, DUBBO_IP_TO_BIND);
+        // todo need pr 使用StringUtils.isNotEmpty
         if (hostToBind != null && hostToBind.length() > 0 && isInvalidLocalHost(hostToBind)) {
             throw new IllegalArgumentException("Specified invalid bind ip from property:" + DUBBO_IP_TO_BIND + ", value:" + hostToBind);
         }
@@ -786,6 +790,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         map.put(BIND_IP_KEY, hostToBind);// bind.ip -> 30.25.58.102
 
         // registry ip is not used for bind ip by default
+        // 这里的意思就是说，该方法的本身目的就是返回连接Registry的host/ip，即这里的变量hostToRegistry，前面计算了bind ip，但是默认我们不使用这个
+        // 而是先调用getValueFromConfig获取，能获取成功（即下面的if-else if都不满足），则直接返回，如果有问题，即下面的if不通过，但是满足else if，那么就使用默认的前面计算好了的bind ip
         String hostToRegistry = getValueFromConfig(protocolConfig, DUBBO_IP_TO_REGISTRY);
         if (hostToRegistry != null && hostToRegistry.length() > 0 && isInvalidLocalHost(hostToRegistry)) {
             throw new IllegalArgumentException("Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
@@ -863,6 +869,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     // 字符串转Integer，且做有效验证
     private Integer parsePort(String configPort) {
         Integer port = null;
+        // todo need pr 使用StringUtils.isNotEmpty
         if (configPort != null && configPort.length() > 0) {
             try {
                 Integer intPort = Integer.parseInt(configPort);

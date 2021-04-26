@@ -48,6 +48,7 @@ public class MetadataInfo implements Serializable {
     private String revision;
     private Map<String, ServiceInfo> services;
 
+    // 注意这里带了transient标记，在使用gson是不会序列化该字段的
     // used at runtime
     private transient Map<String, String> extendParams;
     private transient AtomicBoolean reported = new AtomicBoolean(false);

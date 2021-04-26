@@ -463,6 +463,7 @@ public class RegistryProtocol implements Protocol {
     private URL getProviderUrl(final Invoker<?> originInvoker) {
         // 获取export参数的值，并进行解码解码，比如 registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&export=dubbo%3A%2F%2F30.25.58.102%3A20880%2Forg.apache.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddubbo-demo-api-provider%26bind.ip%3D30.25.58.102%26bind.port%3D20880%26default%3Dtrue%26deprecated%3Dfalse%26dubbo%3D2.0.2%26dynamic%3Dtrue%26generic%3Dfalse%26interface%3Dorg.apache.dubbo.demo.DemoService%26metadata-type%3Dremote%26methods%3DsayHello%2CsayHelloAsync%26pid%3D11828%26release%3D%26side%3Dprovider%26timestamp%3D1609920795524&pid=11828&registry=zookeeper&timestamp=1609920790513 解码为dubbo://30.25.58.102:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=30.25.58.102&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=11828&release=&side=provider&timestamp=1609920795524
         String export = originInvoker.getUrl().getParameterAndDecoded(EXPORT_KEY);
+        // todo need pr  使用 StringUtils.iSNotEmpty()
         if (export == null || export.length() == 0) {
             throw new IllegalArgumentException("The registry export url is null! registry: " + originInvoker.getUrl());
         }
@@ -776,7 +777,7 @@ public class RegistryProtocol implements Protocol {
     private class ProviderConfigurationListener extends AbstractConfiguratorListener {
 
         public ProviderConfigurationListener() {
-            // ApplicationName + ".configurators"，initWith进去
+            // ApplicationName + ".configurators"，initWith进去。在zk生成 /dubbo/config/dubbo/appName.configurators
             this.initWith(ApplicationModel.getApplication() + CONFIGURATORS_SUFFIX);
         }
 

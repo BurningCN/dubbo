@@ -32,6 +32,7 @@ import static org.apache.dubbo.metadata.DynamicConfigurationServiceNameMapping.D
  * @since 2.7.5
  */
 @SPI("config") // todo need pr 使用静态常量
+// 有两个扩展，扩展名分别是config和matedata，表示相关的记录是存到config-center对应的DynamicConfiguration(比如zkDynamicConfiguration)，还是metadata对应的metadataReport（比如zkMetadataReport）
 public interface ServiceNameMapping {
 
     /**
