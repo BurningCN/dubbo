@@ -43,7 +43,9 @@ public class MethodDescriptor {
         this.returnClass = method.getReturnType();
         // 注意，进去
         this.returnTypes = ReflectUtils.getReturnTypes(method);
+        // 比如EchoService#$echo 则 Ljava/lang/Object;
         this.paramDesc = ReflectUtils.getDesc(parameterClasses);
+        // java.lang.Object
         this.compatibleParamSignatures = Stream.of(parameterClasses)
                 .map(Class::getName)
                 .toArray(String[]::new);

@@ -46,7 +46,8 @@ public class MetadataReportInstance {
         //  MetadataReportFactory 的 实现有很多，默认为redis，但是我们用的一般是zk
         MetadataReportFactory metadataReportFactory = ExtensionLoader.getExtensionLoader(MetadataReportFactory.class).getAdaptiveExtension();
         // 进去，内部会拼metadata://
-        // cofig->url的转化关系比如 <dubbo:metadata-report address="zookeeper://127.0.0.1:2181" /> ----> metadata://127.0.0.1:2181?metadata=zookeeper
+        // cofig->url的转化关系比如 <dubbo:metadata-report address="zookeeper://127.0.0.1:2181" />
+        //  ----> metadata://127.0.0.1:2181?metadata=zookeeper
         URL url = config.toUrl();
         // metadata:// 协议
         if (METADATA_REPORT_KEY.equals(url.getProtocol())) {

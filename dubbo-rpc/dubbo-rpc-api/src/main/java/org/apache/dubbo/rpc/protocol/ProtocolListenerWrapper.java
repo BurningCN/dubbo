@@ -61,6 +61,11 @@ public class ProtocolListenerWrapper implements Protocol {
         if (UrlUtils.isRegistry(invoker.getUrl())) {
             // 如果是RegistryProtocol（url为registry://xx），走下面的逻辑，直接暴露，注意下此时protocol的实例是
             // InterfaceCompatibleRegistryProtocol类实例，这个类是RegistryProtocol的子类，export是RegistryProtocol的方法，进去
+
+            // 具体protocol实例是 还是 ，取决于spi文件，如下。如果是registry:// xx 则是InterfaceCompatibleRegistryProtocol，否则就是RegistryProtocol
+            // registry=org.apache.dubbo.registry.integration.InterfaceCompatibleRegistryProtocol
+            // service-discovery-registry=org.apache.dubbo.registry.integration.RegistryProtocol
+
             return protocol.export(invoker);
         }
         // protocol也可能为InjvmProtocol或者DubboProtocol（只要不是RegistryProtocol），就会走下面的逻辑，(injvm)protocol.export(invoker)暴露返回的是InjvmExporter

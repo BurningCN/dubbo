@@ -74,8 +74,9 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
      * All exported {@link URL urls} {@link Map} whose key is the return value of {@link URL#getServiceKey()} method
      * and value is the {@link SortedSet sorted set} of the {@link URL URLs}
      */
-    ConcurrentNavigableMap<String, SortedSet<URL>> exportedServiceURLs = new ConcurrentSkipListMap<>();
-    ConcurrentMap<String, MetadataInfo> metadataInfos;
+    ConcurrentNavigableMap<String/*url.getServiceKey()*/, SortedSet<URL>> exportedServiceURLs = new ConcurrentSkipListMap<>();
+    ConcurrentMap<String/*registryCluster*/, MetadataInfo> metadataInfos;
+    // 每次调用exportURL会信号量++，调用blockUntilUpdated则会--
     final Semaphore metadataSemaphore = new Semaphore(1);
     String serviceDiscoveryMetadata;
     ConcurrentMap<String, MetadataChangeListener> metadataChangeListenerMap = new ConcurrentHashMap<>();
@@ -92,7 +93,7 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
     // 此结构和exportedServiceURLs一致的
     ConcurrentNavigableMap<String, SortedSet<URL>> subscribedServiceURLs = new ConcurrentSkipListMap<>();
 
-    ConcurrentNavigableMap<String, String> serviceDefinitions = new ConcurrentSkipListMap<>();
+    ConcurrentNavigableMap<String/*providerUrl.getServiceKey()*/, String/*serviceDefinition.toJson*/> serviceDefinitions = new ConcurrentSkipListMap<>();
 
     public InMemoryWritableMetadataService() {
         this.metadataInfos = new ConcurrentHashMap<>();
@@ -130,6 +131,7 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
     @Override
     public boolean exportURL(URL url) {
         // 默认的话，走DefaultRegistryClusterIdentifier#providerKey，即获取url的"REGISTRY_CLUSTER"参数值，比如 org.apache.dubbo.config.RegistryConfig#0
+        // 我们提前在调用该exportURL方法的时候已经给url添加了REGISTRY_CLUSTER_KEY参数值
         String registryCluster = RegistryClusterIdentifier.getExtension(url).providerKey(url);
         String[] clusters = registryCluster.split(","); // 可能是多个注册集群，按照逗号分割
         for (String cluster : clusters) {

@@ -109,6 +109,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
      */
     @Override
     public void exported() {
+        // 进去
         super.exported();
         // Publish ServiceBeanExportedEvent
         publishExportEvent();
@@ -118,7 +119,9 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
      * @since 2.6.5
      */
     private void publishExportEvent() {
+        // 构建ApplicationEvent实例，进去
         ServiceBeanExportedEvent exportEvent = new ServiceBeanExportedEvent(this);
+        // 发布事件
         applicationEventPublisher.publishEvent(exportEvent);
     }
 

@@ -29,6 +29,7 @@ import org.springframework.context.ApplicationListener;
  * @see ServiceBean
  * @since 2.6.5
  */
+// 基于spring的ApplicationEvent
 public class ServiceBeanExportedEvent extends ApplicationEvent {
 
     /**

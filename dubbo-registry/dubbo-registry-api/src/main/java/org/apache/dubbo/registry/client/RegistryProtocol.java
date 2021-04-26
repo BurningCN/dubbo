@@ -231,7 +231,7 @@ public class RegistryProtocol implements Protocol {
         boolean register = providerUrl.getParameter(REGISTER_KEY, true);
         // 根据 register 的值决定是否注册服务
         if (register) {
-            // 向注册中心注册服务，进去 ，实例为ListenerRegistryWrapper（Registry是spi接口，被ListenerRegistryWrapper包装了）
+            // 向注册中心注册服务，进去 ，实例为ListenerRegistryWrapper（Registry是spi接口，被ListenerRegistryWrapper包装了ZooKeeperRegistry或者ServiceDiscoveryRegistry）
             register(registryUrl, registeredProviderUrl); // < ------核心2：服务注册
         }
 
@@ -625,6 +625,7 @@ public class RegistryProtocol implements Protocol {
          */
         public InvokerDelegate(Invoker<T> invoker, URL url) {
             super(invoker, url);
+            // 父类有一个invoker，这里还来一个，完全没必要。可以把父类的访问级别变成protected
             this.invoker = invoker;
         }
 

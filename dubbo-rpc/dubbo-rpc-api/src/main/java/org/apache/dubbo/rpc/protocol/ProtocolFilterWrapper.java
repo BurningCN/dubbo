@@ -152,9 +152,14 @@ public class ProtocolFilterWrapper implements Protocol {
 
     @Override
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
-        if (UrlUtils.isRegistry(invoker.getUrl())) {// 判断是不是使用的Registry协议(注意是有RegistryProtocol扩展类的)
+        // 一般在暴露到本地，即inJvm的时候走if后面的，暴露到远端就走if里面的
+
+        // 判断是不是使用的Registry协议或者service-discovery-registry，进去
+        if (UrlUtils.isRegistry(invoker.getUrl())) {
+            //
             return protocol.export(invoker);
-        } // protocol是ProtocolListenerWrapper实例，buildInvokerChain构建一个调用过滤链，内部是多个Filter层层包装了下
+        }
+        // protocol是ProtocolListenerWrapper实例，buildInvokerChain构建一个调用过滤链，内部是多个Filter层层包装了下
         return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
     }
 

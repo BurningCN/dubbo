@@ -63,6 +63,7 @@ public class DelegateProviderMetaDataInvoker<T> implements Invoker {
         invoker.destroy();
     }
 
+    // 只被测试程序调用了，就是做测试的
     public ServiceConfig<?> getMetadata() {
         return metadata;
     }

@@ -190,6 +190,7 @@ public class ServiceInstanceMetadataUtils {
      */
     public static void setMetadataStorageType(ServiceInstance serviceInstance, String metadataType) {
         Map<String, String> metadata = serviceInstance.getMetadata();
+        // "dubbo.metadata.storage-type"
         metadata.put(METADATA_STORAGE_TYPE_PROPERTY_NAME, metadataType);
     }
 
@@ -250,12 +251,31 @@ public class ServiceInstanceMetadataUtils {
         }
         MetadataInfo metadataInfo = WritableMetadataService.getDefaultExtension().getMetadataInfos().get(registryCluster);
         if (metadataInfo != null) {
+            // 默认为null
             String existingInstanceRevision = instance.getMetadata().get(EXPORTED_SERVICES_REVISION_PROPERTY_NAME);
             if (!metadataInfo.calAndGetRevision().equals(existingInstanceRevision)) {
+                // 将metadataInfo.calAndGetRevision()的信息保存到ServiceInstance的metadata属性中，metadataInfo本身是app级别的，他有唯一一个Revision
+                // 我们把这个值塞到ServiceInstance的目的是，表示ServiceInstance隶属于这个app下
                 instance.getMetadata().put(EXPORTED_SERVICES_REVISION_PROPERTY_NAME, metadataInfo.calAndGetRevision());
                 if (existingInstanceRevision != null) {// skip the first registration.
                     instance.getExtendParams().put(INSTANCE_REVISION_UPDATED_KEY, "true");
                 }
+                // eg
+                //serviceInstance = {DefaultServiceInstance@4100} "DefaultServiceInstance{id='30.25.58.39:20880', serviceName='demo-provider', host='30.25.58.39', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}"
+                // id = "30.25.58.39:20880"
+                // serviceName = "demo-provider"
+                // host = "30.25.58.39"
+                // port = {Integer@5329} 20880
+                // enabled = true
+                // healthy = true
+                // metadata = {HashMap@5330}  size = 4
+                //  "dubbo.metadata-service.url-params" -> "{"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}"
+                //  "dubbo.endpoints" -> "[{"port":20880,"protocol":"dubbo"}]"
+                //  "dubbo.metadata.revision" -> "AB6F0B7C2429C8828F640F853B65E1E1"
+                //  "dubbo.metadata.storage-type" -> "remote"
+                // address = null
+                // serviceMetadata = null
+                // extendParams = {HashMap@5331}  size = 0
             }
         }
     }

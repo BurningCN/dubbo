@@ -98,8 +98,9 @@ public abstract class CuratorFrameworkUtils {
     }
 
     // 将自己的ServiceInstance映射为curator的ServiceInstance
-    public static org.apache.curator.x.discovery.ServiceInstance<ZookeeperInstance> build(ServiceInstance serviceInstance) {
+     public static org.apache.curator.x.discovery.ServiceInstance<ZookeeperInstance> build(ServiceInstance serviceInstance) {
         ServiceInstanceBuilder builder;
+        // 这个值是appName（ApplicationConfig#getName）
         String serviceName = serviceInstance.getServiceName();
         String host = serviceInstance.getHost();
         int port = serviceInstance.getPort();

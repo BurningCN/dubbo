@@ -112,7 +112,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
             }
         }
         if (zookeeperClient != null && zookeeperClient.isConnected()) {
-            // 进去
+            // 进去。这里感觉没必要
             writeToClientMap(addressList, zookeeperClient);
         }
         return zookeeperClient;

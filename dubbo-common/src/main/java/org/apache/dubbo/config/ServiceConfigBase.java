@@ -186,6 +186,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     }
 
     public Optional<String> getContextPath(ProtocolConfig protocolConfig) {
+        // 一般下两个都是null
         String contextPath = protocolConfig.getContextpath();
         if (StringUtils.isEmpty(contextPath) && provider != null) {
             contextPath = provider.getContextpath();

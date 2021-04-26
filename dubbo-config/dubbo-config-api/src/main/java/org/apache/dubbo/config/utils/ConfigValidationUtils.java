@@ -202,6 +202,19 @@ public class ConfigValidationUtils {
                     //"pid" -> "6714"
                     //"timestamp" -> "1609849127050"
 
+                    // eg
+                    //"path" -> "org.apache.dubbo.registry.RegistryService"
+                    //"protocol" -> "zookeeper"
+                    //"metadata-type" -> "remote"
+                    //"application" -> "demo-provider"
+                    //"port" -> "2181"
+                    //"release" -> ""
+                    //"dubbo" -> "2.0.2"
+                    //"pid" -> "78269"
+                    //"id" -> "org.apache.dubbo.config.RegistryConfig" ---- 注意这里
+                    //"timestamp" -> "1619340296936"
+
+
                     // 根据这两个参数生成url list，进去
                     List<URL> urls = UrlUtils.parseURLs(address, map);
 
@@ -209,8 +222,12 @@ public class ConfigValidationUtils {
 
                         url = URLBuilder.from(url)
                                 .addParameter(REGISTRY_KEY, url.getProtocol()) // 添加registry=xx(xx比如zookeeper) 参数
-                                .setProtocol(extractRegistryType(url)) // 这行，把原来url的protocol的值从zookeeper变成registry，extractRegistryType进去
-                                .build(); // eg registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&registry=zookeeper&timestamp=1609849127050
+                                .setProtocol(extractRegistryType(url)) // 这行，把原来url的protocol的值从zookeeper变成registry或者service-discovery-registry，extractRegistryType进去
+                                .build();
+                        // eg registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&registry=zookeeper&timestamp=1609849127050
+                        // eg service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.2&id=org.apache.dubbo.config.RegistryConfig&metadata-type=remote&pid=78269&registry=zookeeper&registry-type=service&timestamp=1619340296936
+
+                        //注意provider参数 t/f
                         if ((provider && url.getParameter(REGISTER_KEY, true))
                                 || (!provider && url.getParameter(SUBSCRIBE_KEY, true))) {
                             registryList.add(url);
@@ -218,7 +235,9 @@ public class ConfigValidationUtils {
                     }
                 }
             }
-        } // 进去
+
+        }
+        // 进去
         return genCompatibleRegistries(registryList, provider);
     }
 
@@ -228,7 +247,7 @@ public class ConfigValidationUtils {
             result.add(registryURL);// 先直接存到返回结果
             if (provider) {
                 // for registries enabled service discovery, automatically register interface compatible addresses.
-                // 对于注册表启用的服务发现，自动注册接口兼容的地址。
+                // 对于注册表启用的服务发现，自动注册接口兼容的地址。 下面的逻辑一般不会进去
                 if (SERVICE_REGISTRY_PROTOCOL.equals(registryURL.getProtocol())
                         && registryURL.getParameter(REGISTRY_DUPLICATE_KEY, false)
                         && registryNotExists(registryURL, registryList, REGISTRY_PROTOCOL)) {
@@ -551,7 +570,9 @@ public class ConfigValidationUtils {
         }
     }
 
-    private static String extractRegistryType(URL url) { // 判断注册类型是否是服务发现类型，进去。注册类型有两种service-discovery-registry 、registry
+    private static String extractRegistryType(URL url) {
+        // 判断注册类型是否是服务发现类型，进去。注册类型有两种service-discovery-registry 、registry
+        //  isServiceDiscoveryRegistryType // 进去
         return isServiceDiscoveryRegistryType(url) ? SERVICE_REGISTRY_PROTOCOL : REGISTRY_PROTOCOL;
     }
 

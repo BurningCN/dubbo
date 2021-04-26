@@ -532,6 +532,8 @@ public class UrlUtils {
             return false;
         }
         // 获取map中key为registry-type（key可能为null）的值是否为service，如果equals为false，表示不是ServiceDiscovery Registry Type
+        // 全局搜    <dubbo:registry address="zookeeper://${zookeeper.address:127.0.0.1}:2181?registry-type=service"/>
+        // 可以看到这就是加了这个参数的
         return SERVICE_REGISTRY_TYPE.equals(parameters.get(REGISTRY_TYPE_KEY));
     }
 

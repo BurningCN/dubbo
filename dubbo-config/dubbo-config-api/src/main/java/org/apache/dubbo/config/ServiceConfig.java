@@ -238,14 +238,15 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         exported();
     }
 
-    // 注意看子类
+    // 注意看子类ServiceBean的重写方法
     public void exported() {
         // 爷爷AbstractInterfaceConfig的方法
         List<URL> exportedURLs = this.getExportedUrls();
         exportedURLs.forEach(url -> {
             Map<String, String> parameters = getApplication().getParameters();
             // 做映射关系，获取具体的扩展实例，然后调用map方法，将指定的Dubbo服务接口、组、版本和协议映射到当前的Dubbo服务名称
-            // 如果parameters为null，则使用默认的扩展实例，扩展名为config，扩展实力为DynamicConfigurationServiceNameMapping
+            // 如果parameters为null，则使用默认的扩展实例，扩展名为config，扩展实例为DynamicConfigurationServiceNameMapping
+            // 实际就是注册到zk，zkpath的节点值分别为：/dubbo/config/mapping/samples.servicediscovery.demo.DemoService/demo-provider ----> 当前时间戳
             ServiceNameMapping.getExtension(parameters != null ? parameters.get(MAPPING_KEY) : null).map(url);
         });
         // dispatch a ServiceConfigExportedEvent since 2.7.4
@@ -415,9 +416,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // Dubbo 允许我们使用不同的协议导出服务，也允许我们向多个注册中心注册服务。Dubbo 在 doExportUrls 方法中对多协议，多注册中心进行了支持。
         // 遍历 protocols，并在每个协议下导出服务，并且在导出服务的过程中，将服务注册到注册中心
         for (ProtocolConfig protocolConfig : protocols) { // protocols的填充实际注意下（checkProtocol）
-            String pathKey = URL.buildKey(getContextPath(protocolConfig) // buildKey进去
+            String pathKey = URL.buildKey(
+                    getContextPath(protocolConfig) // 返回的为Optional，进去
                     .map(p -> p + "/" + path)
-                    .orElse(path), group, version);// eg org.apache.dubbo.demo.DemoService
+                    .orElse(path), group, version
+            );// eg org.apache.dubbo.demo.DemoService
             // In case user specified path, register service one more time to map it to path.
             repository.registerService(pathKey, interfaceClass);
             serviceMetadata.setServiceKey(pathKey);
@@ -524,6 +527,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             map.put(METHODS_KEY, ANY_VALUE);
         } else {
             String revision = Version.getVersion(interfaceClass, version);
+            // 一般是null。不会进入
             if (revision != null && revision.length() > 0) {
                 map.put(REVISION_KEY, revision);
             }
@@ -598,7 +602,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         if (LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
                             continue;
                         }
-                        // 填充registryURL的dynamic参数到url
+                        // 填充registryURL的dynamic参数到url（如果为true，创建zk节点的时候是临时节点）
                         url = url.addParameterIfAbsent(DYNAMIC_KEY, registryURL.getParameter(DYNAMIC_KEY));
                         URL monitorUrl = ConfigValidationUtils.loadMonitor(this, registryURL);
                         if (monitorUrl != null) {

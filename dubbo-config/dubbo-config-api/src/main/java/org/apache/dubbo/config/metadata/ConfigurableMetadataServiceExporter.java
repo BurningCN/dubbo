@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
+import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
 import static org.apache.dubbo.common.constants.CommonConstants.DUBBO_PROTOCOL;
 
 /**
@@ -77,8 +78,8 @@ public class ConfigurableMetadataServiceExporter implements MetadataServiceExpor
             serviceConfig.setProtocol(generateMetadataProtocol());
             serviceConfig.setInterface(MetadataService.class);
             serviceConfig.setRef(metadataService);
-            serviceConfig.setGroup(getApplicationConfig().getName());
-            serviceConfig.setVersion(metadataService.version());
+            serviceConfig.setGroup(getApplicationConfig().getName());// 注意 是有值的
+            serviceConfig.setVersion(metadataService.version());// 注意 是有值的
             serviceConfig.setMethods(generateMethodConfig());
 
             // export
@@ -148,27 +149,10 @@ public class ConfigurableMetadataServiceExporter implements MetadataServiceExpor
 
     private ProtocolConfig generateMetadataProtocol() {
         ProtocolConfig defaultProtocol = new ProtocolConfig();
-        Integer port = getApplicationConfig().getMetadataServicePort();
-
-        if (port == null || port < -1) {
-            if (logger.isInfoEnabled()) {
-                logger.info("Metadata Service Port hasn't been set. " +
-                        "Use default protocol defined in protocols.");
-            }
-            List<ProtocolConfig> defaultProtocols = ApplicationModel.getConfigManager().getDefaultProtocols();
-
-            if (defaultProtocols.isEmpty()) {
-                defaultProtocol.setName(DUBBO_PROTOCOL);
-                defaultProtocol.setPort(-1);
-            } else {
-                return defaultProtocols.get(0);
-            }
-
-        } else {
-            defaultProtocol.setName(DUBBO_PROTOCOL);
-            defaultProtocol.setPort(port);
-        }
-
+        defaultProtocol.setName(DUBBO);
+        // defaultProtocol.setHost() ?
+        // auto-increment port
+        defaultProtocol.setPort(-1);
         return defaultProtocol;
     }
 }

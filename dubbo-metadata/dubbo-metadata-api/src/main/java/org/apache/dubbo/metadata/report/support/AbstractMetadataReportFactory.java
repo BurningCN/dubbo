@@ -35,13 +35,15 @@ public abstract class AbstractMetadataReportFactory implements MetadataReportFac
     // Registry Collection Map<metadataAddress, MetadataReport>
     private static final Map<String, MetadataReport> SERVICE_STORE_MAP = new ConcurrentHashMap<String, MetadataReport>();
 
+    // 两层缓存，双层映射 在MetadataReportInstance#init有一层缓存，所以总的缓存类似这样，
+    // Map<config.getRegistry(),<url.toServiceString(),MetadataReport>>
     @Override
     public MetadataReport getMetadataReport(URL url) {
         url = url.setPath(MetadataReport.class.getName())
                 .removeParameters(EXPORT_KEY, REFER_KEY);
         // url eg zookeeper://127.0.0.1:2181/org.apache.dubbo.metadata.report.MetadataReport?application=demo-provider
 
-        // zookeeper://127.0.0.1:2181/org.apache.dubbo.metadata.report.MetadataReport
+        // key eg zookeeper://127.0.0.1:2181/org.apache.dubbo.metadata.report.MetadataReport
         String key = url.toServiceString();
         // Lock the metadata access process to ensure a single instance of the metadata instance
         // todo need pr-pr 应该来一个double check，AbstractRegistryFactory也是

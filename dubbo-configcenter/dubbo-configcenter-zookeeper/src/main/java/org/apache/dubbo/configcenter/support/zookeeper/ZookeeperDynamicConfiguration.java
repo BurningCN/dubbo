@@ -50,7 +50,7 @@ public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration 
         // 进去
         super(url);
         this.url = url;
-        // 进去
+        // 进去 这里完全没必要，前面super已经计算了
         rootPath = getRootPath(url);
 
         // 用以等待"初始化完毕"的闭锁

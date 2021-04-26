@@ -79,10 +79,12 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
 
     // easy
     public static List<ServiceDiscovery> getServiceDiscoveries() {
+        // AbstractRegistryFactory.getRegistries() 先前缓存了相关实例
         return AbstractRegistryFactory.getRegistries()
                 .stream()
                 .filter(registry -> registry instanceof ServiceDiscoveryRegistry)
                 .map(registry -> (ServiceDiscoveryRegistry) registry)
+                // 每个ServiceDiscoveryRegistry里面有一个serviceDiscovery属性，在其构造函数得到初始化的
                 .map(ServiceDiscoveryRegistry::getServiceDiscovery)
                 .collect(Collectors.toList());
     }
@@ -130,6 +132,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
                 .removeParameters(EXPORT_KEY, REFER_KEY) // export  refer
                 .build();
         // eg : zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService
+        // eg : service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService
         String key = createRegistryCacheKey(url);
         // Lock the registry access process to ensure a single instance of the registry
         LOCK.lock();
@@ -141,6 +144,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
             }
             //create registry by spi/ioc
             // 缓存未命中，创建 Registry 实例，进去
+            // 这里是进Registry派系或者ServiceDiscovery派系，比如ZookeeperRegistryFactory 或者 ServiceDiscoveryRegistryFactory
             registry = createRegistry(url);
             if (registry == null) {
                 throw new IllegalStateException("Can not create registry " + url);

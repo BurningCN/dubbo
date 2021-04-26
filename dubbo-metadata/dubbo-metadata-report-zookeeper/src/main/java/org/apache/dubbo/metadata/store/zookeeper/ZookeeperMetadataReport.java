@@ -65,6 +65,7 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
     private Map<String, ChildListener> listenerMap = new ConcurrentHashMap<>();
 
     public ZookeeperMetadataReport(URL url, ZookeeperTransporter zookeeperTransporter) {
+        // 进去
         super(url);
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
@@ -134,6 +135,7 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
 
     // v就是gson.toJson(serviceDefinition);
     private void storeMetadata(MetadataIdentifier metadataIdentifier, String v) {
+        // getNodePath eg /dubbo/metadata/samples.servicediscovery.demo.DemoService/provider/demo-provider
         zkClient.create(getNodePath(metadataIdentifier), v, false);
     }
 
@@ -142,12 +144,29 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
         // /dubbo/metadata/{interface}/{version}/{side}/{appName}
         // eg /dubbo/metadata/my.metadata.zookeeper.ZookeeperMetadataReport4TstService/1.0.0.zk.md/provider/vic.zk.md
         return toRootDir() + metadataIdentifier.getUniqueKey(KeyTypeEnum.PATH);
+        // 如果 参数为SubscriberMetadataIdentifier，
+        // 则eg /dubbo/metadata/demo-provider/AB6F0B7C2429C8828F640F853B65E1E1
+
     }
 
     @Override
     public void publishAppMetadata(SubscriberMetadataIdentifier identifier, MetadataInfo metadataInfo) {
         String path = getNodePath(identifier);
         if (StringUtils.isBlank(zkClient.getContent(path))) {
+            // kv分别为 eg
+            /*
+             /dubbo/metadata/demo-provider/AB6F0B7C2429C8828F640F853B65E1E1
+
+             metadataInfo = {MetadataInfo@4140} "metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2.0.2},consumerParams=null}}}"
+                app = "demo-provider"
+                revision = "AB6F0B7C2429C8828F640F853B65E1E1"
+                services = {HashMap@4156}  size = 2
+                    "demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo" -> {MetadataInfo$ServiceInfo@5250} "service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}"
+                    "samples.servicediscovery.demo.DemoService:dubbo" -> {MetadataInfo$ServiceInfo@5252} "service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2.0.2},consumerParams=null}"
+                extendParams = {HashMap@4161}  size = 1
+                    "REGISTRY_CLUSTER" -> "org.apache.dubbo.config.RegistryConfig"
+                reported = {AtomicBoolean@4162} "false"
+            */
             zkClient.create(path, gson.toJson(metadataInfo), false);
         }
     }

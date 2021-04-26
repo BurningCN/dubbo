@@ -59,20 +59,57 @@ public class RemoteMetadataServiceImpl {
         return MetadataReportInstance.getMetadataReports(false);
     }
 
+    // 这里的serviceName不是传统的接口全限定名称，而是appName，代表一个服务
     public void publishMetadata(String serviceName) {
         Map<String, MetadataInfo> metadataInfos = localMetadataService.getMetadataInfos();
         metadataInfos.forEach((registryCluster, metadataInfo) -> {
             if (!metadataInfo.hasReported()) {
-                SubscriberMetadataIdentifier identifier = new SubscriberMetadataIdentifier(serviceName, metadataInfo.calAndGetRevision());
+                 //todo need pr 这个没用
                 metadataInfo.calAndGetRevision();
                 metadataInfo.getExtendParams().put(REGISTRY_CLUSTER_KEY, registryCluster);
                 MetadataReport metadataReport = getMetadataReports().get(registryCluster);
                 if (metadataReport == null) {
                     metadataReport = getMetadataReports().entrySet().iterator().next().getValue();
                 }
+                // 这个虽然叫订阅，但是是提供者的信息，calAndGetRevision进去
+                SubscriberMetadataIdentifier identifier = new SubscriberMetadataIdentifier(serviceName, metadataInfo.calAndGetRevision());
                 // 核心，发布--》app级别
                 metadataReport.publishAppMetadata(identifier, metadataInfo);
+                // 标记该app已报告
                 metadataInfo.markReported();
+                // 此时zk多了一个节点，信息为
+                /*
+                get /dubbo/metadata/demo-provider/AB6F0B7C2429C8828F640F853B65E1E1
+                {
+                    "app": "demo-provider",
+                    "revision": "AB6F0B7C2429C8828F640F853B65E1E1",
+                    "services": {
+                        "demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo": {
+                            "name": "org.apache.dubbo.metadata.MetadataService",
+                            "group": "demo-provider",
+                            "version": "1.0.0",
+                            "protocol": "dubbo",
+                            "path": "org.apache.dubbo.metadata.MetadataService",
+                            "params": {
+                                "deprecated": "false",
+                                "dubbo": "2.0.2",
+                                "version": "1.0.0",
+                                "group": "demo-provider"
+                            }
+                        },
+                        "samples.servicediscovery.demo.DemoService:dubbo": {
+                            "name": "samples.servicediscovery.demo.DemoService",
+                            "protocol": "dubbo",
+                            "path": "samples.servicediscovery.demo.DemoService",
+                            "params": {
+                                "deprecated": "false",
+                                "weight": "12",
+                                "dubbo": "2.0.2"
+                            }
+                        }
+                    }
+                }
+                }*/
             }
         });
     }

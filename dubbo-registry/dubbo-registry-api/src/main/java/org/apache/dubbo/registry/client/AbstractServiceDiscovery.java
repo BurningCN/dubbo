@@ -30,6 +30,7 @@ public abstract class AbstractServiceDiscovery implements ServiceDiscovery {
     @Override
     public final void register(ServiceInstance serviceInstance) throws RuntimeException {
         this.serviceInstance = serviceInstance;
+        // 进去，默认看ZookeeperServiceDiscovery实现类的方法
         doRegister(serviceInstance);
     }
 

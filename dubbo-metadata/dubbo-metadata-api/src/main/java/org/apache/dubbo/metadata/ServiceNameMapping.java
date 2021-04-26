@@ -69,6 +69,7 @@ public interface ServiceNameMapping {
         //                .append(KEY_SEPARATOR).append(defaultString(version))
         //                .append(KEY_SEPARATOR).append(defaultString(protocol));
         //        return groupBuilder.toString();
+        // /mapping/ (注意还有/services、/dubbo，分别对应ZKServiceDiscovery和ZKMetaReport 都是不一样的。还有/dubbo/config---这个是config-center相关的，对应ZookeeperDynamicConfiguration)
         return DEFAULT_MAPPING_GROUP + SLASH + serviceInterface;
     }
 }

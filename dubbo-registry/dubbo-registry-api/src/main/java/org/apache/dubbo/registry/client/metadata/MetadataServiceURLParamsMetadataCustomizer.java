@@ -63,8 +63,10 @@ public class MetadataServiceURLParamsMetadataCustomizer implements ServiceInstan
 
         String version = MetadataService.VERSION;
 
+        // 这里之所以能拿到是因为我们暴露了MetadataService实例，详见ConfigurableMetadataServiceExporter#export的调用处
         SortedSet<String> urls = writableMetadataService.getExportedURLs(serviceInterface, group, version);
 
+        // 进去
         return getMetadataServiceParameter(toURLs(urls));
     }
 }

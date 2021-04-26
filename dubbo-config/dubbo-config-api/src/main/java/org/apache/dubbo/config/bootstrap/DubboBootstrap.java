@@ -710,7 +710,7 @@ public class DubboBootstrap extends GenericEventListener {
         // FIXME, multiple metadata config support.
         Collection<MetadataReportConfig> metadataReportConfigs = configManager.getMetadataConfigs();
         if (CollectionUtils.isEmpty(metadataReportConfigs)) {
-            // 如果ConfigManager没有MetadataReportConfig，然后application还有metadataType = remote值，直接抛异常
+            // 如果ConfigManager没有MetadataReportConfig，然后application还有metadataType = remote值，直接抛异常。看下面日志
             if (REMOTE_METADATA_STORAGE_TYPE.equals(metadataType)) {
                 throw new IllegalStateException("No MetadataConfig found, Metadata Center address is required when 'metadata=remote' is enabled.");
             }
@@ -1005,11 +1005,12 @@ public class DubboBootstrap extends GenericEventListener {
             exportServices();
 
             // Not only provider register
-            // 不是仅注册Provider信息或者有其他要暴露的服务（两个都进去）（一般provider，使用的是ServiceDiscovery的时候，就会满足第二个条件（第一个不满足））
+            // 不是仅注册Provider信息或者有其他要暴露的服务（两个都进去）（一般provider，使用的是ServiceDiscovery的时候，就会满足第二个条件（第一个一般不满足））
             if (!isOnlyRegisterProvider() || hasExportedServices()) {
                 // 2. export MetadataService
                 exportMetadataService();
-                // 3. Register the local ServiceInstance if required // 进去
+                // 进去 这里是最核心的地方，基于ServiceDiscovery方式，这里就会暴露app相关的服务信息，比如ip、port等信息到zk上
+                // 3. Register the local ServiceInstance if required
                 registerServiceInstance();
             }
 
@@ -1148,6 +1149,7 @@ public class DubboBootstrap extends GenericEventListener {
 
     private DynamicConfiguration prepareEnvironment(ConfigCenterConfig configCenter) {
         if (configCenter.isValid()) {
+            // cas 更新inited属性
             if (!configCenter.checkOrUpdateInited()) {
                 return null;
 
@@ -1297,6 +1299,7 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private void registerServiceInstance() {
+        // 先看下有没有sd实例，getServiceDiscoveries进去
         if (CollectionUtils.isEmpty(getServiceDiscoveries())) {
             return;
         }
@@ -1305,14 +1308,14 @@ public class DubboBootstrap extends GenericEventListener {
 
         String serviceName = application.getName();
 
-        // 选择一个MetadataService已经暴露的url
+        // 选择一个MetadataService已经暴露的url // 进去
         URL exportedURL = selectMetadataServiceExportedURL();
 
         String host = exportedURL.getHost();
 
         int port = exportedURL.getPort();
 
-        // 创建ServiceInstance。注意这里的ServiceName为前面的AppName
+        // 创建ServiceInstance。注意这里的ServiceName为前面的AppName // 进去
         ServiceInstance serviceInstance = createServiceInstance(serviceName, host, port);
 
         // 进去
@@ -1338,6 +1341,7 @@ public class DubboBootstrap extends GenericEventListener {
 
         getServiceDiscoveries().forEach(serviceDiscovery ->
         {
+            // 进去，将app的reversion设置到serviceInstance的map属性中
             calInstanceRevision(serviceDiscovery, serviceInstance);
             // register metadata 这里是关键，app级别的注册
             serviceDiscovery.register(serviceInstance);
@@ -1356,6 +1360,7 @@ public class DubboBootstrap extends GenericEventListener {
 
         URL selectedURL = null;
 
+        // 获取暴露的url列表，对应内存中的容器（exportedServiceURLs）填充的时机在RegistryProtocol 的 registry.register(registeredProviderUrl);--->ServiceDiscoveryRegistry#register
         SortedSet<String> urlValues = metadataService.getExportedURLs();
 
         for (String urlValue : urlValues) {
@@ -1387,6 +1392,7 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private ServiceInstance createServiceInstance(String serviceName, String host, int port) {
+        // 进去
         this.serviceInstance = new DefaultServiceInstance(serviceName, host, port);
         setMetadataStorageType(serviceInstance, getMetadataType());
 
@@ -1394,9 +1400,28 @@ public class DubboBootstrap extends GenericEventListener {
                 ExtensionLoader.getExtensionLoader(ServiceInstanceCustomizer.class);
         // FIXME, sort customizer before apply
         loader.getSupportedExtensionInstances().forEach(customizer -> {
+            // 对serviceInstance做一下定制化操作，其实就是给DefaultServiceInstance#metadata这个map属性加了一些参数
             // customizes
             customizer.customize(this.serviceInstance);
         });
+
+        /*
+        serviceInstance = {DefaultServiceInstance@8778} "DefaultServiceInstance{id='30.25.58.39:20880', serviceName='demo-provider', host='30.25.58.39', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.storage-type=remote}}"
+            id = "30.25.58.39:20880"
+            serviceName = "demo-provider"
+            host = "30.25.58.39"
+            port = {Integer@8777} 20880
+            enabled = true
+            healthy = true
+            metadata = {HashMap@8780}  size = 3
+            "dubbo.metadata-service.url-params" -> "{"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}" // 这个是MetadataServiceURLParamsMetadataCustomizer 添加的
+            "dubbo.endpoints" -> "[{"port":20880,"protocol":"dubbo"}]" // 这个是ProtocolPortsMetadataCustomizer添加的
+            "dubbo.metadata.storage-type" -> "remote"
+            address = null
+            serviceMetadata = null
+            extendParams = {HashMap@8781}  size = 0
+        */
+
 
         return this.serviceInstance;
     }

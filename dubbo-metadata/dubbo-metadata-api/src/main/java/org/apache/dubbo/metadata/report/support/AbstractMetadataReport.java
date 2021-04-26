@@ -117,8 +117,9 @@ public abstract class AbstractMetadataReport implements MetadataReport {
                 }
             }
             // if this file exist, firstly delete it.
-            // getAndSet内部会自动cas，返回值为之前的值，比如返回false。
+            // getAndSet内部会自动cas，返回值为之前的值，比如返回false。如果cas修改成功，且文件存在，直接删除
             if (!initialized.getAndSet(true) && file.exists()) {
+                // todo need pr 这里应该也同步吧lock文件删了
                 file.delete();
             }
         }
@@ -132,6 +133,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
         // cycle report the data switch 默认true
         if (reportServerURL.getParameter(CYCLE_REPORT_KEY, DEFAULT_METADATA_REPORT_CYCLE_REPORT)) {
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("DubboMetadataReportTimer", true));
+            // 每天凌晨的2~6点执行一次，全量的publishAll，将内存的数据推到远端和本地文件
             scheduler.scheduleAtFixedRate(this::publishAll, calculateStartTime(), ONE_DAY_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
         }
     }
