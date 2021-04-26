@@ -573,7 +573,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         boolean anyhost = false;
 
         String hostToBind = getValueFromConfig(protocolConfig, DUBBO_IP_TO_BIND);
-        if (hostToBind != null && hostToBind.length() > 0 && isInvalidLocalHost(hostToBind)) {
+        if (StringUtils.isNotEmpty(hostToBind) && isInvalidLocalHost(hostToBind)) {
             throw new IllegalArgumentException("Specified invalid bind ip from property:" + DUBBO_IP_TO_BIND + ", value:" + hostToBind);
         }
 
@@ -644,7 +644,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     private Integer findConfigedPorts(ProtocolConfig protocolConfig,
                                       String name,
                                       Map<String, String> map) {
-        Integer portToBind = null;
+        Integer portToBind;
 
         // parse bind port from environment
         String port = getValueFromConfig(protocolConfig, DUBBO_PORT_TO_BIND);
@@ -684,7 +684,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     private Integer parsePort(String configPort) {
         Integer port = null;
-        if (configPort != null && configPort.length() > 0) {
+        if (StringUtils.isNotEmpty(configPort)) {
             try {
                 Integer intPort = Integer.parseInt(configPort);
                 if (isInvalidPort(intPort)) {

@@ -44,7 +44,6 @@ public class MetadataReportInstance {
         if (!init.compareAndSet(false, true)) {
             return;
         }
-        MetadataReportFactory metadataReportFactory = ExtensionLoader.getExtensionLoader(MetadataReportFactory.class).getAdaptiveExtension();
         URL url = config.toUrl();
         if (METADATA_REPORT_KEY.equals(url.getProtocol())) {
             String protocol = url.getParameter(METADATA_REPORT_KEY, DEFAULT_DIRECTORY);
@@ -54,9 +53,9 @@ public class MetadataReportInstance {
                     .build();
         }
         url = url.addParameterIfAbsent(APPLICATION_KEY, ApplicationModel.getApplicationConfig().getName());
+
         String relatedRegistryId = config.getRegistry() == null ? DEFAULT_KEY : config.getRegistry();
-//        RegistryConfig registryConfig = ApplicationModel.getConfigManager().getRegistry(relatedRegistryId)
-//                .orElseThrow(() -> new IllegalStateException("Registry id " + relatedRegistryId + " does not exist."));
+        MetadataReportFactory metadataReportFactory = ExtensionLoader.getExtensionLoader(MetadataReportFactory.class).getAdaptiveExtension();
         metadataReports.put(relatedRegistryId, metadataReportFactory.getMetadataReport(url));
     }
 

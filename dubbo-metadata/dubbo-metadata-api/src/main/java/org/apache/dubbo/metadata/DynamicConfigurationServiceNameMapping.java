@@ -73,10 +73,10 @@ public class DynamicConfigurationServiceNameMapping implements ServiceNameMappin
     @Override
     public Set<String> getAndListen(URL url, MappingListener mappingListener) {
         String serviceInterface = url.getServiceInterface();
-        DynamicConfiguration dynamicConfiguration = DynamicConfiguration.getDynamicConfiguration();
 
         Set<String> serviceNames = new LinkedHashSet<>();
         execute(() -> {
+            DynamicConfiguration dynamicConfiguration = DynamicConfiguration.getDynamicConfiguration();
             Set<String> keys = dynamicConfiguration
                     .getConfigKeys(ServiceNameMapping.buildGroup(serviceInterface));
             if (CollectionUtils.isNotEmpty(keys)) {

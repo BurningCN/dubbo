@@ -40,9 +40,6 @@ public class MetadataServiceNameMapping implements ServiceNameMapping {
     @Override
     public void map(URL url) {
         String serviceInterface = url.getServiceInterface();
-        String group = url.getParameter(GROUP_KEY);
-        String version = url.getParameter(VERSION_KEY);
-        String protocol = url.getProtocol();
 
         if (IGNORED_SERVICE_INTERFACES.contains(serviceInterface)) {
             return;
@@ -55,9 +52,6 @@ public class MetadataServiceNameMapping implements ServiceNameMapping {
     @Override
     public Set<String> getAndListen(URL url, MappingListener mappingListener) {
         String serviceInterface = url.getServiceInterface();
-        String group = url.getParameter(GROUP_KEY);
-        String version = url.getParameter(VERSION_KEY);
-        String protocol = url.getProtocol();
 
         String mappingKey = ServiceNameMapping.buildGroup(serviceInterface);
         Set<String> serviceNames = new LinkedHashSet<>();

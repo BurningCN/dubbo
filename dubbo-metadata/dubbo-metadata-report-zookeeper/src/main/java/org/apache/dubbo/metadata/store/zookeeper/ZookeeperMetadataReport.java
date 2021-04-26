@@ -177,14 +177,11 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
     }
 
     private List<String> addServiceMappingListener(String path, String serviceKey, MappingListener listener) {
-        ChildListener zkListener = new ChildListener() {
-            @Override
-            public void childChanged(String path, List<String> children) {
-                MappingChangedEvent event = new MappingChangedEvent();
-                event.setServiceKey(serviceKey);
-                event.setApps(null != children ? new HashSet<>(children) : null);
-                listener.onEvent(event);
-            }
+        ChildListener zkListener = (path1, children) -> {
+            MappingChangedEvent event = new MappingChangedEvent();
+            event.setServiceKey(serviceKey);
+            event.setApps(null != children ? new HashSet<>(children) : null);
+            listener.onEvent(event);
         };
         List<String> childNodes = zkClient.addChildListener(path, zkListener);
         listenerMap.put(path, zkListener);
