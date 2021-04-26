@@ -48,8 +48,6 @@ public class DynamicConfigurationServiceNameMapping implements ServiceNameMappin
     public void map(URL url) {
         String serviceInterface = url.getServiceInterface();
         String group = url.getParameter(GROUP_KEY);
-        String version = url.getParameter(VERSION_KEY);
-        String protocol = url.getProtocol();
 
         if (IGNORED_SERVICE_INTERFACES.contains(serviceInterface)) {
             return;
@@ -64,7 +62,7 @@ public class DynamicConfigurationServiceNameMapping implements ServiceNameMappin
         String content = valueOf(System.currentTimeMillis());
 
         execute(() -> {
-            dynamicConfiguration.publishConfig(key, ServiceNameMapping.buildGroup(serviceInterface, group, version, protocol), content);
+            dynamicConfiguration.publishConfig(key, ServiceNameMapping.buildGroup(serviceInterface), content);
             if (logger.isInfoEnabled()) {
                 logger.info(String.format("Dubbo service[%s] mapped to interface name[%s].",
                         group, serviceInterface));
@@ -75,15 +73,12 @@ public class DynamicConfigurationServiceNameMapping implements ServiceNameMappin
     @Override
     public Set<String> getAndListen(URL url, MappingListener mappingListener) {
         String serviceInterface = url.getServiceInterface();
-        String group = url.getParameter(GROUP_KEY);
-        String version = url.getParameter(VERSION_KEY);
-        String protocol = url.getProtocol();
         DynamicConfiguration dynamicConfiguration = DynamicConfiguration.getDynamicConfiguration();
 
         Set<String> serviceNames = new LinkedHashSet<>();
         execute(() -> {
             Set<String> keys = dynamicConfiguration
-                    .getConfigKeys(ServiceNameMapping.buildGroup(serviceInterface, group, version, protocol));
+                    .getConfigKeys(ServiceNameMapping.buildGroup(serviceInterface));
             if (CollectionUtils.isNotEmpty(keys)) {
                 serviceNames.addAll(keys);
             }

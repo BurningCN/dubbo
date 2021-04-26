@@ -62,8 +62,6 @@ public class RemoteMetadataServiceImpl {
         Map<String, MetadataInfo> metadataInfos = localMetadataService.getMetadataInfos();
         metadataInfos.forEach((registryCluster, metadataInfo) -> {
             if (!metadataInfo.hasReported()) {
-                SubscriberMetadataIdentifier identifier = new SubscriberMetadataIdentifier(serviceName, metadataInfo.calAndGetRevision());
-                metadataInfo.calAndGetRevision();
                 metadataInfo.getExtendParams().put(REGISTRY_CLUSTER_KEY, registryCluster);
                 MetadataReport metadataReport = getMetadataReports().get(registryCluster);
                 if (metadataReport == null) {
@@ -73,6 +71,7 @@ public class RemoteMetadataServiceImpl {
                 if (logger.isDebugEnabled()) {
                     logger.debug(metadataInfo.toString());
                 }
+                SubscriberMetadataIdentifier identifier = new SubscriberMetadataIdentifier(serviceName, metadataInfo.calAndGetRevision());
                 metadataReport.publishAppMetadata(identifier, metadataInfo);
                 metadataInfo.markReported();
             }

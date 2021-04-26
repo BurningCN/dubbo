@@ -218,7 +218,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
 
     @Override
     protected CuratorZookeeperClient.CuratorWatcherImpl createTargetDataListener(String path, DataListener listener) {
-        return new CuratorWatcherImpl(client, listener);
+        return new CuratorWatcherImpl(listener);
     }
 
     @Override
@@ -271,7 +271,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
             this.path = path;
         }
 
-        public CuratorWatcherImpl(CuratorFramework client, DataListener dataListener) {
+        public CuratorWatcherImpl(DataListener dataListener) {
             this.dataListener = dataListener;
         }
 

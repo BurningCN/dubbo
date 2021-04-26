@@ -49,7 +49,7 @@ public class MetadataServiceNameMapping implements ServiceNameMapping {
         }
         String registryCluster = getRegistryCluster(url);
         MetadataReport metadataReport = MetadataReportInstance.getMetadataReport(registryCluster);
-        metadataReport.registerServiceAppMapping(ServiceNameMapping.buildGroup(serviceInterface, group, version, protocol), getName(), url);
+        metadataReport.registerServiceAppMapping(ServiceNameMapping.buildGroup(serviceInterface), getName(), url);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class MetadataServiceNameMapping implements ServiceNameMapping {
         String version = url.getParameter(VERSION_KEY);
         String protocol = url.getProtocol();
 
-        String mappingKey = ServiceNameMapping.buildGroup(serviceInterface, group, version, protocol);
+        String mappingKey = ServiceNameMapping.buildGroup(serviceInterface);
         Set<String> serviceNames = new LinkedHashSet<>();
         String registryCluster = getRegistryCluster(url);
         MetadataReport metadataReport = MetadataReportInstance.getMetadataReport(registryCluster);
