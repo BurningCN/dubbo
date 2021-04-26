@@ -14,20 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.dubbo.event;
 
-import java.util.concurrent.ForkJoinPool;
+package org.apache.dubbo.common.extension.activate.impl;
 
-/**
- * Parallel {@link EventDispatcher} implementation uses {@link ForkJoinPool#commonPool() JDK common thread pool}
- *
- * @see ForkJoinPool#commonPool()
- * @since 2.7.5
- */
-public class ParallelEventDispatcher extends AbstractEventDispatcher {
-    public static final String NAME = "parallel";
+import org.apache.dubbo.common.extension.activate.ActivateWrapperExt1;
 
-    public ParallelEventDispatcher() {
-        super(ForkJoinPool.commonPool());
+
+public class ActivateWrapperExt1Wrapper implements ActivateWrapperExt1 {
+    private ActivateWrapperExt1 activateWrapperExt1;
+
+    public ActivateWrapperExt1Wrapper(ActivateWrapperExt1 activateWrapperExt1) {
+        this.activateWrapperExt1 = activateWrapperExt1;
+    }
+
+    @Override
+    public String echo(String msg) {
+        return activateWrapperExt1.echo(msg);
     }
 }

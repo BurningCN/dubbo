@@ -17,6 +17,7 @@
 package org.apache.dubbo.registry.etcd;
 
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.ConcurrentHashSet;
 import org.apache.dubbo.common.utils.UrlUtils;
 import org.apache.dubbo.registry.NotifyListener;
@@ -247,9 +248,14 @@ public class EtcdRegistry extends FailbackRegistry {
         if (listeners != null) {
             ChildListener etcdListener = listeners.get(listener);
             if (etcdListener != null) {
-                // maybe url has many subscribed paths
-                for (String path : toUnsubscribedPath(url)) {
-                    etcdClient.removeChildListener(path, etcdListener);
+                if (ANY_VALUE.equals(url.getServiceInterface())) {
+                    String root = toRootPath();
+                    etcdClient.removeChildListener(root, etcdListener);
+                }else {
+                    // maybe url has many subscribed paths
+                    for (String path : toUnsubscribedPath(url)) {
+                        etcdClient.removeChildListener(path, etcdListener);
+                    }
                 }
             }
         }
@@ -344,7 +350,7 @@ public class EtcdRegistry extends FailbackRegistry {
 
     protected List<URL> toUrlsWithEmpty(URL consumer, String path, List<String> providers) {
         List<URL> urls = toUrlsWithoutEmpty(consumer, providers);
-        if (urls == null || urls.isEmpty()) {
+        if (CollectionUtils.isEmpty(urls)) {
             int i = path.lastIndexOf('/');
             String category = i < 0 ? path : path.substring(i + 1);
             URL empty = consumer.setProtocol(EMPTY_PROTOCOL).addParameter(CATEGORY_KEY, category);
