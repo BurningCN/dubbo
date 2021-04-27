@@ -49,6 +49,7 @@ public abstract class AbstractMetadataReportFactory implements MetadataReportFac
         // todo need pr-pr 应该来一个double check，AbstractRegistryFactory也是
         LOCK.lock();
         try {
+            // AbstractDynamicConfigurationFactory的key也是url.toServiceString();
             MetadataReport metadataReport = SERVICE_STORE_MAP.get(key);
             if (metadataReport != null) {
                 return metadataReport;

@@ -95,15 +95,20 @@ public class ConfigCenterConfig extends AbstractConfig {
     public URL toUrl() {
         Map<String, String> map = new HashMap<>();
         appendParameters(map, this);
+        // 注意会填充两个一样的，只是以-做连接存入了
+//        "registry.type" -> "service"
+//        "registry-type" -> "service"
         if (StringUtils.isEmpty(address)) {
             address = ANYHOST_VALUE;
         }
+        // todo need pr 这里不该是getSimpleName，而是getName
         map.put(PATH_KEY, ConfigCenterConfig.class.getSimpleName());
         // use 'zookeeper' as the default configcenter.
         if (StringUtils.isEmpty(map.get(PROTOCOL_KEY))) {
             map.put(PROTOCOL_KEY, ZOOKEEPER_PROTOCOL);
         }
         return UrlUtils.parseURL(address, map);
+        // eg zookeeper://127.0.0.1:2181/ConfigCenterConfig?check=true&config-file=dubbo.properties&group=dubbo&highest-priority=false&registry-type=service&registry.type=service&timeout=3000
     }
 
     public boolean checkOrUpdateInited() {

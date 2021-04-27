@@ -105,6 +105,10 @@ public abstract class AbstractConfig implements Serializable {
     // gx
     public static String getTagName(Class<?> cls) {
         String tag = cls.getSimpleName();
+        //SUFFIXES = {String[3]@5914}
+        // 0 = "Config"
+        // 1 = "Bean"
+        // 2 = "ConfigBase"
         for (String suffix : SUFFIXES) {
             // ConfigCenterConfig以Config结尾，tag = ConfigCenter（还有其他的比如ReferenceBean、ReferenceConfigBase）
             if (tag.endsWith(suffix)) {

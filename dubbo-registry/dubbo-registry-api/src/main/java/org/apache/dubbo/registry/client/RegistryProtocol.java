@@ -508,12 +508,14 @@ public class RegistryProtocol implements Protocol {
             }
         }
 
+        // 这里cluster参数为空的话，默认使用FailoverCluster，不过会被MockClusterWrapper包装
         Cluster cluster = Cluster.getCluster(qs.get(CLUSTER_KEY));
         // 调用 doRefer 继续执行服务引用逻辑
         return doRefer(cluster, registry, type, url);
         // 上面代码首先为 url 设置协议头，然后根据 url 参数加载注册中心实例。然后获取 group 配置，根据 group 配置决定 doRefer 第一个参数的类型。这里的重点是 doRefer 方法
     }
 
+    // 看 master-cp
     protected <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url) {
         return interceptInvoker(getInvoker(cluster, registry, type, url), url);
     }

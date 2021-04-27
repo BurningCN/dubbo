@@ -128,7 +128,7 @@ public class ServiceDiscoveryRegistry implements Registry {
         this.serviceDiscovery = createServiceDiscovery(registryURL);
         // 获取 "subscribed-services"参数值,按照逗号分割填充到set集合
         this.subscribedServices = parseServices(registryURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY));
-        // 获取"mapping-type"参数值，ServiceNameMapping#getExtension进去
+        // 获取"mapping-type"参数值，ServiceNameMapping#getExtension进去。有两种，基于config-center的和基于MetadataReport的
         this.serviceNameMapping = ServiceNameMapping.getExtension(registryURL.getParameter(MAPPING_KEY));
         // 进去 默认InMemoryWritableMetadataService
         this.writableMetadataService = WritableMetadataService.getDefaultExtension();
@@ -151,6 +151,8 @@ public class ServiceDiscoveryRegistry implements Registry {
         ServiceDiscovery serviceDiscovery = enhanceEventPublishing(originalServiceDiscovery);
         execute(() -> {
             // 进去 EventPublishingServiceDiscovery#initialize
+            // 这里将interface参数值从org.apache.dubbo.registry.RegistryService变成
+                    // org.apache.dubbo.registry.client.ServiceDiscovery，并且把 registry-type=service 参数去掉了
             serviceDiscovery.initialize(registryURL.addParameter(INTERFACE_KEY, ServiceDiscovery.class.getName())
                     .removeParameter(REGISTRY_TYPE_KEY));
         });

@@ -55,6 +55,11 @@ public class ProtocolFilterWrapper implements Protocol {
         Invoker<T> last = invoker;
         // 根据几个条件激活满足的扩展类实例，比如 group参数值为provider，那么这种就满足：@Activate(group = CommonConstants.PROVIDER)
         List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
+        // 消费端的filter有
+        // filters = {ArrayList@4040}  size = 3
+        // 0 = {ConsumerContextFilter@4044}
+        // 1 = {FutureFilter@4045}
+        // 2 = {MonitorFilter@4046}
         if (!filters.isEmpty()) {
             for (int i = filters.size() - 1; i >= 0; i--) {
                 final Filter filter = filters.get(i);

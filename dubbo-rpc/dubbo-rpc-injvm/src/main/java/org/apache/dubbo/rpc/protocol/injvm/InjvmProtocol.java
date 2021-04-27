@@ -119,6 +119,7 @@ public class InjvmProtocol extends AbstractProtocol implements Protocol {
             // by default, go through local reference if there's the service exposed locally
             return true;
         } else {
+            // 一般scope的值为null，走这里
             return false;
         }
     }

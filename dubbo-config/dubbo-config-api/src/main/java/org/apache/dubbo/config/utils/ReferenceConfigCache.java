@@ -99,6 +99,7 @@ public class ReferenceConfigCache {
      * Create cache if not existed yet.
      */
     public static ReferenceConfigCache getCache(String name, KeyGenerator keyGenerator) {
+        // 将 <DEFAULT_NAME,DEFAULT_KEY_GENERATOR> 映射（默认情况）
         return CACHE_HOLDER.computeIfAbsent(name, k -> new ReferenceConfigCache(k, keyGenerator));
     }
 

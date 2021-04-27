@@ -221,8 +221,10 @@ public class ConfigValidationUtils {
                     for (URL url : urls) { // eg zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&timestamp=1609849127050
 
                         url = URLBuilder.from(url)
-                                .addParameter(REGISTRY_KEY, url.getProtocol()) // 添加registry=xx(xx比如zookeeper) 参数
-                                .setProtocol(extractRegistryType(url)) // 这行，把原来url的protocol的值从zookeeper变成registry或者service-discovery-registry，extractRegistryType进去
+                                // 添加registry=xx(xx比如zookeeper) 参数
+                                .addParameter(REGISTRY_KEY, url.getProtocol())
+                                // 这行，把原来url的protocol的值从zookeeper变成registry或者service-discovery-registry，extractRegistryType进去
+                                .setProtocol(extractRegistryType(url))
                                 .build();
                         // eg registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=6714&registry=zookeeper&timestamp=1609849127050
                         // eg service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.2&id=org.apache.dubbo.config.RegistryConfig&metadata-type=remote&pid=78269&registry=zookeeper&registry-type=service&timestamp=1619340296936

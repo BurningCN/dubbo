@@ -154,6 +154,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     private String services;
 
     public ReferenceConfig() {
+        // 进去
         super();
         this.repository = ApplicationModel.getServiceRepository();
     }
@@ -240,7 +241,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             bootstrap = DubboBootstrap.getInstance();
             bootstrap.initialize();
         }
-
+        // 进去
         checkAndUpdateSubConfigs();
         // 检测本地存根配置合法性
         checkStubAndLocal(interfaceClass);
@@ -281,6 +282,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         if (metadataReportConfig != null && metadataReportConfig.isValid()) {
             map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
         }
+
         Map<String, AsyncMethodInfo> attributes = null;
         if (CollectionUtils.isNotEmpty(getMethods())) {
             attributes = new HashMap<>();
@@ -314,6 +316,22 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             throw new IllegalArgumentException("Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
         }
         map.put(REGISTER_IP_KEY, hostToRegistry);
+
+        //map = {HashMap@6399}  size = 14
+        // "init" -> "false"
+        // "side" -> "consumer"
+        // "register.ip" -> "30.25.58.39"
+        // "release" -> ""
+        // "methods" -> "sayHello"
+        // "provided-by" -> "demo-provider"
+        // "dubbo" -> "2.0.2"
+        // "pid" -> "93053"
+        // "check" -> "false"
+        // "interface" -> "samples.servicediscovery.demo.DemoService"
+        // "metadata-type" -> "remote"
+        // "application" -> "demo-consumer"
+        // "sticky" -> "false"
+        // "timestamp" -> "1619440124701"
 
         serviceMetadata.getAttachments().putAll(map);
 
@@ -351,8 +369,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         // 本地引用 进去
         if (shouldJvmRefer(map)) {
             // 生成本地引用 URL，协议为 injvm
+            // eg injvm://127.0.0.1/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&metadata-type=remote&methods=sayHello&pid=93644&provided-by=demo-provider&register.ip=30.25.58.39&release=&side=consumer&sticky=false&timestamp=1619440753094
             URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
-            // 调用 refer 方法构建 InjvmInvoker 实例
+            // 调用 refer 方法构建 InjvmInvoker 实例。进去最后跟到AbstractProtocol->InjvmProtocol
             invoker = REF_PROTOCOL.refer(interfaceClass, url);
             if (logger.isInfoEnabled()) {
                 logger.info("Using injvm service " + interfaceClass.getName());
@@ -360,7 +379,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             // 远程引用
         } else {
             urls.clear();
-            // url 不为空，表明用户可能想进行点对点调用
+            // url 不为空，表明用户可能想进行点对点调用(xml可以给dubbo:reference 配置url属性)
             if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
                 // 当需要配置多个 url 时，可用分号进行分割，这里会进行切分
                 String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
@@ -395,7 +414,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                             if (monitorUrl != null) {
                                 map.put(MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
                             }
-                            // 添加 refer 参数到 url 中，并将 url 添加到 urls 中
+                            // 添加 refer 参数到 url 中，并将 url 添加到 urls 中。提供方也有这个，不过是直接编码的url并以export参数拼接
                             urls.add(u.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
                         }
                     }
@@ -406,10 +425,11 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 }
             }
 
-            // 单个注册中心或服务提供者(服务直连，下同)
+            // 单个注册中心或服务提供者(服务直连，下同) 一般是这个
             if (urls.size() == 1) {
                 // 调用 RegistryProtocol 的 refer 构建 Invoker 实例
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
+
                 // 多个注册中心或多个服务提供者，或者两者混合
             } else {
                 List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
@@ -500,6 +520,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 .getActivateExtension(URL.valueOf("configInitializer://"), (String[]) null);
         configInitializers.forEach(e -> e.initReferConfig(this));
 
+        // prefix=dubbo.reference.samples.servicediscovery.demo.DemoService
         this.refresh();
         if (getGeneric() == null && getConsumer() != null) {
             // 设置 generic
@@ -553,10 +574,13 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
      * call, which is the default behavior
      */
     protected boolean shouldJvmRefer(Map<String, String> map) {
+        // temp://localhost?xxxx
         URL tmpUrl = new URL("temp", "localhost", 0, map);
         boolean isJvmRefer;
+        // 默认是null（很少有人在xml配置injvm=true）
         if (isInjvm() == null) {
             // if a url is specified, don't do local reference
+            // 一开始调用该方法的时候，url是null的，不会走if
             if (url != null && url.length() > 0) {
                 isJvmRefer = false;
             } else {

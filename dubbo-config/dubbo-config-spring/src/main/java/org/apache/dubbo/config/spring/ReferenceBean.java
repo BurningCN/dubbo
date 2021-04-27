@@ -49,7 +49,9 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
 
     private transient ApplicationContext applicationContext;
 
+    // ioc容器调用refresh就会触发
     public ReferenceBean() {
+        // 进去
         super();
     }
 
@@ -63,8 +65,11 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         SpringExtensionFactory.addApplicationContext(applicationContext);
     }
 
-    // 见demo模块xml方式里的consumer模块，因为我们在自定义的parser类里面设置的都是延迟加载。测试程序getBean的时候才会创建bean，就会调用这个方法
+    // 见demo模块xml方式里的consumer模块，因为我们在自定义的parser类里面设置的都是延迟加载。【测试程序getBean的时候才会创建bean】，就会调用这个方法
     // 而DubboBootstrap#start方法在referService方法内部判定shouldInit都是false，即不通过该入口进行refer，而是上面说的getBean入口
+    // 上面大部分是对的，只有【】标记是不对的，其实在xml配置完成后就会自动实例化，只是在自动触发该类的afterPropertiesSet方法的时候shouldInit不通过（默认init为null）
+    // 导致不会进入getObject，还有就是DubboBootstrap#start方法的...也会调shouldInit...
+    // 而外界通过ioc.getBean(xx)的时候就会触发下面（FactoryBean的作用），这时候就会执行refer了！
     @Override
     public Object getObject() {
         // 进去

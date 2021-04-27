@@ -1159,7 +1159,8 @@ public class DubboBootstrap extends GenericEventListener {
             //  group="dubbo" configFile="dubbo.properties" highestPriority="false" check="true" />
             //   -- >    zookeeper://127.0.0.1:2181/ConfigCenterConfig?check=true&config-file=dubbo.properties&group=dubbo
             //                                                                         &highest-priority=false&timeout=3000
-            // getDynamicConfiguration，进去
+            // getDynamicConfiguration，进去 ,toUrl也进去，这个在  MetadataReportConfig 也有toUrl
+
             DynamicConfiguration dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl());
             // 如果上面的dynamicConfiguration是zkDynamicConfiguration，其getProperties最终是Curator进行ZNode节点的读取
             // 根据key、group获取配置内容
