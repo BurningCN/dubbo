@@ -61,7 +61,7 @@ public interface ServiceNameMapping {
     }
 
     static String buildGroup(String serviceInterface) {
-        // /mapping/
+        // /mapping/{url.getServiceInterface()}
         return DEFAULT_MAPPING_GROUP + SLASH + serviceInterface;
     }
 }

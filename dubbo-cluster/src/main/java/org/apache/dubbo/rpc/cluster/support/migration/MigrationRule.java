@@ -63,7 +63,7 @@ public class MigrationRule {
         }
 
         if (StringUtils.isBlank(rawRule) || INIT.equals(rawRule)) {
-            String step = (String)configuration.getInternalProperty(DUBBO_SERVICEDISCOVERY_MIGRATION_KEY);
+            String step = (String) configuration.getInternalProperty(DUBBO_SERVICEDISCOVERY_MIGRATION_KEY);
             return getMigrationRule(step);
 
         }
@@ -82,9 +82,10 @@ public class MigrationRule {
         return parse(rawRule);
     }
 
-    private  static MigrationRule getMigrationRule(String step) {
+    private static MigrationRule getMigrationRule(String step) {
         MigrationRule rule = new MigrationRule();
-        rule.setStep(Enum.valueOf(MigrationStep.class, StringUtils.isBlank(step) ? MigrationStep.APPLICATION_FIRST.name() : step));
+        step = StringUtils.isBlank(step) ? MigrationStep.APPLICATION_FIRST.name() : step;
+        rule.setStep(Enum.valueOf(MigrationStep.class, step));
         return rule;
     }
 }
