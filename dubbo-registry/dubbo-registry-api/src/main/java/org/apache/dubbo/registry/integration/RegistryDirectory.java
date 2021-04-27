@@ -259,7 +259,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
      * else :routers list
      */
     private Optional<List<Router>> toRouters(List<URL> urls) {
-        if (urls == null || urls.isEmpty()) {
+        if (CollectionUtils.isEmpty(urls)) {
             return Optional.empty();
         }
 
@@ -293,7 +293,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
      */
     private Map<URL, Invoker<T>> toInvokers(List<URL> urls) {
         Map<URL, Invoker<T>> newUrlInvokerMap = new ConcurrentHashMap<>();
-        if (urls == null || urls.isEmpty()) {
+        if (CollectionUtils.isEmpty(urls)) {
             return newUrlInvokerMap;
         }
         Set<URL> keys = new HashSet<>();
@@ -540,16 +540,13 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
             return false;
         }
         Map<URL, Invoker<T>> localUrlInvokerMap = urlInvokerMap;
-        if (localUrlInvokerMap != null && localUrlInvokerMap.size() > 0) {
-            try {
-                for (Map.Entry<URL,Invoker<T>> entry : localUrlInvokerMap.entrySet()){
-                    if (entry.getValue().isAvailable()) {
-                        return true;
-                    }
-                }
-            }catch (Throwable throwable){
+        try {
+            if (CollectionUtils.isNotEmptyMap(localUrlInvokerMap)
+                    && localUrlInvokerMap.values().stream().anyMatch(Invoker::isAvailable)) {
                 return true;
             }
+        } catch (Throwable throwable) {
+            return true;
         }
         return false;
     }
