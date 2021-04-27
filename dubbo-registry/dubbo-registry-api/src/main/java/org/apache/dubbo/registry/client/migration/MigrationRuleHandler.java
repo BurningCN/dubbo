@@ -22,7 +22,9 @@ import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.rpc.cluster.support.migration.MigrationRule;
 import org.apache.dubbo.rpc.cluster.support.migration.MigrationStep;
 
+// todo need pr 这个没有用注解
 @Activate
+// 该类主要是解析 rawRule 的 并进行迁移的
 public class MigrationRuleHandler<T> {
     private static final Logger logger = LoggerFactory.getLogger(MigrationRuleHandler.class);
 
@@ -35,6 +37,7 @@ public class MigrationRuleHandler<T> {
     private MigrationStep currentStep;
 
     public void doMigrate(String rawRule) {
+        // 进去
         MigrationRule rule = MigrationRule.parse(rawRule);
 
         if (null != currentStep && currentStep.equals(rule.getStep())) {
@@ -43,11 +46,14 @@ public class MigrationRuleHandler<T> {
             }
             return;
         } else {
+            // 赋值
             currentStep = rule.getStep();
         }
 
+        // migrationInvoker 的赋值触发点注意下
         migrationInvoker.setMigrationRule(rule);
 
+        // 默认是false
         if (migrationInvoker.isMigrationMultiRegistry()) {
             if (migrationInvoker.isServiceInvoker()) {
                 migrationInvoker.refreshServiceDiscoveryInvoker();
@@ -56,10 +62,13 @@ public class MigrationRuleHandler<T> {
             }
         } else {
             switch (rule.getStep()) {
+                // 默认这个
                 case APPLICATION_FIRST:
+                    // ServiceDiscoveryMigrationInvoker的方法进去。传入的参数表示是否强制迁移
                     migrationInvoker.migrateToServiceDiscoveryInvoker(false);
                     break;
                 case FORCE_APPLICATION:
+                    // 这里是FORCE_APPLICATION带有FORCE，所以参数是true
                     migrationInvoker.migrateToServiceDiscoveryInvoker(true);
                     break;
                 case FORCE_INTERFACE:

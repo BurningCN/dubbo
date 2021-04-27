@@ -38,6 +38,7 @@ import java.util.Set;
 
 import static org.apache.dubbo.common.constants.RegistryConstants.INIT;
 
+// 看到这里实现ConfigurationListener，肯定是要注册到 (zk)AbstractDynamicConfiguration#addListener
 @Activate
 public class MigrationRuleListener implements RegistryProtocolListener, ConfigurationListener {
     private static final Logger logger = LoggerFactory.getLogger(MigrationRuleListener.class);
@@ -48,14 +49,20 @@ public class MigrationRuleListener implements RegistryProtocolListener, Configur
     private volatile String rawRule;
 
     public MigrationRuleListener() {
+        // 返回的是CompositeDynamicConfiguration
         Optional<DynamicConfiguration> optional = ApplicationModel.getEnvironment().getDynamicConfiguration();
 
+        //一般是存在的
         if (optional.isPresent()) {
             this.configuration = optional.get();
 
+            // eg MigrationRule.RULE_KEY  = "demo-provider.migration"
             logger.info("Listening for migration rules on dataId-" + MigrationRule.RULE_KEY + " group-" + MigrationRule.DUBBO_SERVICEDISCOVERY_MIGRATION_GROUP);
+            // 进去
             configuration.addListener(MigrationRule.RULE_KEY, MigrationRule.DUBBO_SERVICEDISCOVERY_MIGRATION_GROUP, this);
 
+            // key =  "demo-provider.migration", group = "MIGRATION"
+            // path eg /dubbo/config/MIGRATION/demo-consumer.migration
             rawRule = configuration.getConfig(MigrationRule.RULE_KEY, MigrationRule.DUBBO_SERVICEDISCOVERY_MIGRATION_GROUP);
             if (StringUtils.isEmpty(rawRule)) {
                 rawRule = INIT;
@@ -69,6 +76,7 @@ public class MigrationRuleListener implements RegistryProtocolListener, Configur
             rawRule = INIT;
         }
 
+        // 进去
         process(new ConfigChangedEvent(MigrationRule.RULE_KEY, MigrationRule.DUBBO_SERVICEDISCOVERY_MIGRATION_GROUP, rawRule));
     }
 
@@ -95,11 +103,13 @@ public class MigrationRuleListener implements RegistryProtocolListener, Configur
 
     @Override
     public synchronized void onRefer(RegistryProtocol registryProtocol, ClusterInvoker<?> invoker, URL url) {
+        // 这里的invoker实例为ServiceDiscoveryMigrationInvoker
         MigrationInvoker<?> migrationInvoker = (MigrationInvoker<?>) invoker;
 
         MigrationRuleHandler<?> migrationListener = new MigrationRuleHandler<>(migrationInvoker);
         listeners.add(migrationListener);
 
+        // 进去。默认为INIT
         migrationListener.doMigrate(rawRule);
     }
 

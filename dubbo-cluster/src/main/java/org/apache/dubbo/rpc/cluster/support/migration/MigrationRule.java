@@ -63,7 +63,9 @@ public class MigrationRule {
         }
 
         if (StringUtils.isBlank(rawRule) || INIT.equals(rawRule)) {
+            // 获取 /dubbo/config/dubbo.application.service-discovery.migration path的节点值
             String step = (String)configuration.getInternalProperty(DUBBO_SERVICEDISCOVERY_MIGRATION_KEY);
+            // 进去
             return getMigrationRule(step);
 
         }
@@ -82,9 +84,12 @@ public class MigrationRule {
         return parse(rawRule);
     }
 
-    private  static MigrationRule getMigrationRule(String step) {
+    private static MigrationRule getMigrationRule(String step) {
         MigrationRule rule = new MigrationRule();
-        rule.setStep(Enum.valueOf(MigrationStep.class, StringUtils.isBlank(step) ? MigrationStep.APPLICATION_FIRST.name() : step));
+        // 注意这里的api，name()。如果step为null，默认为APPLICATION_FIRST
+        step = StringUtils.isBlank(step) ? MigrationStep.APPLICATION_FIRST.name() : step;
+        // api注意
+        rule.setStep(Enum.valueOf(MigrationStep.class, step));
         return rule;
     }
 }

@@ -471,29 +471,38 @@ public class RegistryProtocol implements Protocol {
     }
 
     protected <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url, Map<String, String> parameters) {
+        // consumer://30.25.58.39/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&metadata-type=remote&methods=sayHello&pid=3520&provided-by=demo-provider&side=consumer&sticky=false&timestamp=1619495578337
         URL consumerUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
+        // 进去 返回ServiceDiscoveryMigrationInvoker
         ClusterInvoker<T> migrationInvoker = getMigrationInvoker(this, cluster, registry, type, url, consumerUrl);
+        // 进去，前面是ClusterInvoker，ClusterInvoker是专门生成Invoker的，下面这个方法就是生产的过程
         return interceptInvoker(migrationInvoker, url, consumerUrl);
     }
 
     protected <T> ClusterInvoker<T> getMigrationInvoker(RegistryProtocol registryProtocol, Cluster cluster, Registry registry, Class<T> type, URL url, URL consumerUrl) {
+        // 进去
         return new ServiceDiscoveryMigrationInvoker<T>(registryProtocol, cluster, registry, type, url, consumerUrl);
     }
 
     protected <T> Invoker<T> interceptInvoker(ClusterInvoker<T> invoker, URL url, URL consumerUrl) {
+        // 进去 RegistryProtocolListener 的spi扩展实例，只有一个
         List<RegistryProtocolListener> listeners = findRegistryProtocolListeners(url);
         if (CollectionUtils.isEmpty(listeners)) {
             return invoker;
         }
 
         for (RegistryProtocolListener listener : listeners) {
+            // 进去，onRefer是监听器的回调方法
             listener.onRefer(this, invoker, consumerUrl);
         }
         return invoker;
     }
 
     public <T> ClusterInvoker<T> getServiceDiscoveryInvoker(Cluster cluster, Registry registry, Class<T> type, URL url) {
+        // url 是 service-discovery-registry url ，eg service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-consumer&dubbo=2.0.2&id=org.apache.dubbo.config.RegistryConfig&pid=3520&refer=application%3Ddemo-consumer%26check%3Dfalse%26dubbo%3D2.0.2%26init%3Dfalse%26interface%3Dsamples.servicediscovery.demo.DemoService%26metadata-type%3Dremote%26methods%3DsayHello%26pid%3D3520%26provided-by%3Ddemo-provider%26register.ip%3D30.25.58.39%26side%3Dconsumer%26sticky%3Dfalse%26timestamp%3D1619495578337&registry=zookeeper&registry-type=service&timestamp=1619495583382
+        // // 进去 首先创建DynamicDirectory，因为ClusterInvoker的生成需要，一会看doCreateInvoker就知道了
         DynamicDirectory<T> directory = new ServiceDiscoveryRegistryDirectory<>(type, url);
+        // 进去
         return doCreateInvoker(directory, cluster, registry, type);
     }
 
@@ -508,11 +517,18 @@ public class RegistryProtocol implements Protocol {
         directory.setProtocol(protocol);
         // all attributes of REFER_KEY
         Map<String, String> parameters = new HashMap<String, String>(directory.getConsumerUrl().getParameters());
+        // eg consumer://30.25.58.39/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&metadata-type=remote&methods=sayHello&pid=3520&provided-by=demo-provider&side=consumer&sticky=false&timestamp=1619495578337
         URL urlToRegistry = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
+        // 默认是true
         if (directory.isShouldRegister()) {
+            // 进去。内部判定是否简化，并填充或者移除一些参数
             directory.setRegisteredConsumerUrl(urlToRegistry);
+            // 进去 不过内部识别side为consumer，不会进行注册
+            // registry = {ListenerRegistryWrapper@3519}
+            //  registry = {ServiceDiscoveryRegistry@4547}
             registry.register(directory.getRegisteredConsumerUrl());
         }
+        // directory的routeChain还是null的，这里进行赋值
         directory.buildRouterChain(urlToRegistry);
         directory.subscribe(toSubscribeUrl(urlToRegistry));
 
@@ -535,6 +551,7 @@ public class RegistryProtocol implements Protocol {
 
     protected List<RegistryProtocolListener> findRegistryProtocolListeners(URL url) {
         return ExtensionLoader.getExtensionLoader(RegistryProtocolListener.class)
+                // 调用的是 get[Activate]Extension
                 .getActivateExtension(url, "registry.protocol.listener");
     }
 

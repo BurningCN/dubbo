@@ -74,14 +74,21 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
                             Class<T> type,
                             URL url,
                             URL consumerUrl) {
+        // null
         this.invoker = invoker;
+        // null
         this.serviceDiscoveryInvoker = serviceDiscoveryInvoker;
+        // RegistryProtocol
         this.registryProtocol = registryProtocol;
+        // eg MockClusterWrapper
         this.cluster = cluster;
+        //registry = {ListenerRegistryWrapper@3519}
+        // registry = {ServiceDiscoveryRegistry@3547}
         this.registry = registry;
         this.type = type;
         this.url = url;
         this.consumerUrl = consumerUrl;
+        // "MIGRATION_MULTI_REGISTRY" ，默认false
         this.migrationMultiRegistry = url.getParameter(RegistryConstants.MIGRATION_MULTI_REGISTRY, false);
     }
 
@@ -286,11 +293,14 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
 
     @Override
     public synchronized void refreshServiceDiscoveryInvoker() {
+        // 进去 第一次serviceDiscoveryInvoker为null
         clearListener(serviceDiscoveryInvoker);
+        // 进去 第一次serviceDiscoveryInvoker为null
         if (needRefresh(serviceDiscoveryInvoker)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Re-subscribing instance addresses, current interface " + type.getName());
             }
+            // 这里是关键！！！进去 几个参数值可以看开头构造方法赋值处
             serviceDiscoveryInvoker = registryProtocol.getServiceDiscoveryInvoker(cluster, registry, type, url);
 
             if (migrationMultiRegistry) {

@@ -17,6 +17,7 @@
 package org.apache.dubbo.rpc.cluster.support.migration;
 
 public enum MigrationStep {
+    // 强制接口、应用优先、强制应用
     FORCE_INTERFACE,
     APPLICATION_FIRST,
     FORCE_APPLICATION

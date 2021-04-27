@@ -31,6 +31,7 @@ public class ServiceDiscoveryMigrationInvoker<T> extends MigrationInvoker<T> {
     private static final Logger logger = LoggerFactory.getLogger(ServiceDiscoveryMigrationInvoker.class);
 
     public ServiceDiscoveryMigrationInvoker(RegistryProtocol registryProtocol, Cluster cluster, Registry registry, Class<T> type, URL url, URL consumerUrl) {
+        // 进去
         super(registryProtocol, cluster, registry, type, url, consumerUrl);
     }
 
@@ -47,6 +48,7 @@ public class ServiceDiscoveryMigrationInvoker<T> extends MigrationInvoker<T> {
 
     @Override
     public synchronized void migrateToServiceDiscoveryInvoker(boolean forceMigrate) {
+        // 进去，父类的方法
         refreshServiceDiscoveryInvoker();
     }
 

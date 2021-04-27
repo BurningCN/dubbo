@@ -24,6 +24,9 @@ import org.apache.dubbo.rpc.cluster.ClusterInvoker;
 /**
  * RegistryProtocol listener is introduced to provide a chance to user to customize or change export and refer behavior
  * of RegistryProtocol. For example: re-export or re-refer on the fly when certain condition meets.
+ *
+ * * RegistryProtocol监听器被引入为用户提供一个机会来定制或更改导出和引用行为
+ * * RegistryProtocol。例如:当某些条件满足时，重新出口或重新引用。
  */
 @SPI
 public interface RegistryProtocolListener {
