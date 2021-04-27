@@ -35,7 +35,11 @@ import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.model.ApplicationModel.getName;
 
-// OK
+// OK 默认spi扩展不是这个，如果想要debug进来了解过程，可以在生产者和消费者对应的xml都加上 mapping-type  = metadata，如下
+// <dubbo:application name="demo-provider" metadata-type="remote">
+//        <dubbo:parameter key="mapping-type" value="metadata"/>
+//    </dubbo:application>
+// 或者也可以在 ServiceDiscoveryRegistry的构造函数里面debug到的时候断点给url临时加上该 mapping-type  = metadata
 public class MetadataServiceNameMapping implements ServiceNameMapping {
     private static final List<String> IGNORED_SERVICE_INTERFACES = asList(MetadataService.class.getName());
 
@@ -50,11 +54,12 @@ public class MetadataServiceNameMapping implements ServiceNameMapping {
         if (IGNORED_SERVICE_INTERFACES.contains(serviceInterface)) {
             return;
         }
-        // 获取注册集群
+        // 获取注册集群 默认值为 "default"
         String registryCluster = getRegistryCluster(url);
         // 根据key从缓存获取MetadataReport,比如 zkMetadataReport
         MetadataReport metadataReport = MetadataReportInstance.getMetadataReport(registryCluster);
         // 注册registerServiceAppMapping
+        // 最终会生成 /dubbo/mapping/samples.servicediscovery.demo.DemoService/demo-provider 内容为时间戳
         metadataReport.registerServiceAppMapping(ServiceNameMapping.buildGroup(serviceInterface, group, version, protocol), getName(), url);
     }
 
@@ -68,7 +73,9 @@ public class MetadataServiceNameMapping implements ServiceNameMapping {
         // "mapping/{serviceInterface}"
         String mappingKey = ServiceNameMapping.buildGroup(serviceInterface, group, version, protocol);
         Set<String> serviceNames = new LinkedHashSet<>();
+        // org.apache.dubbo.config.RegistryConfig
         String registryCluster = getRegistryCluster(url);
+        // 内部有一个key是default的，获取不到，但是会返回第一个
         MetadataReport metadataReport = MetadataReportInstance.getMetadataReport(registryCluster);
 
         // 进去，注意参数，返回值就是（相对节点）mappingKey的节点值

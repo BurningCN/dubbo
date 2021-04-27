@@ -239,6 +239,7 @@ public interface DynamicConfiguration extends Configuration, AutoCloseable {
      * @return
      */
     static String getRuleKey(URL url) {
+        // eg samples.servicediscovery.demo.DemoService::
         return url.getColonSeparatedKey();
     }
 

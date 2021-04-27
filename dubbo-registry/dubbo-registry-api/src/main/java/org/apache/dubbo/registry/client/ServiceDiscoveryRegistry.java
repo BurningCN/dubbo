@@ -112,6 +112,8 @@ public class ServiceDiscoveryRegistry implements Registry {
     /* apps - listener */
     private final Map<String, ServiceInstancesChangedListener> serviceListeners = new HashMap<>();
 
+    private final Map<String, String> serviceToAppsMapping = new HashMap<>();
+
     private URL registryURL;
 
     /**
@@ -129,6 +131,7 @@ public class ServiceDiscoveryRegistry implements Registry {
         // 获取 "subscribed-services"参数值,按照逗号分割填充到set集合
         this.subscribedServices = parseServices(registryURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY));
         // 获取"mapping-type"参数值，ServiceNameMapping#getExtension进去。有两种，基于config-center的和基于MetadataReport的
+        // debug可以临时加参数，如果想跟踪MetadataServiceNameMapping的逻辑 --- > registryURL = registryURL.addParameter("mapping-type","metadata")
         this.serviceNameMapping = ServiceNameMapping.getExtension(registryURL.getParameter(MAPPING_KEY));
         // 进去 默认InMemoryWritableMetadataService
         this.writableMetadataService = WritableMetadataService.getDefaultExtension();
@@ -260,27 +263,33 @@ public class ServiceDiscoveryRegistry implements Registry {
         }
     }
 
+    // listener 为 ServiceDiscoveryRegistryDirectory
     @Override
     public final void subscribe(URL url, NotifyListener listener) {
         if (!shouldSubscribe(url)) { // Should Not Subscribe // 进去
             return;
         }
+        // eg org.apache.dubbo.config.RegistryConfig
         String registryCluster = serviceDiscovery.getUrl().getParameter(ID_KEY);
         if (registryCluster != null && url.getParameter(REGISTRY_CLUSTER_KEY) == null) {
             url = url.addParameter(REGISTRY_CLUSTER_KEY, registryCluster);
         }
-        doSubscribe(url, listener);// 进去
+        // 进去
+        doSubscribe(url, listener);
     }
 
     public void doSubscribe(URL url, NotifyListener listener) {
-        writableMetadataService.subscribeURL(url);// 将url填充到 InMemoryWritableMetadataService#subscribedServiceURLs 容器中 进去
+        // 将url填充到 InMemoryWritableMetadataService#subscribedServiceURLs 容器中 进去
+        writableMetadataService.subscribeURL(url);
 
-        Set<String> serviceNames = getServices(url, listener);// 获取url对应的服务列表（如果有的话），进去
+        // 获取url对应的服务列表（如果有的话），进去，非常重要。返回的是appNames
+        Set<String> serviceNames = getServices(url, listener);
         if (CollectionUtils.isEmpty(serviceNames)) {
             throw new IllegalStateException("Should has at least one way to know which services this interface belongs to, subscription url: " + url);
         }
 
-        subscribeURLs(url, listener, serviceNames);// 这里才是真实的订阅，进去
+        // 这里才是真实的订阅，进去，这里会根据前面的serviceNames（appName）获取app下支持的service信息，比如ip port
+        subscribeURLs(url, listener, serviceNames);
     }
 
     @Override
@@ -323,21 +332,49 @@ public class ServiceDiscoveryRegistry implements Registry {
         });
     }
 
+    // 主要被该类的doSubscribe主动调用。或者DefaultMappingListener调用，用于在收到新的一批appName的时候进行相关订阅操作
+    // listener为ServiceDiscoveryDirectory
     protected void subscribeURLs(URL url, NotifyListener listener, Set<String> serviceNames) {
         String serviceNamesKey = serviceNames.toString();
+        String protocolServiceKey = url.getServiceKey() + GROUP_CHAR_SEPARATOR + url.getParameter(PROTOCOL_KEY, DUBBO);
+        // eg samples.servicediscovery.demo.DemoService:dubbo -> [demo-provider, demo-provider-test1]
+        serviceToAppsMapping.put(protocolServiceKey, serviceNamesKey);
+
         // register ServiceInstancesChangedListener
         ServiceInstancesChangedListener serviceListener = serviceListeners.computeIfAbsent(serviceNamesKey,
-                k -> new ServiceInstancesChangedListener(serviceNames, serviceDiscovery));// 进去，注意这里是创建的ServiceInstancesChangedListener，不是那个ServiceInstancesChangedEvent
+                k -> new ServiceInstancesChangedListener(serviceNames, serviceDiscovery));
         serviceListener.setUrl(url);
-        listener.addServiceListener(serviceListener);// addServiceListener 是 NotifyListener的默认方法，空实现
+        // 进去
+        listener.addServiceListener(serviceListener);
 
-        String protocolServiceKey = url.getServiceKey() + GROUP_CHAR_SEPARATOR + url.getParameter(PROTOCOL_KEY, DUBBO);
-        serviceListener.addListener(protocolServiceKey, listener);// ServiceInstancesChangedListener 内部 会对这两个建立kv映射存到指定的map容器，进去
-        registerServiceInstancesChangedListener(url, serviceListener);// 进去
+        // 将 listener 即ServiceDiscoveryDirectory保存到ServiceInstancesChangedListener
+        // 这样后者得到通知的时候回调用listener#notify方法
+        serviceListener.addListener(protocolServiceKey, listener);
+        // 注册到sd，进去
+        registerServiceInstancesChangedListener(url, serviceListener);
 
         serviceNames.forEach(serviceName -> {
-            List<ServiceInstance> serviceInstances = serviceDiscovery.getInstances(serviceName);
-            serviceListener.onEvent(new ServiceInstancesChangedEvent(serviceName, serviceInstances));
+            // 进去 serviceName demo-provider appname
+            // 内部会获取path为/services/demo-provider/30.25.58.39:20880的值并反序列化为DefaultServiceInstance（是SD#register注册d）
+              List<ServiceInstance> serviceInstances = serviceDiscovery.getInstances(serviceName);
+            //0 = {DefaultServiceInstance@3779} "DefaultServiceInstance{id='30.25.58.39:20880', serviceName='demo-provider', host='30.25.58.39', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}"
+            // id = "30.25.58.39:20880"
+            // serviceName = "demo-provider"
+            // host = "30.25.58.39"
+            // port = {Integer@3784} 20880
+            // enabled = true
+            // healthy = true
+            // metadata = {LinkedHashMap@3785}  size = 4
+            // address = null
+            // serviceMetadata = null
+            // extendParams = {HashMap@3786}  size = 0
+
+            if (CollectionUtils.isNotEmpty(serviceInstances)) {
+                // 进去
+                serviceListener.onEvent(new ServiceInstancesChangedEvent(serviceName, serviceInstances));
+            } else {
+                logger.info("getInstances by serviceName=" + serviceName + " is empty, waiting for serviceListener callback. url=" + url);
+            }
         });
 
         listener.notify(serviceListener.getUrls(protocolServiceKey));
@@ -350,8 +387,11 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @param listener the {@link ServiceInstancesChangedListener}
      */
     private void registerServiceInstancesChangedListener(URL url, ServiceInstancesChangedListener listener) {
+        // eg [demo-provider, demo-provider-test1]:consumer://30.25.58.39/samples.servicediscovery.demo.DemoService
         String listenerId = createListenerId(url, listener);// 进去
+        // 添加到容器
         if (registeredListeners.add(listenerId)) {
+            // 进去。进去是EventPublishingServiceDiscovery
             serviceDiscovery.addServiceInstancesChangedListener(listener);
         }
     }
@@ -368,22 +408,31 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @param subscribedURL
      * @return
      */
+    // 两个参数 eg
+    // consumer://30.25.58.39/samples.servicediscovery.demo.DemoService?REGISTRY_CLUSTER=org.apache.dubbo.config.RegistryConfig&application=demo-consumer&category=providers,configurators,routers&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&metadata-type=remote&methods=sayHello&pid=3520&provided-by=demo-provider&side=consumer&sticky=false&timestamp=1619495578337
+    // ServiceDiscoveryRegistryDirectory
     protected Set<String> getServices(URL subscribedURL, final NotifyListener listener) {
         Set<String> subscribedServices = new TreeSet<>();
 
-        String serviceNames = subscribedURL.getParameter(PROVIDED_BY);// 获取 "provided-by" 参数值
+        // 获取 "provided-by" 参数值 很重要，消费者在xml必须配置。eg demo-provider，这个是应用级别的服务名称
+        String serviceNames = subscribedURL.getParameter(PROVIDED_BY);
         if (StringUtils.isNotEmpty(serviceNames)) {
+            logger.info(subscribedURL.getServiceInterface() + " mapping to " + serviceNames + " instructed by provided-by set by user.");
+            // samples.servicediscovery.demo.DemoService mapping to demo-provider instructed by provided-by set by user.
             subscribedServices.addAll(parseServices(serviceNames));
+            // subscribedServices = {TreeSet@5025}  size = 1
+            // 0 = "demo-provider"
         }
 
-        serviceNames = subscribedURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY);// 获取 "subscribed-services" 参数值
-        if (StringUtils.isNotEmpty(serviceNames)) {
-            subscribedServices.addAll(parseServices(serviceNames));
-        }
-
-        if (isEmpty(subscribedServices)) { // findMappedServices、DefaultMappingListener 进去
-            subscribedServices.addAll(findMappedServices(subscribedURL, new DefaultMappingListener(subscribedURL, subscribedServices, listener)));
-            if (isEmpty(subscribedServices)) { // 如果还是空，则直接获取getSubscribedServices填充到返回结果，subscribedServices属性的内容是在构造函数里面处理填充的，主要是获取url的"subscribed-services"参数值（按照逗号分割）
+        // 如果为空，即消费业务方没有指定 "provided-by" 参数值
+        if (isEmpty(subscribedServices)) {
+            // findMappedServices、DefaultMappingListener 进去
+            Set<String> mappedServices = findMappedServices(subscribedURL, new DefaultMappingListener(subscribedURL, subscribedServices, listener));
+            // instructed by remote metadata center（前面是instructed by provided-by set by user.）
+            logger.info(subscribedURL.getServiceInterface() + " mapping to " + serviceNames + " instructed by remote metadata center.");
+            subscribedServices.addAll(mappedServices);
+            // 如果还是空，则直接获取getSubscribedServices填充到返回结果，subscribedServices属性的内容是在构造函数里面处理填充的，主要是获取url的"subscribed-services"参数值（按照逗号分割）
+            if (isEmpty(subscribedServices)) {
                 subscribedServices.addAll(getSubscribedServices());
             }
         }
@@ -414,7 +463,9 @@ public class ServiceDiscoveryRegistry implements Registry {
      * @return
      */
     protected Set<String> findMappedServices(URL subscribedURL, MappingListener listener) {
-        return serviceNameMapping.getAndListen(subscribedURL, listener);// 进去，默认为DynamicConfigurationServiceNameMapping
+        // 默认为DynamicConfigurationServiceNameMapping，listener为DefaultMappingListener
+        // 进去。这里是找到所有appName（应用级别的服务名称）
+        return serviceNameMapping.getAndListen(subscribedURL, listener);
     }
 
     /**
@@ -469,7 +520,11 @@ public class ServiceDiscoveryRegistry implements Registry {
         private Set<String> oldApps;
         private NotifyListener listener;
 
+        // 这个最终会跑到 ZookeeperMetadataReport#addServiceMappingListener方法的参数中
         public DefaultMappingListener(URL subscribedURL, Set<String> serviceNames, NotifyListener listener) {
+            // url = {URL@4360} "consumer://30.25.58.39/samples.servicediscovery.demo.DemoService?REGISTRY_CLUSTER=org.apache.dubbo.config.RegistryConfig&application=demo-consumer&category=providers,configurators,routers&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&metadata-type=remote&methods=sayHello&pid=8079&provided-by=demo-provider&side=consumer&sticky=false&timestamp=1619507109916"
+            // oldApps = {TreeSet@4370}  size = 0
+            // listener = {ServiceDiscoveryRegistryDirectory@4350}
             this.url = subscribedURL;
             this.oldApps = serviceNames;
             this.listener = listener;
@@ -477,6 +532,7 @@ public class ServiceDiscoveryRegistry implements Registry {
 
         @Override
         public void onEvent(MappingChangedEvent event) {
+            // event的两个属性填充处看 ZookeeperMetadataReport#addServiceMappingListener
             Set<String> newApps = event.getApps();
             Set<String> tempOldApps = oldApps;
             oldApps = newApps;
@@ -485,12 +541,15 @@ public class ServiceDiscoveryRegistry implements Registry {
                 return;
             }
 
+            // 这里表示全部是新的appName，全都需要subscribeURLs
             if (CollectionUtils.isEmpty(tempOldApps) && newApps.size() > 0) {
+                // // 进去
                 subscribeURLs(url, listener, newApps);
                 return;
             }
 
             for (String newAppName : newApps) {
+                // 这是表示只对新的appName进行subscribeURLs的调用，旧的之前已经掉过了subscribeURLs了
                 if (!tempOldApps.contains(newAppName)) {
                     subscribeURLs(url, listener, newApps);
                     return;

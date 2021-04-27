@@ -50,9 +50,11 @@ public abstract class ListenableRouter extends AbstractRouter implements Configu
     private ConditionRouterRule routerRule;
     private List<ConditionRouter> conditionRouters = Collections.emptyList();
 
+    // 被子类调用
     public ListenableRouter(URL url, String ruleKey) {
         super(url);
         this.force = false;
+        // 进去
         this.init(ruleKey);
     }
 
@@ -119,7 +121,10 @@ public abstract class ListenableRouter extends AbstractRouter implements Configu
         if (StringUtils.isEmpty(ruleKey)) {
             return;
         }
+        // eg demo-consumer.condition-router  --- app
+        // eg samples.servicediscovery.demo.DemoService::.condition-router --- service
         String routerKey = ruleKey + RULE_SUFFIX;
+        // 添加监听
         ruleRepository.addListener(routerKey, this);
         String rule = ruleRepository.getRule(routerKey, DynamicConfiguration.DEFAULT_GROUP);
         if (StringUtils.isNotEmpty(rule)) {

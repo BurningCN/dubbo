@@ -192,16 +192,19 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
         return gson.fromJson(content, MetadataInfo.class);
     }
 
-    // 和前面的registerServiceAppMapping相反，这个是给消费者服务的
+    // 和前面的registerServiceAppMapping相反，这个是给消费者服务的。
+    // 专门配合MetadataServiceNameMapping的方法
     @Override
     public Set<String> getServiceAppMapping(String serviceKey, MappingListener listener, URL url) {
         Set<String>  appNameSet = new HashSet<>();
+        // eg /dubbo/mapping/samples.servicediscovery.demo.DemoService
         String path = toRootDir() + serviceKey;
 
         List<String> appNameList;
 
         if (null == listenerMap.get(path)) {
             zkClient.create(path, false);
+            // 进去
             appNameList = addServiceMappingListener(path, serviceKey, listener);
         } else {
             // 获取path下的所有app名称，因为之前注册的path就是 /dubbo/mapping/{serviceInterface}/testApp 或者 /dubbo/cofing/mapping/{serviceInterface}/testApp
@@ -212,18 +215,33 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
             appNameSet.addAll(appNameList);
         }
 
+        //appNameSet = {HashSet@4406}  size = 1
+        // 0 = "demo-provider"
         return appNameSet;
     }
 
+    // 这里的listener为 DefaultMappingListener
     private List<String> addServiceMappingListener(String path, String serviceKey, MappingListener listener) {
         ChildListener zkListener = (path1, children) -> {
+            // 当父path /dubbo/mapping/samples.servicediscovery.demo.DemoService 的子节点变更，就会收到通知，走这段逻辑
             MappingChangedEvent event = new MappingChangedEvent();
+            // serviceKey eg mapping/samples.servicediscovery.demo.DemoService
             event.setServiceKey(serviceKey);
+            // 父path下的所有子节点，表示appName
             event.setApps(null != children ? new HashSet<>(children) : null);
+            // 进 DefaultMappingListener 的onEvent
             listener.onEvent(event);
         };
+        // 内部添加监听的同时，查节点下的子节点，比如返回demo-provider
         List<String> childNodes = zkClient.addChildListener(path, zkListener);
         listenerMap.put(path, zkListener);
         return childNodes;
+        //childListeners = {ConcurrentHashMap@4450}  size = 1  注意这个
+        // "/dubbo/mapping/samples.servicediscovery.demo.DemoService" -> {ConcurrentHashMap@4471}  size = 1
+        //listeners = {ConcurrentHashMap@4451}  size = 4
+        // "/dubbo/config/dubbo/samples.servicediscovery.demo.DemoService::.condition-router" -> {ConcurrentHashMap@4461}  size = 1
+        // "/dubbo/config/MIGRATION/demo-consumer.migration" -> {ConcurrentHashMap@4463}  size = 1
+        // "/dubbo/config/dubbo/demo-consumer.condition-router" -> {ConcurrentHashMap@4465}  size = 1
+        // "/dubbo/config/dubbo/demo-consumer.configurators" -> {ConcurrentHashMap@4467}  size = 1
     }
 }

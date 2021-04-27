@@ -132,7 +132,8 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     @Override
     public List<ServiceInstance> getInstances(String serviceName) throws NullPointerException {
-        // 根据服务名称即父节点（当然带rootPath前缀）查询下的所有子节点，build进去  queryForInstances是api
+        // build进去  queryForInstances是api，serviceName是appName
+        // 看下面register的逻辑，会发起注册，完成的path为 /services/demo-provider/30.25.58.39:20880
         return doInServiceDiscovery(s -> build(s.queryForInstances(serviceName)));
     }
 
@@ -180,7 +181,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     @Override
     public void addServiceInstancesChangedListener(ServiceInstancesChangedListener listener)
             throws NullPointerException, IllegalArgumentException {
-        //每一个服务/节点绑定一个watcher  ， registerServiceWatcher  进去，
+        //每一个服务/节点（appName）绑定一个watcher  ， registerServiceWatcher  进去，
         listener.getServiceNames().forEach(serviceName -> registerServiceWatcher(serviceName, listener));
     }
 
@@ -195,12 +196,26 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     }
 
     protected void registerServiceWatcher(String serviceName, ServiceInstancesChangedListener listener) {
+        //  eg /services/demo-provider
         String path = buildServicePath(serviceName);
+
+        try {
+            curatorFramework.create().creatingParentsIfNeeded().forPath(path);
+        } catch (KeeperException.NodeExistsException e) {
+            // ignored
+            if (logger.isDebugEnabled()) {
+
+                logger.debug(e);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("registerServiceWatcher create path=" + path + " fail.", e);
+        }
+
         CuratorWatcher watcher = watcherCaches.computeIfAbsent(path, key ->
                 // 进去
                 new ZookeeperServiceDiscoveryChangeWatcher(this, serviceName, listener));
         try {
-            // 注册watcher
+            // 注册watcher getChildren有 /services/demo-provider/30.25.58.39:20880
             curatorFramework.getChildren().usingWatcher(watcher).forPath(path);
         } catch (KeeperException.NoNodeException e) {
             // ignored

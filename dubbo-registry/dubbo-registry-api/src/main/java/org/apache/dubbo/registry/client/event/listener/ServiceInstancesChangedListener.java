@@ -73,7 +73,12 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
 
     // gx
     public ServiceInstancesChangedListener(Set<String> serviceNames, ServiceDiscovery serviceDiscovery) {
+        //serviceNames = {HashSet@3669}  size = 2
+        // 0 = "demo-provider"
+        // 1 = "demo-provider-test1"
         this.serviceNames = serviceNames;
+        //serviceDiscovery = {EventPublishingServiceDiscovery@3510} "org.apache.dubbo.registry.zookeeper.ZookeeperServiceDiscovery@1f2d2181"
+        // serviceDiscovery = {ZookeeperServiceDiscovery@3712}
         this.serviceDiscovery = serviceDiscovery;
         this.listeners = new HashMap<>();
         this.allInstances = new HashMap<>();
@@ -96,18 +101,21 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
         Map<String, Set<String>> localServiceToRevisions = new HashMap<>();
         Map<Set<String>, List<URL>> revisionsToUrls = new HashMap();
 
+        // 遍历所有app的serviceInstance
         for (Map.Entry<String, List<ServiceInstance>> entry : allInstances.entrySet()) {
             List<ServiceInstance> instances = entry.getValue();
             for (ServiceInstance instance : instances) {
-                // 进去 n. [印刷] 修正；复习；修订本
+                // 进去 n. [印刷] 修正；复习；修订本 获取 dubbo.metadata.revision的值，一般都是有值的
                 String revision = getExportedServicesRevision(instance);
                 if (DEFAULT_REVISION.equals(revision)) {
                     logger.info("Find instance without valid service metadata: " + instance.getAddress());
                     continue;
                 }
+                // revisionToInstances , 一个revision代表一个app，一个app下的所有service，以ServiceInstance表示，都会存放这个reversion，表示这是同一app下的
                 List<ServiceInstance> subInstances = revisionToInstances.computeIfAbsent(revision, r -> new LinkedList<>());
                 subInstances.add(instance);
 
+                // 同上面的逻辑
                 MetadataInfo metadata = revisionToMetadata.get(revision);
                 if (metadata == null) {
                     metadata = getMetadataInfo(instance);
@@ -121,6 +129,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                 }
 
                 if (metadata != null) {
+                    // 进去
                     parseMetadata(revision, metadata, localServiceToRevisions);
                     ((DefaultServiceInstance) instance).setServiceMetadata(metadata);
                 }
@@ -158,6 +167,12 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
             set.add(revision);
         }
 
+        //localServiceToRevisions = {HashMap@3840}  size = 2
+        //   "demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo"
+        //   "AB6F0B7C2429C8828F640F853B65E1E1"
+
+        //   "samples.servicediscovery.demo.DemoService:dubbo"
+        //   "AB6F0B7C2429C8828F640F853B65E1E1"
         return localServiceToRevisions;
     }
 
