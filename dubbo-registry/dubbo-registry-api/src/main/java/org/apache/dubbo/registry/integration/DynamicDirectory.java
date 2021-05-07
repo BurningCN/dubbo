@@ -100,11 +100,13 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
             throw new IllegalArgumentException("service type is null.");
         }
 
-        shouldRegister = !ANY_VALUE.equals(url.getServiceInterface()) && url.getParameter(REGISTER_KEY, true);
-        shouldSimplified = url.getParameter(SIMPLIFIED_KEY, false);
         if (url.getServiceKey() == null || url.getServiceKey().length() == 0) {
             throw new IllegalArgumentException("registry serviceKey is null.");
         }
+
+        this.shouldRegister = !ANY_VALUE.equals(url.getServiceInterface()) && url.getParameter(REGISTER_KEY, true);
+        this.shouldSimplified = url.getParameter(SIMPLIFIED_KEY, false);
+
         this.serviceType = serviceType;
         this.serviceKey = super.getConsumerUrl().getServiceKey();
 

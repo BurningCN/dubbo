@@ -70,13 +70,12 @@ public abstract class AbstractDirectory<T> implements Directory<T> {
             throw new IllegalArgumentException("url == null");
         }
 
-        queryMap = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
-        String path = queryMap.get(PATH_KEY);
+        this.queryMap = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
         this.consumedProtocol = this.queryMap.get(PROTOCOL_KEY) == null ? DUBBO : this.queryMap.get(PROTOCOL_KEY);
         this.url = url.removeParameter(REFER_KEY).removeParameter(MONITOR_KEY);
 
         URL consumerUrlFrom = this.url.setProtocol(consumedProtocol)
-                .setPath(path == null ? queryMap.get(INTERFACE_KEY) : path);
+                .setPath(queryMap.get(PATH_KEY) == null ? queryMap.get(INTERFACE_KEY) : queryMap.get(PATH_KEY));
         if (isUrlFromRegistry) {
             // reserve parameters if url is already a consumer url
             consumerUrlFrom = consumerUrlFrom.clearParameters();
