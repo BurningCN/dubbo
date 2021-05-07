@@ -100,6 +100,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
         Map<String, List<ServiceInstance>> revisionToInstances = new HashMap<>();
         Map<String, Set<String>> localServiceToRevisions = new HashMap<>();
         Map<Set<String>, List<URL>> revisionsToUrls = new HashMap();
+        Map<String, List<URL>> tmpServiceUrls = new HashMap<>();
 
         // 遍历所有app的serviceInstance
         for (Map.Entry<String, List<ServiceInstance>> entry : allInstances.entrySet()) {
@@ -120,6 +121,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                 if (metadata == null) {
                     // 进去
                     metadata = getMetadataInfo(instance);
+                    //  MetadataInfo for instance 30.25.58.166:20880?revision=AB6F0B7C2429C8828F640F853B65E1E1 is metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2.0.2},consumerParams=null}}}, dubbo version: , current host: 30.25.58.166
                     logger.info("MetadataInfo for instance " + instance.getAddress() + "?revision=" + revision + " is " + metadata);
                     if (metadata != null) {
                         revisionToMetadata.put(revision, metadata);
@@ -127,7 +129,8 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                 }
 
                 if (metadata != null) {
-                    // 进去
+                    // 进去 将 MetadataInfo#services 以及reversion 的信息填充到 localServiceToRevisions
+                    // localServiceToRevisions看这个变量名称就知道kv是咋么映射的
                     parseMetadata(revision, metadata, localServiceToRevisions);
                     ((DefaultServiceInstance) instance).setServiceMetadata(metadata);
                 }
@@ -140,7 +143,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                 localServiceToRevisions.forEach((serviceKey, revisions) -> {
                     List<URL> urls = revisionsToUrls.get(revisions);
                     if (urls != null) {
-                        serviceUrls.put(serviceKey, urls);
+                        tmpServiceUrls.put(serviceKey, urls);
                     } else {
                         urls = new ArrayList<>();
                         for (String r : revisions) {
@@ -149,12 +152,25 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                             }
                         }
                         revisionsToUrls.put(revisions, urls);
-                        serviceUrls.put(serviceKey, urls);
+                        tmpServiceUrls.put(serviceKey, urls);
                     }
                 });
             }
         }
 
+        // 上面搞了四个临时的容器目的就是为了这里的serviceUrls
+        this.serviceUrls = tmpServiceUrls;
+        //this.serviceUrls = {HashMap@3719}  size = 2
+        // "demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo" -> {ArrayList@4905}  size = 1
+        //  key = "demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo"
+        //  value = {ArrayList@4905}  size = 1
+        //   0 = {InstanceAddressURL@4933} "DefaultServiceInstance{id='30.25.58.166:20880', serviceName='demo-provider', host='30.25.58.166', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2.0.2},consumerParams=null}}}"
+        // "samples.servicediscovery.demo.DemoService:dubbo" -> {ArrayList@4905}  size = 1
+        //  key = "samples.servicediscovery.demo.DemoService:dubbo"
+        //  value = {ArrayList@4905}  size = 1
+        //   0 = {InstanceAddressURL@4933} "DefaultServiceInstance{id='30.25.58.166:20880', serviceName='demo-provider', host='30.25.58.166', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2.0.2},consumerParams=null}}}"
+
+        // 进去
         this.notifyAddressChanged();
     }
 
@@ -165,12 +181,14 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
             set.add(revision);
         }
 
-        //localServiceToRevisions = {HashMap@3840}  size = 2
-        //   "demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo"
-        //   "AB6F0B7C2429C8828F640F853B65E1E1"
-
-        //   "samples.servicediscovery.demo.DemoService:dubbo"
-        //   "AB6F0B7C2429C8828F640F853B65E1E1"
+        //"demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo" -> {TreeSet@4873}  size = 1
+        //  key = "demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo"
+        //  value = {TreeSet@4873}  size = 1
+        //      0 = "AB6F0B7C2429C8828F640F853B65E1E1"
+        //"samples.servicediscovery.demo.DemoService:dubbo" -> {TreeSet@4874}  size = 1
+        //  key = "samples.servicediscovery.demo.DemoService:dubbo"
+        //  value = {TreeSet@4874}  size = 1
+        //      0 = "AB6F0B7C2429C8828F640F853B65E1E1"
         return localServiceToRevisions;
     }
 
@@ -192,6 +210,46 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                 RemoteMetadataServiceImpl remoteMetadataService = MetadataUtils.getRemoteMetadataService();
                 // 进去 从zk获取值
                 metadataInfo = remoteMetadataService.getMetadata(instance);
+
+                // metadataInfo对应的json eg 如下
+                //{
+                //  "app": "demo-provider",
+                //  "revision": "AB6F0B7C2429C8828F640F853B65E1E1",
+                //  "services": {
+                //    "demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo": {
+                //      "name": "org.apache.dubbo.metadata.MetadataService",
+                //      "group": "demo-provider",
+                //      "version": "1.0.0",
+                //      "protocol": "dubbo",
+                //      "path": "org.apache.dubbo.metadata.MetadataService",
+                //      "params": {
+                //        "deprecated": "false",
+                //        "dubbo": "2.0.2",
+                //        "version": "1.0.0",
+                //        "group": "demo-provider"
+                //      }
+                //    },
+                //    "samples.servicediscovery.demo.DemoService:dubbo": {
+                //      "name": "samples.servicediscovery.demo.DemoService",
+                //      "protocol": "dubbo",
+                //      "path": "samples.servicediscovery.demo.DemoService",
+                //      "params": {
+                //        "deprecated": "false",
+                //        "weight": "12",
+                //        "dubbo": "2.0.2"
+                //      }
+                //    }
+                //  }
+                //}
+
+                //反序列为metadataInfo如下
+                //metadataInfo = {MetadataInfo@4783} "metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2.0.2},consumerParams=null}}}"
+                // app = "demo-provider"
+                // revision = "AB6F0B7C2429C8828F640F853B65E1E1"
+                // services = {LinkedTreeMap@4802}  size = 2
+                //  "demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo" -> {MetadataInfo$ServiceInfo@4808} "service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}"
+                //  "samples.servicediscovery.demo.DemoService:dubbo" -> {MetadataInfo$ServiceInfo@4810} "service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2.0.2},consumerParams=null}"
+
                 // local
             } else {
                 MetadataService metadataServiceProxy = MetadataUtils.getMetadataServiceProxy(instance, serviceDiscovery);
@@ -206,8 +264,10 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
     }
 
     private void notifyAddressChanged() {
+        // listeners的填充时期就是下面的addListener方法，注意listeners的value结构在新版本是master-cp中set<NotifyListener>
         listeners.forEach((key, notifyListener) -> {
             //FIXME, group wildcard match
+            //进去 serviceUrls 的填充时间点在onEvent。notify进ServiceDiscoveryRegistryDirectory
             notifyListener.notify(toUrlsWithEmpty(serviceUrls.get(key)));
         });
     }

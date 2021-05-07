@@ -172,6 +172,7 @@ public class DefaultServiceInstance implements ServiceInstance {
 
     @Override
     public InstanceAddressURL toURL() {
+        // 进去
         return new InstanceAddressURL(this, serviceMetadata);
     }
 

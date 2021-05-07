@@ -283,6 +283,7 @@ public class InstanceAddressURL extends URL {
     }
 
     public URL addConsumerParams(String protocolServiceKey, Map<String, String> params) {
+        // 先从 MetaDataInfo 获取对应的 ServiceInfo，然后将params存入 ServiceInfo#consumerParams的属性中
         getMetadataInfo().getServiceInfo(protocolServiceKey).addConsumerParams(params);
         return this;
     }

@@ -73,7 +73,8 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T> im
         return false;
     }
 
-    // 方法结构较RegistryDirectory还是比较简单的
+    // 方法结构较RegistryDirectory还是比较简单的 ，注意参数list内部元素的类型为 url的子类 -> InstanceAddressURL
+    // 这个list也是代表provider的urls
     @Override
     public synchronized void notify(List<URL> instanceUrls) {
         // Set the context of the address notification thread.
@@ -91,9 +92,12 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T> im
             }
         }
 
+        // 进去
         refreshInvoker(instanceUrls);
     }
 
+    //invokerUrls = {ArrayList@4905}  size = 1
+    // 0 = {InstanceAddressURL@4933} "DefaultServiceInstance{id='30.25.58.166:20880', serviceName='demo-provider', host='30.25.58.166', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2.0.2},consumerParams=null}}}"
     private void refreshInvoker(List<URL> invokerUrls) {
         Assert.notNull(invokerUrls, "invokerUrls should not be null, use empty url list to clear address.");
 
@@ -111,6 +115,7 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T> im
             return;
         }
 
+        // 进去
         Map<String, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map
 
         if (CollectionUtils.isEmptyMap(newUrlInvokerMap)) {
@@ -147,6 +152,7 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T> im
         }
         for (URL url : urls) {
             InstanceAddressURL instanceAddressURL = (InstanceAddressURL) url;
+            // instanceAddressURL.getProtocol() 进去，是从RpcContext获取的，注意在该类的notify方法中第一步就存入了consumerUrl到RpcContext
             if (EMPTY_PROTOCOL.equals(instanceAddressURL.getProtocol())) {
                 continue;
             }
@@ -159,25 +165,39 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T> im
             }
 
             // FIXME, some keys may need to be removed.
+            // // 进去
             instanceAddressURL.addConsumerParams(getConsumerUrl().getProtocolServiceKey(), queryMap);
 
             Invoker<T> invoker = urlInvokerMap == null ? null : urlInvokerMap.get(instanceAddressURL.getAddress());
+            // invoker为null表示新的，或者invoker不为null，那么比较新旧之间是否发生变更，urlChanged进去
             if (invoker == null || urlChanged(invoker, instanceAddressURL)) { // Not in the cache, refer again
                 try {
+                    // 判定provider的url是否可用
                     boolean enabled = true;
                     if (instanceAddressURL.hasParameter(DISABLED_KEY)) {
                         enabled = !instanceAddressURL.getParameter(DISABLED_KEY, false);
                     } else {
+                        // 一般走这个分支
                         enabled = instanceAddressURL.getParameter(ENABLED_KEY, true);
                     }
                     if (enabled) {
+                        // 核心！！开始连接server，创建client了
                         invoker = protocol.refer(serviceType, instanceAddressURL);
+                        // invoker = {FilterNode@5656} "interface samples.servicediscovery.demo.DemoService -> DefaultServiceInstance{id='30.25.58.166:20880', serviceName='demo-provider', host='30.25.58.166', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2"
+                        // invoker = {ListenerInvokerWrapper@5664} "interface samples.servicediscovery.demo.DemoService -> DefaultServiceInstance{id='30.25.58.166:20880', serviceName='demo-provider', host='30.25.58.166', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2"
+                        //  invoker = {AsyncToSyncInvoker@5669}
+                        //   invoker = {DubboInvoker@5685} "interface samples.servicediscovery.demo.DemoService -> DefaultServiceInstance{id='30.25.58.166:20880', serviceName='demo-provider', host='30.25.58.166', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2"
+                        //  listeners = {Collections$UnmodifiableRandomAccessList@5670}  size = 0
+                        // next = {FilterNode@5665} "interface samples.servicediscovery.demo.DemoService -> DefaultServiceInstance{id='30.25.58.166:20880', serviceName='demo-provider', host='30.25.58.166', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2"
+                        // filter = {ConsumerContextFilter@5666}
                     }
                 } catch (Throwable t) {
                     logger.error("Failed to refer invoker for interface:" + serviceType + ",url:(" + instanceAddressURL + ")" + t.getMessage(), t);
                 }
                 if (invoker != null) { // Put new invoker in cache
                     newUrlInvokerMap.put(instanceAddressURL.getAddress(), invoker);
+                    //newUrlInvokerMap = {HashMap@5073}  size = 1
+                    // "30.25.58.166:20880" -> {FilterNode@5656} "interface samples.servicediscovery.demo.DemoService -> DefaultServiceInstance{id='30.25.58.166:20880', serviceName='demo-provider', host='30.25.58.166', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2"
                 }
             } else {
                 newUrlInvokerMap.put(instanceAddressURL.getAddress(), invoker);
@@ -189,10 +209,12 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T> im
     private boolean urlChanged(Invoker<T> invoker, InstanceAddressURL newURL) {
         InstanceAddressURL oldURL = (InstanceAddressURL) invoker.getUrl();
 
+        // 如果instance不一致，表示变化了，返回true
         if (!newURL.getInstance().equals(oldURL.getInstance())) {
             return true;
         }
 
+        // 如果instance一致，但是ServiceInfo不一致
         return !oldURL.getMetadataInfo().getServiceInfo(getConsumerUrl().getProtocolServiceKey())
                 .equals(newURL.getMetadataInfo().getServiceInfo(getConsumerUrl().getProtocolServiceKey()));
     }

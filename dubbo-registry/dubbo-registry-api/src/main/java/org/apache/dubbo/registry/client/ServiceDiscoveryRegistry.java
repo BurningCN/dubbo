@@ -377,6 +377,7 @@ public class ServiceDiscoveryRegistry implements Registry {
             }
         });
 
+        // 前面onEvent内部已经会调用下面的方法了，这里再一次了
         listener.notify(serviceListener.getUrls(protocolServiceKey));
     }
 
