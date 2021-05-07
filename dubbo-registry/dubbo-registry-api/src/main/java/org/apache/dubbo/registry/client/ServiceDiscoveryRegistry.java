@@ -322,9 +322,10 @@ public class ServiceDiscoveryRegistry implements Registry {
         ServiceInstancesChangedListener serviceListener = serviceListeners.computeIfAbsent(serviceNamesKey,
                 k -> new ServiceInstancesChangedListener(serviceNames, serviceDiscovery));
         serviceListener.setUrl(url);
+        serviceListener.addListener(protocolServiceKey, listener);
+
         listener.addServiceListener(serviceListener);
 
-        serviceListener.addListener(protocolServiceKey, listener);
         registerServiceInstancesChangedListener(url, serviceListener);
 
         // FIXME: This will cause redundant duplicate notifications
