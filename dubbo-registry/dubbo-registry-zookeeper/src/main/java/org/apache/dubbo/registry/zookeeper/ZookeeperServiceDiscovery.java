@@ -158,6 +158,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
             Iterator<String> iterator = serviceIds.iterator();
 
+            // sd本身是不支持分页的，这是在内存级别做分页，实际还是将serviceName下的所有的数据查出来了（上面getChildren）
             for (int i = 0; i < offset; i++) {
                 if (iterator.hasNext()) { // remove the elements from 0 to offset
                     iterator.next();
@@ -168,7 +169,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
             for (int i = 0; i < pageSize; i++) {
                 if (iterator.hasNext()) {
                     String serviceId = iterator.next();
-                    // serviceName是父节点，serviceId是其子节点。这里是取子节点的值
+                    // serviceName是父节点，serviceId是其子节点。这里是取子节点的值。build进去
                     ServiceInstance serviceInstance = build(serviceDiscovery.queryForInstance(serviceName, serviceId));
                     serviceInstances.add(serviceInstance);
                 }
@@ -200,9 +201,10 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
         String path = buildServicePath(serviceName);
 
         try {
+            // 递归创建节点创建节点
             curatorFramework.create().creatingParentsIfNeeded().forPath(path);
         } catch (KeeperException.NodeExistsException e) {
-            // ignored
+            // ignored 前面create、创建节点已存在，会进这个NodeExistsException异常，这里直接忽略即可
             if (logger.isDebugEnabled()) {
 
                 logger.debug(e);

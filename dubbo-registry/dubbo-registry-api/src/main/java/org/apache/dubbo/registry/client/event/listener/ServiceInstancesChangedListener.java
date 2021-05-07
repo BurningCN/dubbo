@@ -105,7 +105,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
         for (Map.Entry<String, List<ServiceInstance>> entry : allInstances.entrySet()) {
             List<ServiceInstance> instances = entry.getValue();
             for (ServiceInstance instance : instances) {
-                // 进去 n. [印刷] 修正；复习；修订本 获取 dubbo.metadata.revision的值，一般都是有值的
+                // 进去 n. [印刷] 修正；复习；修订本 获取 dubbo.metadata.revision的值，一般都是有值的（提供者先前写到zk的）
                 String revision = getExportedServicesRevision(instance);
                 if (DEFAULT_REVISION.equals(revision)) {
                     logger.info("Find instance without valid service metadata: " + instance.getAddress());
@@ -115,16 +115,14 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                 List<ServiceInstance> subInstances = revisionToInstances.computeIfAbsent(revision, r -> new LinkedList<>());
                 subInstances.add(instance);
 
-                // 同上面的逻辑
+                // 同上面的逻辑。前面是reversion - List<ServiceInstance> 映射，下面是 reversion - MetadataInfo进行映射
                 MetadataInfo metadata = revisionToMetadata.get(revision);
                 if (metadata == null) {
+                    // 进去
                     metadata = getMetadataInfo(instance);
                     logger.info("MetadataInfo for instance " + instance.getAddress() + "?revision=" + revision + " is " + metadata);
                     if (metadata != null) {
-                        // 这里重复getMetadataInfo了
-                        revisionToMetadata.put(revision, getMetadataInfo(instance));
-                    } else {
-
+                        revisionToMetadata.put(revision, metadata);
                     }
                 }
 
@@ -177,14 +175,24 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
     }
 
     private MetadataInfo getMetadataInfo(ServiceInstance instance) {
+        // 进去 获取存储类型，是local还是remote，分别对应InMemoryWritableMetadataService 和 RemoteMetadataServiceImpl
         String metadataType = ServiceInstanceMetadataUtils.getMetadataStorageType(instance);
         // FIXME, check "REGISTRY_CLUSTER_KEY" must be set by every registry implementation.
+        // extendParams添加了这个 REGISTRY_CLUSTER -> org.apache.dubbo.config.RegistryConfig
         instance.getExtendParams().putIfAbsent(REGISTRY_CLUSTER_KEY, RegistryClusterIdentifier.getExtension(url).consumerKey(url));
         MetadataInfo metadataInfo;
         try {
+            if (logger.isDebugEnabled()) {
+                // Instance 30.25.58.166:20880 is using metadata type remote
+                logger.info("Instance " + instance.getAddress() + " is using metadata type " + metadataType);
+            }
+            // remote
             if (REMOTE_METADATA_STORAGE_TYPE.equals(metadataType)) {
+                // 进去
                 RemoteMetadataServiceImpl remoteMetadataService = MetadataUtils.getRemoteMetadataService();
+                // 进去 从zk获取值
                 metadataInfo = remoteMetadataService.getMetadata(instance);
+                // local
             } else {
                 MetadataService metadataServiceProxy = MetadataUtils.getMetadataServiceProxy(instance, serviceDiscovery);
                 metadataInfo = metadataServiceProxy.getMetadataInfo(ServiceInstanceMetadataUtils.getExportedServicesRevision(instance));

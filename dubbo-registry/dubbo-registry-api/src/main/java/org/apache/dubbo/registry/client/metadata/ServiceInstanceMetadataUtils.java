@@ -179,6 +179,7 @@ public class ServiceInstanceMetadataUtils {
      */
     public static String getMetadataStorageType(ServiceInstance serviceInstance) {
         Map<String, String> metadata = serviceInstance.getMetadata();
+        // 找一下METADATA_STORAGE_TYPE_PROPERTY_NAME这个属性的引用点，发现在DubboBootstrap，xml中给application标签配置了 metadata-type="remote">
         return metadata.getOrDefault(METADATA_STORAGE_TYPE_PROPERTY_NAME, DEFAULT_METADATA_STORAGE_TYPE);
     }
 

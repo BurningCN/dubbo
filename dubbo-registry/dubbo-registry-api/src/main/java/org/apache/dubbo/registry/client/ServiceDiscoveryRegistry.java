@@ -344,10 +344,10 @@ public class ServiceDiscoveryRegistry implements Registry {
         ServiceInstancesChangedListener serviceListener = serviceListeners.computeIfAbsent(serviceNamesKey,
                 k -> new ServiceInstancesChangedListener(serviceNames, serviceDiscovery));
         serviceListener.setUrl(url);
-        // 进去
+        // listener为ServiceDiscoveryRegistryDirectory进去
         listener.addServiceListener(serviceListener);
 
-        // 将 listener 即ServiceDiscoveryDirectory保存到ServiceInstancesChangedListener
+        // 将 listener 即ServiceDiscoveryDirectory保存到ServiceInstancesChangedListener（和前面步骤相反）
         // 这样后者得到通知的时候回调用listener#notify方法
         serviceListener.addListener(protocolServiceKey, listener);
         // 注册到sd，进去
@@ -389,7 +389,7 @@ public class ServiceDiscoveryRegistry implements Registry {
     private void registerServiceInstancesChangedListener(URL url, ServiceInstancesChangedListener listener) {
         // eg [demo-provider, demo-provider-test1]:consumer://30.25.58.39/samples.servicediscovery.demo.DemoService
         String listenerId = createListenerId(url, listener);// 进去
-        // 添加到容器
+        // 添加到容器，返回值为t f，如果返回t表示之前没有，返回f表示重复添加了
         if (registeredListeners.add(listenerId)) {
             // 进去。进去是EventPublishingServiceDiscovery
             serviceDiscovery.addServiceInstancesChangedListener(listener);
@@ -405,6 +405,9 @@ public class ServiceDiscoveryRegistry implements Registry {
      * 2.check Interface-App mapping
      * 3.use the services specified in registry url.
      *
+     * 1.开发者显式指定该接口所属的应用程序名称
+     * 2.检查Interface-App映射
+     * 3.使用注册表url中指定的服务。 这三个步骤是获取appNames的顺序
      * @param subscribedURL
      * @return
      */

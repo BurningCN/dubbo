@@ -65,6 +65,7 @@ public class ZookeeperServiceDiscoveryChangeWatcher implements CuratorWatcher {
                 listener.onEvent(new ServiceInstancesChangedEvent(serviceName, zookeeperServiceDiscovery.getInstances(serviceName)));
                 // 继续注册
                 zookeeperServiceDiscovery.registerServiceWatcher(serviceName, listener);
+                // 事件传递给EventDispatcher
                 zookeeperServiceDiscovery.dispatchServiceInstancesChangedEvent(serviceName);
             }
         }

@@ -258,6 +258,7 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
             // getServiceKey 比如 dubbo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0
             SortedSet<URL> urls = serviceURLs.computeIfAbsent(url.getServiceKey(), this::newSortedURLs);
             // make sure the parameters of tmpUrl is variable
+            // 上面注释的意思就是说直接将url原引用填入，这样外界改变url的值，这里也会同步改变
             return urls.add(url);
         });
     }

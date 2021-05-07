@@ -120,6 +120,7 @@ public interface ServiceDiscovery extends Prioritized {
      * @return non-null {@link List}
      * @throws NullPointerException if <code>serviceName</code> is <code>null</code>
      */
+    // 获取所有的
     default List<ServiceInstance> getInstances(String serviceName) throws NullPointerException {
 
         // 搞了一个分页查询
@@ -212,6 +213,11 @@ public interface ServiceDiscovery extends Prioritized {
      * Nacos EventListener. If the registry observes the change, It's suggested that the implementation could invoke
      * {@link #dispatchServiceInstancesChangedEvent(String)} method or variants
      *
+     * 为指定的服务添加一个{@link ServiceInstancesChangedListener}实例
+     * 默认情况下，当前方法将由 ServiceDiscoveryRegistry 的 ServiceDiscoveryRegistry#subscribe(URL, NotifyListener)调用，
+     * 这是强制{@link EventDispatcher # addEventListener (EventListener)添加},{@link ServiceInstancesChangedListener}参数为{@link EventDispatcher}是否子类实现了相同的方法,
+     * 因此这个方法是用来触发或调整供应商的更改通知机制通常,like Zookeeper Watcher,Nacos EventListener。如果注册表观察到变化，
+     * 建议实现可以调用{@link #dispatchServiceInstancesChangedEvent(String)}方法或变体
      * @param listener an instance of {@link ServiceInstancesChangedListener}
      * @throws NullPointerException
      * @throws IllegalArgumentException

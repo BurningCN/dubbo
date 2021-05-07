@@ -115,15 +115,21 @@ public class RemoteMetadataServiceImpl {
     }
 
     public MetadataInfo getMetadata(ServiceInstance instance) {
+        // 进去 赋值给其app和reversion属性
         SubscriberMetadataIdentifier identifier = new SubscriberMetadataIdentifier(instance.getServiceName(),
                 ServiceInstanceMetadataUtils.getExportedServicesRevision(instance));
 
+        // org.apache.dubbo.config.RegistryConfig 。这个赋值处往上跟一层
         String registryCluster = instance.getExtendParams().get(REGISTRY_CLUSTER_KEY);
 
         MetadataReport metadataReport = getMetadataReports().get(registryCluster);
+        // 一般为null，因为getMetadataReports的key默认为"default"
         if (metadataReport == null) {
             metadataReport = getMetadataReports().entrySet().iterator().next().getValue();
         }
+        // metadataReport 为 ZookeeperMetadataReport
+        // extendParams = {HashMap@3742}  size = 1
+        // "REGISTRY_CLUSTER" -> "org.apache.dubbo.config.RegistryConfig"
         return metadataReport.getAppMetadata(identifier, instance.getExtendParams());
     }
 
