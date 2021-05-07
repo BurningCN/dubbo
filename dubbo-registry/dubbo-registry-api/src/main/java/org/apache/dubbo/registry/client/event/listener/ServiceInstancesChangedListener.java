@@ -99,6 +99,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
         Map<String, Set<String>> localServiceToRevisions = new HashMap<>();
         Map<Set<String>, List<URL>> revisionsToUrls = new HashMap();
         Map<String, List<URL>> tmpServiceUrls = new HashMap<>();
+
         for (Map.Entry<String, List<ServiceInstance>> entry : allInstances.entrySet()) {
             List<ServiceInstance> instances = entry.getValue();
             for (ServiceInstance instance : instances) {
@@ -116,8 +117,6 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                     logger.info("MetadataInfo for instance " + instance.getAddress() + "?revision=" + revision + " is " + metadata);
                     if (metadata != null) {
                         revisionToMetadata.put(revision, metadata);
-                    } else {
-
                     }
                 }
 
@@ -200,8 +199,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
 
     private List<URL> toUrlsWithEmpty(List<URL> urls) {
         if (urls == null) {
-            urls = Collections.emptyList();
-        }
+            urls = Collections.emptyList();        }
         return urls;
     }
 

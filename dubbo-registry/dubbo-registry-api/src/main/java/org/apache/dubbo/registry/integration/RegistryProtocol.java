@@ -516,6 +516,7 @@ public class RegistryProtocol implements Protocol {
         directory.buildRouterChain(urlToRegistry);
         directory.subscribe(toSubscribeUrl(urlToRegistry));
 
+        // todo 继续debug
         return (ClusterInvoker<T>) cluster.join(directory);
     }
 
