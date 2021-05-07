@@ -48,8 +48,6 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T>{
     // instance address to invoker mapping.
     private volatile Map<String, Invoker<T>> urlInvokerMap; // The initial value is null and the midway may be assigned to null, please use the local variable reference
 
-    private ServiceInstancesChangedListener listener;
-
     public ServiceDiscoveryRegistryDirectory(Class<T> serviceType, URL url) {
         super(serviceType, url);
     }
@@ -162,7 +160,7 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T>{
             Invoker<T> invoker = urlInvokerMap == null ? null : urlInvokerMap.get(instanceAddressURL.getAddress());
             if (invoker == null || urlChanged(invoker, instanceAddressURL)) { // Not in the cache, refer again
                 try {
-                    boolean enabled = true;
+                    boolean enabled;
                     if (instanceAddressURL.hasParameter(DISABLED_KEY)) {
                         enabled = !instanceAddressURL.getParameter(DISABLED_KEY, false);
                     } else {

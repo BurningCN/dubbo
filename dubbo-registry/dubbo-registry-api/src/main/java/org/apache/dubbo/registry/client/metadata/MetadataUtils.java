@@ -66,11 +66,11 @@ public class MetadataUtils {
         getRemoteMetadataService().publishServiceDefinition(url);
     }
 
-    public static MetadataService getMetadataServiceProxy(ServiceInstance instance, ServiceDiscovery serviceDiscovery) {
+    public static MetadataService getMetadataServiceProxy(ServiceInstance instance) {
         String key = instance.getServiceName() + "##" +
                 ServiceInstanceMetadataUtils.getExportedServicesRevision(instance);
         return metadataServiceProxies.computeIfAbsent(key, k -> {
-            MetadataServiceURLBuilder builder = null;
+            MetadataServiceURLBuilder builder;
             ExtensionLoader<MetadataServiceURLBuilder> loader
                     = ExtensionLoader.getExtensionLoader(MetadataServiceURLBuilder.class);
 

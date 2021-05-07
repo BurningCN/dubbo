@@ -124,11 +124,6 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                     parseMetadata(revision, metadata, localServiceToRevisions);
                     ((DefaultServiceInstance) instance).setServiceMetadata(metadata);
                 }
-//                else {
-//                    logger.error("Failed to load service metadata for instance " + instance);
-//                    Set<String> set = localServiceToRevisions.computeIfAbsent(url.getServiceKey(), k -> new TreeSet<>());
-//                    set.add(revision);
-//                }
             }
 
             localServiceToRevisions.forEach((serviceKey, revisions) -> {
@@ -175,7 +170,8 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                 RemoteMetadataServiceImpl remoteMetadataService = MetadataUtils.getRemoteMetadataService();
                 metadataInfo = remoteMetadataService.getMetadata(instance);
             } else {
-                MetadataService metadataServiceProxy = MetadataUtils.getMetadataServiceProxy(instance, serviceDiscovery);
+                // todo 待分析
+                MetadataService metadataServiceProxy = MetadataUtils.getMetadataServiceProxy(instance);
                 metadataInfo = metadataServiceProxy.getMetadataInfo(ServiceInstanceMetadataUtils.getExportedServicesRevision(instance));
             }
             if (logger.isDebugEnabled()) {
@@ -190,9 +186,9 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
     }
 
     private void notifyAddressChanged() {
-        listeners.forEach((key, notifyListeners) -> {
+        listeners.forEach((protocolServiceKey, notifyListeners) -> {
             notifyListeners.forEach(notifyListener -> {
-                notifyListener.notify(toUrlsWithEmpty(serviceUrls.get(key)));
+                notifyListener.notify(toUrlsWithEmpty(serviceUrls.get(protocolServiceKey)));
             });
         });
     }
@@ -203,8 +199,8 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
         return urls;
     }
 
-    public void addListener(String serviceKey, NotifyListener listener) {
-        this.listeners.computeIfAbsent(serviceKey, k -> new HashSet<>()).add(listener);
+    public void addListener(String protocolServiceKey, NotifyListener listener) {
+        this.listeners.computeIfAbsent(protocolServiceKey, k -> new HashSet<>()).add(listener);
     }
 
     public void removeListener(String serviceKey) {

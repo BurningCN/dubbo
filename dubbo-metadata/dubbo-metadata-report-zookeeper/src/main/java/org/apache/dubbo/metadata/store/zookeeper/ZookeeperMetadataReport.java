@@ -157,7 +157,7 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
 
     @Override
     public Set<String> getServiceAppMapping(String serviceKey, MappingListener listener, URL url) {
-        Set<String>  appNameSet = new HashSet<>();
+        Set<String> appNameSet = new HashSet<>();
         String path = toRootDir() + serviceKey;
 
         List<String> appNameList;

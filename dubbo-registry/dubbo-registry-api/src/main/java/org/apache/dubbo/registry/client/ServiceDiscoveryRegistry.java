@@ -468,7 +468,6 @@ public class ServiceDiscoveryRegistry implements Registry {
         private NotifyListener listener;
 
         public DefaultMappingListener(URL subscribedURL, Set<String> serviceNames, NotifyListener listener) {
-
             this.url = subscribedURL;
             this.oldApps = serviceNames;
             this.listener = listener;

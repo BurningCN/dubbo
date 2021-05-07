@@ -184,7 +184,6 @@ public class ZookeeperServiceDiscovery extends AbstractServiceDiscovery {
         } catch (KeeperException.NodeExistsException e) {
             // ignored
             if (logger.isDebugEnabled()) {
-
                 logger.debug(e);
             }
         } catch (Exception e) {
