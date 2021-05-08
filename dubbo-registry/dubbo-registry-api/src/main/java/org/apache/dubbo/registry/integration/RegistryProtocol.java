@@ -534,6 +534,10 @@ public class RegistryProtocol implements Protocol {
         // toSubscribeUrl 添加了参数 category=providers,configurators,routers
         directory.subscribe(toSubscribeUrl(urlToRegistry));
 
+
+        // doJoin操作是利用Cluster生成ClusterInvoker
+        //cluster = {MockClusterWrapper@6255}
+        // cluster = {FailoverCluster@6265}
         return (ClusterInvoker<T>) cluster.join(directory);
     }
 
