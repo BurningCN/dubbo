@@ -115,7 +115,7 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T> im
             return;
         }
 
-        // 进去
+        // 进去 key是 ip:port eg "30.25.58.166:20880"
         Map<String, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map
 
         if (CollectionUtils.isEmptyMap(newUrlInvokerMap)) {
@@ -165,9 +165,10 @@ public class ServiceDiscoveryRegistryDirectory<T> extends DynamicDirectory<T> im
             }
 
             // FIXME, some keys may need to be removed.
-            // // 进去
+            // 进去
             instanceAddressURL.addConsumerParams(getConsumerUrl().getProtocolServiceKey(), queryMap);
 
+            // 先从原始缓存容器取一下，没取到就需要refer
             Invoker<T> invoker = urlInvokerMap == null ? null : urlInvokerMap.get(instanceAddressURL.getAddress());
             // invoker为null表示新的，或者invoker不为null，那么比较新旧之间是否发生变更，urlChanged进去
             if (invoker == null || urlChanged(invoker, instanceAddressURL)) { // Not in the cache, refer again

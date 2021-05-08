@@ -256,6 +256,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
             } else {
                 // 进去
                 MetadataService metadataServiceProxy = MetadataUtils.getMetadataServiceProxy(instance, serviceDiscovery);
+                // 调用提供方接口的方法，进行rpc调用，获取metadataInfo
                 metadataInfo = metadataServiceProxy.getMetadataInfo(ServiceInstanceMetadataUtils.getExportedServicesRevision(instance));
             }
         } catch (Exception e) {
