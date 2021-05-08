@@ -471,6 +471,7 @@ public class RegistryProtocol implements Protocol {
     }
 
     protected <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url, Map<String, String> parameters) {
+        // 参数url的ip为registry的ip:port，比如127.0.0.1:2181，下面ip和port变了
         // consumer://30.25.58.39/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&metadata-type=remote&methods=sayHello&pid=3520&provided-by=demo-provider&side=consumer&sticky=false&timestamp=1619495578337
         URL consumerUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
         // 进去 返回ServiceDiscoveryMigrationInvoker

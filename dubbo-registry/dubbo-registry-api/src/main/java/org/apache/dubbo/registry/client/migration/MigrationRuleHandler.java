@@ -37,7 +37,7 @@ public class MigrationRuleHandler<T> {
     private MigrationStep currentStep;
 
     public void doMigrate(String rawRule) {
-        // 进去
+        // 进去 初始rawRule为INIT，返回的rule里面的step为 APPLICATION_FIRST
         MigrationRule rule = MigrationRule.parse(rawRule);
 
         if (null != currentStep && currentStep.equals(rule.getStep())) {
@@ -53,8 +53,9 @@ public class MigrationRuleHandler<T> {
         // migrationInvoker 的赋值触发点注意下
         migrationInvoker.setMigrationRule(rule);
 
-        // 默认是false
+        // 默认为false
         if (migrationInvoker.isMigrationMultiRegistry()) {
+            // MigrationInvoker为false，子类为true
             if (migrationInvoker.isServiceInvoker()) {
                 migrationInvoker.refreshServiceDiscoveryInvoker();
             } else {
