@@ -108,6 +108,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         this.serviceType = serviceType;
         this.serviceKey = super.getConsumerUrl().getServiceKey();
 
+        // 和父类的consumeURL仅仅ip不同，其他都一样，且只有overrideDirectoryUrl被外界使用，directoryUrl没啥用
         this.overrideDirectoryUrl = this.directoryUrl = turnRegistryUrlToConsumerUrl(url);
         String group = directoryUrl.getParameter(GROUP_KEY, "");
         this.multiGroup = group != null && (ANY_VALUE.equals(group) || group.contains(","));

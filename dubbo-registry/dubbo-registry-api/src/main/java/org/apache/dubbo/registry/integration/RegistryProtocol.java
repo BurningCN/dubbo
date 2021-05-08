@@ -531,6 +531,7 @@ public class RegistryProtocol implements Protocol {
         }
         // directory的routeChain还是null的，这里进行赋值
         directory.buildRouterChain(urlToRegistry);
+        // toSubscribeUrl 添加了参数 category=providers,configurators,routers
         directory.subscribe(toSubscribeUrl(urlToRegistry));
 
         return (ClusterInvoker<T>) cluster.join(directory);
