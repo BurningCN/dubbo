@@ -70,29 +70,41 @@ public class MetadataUtils {
     }
 
     public static MetadataService getMetadataServiceProxy(ServiceInstance instance, ServiceDiscovery serviceDiscovery) {
+        // demo-provider##AB6F0B7C2429C8828F640F853B65E1E1
         String key = instance.getServiceName() + "##" + instance.getId() + "##" +
                 ServiceInstanceMetadataUtils.getExportedServicesRevision(instance);
         return metadataServiceProxies.computeIfAbsent(key, k -> {
-            MetadataServiceURLBuilder builder = null;
+            MetadataServiceURLBuilder builder;
+            // MetadataServiceURLBuilder 两个扩展实例
             ExtensionLoader<MetadataServiceURLBuilder> loader
                     = ExtensionLoader.getExtensionLoader(MetadataServiceURLBuilder.class);
 
+            //metadata = {LinkedHashMap@4574}  size = 4
+            // "dubbo.metadata-service.url-params" -> "{"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}"
+            // "dubbo.endpoints" -> "[{"port":20880,"protocol":"dubbo"}]"
+            // "dubbo.metadata.revision" -> "AB6F0B7C2429C8828F640F853B65E1E1"
+            // "dubbo.metadata.storage-type" -> "remote"
             Map<String, String> metadata = instance.getMetadata();
+
             // METADATA_SERVICE_URLS_PROPERTY_NAME is a unique key exists only on instances of spring-cloud-alibaba.
+            // 默认取出来为null
             String dubboURLsJSON = metadata.get(METADATA_SERVICE_URLS_PROPERTY_NAME);
-            if (metadata.isEmpty() || StringUtils.isEmpty(dubboURLsJSON)) {
-                builder = loader.getExtension(StandardMetadataServiceURLBuilder.NAME);
-            } else {
+            if (StringUtils.isNotEmpty(dubboURLsJSON)) {
                 builder = loader.getExtension(SpringCloudMetadataServiceURLBuilder.NAME);
+            } else {
+                builder = loader.getExtension(StandardMetadataServiceURLBuilder.NAME);
             }
 
+            // 进去
             List<URL> urls = builder.build(instance);
             if (CollectionUtils.isEmpty(urls)) {
                 throw new IllegalStateException("You have enabled introspection service discovery mode for instance "
                         + instance + ", but no metadata service can build from it.");
             }
 
+            // urls里面一般只有一项，eg dubbo://30.25.58.166:20881/org.apache.dubbo.metadata.MetadataService?dubbo=2.0.2&group=demo-provider&port=20881&side=consumer&timeout=5000&version=1.0.0
             // Simply rely on the first metadata url, as stated in MetadataServiceURLBuilder.
+            // 只需依赖第一个元数据url，如MetadataServiceURLBuilder中所述。
             Invoker<MetadataService> invoker = protocol.refer(MetadataService.class, urls.get(0));
 
             return proxyFactory.getProxy(invoker);

@@ -63,6 +63,11 @@ public class StandardMetadataServiceURLBuilder implements MetadataServiceURLBuil
     @Override
     public List<URL> build(ServiceInstance serviceInstance) {
 
+        //key = "dubbo"
+        //value = {JSONObject@4667}  size = 3
+        // "port" -> "20881"
+        // "dubbo" -> "2.0.2"
+        // "version" -> "1.0.0"
         Map<String, Map<String, String>> paramsMap = getMetadataServiceURLsParams(serviceInstance);
 
         List<URL> urls = new ArrayList<>(paramsMap.size());
@@ -71,66 +76,27 @@ public class StandardMetadataServiceURLBuilder implements MetadataServiceURLBuil
 
         String host = serviceInstance.getHost();
 
-        if (paramsMap.isEmpty()) {
-            // ServiceInstance Metadata is empty. Happened when registry not support metadata write.
-            urls.add(generateUrlWithoutMetadata(serviceName, host));
-        } else {
-            for (Map.Entry<String, Map<String, String>> entry : paramsMap.entrySet()) {
-                String protocol = entry.getKey();
-                Map<String, String> params = entry.getValue();
+        for (Map.Entry<String, Map<String, String>> entry : paramsMap.entrySet()) {
+            String protocol = entry.getKey();
+            Map<String, String> params = entry.getValue();
+            int port = Integer.parseInt(params.get(PORT_KEY));
+            URLBuilder urlBuilder = new URLBuilder()
+                    .setHost(host)
+                    .setPort(port)
+                    .setProtocol(protocol)
+                    .setPath(MetadataService.class.getName())
+                    .addParameter(TIMEOUT_KEY, ConfigurationUtils.get(METADATA_PROXY_TIMEOUT_KEY, DEFAULT_METADATA_TIMEOUT_VALUE))
+                    .addParameter(SIDE_KEY, CONSUMER);
 
-                urls.add(generateWithMetadata(serviceName, host, protocol, params));
-            }
+            // add parameters
+            params.forEach((name, value) -> urlBuilder.addParameter(name, valueOf(value)));
+
+            // add the default parameters
+            urlBuilder.addParameter(GROUP_KEY, serviceName);
+
+            // dubbo://30.25.58.166:20881/org.apache.dubbo.metadata.MetadataService?dubbo=2.0.2&group=demo-provider&port=20881&side=consumer&timeout=5000&version=1.0.0
+            urls.add(urlBuilder.build());
         }
-
         return urls;
-    }
-
-    private URL generateWithMetadata(String serviceName, String host, String protocol, Map<String, String> params) {
-        int port = Integer.parseInt(params.get(PORT_KEY));
-        URLBuilder urlBuilder = new URLBuilder()
-                .setHost(host)
-                .setPort(port)
-                .setProtocol(protocol)
-                .setPath(MetadataService.class.getName())
-                .addParameter(TIMEOUT_KEY, ConfigurationUtils.get(METADATA_PROXY_TIMEOUT_KEY, DEFAULT_METADATA_TIMEOUT_VALUE))
-                .addParameter(SIDE_KEY, CONSUMER);
-
-        // add parameters
-        params.forEach((name, value) -> urlBuilder.addParameter(name, valueOf(value)));
-
-        // add the default parameters
-        urlBuilder.addParameter(GROUP_KEY, serviceName);
-        return urlBuilder.build();
-    }
-
-    private URL generateUrlWithoutMetadata(String serviceName, String host) {
-        Integer port = ApplicationModel.getApplicationConfig().getMetadataServicePort();
-
-        if (port == null || port < 1) {
-            String message = "Metadata Service Port should be specified for consumer. " +
-                    "Please set dubbo.application.metadataServicePort and " +
-                    "make sure it has been set in provider side. " +
-                    "ServiceName: " + serviceName + " Host: " + host;
-
-            logger.error(message);
-            throw new IllegalStateException(message);
-        }
-
-        URLBuilder urlBuilder = new URLBuilder()
-                .setHost(host)
-                .setPort(port)
-                .setProtocol(DUBBO_PROTOCOL)
-                .setPath(MetadataService.class.getName())
-                .addParameter(TIMEOUT_KEY, ConfigurationUtils.get(METADATA_PROXY_TIMEOUT_KEY, DEFAULT_METADATA_TIMEOUT_VALUE))
-                .addParameter(Constants.RECONNECT_KEY, false)
-                .addParameter(SIDE_KEY, CONSUMER)
-                .addParameter(GROUP_KEY, serviceName)
-                .addParameter(VERSION_KEY, MetadataService.VERSION);
-
-        // add ServiceInstance Metadata notify support
-        urlBuilder.addParameter("getAndListenServiceDiscoveryMetadata.1.callback", true);
-
-        return urlBuilder.build();
     }
 }

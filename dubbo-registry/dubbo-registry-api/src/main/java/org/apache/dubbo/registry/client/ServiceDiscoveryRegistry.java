@@ -269,7 +269,7 @@ public class ServiceDiscoveryRegistry implements Registry {
         }
     }
 
-    // url为consumer://xxx
+    // url为consumer://30.25.58.166/samples.servicediscovery.demo.DemoService?application=demo-consumer&category=providers,configurators,routers&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello&pid=41340&provided-by=demo-provider&side=consumer&sticky=false&timestamp=1620447023760
     // listener 为 ServiceDiscoveryRegistryDirectory
     @Override
     public final void subscribe(URL url, NotifyListener listener) {

@@ -254,6 +254,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
 
                 // local
             } else {
+                // 进去
                 MetadataService metadataServiceProxy = MetadataUtils.getMetadataServiceProxy(instance, serviceDiscovery);
                 metadataInfo = metadataServiceProxy.getMetadataInfo(ServiceInstanceMetadataUtils.getExportedServicesRevision(instance));
             }

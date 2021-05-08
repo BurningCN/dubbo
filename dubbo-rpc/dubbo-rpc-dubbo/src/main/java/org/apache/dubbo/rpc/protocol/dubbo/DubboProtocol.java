@@ -542,7 +542,10 @@ public class DubboProtocol extends AbstractProtocol {
             return clients;
         }
 
-        locks.putIfAbsent(key, new Object()); // 分段锁 ，用以每个value的双重检查(同一个address之间的竞争)
+        // 分段锁 ，用以每个value的双重检查(同一个address之间的竞争)
+        // 新版本变化了。可以看 pr #6018 -- 看另一个analyze
+        locks.putIfAbsent(key, new Object());
+
         synchronized (locks.get(key)) {
             clients = referenceClientMap.get(key);
             // double check
@@ -581,6 +584,7 @@ public class DubboProtocol extends AbstractProtocol {
              * But "locks.remove(key);" can lead to "synchronized (locks.get(key)) {" NPE, considering that the key of locks is "IP + port",
              * it will not lead to the expansion of "locks" in theory, so I will annotate it here.
              */
+            // 我理解这里的删除操作的目的是为了避免过期的url键总是占用这个内存空间。但是"locks.remove(key);"会导致"synchronized (locks.get(key)) {" NPE，考虑到locks的key是"IP + port"，理论上不会导致"locks"的扩展，所以我在这里标注一下。
 //            locks.remove(key);
 
             return clients;

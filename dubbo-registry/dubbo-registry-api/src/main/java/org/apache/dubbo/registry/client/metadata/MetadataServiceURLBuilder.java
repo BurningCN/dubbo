@@ -35,6 +35,7 @@ public interface MetadataServiceURLBuilder {
      * Build the {@link URL URLs} from the specified {@link ServiceInstance}
      *
      * @param serviceInstance {@link ServiceInstance}
+     * // 注意下面这句话
      * @return TODO, usually, we generate one metadata url from one instance. There's no scenario to return a metadta url list.
      */
     List<URL> build(ServiceInstance serviceInstance);
