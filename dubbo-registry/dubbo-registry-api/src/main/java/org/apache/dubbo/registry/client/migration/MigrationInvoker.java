@@ -331,6 +331,8 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
         directory.setInvokersChangedListener(listener);
     }
 
+    // 对比refreshServiceDiscoveryInvoker方法基本一致，只有在invoker的赋值不一致
+    // 一个是interface级别，一个是service级别(appName) ，也即  registry://  和 service-discovery-registry://
     @Override
     public synchronized void refreshInterfaceInvoker() {
         clearListener(invoker);
@@ -339,6 +341,8 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
             if (logger.isDebugEnabled()) {
                 logger.debug("Re-subscribing interface addresses for interface " + type.getName());
             }
+            // refreshServiceDiscoveryInvoker 方法 这里为
+            // serviceDiscoveryInvoker = registryProtocol.getServiceDiscoveryInvoker(cluster, registry, type, url);
             invoker = registryProtocol.getInvoker(cluster, registry, type, url);
 
             if (migrationMultiRegistry) {

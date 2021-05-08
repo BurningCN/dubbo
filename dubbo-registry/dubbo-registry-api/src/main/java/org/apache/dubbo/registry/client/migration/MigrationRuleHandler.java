@@ -57,8 +57,10 @@ public class MigrationRuleHandler<T> {
         if (migrationInvoker.isMigrationMultiRegistry()) {
             // MigrationInvoker为false，子类为true
             if (migrationInvoker.isServiceInvoker()) {
+                // 注意和下面的方法区别，带不带 "ServiceDiscovery"，进去
                 migrationInvoker.refreshServiceDiscoveryInvoker();
             } else {
+                // 进去
                 migrationInvoker.refreshInterfaceInvoker();
             }
         } else {
