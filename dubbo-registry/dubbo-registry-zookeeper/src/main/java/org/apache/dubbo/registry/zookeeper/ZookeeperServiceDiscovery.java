@@ -80,6 +80,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
         this.curatorFramework = buildCuratorFramework(registryURL); // 进去
         // 进去 默认值 /services
         this.rootPath = ROOT_PATH.getParameterValue(registryURL);
+        // 进去
         this.serviceDiscovery = buildServiceDiscovery(curatorFramework, rootPath);// 进去
         // 和buildCuratorFramework一样，建立完成都需要start
         this.serviceDiscovery.start();
@@ -206,7 +207,6 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
         } catch (KeeperException.NodeExistsException e) {
             // ignored 前面create、创建节点已存在，会进这个NodeExistsException异常，这里直接忽略即可
             if (logger.isDebugEnabled()) {
-
                 logger.debug(e);
             }
         } catch (Exception e) {

@@ -89,6 +89,7 @@ public class DynamicConfigurationServiceNameMapping implements ServiceNameMappin
         DynamicConfiguration dynamicConfiguration = DynamicConfiguration.getDynamicConfiguration();
 
         Set<String> serviceNames = new LinkedHashSet<>();
+        // 小马哥喜欢用这种写法，之所以这样是因为execute内部捕获异常的代码可以通用
         execute(() -> {
             // 从 dynamicConfiguration 获取节点值
             Set<String> keys = dynamicConfiguration

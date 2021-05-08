@@ -65,6 +65,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
     private URL url;
     private Map<String, NotifyListener> listeners;
 
+    /*appName - List<ServiceInstance>*/
     private Map<String, List<ServiceInstance>> allInstances;
 
     private Map<String, List<URL>> serviceUrls;
@@ -91,12 +92,13 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
      *
      * @param event {@link ServiceInstancesChangedEvent}
      */
-    // 加锁了，很多涉及到事件的都加了锁
+    // 加锁了，很多涉及到事件的都加了锁，确保串行，因为事件很重要。这是关乎provider 列表变更的通知
     public synchronized void onEvent(ServiceInstancesChangedEvent event) {
         logger.info("Received instance notification, serviceName: " + event.getServiceName() + ", instances: " + event.getServiceInstances().size());
         String appName = event.getServiceName();
         allInstances.put(appName, event.getServiceInstances());
 
+        // 准备四个临时容器
         Map<String, List<ServiceInstance>> revisionToInstances = new HashMap<>();
         Map<String, Set<String>> localServiceToRevisions = new HashMap<>();
         Map<Set<String>, List<URL>> revisionsToUrls = new HashMap();
@@ -170,7 +172,7 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
         //  value = {ArrayList@4905}  size = 1
         //   0 = {InstanceAddressURL@4933} "DefaultServiceInstance{id='30.25.58.166:20880', serviceName='demo-provider', host='30.25.58.166', port=20880, enabled=true, healthy=true, metadata={dubbo.metadata-service.url-params={"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}, dubbo.endpoints=[{"port":20880,"protocol":"dubbo"}], dubbo.metadata.revision=AB6F0B7C2429C8828F640F853B65E1E1, dubbo.metadata.storage-type=remote}}metadata{app='demo-provider',revision='AB6F0B7C2429C8828F640F853B65E1E1',services={demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo=service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}, samples.servicediscovery.demo.DemoService:dubbo=service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2.0.2},consumerParams=null}}}"
 
-        // 进去
+        // 核心！！进去
         this.notifyAddressChanged();
     }
 

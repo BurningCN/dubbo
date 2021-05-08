@@ -128,7 +128,7 @@ public class ServiceDiscoveryRegistry implements Registry {
         this.registryURL = registryURL;
         // 创建sd进去
         this.serviceDiscovery = createServiceDiscovery(registryURL);
-        // 获取 "subscribed-services"参数值,按照逗号分割填充到set集合
+        // 获取 "subscribed-services"参数值,按照逗号分割填充到set集合，这就是appNames
         this.subscribedServices = parseServices(registryURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY));
         // 获取"mapping-type"参数值，ServiceNameMapping#getExtension进去。有两种，基于config-center的和基于MetadataReport的
         // debug可以临时加参数，如果想跟踪MetadataServiceNameMapping的逻辑 --- > registryURL = registryURL.addParameter("mapping-type","metadata")
@@ -149,13 +149,19 @@ public class ServiceDiscoveryRegistry implements Registry {
      */
     protected ServiceDiscovery createServiceDiscovery(URL registryURL) {
         // 先创建目标sd，比如测试程序的InMemoryServiceDiscovery（实际场景比如zkSD），进去
+
+        // RegistryFactory -- AbstractRegistryFactory -- ServiceDiscoveryRegistry
+        // ServiceDiscoveryFactory -- AbstractServiceDiscoveryFactory  -- ZookeeperServiceDiscoveryFactory
+        // ServiceDiscovery -- AbstractServiceDiscovery -- ZookeeperServiceDiscovery
+
+        // 这里是 ZookeeperServiceDiscovery
         ServiceDiscovery originalServiceDiscovery = getServiceDiscovery(registryURL);
         // origin 目标sd用 EventPublishingServiceDiscovery 包装下。这里enhance名字用得好
         ServiceDiscovery serviceDiscovery = enhanceEventPublishing(originalServiceDiscovery);
         execute(() -> {
             // 进去 EventPublishingServiceDiscovery#initialize
             // 这里将interface参数值从org.apache.dubbo.registry.RegistryService变成
-                    // org.apache.dubbo.registry.client.ServiceDiscovery，并且把 registry-type=service 参数去掉了
+            // org.apache.dubbo.registry.client.ServiceDiscovery，并且把 registry-type=service 参数去掉了
             serviceDiscovery.initialize(registryURL.addParameter(INTERFACE_KEY, ServiceDiscovery.class.getName())
                     .removeParameter(REGISTRY_TYPE_KEY));
         });
@@ -263,6 +269,7 @@ public class ServiceDiscoveryRegistry implements Registry {
         }
     }
 
+    // url为consumer://xxx
     // listener 为 ServiceDiscoveryRegistryDirectory
     @Override
     public final void subscribe(URL url, NotifyListener listener) {
@@ -344,13 +351,18 @@ public class ServiceDiscoveryRegistry implements Registry {
         ServiceInstancesChangedListener serviceListener = serviceListeners.computeIfAbsent(serviceNamesKey,
                 k -> new ServiceInstancesChangedListener(serviceNames, serviceDiscovery));
         serviceListener.setUrl(url);
-        // listener为ServiceDiscoveryRegistryDirectory进去
+
+        // serviceToAppsMapping 和 serviceListeners 感觉没啥用处，就是做了一个缓存
+
+        // listener为ServiceDiscoveryRegistryDirectory进去 ，这个也感觉没啥用处，设置进去后也没有调用
         listener.addServiceListener(serviceListener);
 
         // 将 listener 即ServiceDiscoveryDirectory保存到ServiceInstancesChangedListener（和前面步骤相反）
         // 这样后者得到通知的时候回调用listener#notify方法
         serviceListener.addListener(protocolServiceKey, listener);
-        // 注册到sd，进去
+
+
+        // 核心点注册到sd，进去
         registerServiceInstancesChangedListener(url, serviceListener);
 
         serviceNames.forEach(serviceName -> {

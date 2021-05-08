@@ -185,7 +185,7 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
     }
 
 
-    // 和前面的publishAppMetadata相反，这个是给消费者服务的
+    // 和前面的publishAppMetadata相反，这个是给消费者服务的。第二个参数没有用
     @Override
     public MetadataInfo getAppMetadata(SubscriberMetadataIdentifier identifier, Map<String, String> instanceMetadata) {
         String content = zkClient.getContent(getNodePath(identifier));

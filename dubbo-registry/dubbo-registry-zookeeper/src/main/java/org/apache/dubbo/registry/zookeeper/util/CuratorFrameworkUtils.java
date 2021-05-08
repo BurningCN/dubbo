@@ -61,7 +61,7 @@ public abstract class CuratorFrameworkUtils {
                 .retryPolicy(buildRetryPolicy(connectionURL))
                 .build();
         curatorFramework.start();
-        // 等待连接完成
+        // 等待连接完成 10s
         curatorFramework.blockUntilConnected(BLOCK_UNTIL_CONNECTED_WAIT.getParameterValue(connectionURL),
                 BLOCK_UNTIL_CONNECTED_UNIT.getParameterValue(connectionURL));
         // 这个就可以理解为zkClient

@@ -131,7 +131,8 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
                 .addParameter(INTERFACE_KEY, RegistryService.class.getName())// interface
                 .removeParameters(EXPORT_KEY, REFER_KEY) // export  refer
                 .build();
-        // eg : zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService
+
+        // eg : zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService
         // eg : service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService
         String key = createRegistryCacheKey(url);
         // Lock the registry access process to ensure a single instance of the registry
@@ -168,6 +169,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
      * @return non-null
      */
     protected String createRegistryCacheKey(URL url) {
+        // 进去
         return url.toServiceStringWithoutResolving();
     }
 

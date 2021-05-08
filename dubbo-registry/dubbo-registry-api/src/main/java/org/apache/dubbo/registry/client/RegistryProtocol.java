@@ -488,9 +488,10 @@ public class RegistryProtocol implements Protocol {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+        // service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=demo-consumer&dubbo=2.0.2&id=org.apache.dubbo.config.RegistryConfig&mapping-type=metadata&mapping.type=metadata&pid=38997&refer=application%3Ddemo-consumer%26check%3Dfalse%26dubbo%3D2.0.2%26init%3Dfalse%26interface%3Dsamples.servicediscovery.demo.DemoService%26mapping-type%3Dmetadata%26mapping.type%3Dmetadata%26metadata-type%3Dremote%26methods%3DsayHello%26pid%3D38997%26provided-by%3Ddemo-provider%26register.ip%3D30.25.58.166%26side%3Dconsumer%26sticky%3Dfalse%26timestamp%3D1620440133648&registry=zookeeper&registry-type=service&timestamp=1620440138688
         // 取 registry 参数值，并将其设置为协议头
         url = getRegistryUrl(url);
-        // 获取注册中心实例
+        // 获取注册中心实例 registryFactory 是 自适应扩展实例
         Registry registry = registryFactory.getRegistry(url);
         if (RegistryService.class.equals(type)) {
             return proxyFactory.getInvoker((T) registry, type, url);
