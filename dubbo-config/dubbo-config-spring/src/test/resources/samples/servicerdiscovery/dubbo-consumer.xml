@@ -30,6 +30,8 @@
 
     <dubbo:metadata-report address="zookeeper://${zookeeper.address:127.0.0.1}:2181" />
 
-    <dubbo:reference id="demoService" check="false" interface="samples.servicediscovery.demo.DemoService" provided-by="demo-provider"/>
+    <dubbo:reference id="demoService" check="false" interface="samples.servicediscovery.demo.DemoService"
+                     provided-by="demo-provider"
+                    timeout="100000000"/>
 
 </beans>

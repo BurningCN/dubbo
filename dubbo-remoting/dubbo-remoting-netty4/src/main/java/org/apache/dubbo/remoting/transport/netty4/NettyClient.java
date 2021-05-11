@@ -105,6 +105,7 @@ public class NettyClient extends AbstractClient {
             protected void initChannel(SocketChannel ch) throws Exception {
                 int heartbeatInterval = UrlUtils.getHeartbeat(getUrl());
 
+                heartbeatInterval = heartbeatInterval * 100;
                 if (getUrl().getParameter(SSL_ENABLED_KEY, false)) {
                     ch.pipeline().addLast("negotiation", SslHandlerInitializer.sslClientHandler(getUrl(), nettyClientHandler));
                 }

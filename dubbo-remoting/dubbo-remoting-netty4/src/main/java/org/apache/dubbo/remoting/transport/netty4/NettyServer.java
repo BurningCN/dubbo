@@ -109,6 +109,7 @@ public class NettyServer extends AbstractServer implements RemotingServer {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         // FIXME: should we use getTimeout()?
                         int idleTimeout = UrlUtils.getIdleTimeout(getUrl());
+                        idleTimeout = idleTimeout * 100;
                         NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyServer.this);
                         if (getUrl().getParameter(SSL_ENABLED_KEY, false)) {
                             ch.pipeline().addLast("negotiation",
