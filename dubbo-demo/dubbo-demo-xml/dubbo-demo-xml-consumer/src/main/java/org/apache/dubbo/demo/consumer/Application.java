@@ -34,19 +34,19 @@ public class Application {
         DemoService demoService = context.getBean("demoService", DemoService.class);
         GreetingService greetingService = context.getBean("greetingService", GreetingService.class);
 
-        new Thread(() -> {
-            while (true) {
-                String greetings = greetingService.hello();
-                System.out.println(greetings + " from separated thread.");
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+//        new Thread(() -> {
+//            while (true) {
+//                String greetings = greetingService.hello();
+//                System.out.println(greetings + " from separated thread.");
+//                try {
+//                    Thread.sleep(100);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }).start();
 
-        while (true) {
+        //while (true) {
             CompletableFuture<String> hello = demoService.sayHelloAsync("world");
             System.out.println("result: " + hello.get());
 
@@ -54,6 +54,7 @@ public class Application {
             System.out.println("result: " + greetings);
 
             Thread.sleep(500);
-        }
+        //}
+        System.in.read();
     }
 }
