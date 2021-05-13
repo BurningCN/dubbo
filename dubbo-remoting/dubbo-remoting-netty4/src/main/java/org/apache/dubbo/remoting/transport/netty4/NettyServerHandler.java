@@ -80,6 +80,8 @@ public class NettyServerHandler extends ChannelDuplexHandler { // 和rmq的一�
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
         if (channel != null) {
             // 缓存 channel ，key为远端/客户端的ip:port，value是NettyChannel，NettyChannel内部包装实际的ctx.channel()
+            //channels = {ConcurrentHashMap@4725}  size = 1
+            // "30.25.58.158:50914" -> {NettyChannel@4929} "NettyChannel [channel=[id: 0x5cc6d0a9, L:/30.25.58.158:20880 - R:/30.25.58.158:50914]]"
             channels.put(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), channel);
         }
         // 回调"监听"类的方法，这个handler是NettyServer，connected是其父类AbstractServer的方法，进去

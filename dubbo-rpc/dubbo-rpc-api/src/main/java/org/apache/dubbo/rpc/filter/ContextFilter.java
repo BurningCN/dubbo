@@ -57,6 +57,7 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
  *
  * @see RpcContext
  */
+// 这个是提供者专用的，和消费端的ConsumerContextFilter一致
 // OK
 @Activate(group = PROVIDER, order = -10000)
 public class ContextFilter implements Filter, Filter.Listener {

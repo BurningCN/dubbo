@@ -124,8 +124,10 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
         if (closed) {
             return;
         }
-        handler.connected(ch); // 对于NettyServer，这里的handler为 MultiMessageHandler ，不过这个类的connected是继承 AbstractChannelHandlerDelegate 类的方法 ，进去
-    }                          // 对Client来说，这里 handler 为 AllChannelHandler，进去
+        // 这里的handler为 MultiMessageHandler ，不过这个类的connected是继承 AbstractChannelHandlerDelegate 类的方法 ，进去
+        handler.connected(ch);
+
+    }
 
     @Override
     public void disconnected(Channel ch) throws RemotingException {

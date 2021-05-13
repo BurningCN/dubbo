@@ -27,6 +27,7 @@ public class UrlUtils {
         int heartBeat = getHeartbeat(url);
         //  idleTimeout should be at least more than twice heartBeat because possible retries of client.
         // idleTimeout应该至少是心跳的两倍，因为客户机可能会重试。
+        // 默认为180s
         int idleTimeout = url.getParameter(Constants.HEARTBEAT_TIMEOUT_KEY, heartBeat * 3);
         if (idleTimeout < heartBeat * 2) {
             //
@@ -36,6 +37,7 @@ public class UrlUtils {
     }
 
     public static int getHeartbeat(URL url) {
+        // DubboProtocol#createServer会填充HEARTBEAT_KEY为60000 60s
         return url.getParameter(Constants.HEARTBEAT_KEY, Constants.DEFAULT_HEARTBEAT);
     }
 }

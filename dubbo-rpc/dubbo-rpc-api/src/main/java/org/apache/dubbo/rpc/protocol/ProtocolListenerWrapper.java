@@ -84,6 +84,9 @@ public class ProtocolListenerWrapper implements Protocol {
             return protocol.refer(type, url);
         }
         // 进去
+        // 和前面export对比
+        // ListenerExporterWrapper Exporter + ExporterListener
+        // ListenerInvokerWrapper Invoker + InvokerListener
         return new ListenerInvokerWrapper<T>(protocol.refer(type, url),
                 Collections.unmodifiableList(
                         ExtensionLoader.getExtensionLoader(InvokerListener.class)

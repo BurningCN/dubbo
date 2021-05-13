@@ -55,6 +55,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     public AbstractClient(URL url, ChannelHandler handler) throws RemotingException {
         super(url, handler); // AllChannelHandler -> DecodeHandler  ->  HeaderExchangeHandler ->   ExchangeHandlerDispatcher
 
+        // 控制自动重连的
         needReconnect = url.getParameter(Constants.SEND_RECONNECT_KEY, false);
         // 进去
         initExecutor(url);
@@ -92,7 +93,9 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     }
 
     private void initExecutor(URL url) {
+        // 注意新版本消费者的线程模型变了，不是一个port一个线程池了，而是全局的，可以看master-cp
         url = ExecutorUtil.setThreadName(url, CLIENT_THREAD_POOL_NAME);
+        // threadpool控制使用什么线程池，这里使用cached
         url = url.addParameterIfAbsent(THREADPOOL_KEY, DEFAULT_CLIENT_THREADPOOL);
         // 进去
         executor = executorRepository.createExecutorIfAbsent(url);
@@ -103,7 +106,8 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         return ChannelHandlers.wrap(handler, url);
     }
 
-    public InetSocketAddress getConnectAddress() {// filterLocalHost进去
+    public InetSocketAddress getConnectAddress() {
+        // filterLocalHost进去
         return new InetSocketAddress(NetUtils.filterLocalHost(getUrl().getHost()), getUrl().getPort());
     }
 

@@ -265,12 +265,15 @@ public class HeaderExchangeServer implements ExchangeServer {
         // 进去
         if (!server.canHandleIdle()) {
             AbstractTimerTask.ChannelProvider cp = () -> unmodifiableCollection(HeaderExchangeServer.this.getChannels());
+            // 默认返回180s
             int idleTimeout = getIdleTimeout(url);
+            // 180s/3 = 60s
             long idleTimeoutTick = calculateLeastDuration(idleTimeout);
+            // 进去 参数分别为180s和60s
             CloseTimerTask closeTimerTask = new CloseTimerTask(cp, idleTimeoutTick, idleTimeout);
             this.closeTimerTask = closeTimerTask;
 
-            // init task and start timer.
+            // init task and start timer. 初始60s后开始检查执行，父类AbstractTimerTask的run方法会reput
             IDLE_CHECK_TIMER.newTimeout(closeTimerTask, idleTimeoutTick, TimeUnit.MILLISECONDS);
         }
     }

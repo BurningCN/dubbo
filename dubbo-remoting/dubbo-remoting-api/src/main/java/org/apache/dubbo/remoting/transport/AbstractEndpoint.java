@@ -46,9 +46,11 @@ public abstract class AbstractEndpoint extends AbstractPeer implements Resetable
     public AbstractEndpoint(URL url, ChannelHandler handler) {
         // 进去
         super(url, handler);
-        // 进去
-        this.codec = getChannelCodec(url);// DubboExchangeCodec、TelnetCodec
+        // 进去 // DubboExchangeCodec、TelnetCodec
+        this.codec = getChannelCodec(url);
+        // 默认1000 这个控制的是rpc请求的超时时间，但是并没有实际的调用处
         this.timeout = url.getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
+        // 默认3000
         this.connectTimeout = url.getPositiveParameter(Constants.CONNECT_TIMEOUT_KEY, Constants.DEFAULT_CONNECT_TIMEOUT);
     }
 

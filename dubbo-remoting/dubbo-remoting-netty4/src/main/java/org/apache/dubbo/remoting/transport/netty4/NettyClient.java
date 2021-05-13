@@ -86,6 +86,7 @@ public class NettyClient extends AbstractClient {
     	// you can customize name and type of client thread pool by THREAD_NAME_KEY and THREADPOOL_KEY in CommonConstants.
     	// the handler will be wrapped: MultiMessageHandler->HeartbeatHandler->handler
        // 原来是这样super(url, wrapChannelHandler(url, handler)); 为了和NettyServer统一 我改成了如下
+        // server直接给url添加了THREAD_NAME_KEY参数，这里没有
     	super(url,  ChannelHandlers.wrap(handler, url));
 
     }
@@ -145,7 +146,8 @@ public class NettyClient extends AbstractClient {
     @Override
     protected void doConnect() throws Throwable {
         long start = System.currentTimeMillis();
-        ChannelFuture future = bootstrap.connect(getConnectAddress()); // getConnectAddress 进去
+        // getConnectAddress 进去
+        ChannelFuture future = bootstrap.connect(getConnectAddress());
         try {
             // 等待连接超时(server是直接 syncUninterruptibly)
             boolean ret = future.awaitUninterruptibly(getConnectTimeout(), MILLISECONDS);

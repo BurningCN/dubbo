@@ -230,7 +230,8 @@ public class NetUtils {
             if (NetUtils.isInvalidLocalHost(host.substring(0, i))) {
                 return NetUtils.getLocalHost() + host.substring(i);
             }
-        } else { // 比如host为localhost，进这个分支
+        } else {
+            // 比如host为localhost，进这个分支
             if (NetUtils.isInvalidLocalHost(host)) {
                 return NetUtils.getLocalHost(); // 进去
             }

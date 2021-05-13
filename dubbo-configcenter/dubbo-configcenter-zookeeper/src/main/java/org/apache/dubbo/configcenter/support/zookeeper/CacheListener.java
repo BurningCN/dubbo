@@ -87,6 +87,8 @@ public class CacheListener implements DataListener {
             return;
         }
 
+        // 如下一段if新版本去掉了，做了调整，具体看master-cp
+
         // TODO We only care the changes happened on a specific path level, for example
         //  /dubbo/config/dubbo/configurators, other config changes not in this level will be ignored,
         // TODO，我们只关心发生在特定路径级别上的更改/dubbo/config/dubbo/configurators，其他配置更改在这个级别将被忽略，

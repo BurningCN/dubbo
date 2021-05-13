@@ -207,6 +207,12 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             // init 方法主要用于处理配置，以及调用 createProxy 生成代理类
             init();
         }
+        // ref = {proxy0@4260}
+        // handler = {InvokerInvocationHandler@4280}
+        //  invoker = {ServiceDiscoveryMigrationInvoker@4263}
+        //  consumerModel = {ConsumerModel@4281}
+        //  url = {URL@4282} "dubbo://30.25.58.158/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello&pid=64096&provided-by=demo-provider&register.ip=30.25.58.158&side=consumer&sticky=false&timestamp=1620702737234"
+        //  protocolServiceKey = "samples.servicediscovery.demo.DemoService:dubbo"
         return ref;
     }
 
@@ -460,10 +466,12 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         }
 
         if (logger.isInfoEnabled()) {
+            // Refer dubbo service samples.servicediscovery.demo.DemoService from url dubbo://30.25.58.166/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello&pid=42737&provided-by=demo-provider&register.ip=30.25.58.166&side=consumer&sticky=false&timestamp=1620452275520, dubbo version: , current host: 30.25.58.166
             logger.info("Refer dubbo service " + interfaceClass.getName() + " from url " + invoker.getUrl());
         }
 
         URL consumerURL = new URL(CONSUMER_PROTOCOL, map.remove(REGISTER_IP_KEY), 0, map.get(INTERFACE_KEY), map);
+        // 进去
         MetadataUtils.publishServiceDefinition(consumerURL);
 
         // create service proxy

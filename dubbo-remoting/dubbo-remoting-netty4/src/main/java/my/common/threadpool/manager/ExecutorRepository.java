@@ -33,7 +33,7 @@ public interface ExecutorRepository {
     /**
      * Called by both Client and Server. TODO, consider separate these two parts.
      * When the Client or Server starts for the first time, generate a new threadpool according to the parameters specified.
-     *
+     *由客户端和服务器调用。考虑将这两部分分开。当Client或Server第一次启动时，根据指定的参数生成一个新的线程池。
      * @param url
      * @return
      */

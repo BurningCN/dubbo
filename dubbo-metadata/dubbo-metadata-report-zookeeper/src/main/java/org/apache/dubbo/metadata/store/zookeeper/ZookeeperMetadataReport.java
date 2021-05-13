@@ -136,7 +136,9 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
 
     // v就是gson.toJson(serviceDefinition);
     private void storeMetadata(MetadataIdentifier metadataIdentifier, String v) {
-        // getNodePath eg /dubbo/metadata/samples.servicediscovery.demo.DemoService/provider/demo-provider
+        // getNodePath
+        // provider-eg /dubbo/metadata/samples.servicediscovery.demo.DemoService/provider/demo-provider
+        // consumer-eg /dubbo/metadata/samples.servicediscovery.demo.DemoService/consumer/demo-consumer
         zkClient.create(getNodePath(metadataIdentifier), v, false);
     }
 

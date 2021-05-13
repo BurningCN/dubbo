@@ -38,7 +38,8 @@ public abstract class AbstractCluster implements Cluster {
     private <T> Invoker<T> buildClusterInterceptors(AbstractClusterInvoker<T> clusterInvoker, String key) {
         AbstractClusterInvoker<T> last = clusterInvoker;
         List<ClusterInterceptor> interceptors = ExtensionLoader.getExtensionLoader(ClusterInterceptor.class).getActivateExtension(clusterInvoker.getUrl(), key);
-        // 根据需要包装ClusterInvoker, 使用切面的方式进行拦截器接入，按先后依次强入拦截器
+        // 根据需要包装ClusterInvoker, 使用切面的方式进行拦截器接入，按先后依次强入拦截器.
+        // 已有的两个拦截器都是给消费端使用的，默认会返回 ConsumerContextClusterInterceptor
         if (!interceptors.isEmpty()) {
             // 从后往前遍历
             for (int i = interceptors.size() - 1; i >= 0; i--) {
@@ -51,6 +52,15 @@ public abstract class AbstractCluster implements Cluster {
                 last = new InterceptorInvokerNode<>(clusterInvoker, interceptor, next);
             }
         }
+        //last = {AbstractCluster$InterceptorInvokerNode@6331} "interface samples.servicediscovery.demo.DemoService -> dubbo://30.25.58.166/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello&pid=42737&provided-by=demo-provider&register.ip=30.25.58.166&side=consumer&sticky=false&timestamp=1620452275520"
+        // clusterInvoker = {FailoverClusterInvoker@6330} "interface samples.servicediscovery.demo.DemoService -> dubbo://30.25.58.166/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello&pid=42737&provided-by=demo-provider&register.ip=30.25.58.166&side=consumer&sticky=false&timestamp=1620452275520"
+        // interceptor = {ConsumerContextClusterInterceptor@6288}
+        // next = {FailoverClusterInvoker@6330} "interface samples.servicediscovery.demo.DemoService -> dubbo://30.25.58.166/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello&pid=42737&provided-by=demo-provider&register.ip=30.25.58.166&side=consumer&sticky=false&timestamp=1620452275520"
+        // this$0 = {FailoverCluster@6265}
+        // directory = null
+        // availablecheck = false
+        // destroyed = {AtomicBoolean@6333} "false"
+        // stickyInvoker = null
         return last;
     }
 

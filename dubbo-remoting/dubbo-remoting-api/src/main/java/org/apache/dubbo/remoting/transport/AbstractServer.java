@@ -69,10 +69,12 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
         int bindPort = getUrl().getParameter(Constants.BIND_PORT_KEY, getUrl().getPort());
         if (url.getParameter(ANYHOST_KEY, false) || NetUtils.isInvalidLocalHost(bindIp)) {
             // 如果满足上面的条件，即anyhost = true或者host为127.0.0.1、localhost、0.0.0.0等，就设置 ip 为 0.0.0.0，表示服务端的socket不选择ip，一个机器可以多ip/多宿的，这样其他客户端可以指定多个服务端ip，都能接收到
+            // anyhost的赋值在 ServiceConfig#findConfigedHosts的最后一步
+            // ANYHOST_VALUE 的值为 "0.0.0.0"
             bindIp = ANYHOST_VALUE;
         }
         bindAddress = new InetSocketAddress(bindIp, bindPort);
-        // 获取最大可接受连接数
+        // 获取最大可接受连接数 默认为0
         this.accepts = url.getParameter(ACCEPTS_KEY, DEFAULT_ACCEPTS);
         // 该值在NettyServer子类用到（这句话不对，子类用的不是这个，去看下int idleTimeout = UrlUtils.getIdleTimeout(getUrl()) ，从url取的key不一样）
         this.idleTimeout = url.getParameter(IDLE_TIMEOUT_KEY, DEFAULT_IDLE_TIMEOUT);
@@ -196,6 +198,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Remotin
             ch.close();
             return;
         }
+        // 进去
         super.connected(ch);
     }
 

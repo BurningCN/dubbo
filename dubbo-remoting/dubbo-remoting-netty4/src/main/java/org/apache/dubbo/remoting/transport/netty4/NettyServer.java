@@ -79,6 +79,7 @@ public class NettyServer extends AbstractServer /*implements RemotingServer */{ 
         // 可以通过CommonConstants中的THREAD_NAME_KEY和THREADPOOL_KEY自定义client线程池的名称和类型。
         // the handler will be wrapped: MultiMessageHandler->HeartbeatHandler->handler
         // setThreadName、wrap、super方法都进去
+        // 添加了 threadname=DubboServerHandler-30.25.58.158:20880 参数
         super(ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME), ChannelHandlers.wrap(handler, url));
     }
 
@@ -100,7 +101,9 @@ public class NettyServer extends AbstractServer /*implements RemotingServer */{ 
         // eventLoopGroup 指定线程个数和线程名称，进去
         bossGroup = NettyEventLoopFactory.eventLoopGroup(1, "NettyServerBoss"); // boss 一个线程接受连接即可
         workerGroup = NettyEventLoopFactory.eventLoopGroup(
-                getUrl().getPositiveParameter(IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS),// 默认  Math.min(Runtime.getRuntime().availableProcessors() + 1, 32);
+                // 默认  Math.min(Runtime.getRuntime().availableProcessors() + 1, 32);
+                // worker的线程数取决于当前系统的核数
+                getUrl().getPositiveParameter(IO_THREADS_KEY, Constants.DEFAULT_IO_THREADS),
                 "NettyServerWorker");
 
         // 进去

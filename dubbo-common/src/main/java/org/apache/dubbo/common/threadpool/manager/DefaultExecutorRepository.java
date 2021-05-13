@@ -81,6 +81,8 @@ public class DefaultExecutorRepository implements ExecutorRepository {
     // private ConcurrentMap<String, ConcurrentMap<Integer, ExecutorService>> data = new ConcurrentHashMap<>();
     // 外面的 key 表示服务提供方还是消费方，里面的 key 表示服务暴露的端口号，也就是说消费方对于相同端口号的服务只会创建一个线程池，
     // 共享同一个线程池进行服务请求和消息接收后一系列处理。
+
+    // 注意新版本 消费者端Executor改为全局共享，不再按提供者Port共享。 (#7109)，下面的代码比较过时了
     public synchronized ExecutorService createExecutorIfAbsent(URL url) {
         String componentKey = EXECUTOR_SERVICE_COMPONENT_KEY; // java.util.concurrent.ExecutorService
         if (CONSUMER_SIDE.equalsIgnoreCase(url.getParameter(SIDE_KEY))) {

@@ -185,8 +185,27 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
                     ServiceDefinition serviceDefinition = ServiceDefinitionBuilder.build(interfaceClass);
                     Gson gson = new Gson();
                     String data = gson.toJson(serviceDefinition);
-//                    eg:
-//                    {"canonicalName":"samples.servicediscovery.demo.DemoService","codeSource":"file:/Users/gy821075/IdeaProjects/dubbo/dubbo-config/dubbo-config-spring/target/test-classes/","methods":[{"name":"sayHello","parameterTypes":["java.lang.String"],"returnType":"java.lang.String"}],"types":[{"type":"int","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"java.lang.String","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"char","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"}]}
+                    // eg:
+                    // {"canonicalName":"samples.servicediscovery.demo.DemoService","codeSource":"file:/Users/gy821075/IdeaProjects/dubbo/dubbo-config/dubbo-config-spring/target/test-classes/","methods":[{"name":"sayHello","parameterTypes":["java.lang.String"],"returnType":"java.lang.String"}],"types":[{"type":"int","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"java.lang.String","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"},{"type":"char","typeBuilderName":"org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"}]}
+                    //{
+                    //  "canonicalName": "samples.servicediscovery.demo.DemoService",
+                    //  "codeSource": "file:/Users/gy821075/IdeaProjects/dubbo-master-cp/dubbo-config/dubbo-config-spring/target/test-classes/",
+                    //  "methods": [
+                    //    {
+                    //      "name": "sayHello",
+                    //      "parameterTypes": [
+                    //        "java.lang.String"
+                    //      ],
+                    //      "returnType": "java.lang.String"
+                    //    }
+                    //  ],
+                    //  "types": [
+                    //    {
+                    //      "type": "java.lang.String",
+                    //      "typeBuilderName": "org.apache.dubbo.metadata.definition.builder.DefaultTypeBuilder"
+                    //    }
+                    //  ]
+                    //}
                     serviceDefinitions.put(providerUrl.getServiceKey(), data);
                     return;
                 }

@@ -178,10 +178,13 @@ public class RemoteMetadataServiceImpl {
     private void publishConsumer(URL consumerURL) throws RpcException {
         final URL url = consumerURL.removeParameters(PID_KEY, TIMESTAMP_KEY, Constants.BIND_IP_KEY,
                 Constants.BIND_PORT_KEY, TIMESTAMP_KEY);
+        // consumer://30.25.58.166/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello&provided-by=demo-provider&release=&side=consumer&sticky=false
         getMetadataReports().forEach((registryKey, config) -> {
-            config.storeConsumerMetadata(new MetadataIdentifier(url.getServiceInterface(),
+            MetadataIdentifier metadataIdentifier = new MetadataIdentifier(url.getServiceInterface(),
                     url.getParameter(VERSION_KEY), url.getParameter(GROUP_KEY), CONSUMER_SIDE,
-                    url.getParameter(APPLICATION_KEY)), url.getParameters());
+                    url.getParameter(APPLICATION_KEY));
+            // 进去
+            config.storeConsumerMetadata(metadataIdentifier, url.getParameters());
         });
     }
 
