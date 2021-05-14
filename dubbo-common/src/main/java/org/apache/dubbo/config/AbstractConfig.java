@@ -85,6 +85,10 @@ public abstract class AbstractConfig implements Serializable {
 
     protected final AtomicBoolean refreshed = new AtomicBoolean(false);
 
+    public AbstractConfig(){
+        System.out.println("init AbstractConfig for debug");
+    }
+
     private static String convertLegacyValue(String key, String value) {
         if (value != null && value.length() > 0) {
             if ("dubbo.service.max.retry.providers".equals(key)) {
