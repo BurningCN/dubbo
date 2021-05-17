@@ -27,6 +27,7 @@ public class AnnotationHelloServiceImpl implements HelloService {
     public AnnotationHelloServiceImpl() {
         System.out.println("init AnnotationHelloServiceImpl");
     }
+
     @Override
     public String sayHello(String name) {
         System.out.println("provider received invoke of sayHello: " + name);
