@@ -25,7 +25,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 public class AnnotationConsumerBootstrap {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ConsumerConfiguration.class);
         context.start();
         final AnnotationAction annotationAction = (AnnotationAction) context.getBean("annotationAction");
@@ -34,6 +34,9 @@ public class AnnotationConsumerBootstrap {
         System.out.println("goodbye : " + annotationAction.doSayGoodbye("world"));
         System.out.println("greeting : " + annotationAction.doGreeting("world"));
         System.out.println("reply : " + annotationAction.replyGreeting("world"));
+    Thread.sleep(10000);
+        //context.stop(); // for know destroy
+       System.in.read();
     }
 
 
