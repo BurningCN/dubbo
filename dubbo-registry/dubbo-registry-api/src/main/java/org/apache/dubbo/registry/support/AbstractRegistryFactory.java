@@ -101,8 +101,10 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
             LOGGER.info("Close all registries " + getRegistries());
         }
         // Lock up the registry shutdown process
-        LOCK.lock();// 设计的精巧，当前线程已经走到这步骤，但是别的线程有可能还在后面getRegistry的LOCK.lock()这步骤前，而这俩是用的一把锁
+        // 设计的精巧，当前线程已经走到这步骤，但是别的线程有可能还在后面getRegistry的LOCK.lock()这步骤前，而这俩是用的一把锁
+        LOCK.lock();
         try {
+            // 一般提供者只有一个元素，常规的ZookeeperRegistry，而如果是消费者（新版本）除了前者外，还有一个 ServiceDiscoverRegistry
             for (Registry registry : getRegistries()) {
                 try {
                     registry.destroy();

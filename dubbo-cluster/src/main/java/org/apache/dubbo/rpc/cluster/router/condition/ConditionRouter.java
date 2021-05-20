@@ -269,7 +269,7 @@ public class ConditionRouter extends AbstractRouter {
                     result.add(invoker);
                 }
             }
-            // 返回匹配结果，如果 result 为空列表，且 force = true，表示强制返回空列表，
+            // 返回匹配结果，如果 result 为空列表，且 force = true，表示强制返回空列表，否则返回原始集合
             // 否则路由结果为空的路由规则将自动失效
             if (!result.isEmpty()) {
                 return result;

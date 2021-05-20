@@ -1,0 +1,236 @@
+ReferenceBean#getObject返回的ref为
+ref = {proxy0@4260} 
+ handler = {InvokerInvocationHandler@4280} 
+  invoker = {ServiceDiscoveryMigrationInvoker@4263} 
+  consumerModel = {ConsumerModel@4281} 
+  url = {URL@4282} "dubbo://30.25.58.158/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello&pid=64096&provided-by=demo-provider&register.ip=30.25.58.158&side=consumer&sticky=false&timestamp=1620702737234"
+  protocolServiceKey = "samples.servicediscovery.demo.DemoService:dubbo"
+// ====================================================================
+
+
+String hello = demoService.sayHello("world");
+
+InvokerInvocationHandler invoke
+	RpcContext.setRpcContext(invoker.getUrl());
+	RpcInvocation
+	invoker.invoke(rpcInvocation).recreate();
+
+ServiceDiscoveryMigrationInvoker invoke
+
+MockClusterInvoker invoke
+
+InterceptorInvokerNode invoke
+
+ConsumerContextClusterInterceptor before
+
+
+ClusterInterceptor intercept - this为ConsumerContextClusterInterceptor
+
+AbstractClusterInvoker invoke  - this为 FailoverClusterInvoker
+
+	AbstractClusterInvoker list
+	AbstractDirectory list
+	DynamicDirectory doList
+		RouterChain route(mock、tag、service、app)
+	initLoadBalance
+
+FailoverClusterInvoker doInvoke
+	AbstractClusterInvoker select
+ 
+FilterNode invoke ，其 filter 属性为 ConsumerContextFilter
+	ConsumerContextFilter invoke
+
+FilterNode invoke ，其 filter 属性为 FutureFilter
+	FutureFilter invoke
+
+FilterNode invoke ，其 filter 属性为 MonitorFilter
+	MonitorFilter invoke
+
+ListenerInvokerWrapper invoke
+
+AsyncToSyncInvoker invoke
+
+AbstractInvoker invoke this为DubboInvoker
+
+DubboInvoker doInvoke
+	AbstractInvoker getCallbackExecutor
+	ThreadlessExecutor 构造
+
+ReferenceCountExchangeClient request
+
+HeaderExchangeClient request
+
+HeaderExchangeChannel request
+	DefaultFuture newFuture
+		ThreadlessExecutor setWaitingFuture
+		timeoutCheck
+
+AbstractPeer send  - this 为 NettyChannel
+
+AbstractClient send
+
+NettyChannel send 
+	AbstractChannel send
+	channel.writeAndFlush(message);
+	这里就是异步写了，
+
+
+// ====================================================================
+下面是客户端同步处理剩余逻辑
+
+.....
+AsyncToSyncInvoker  asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+
+AsyncRpcResult get
+
+threadlessExecutor.waitAndDrain();
+
+ChannelEventRunnable run
+
+DecodeHandler received
+	decode
+
+DecodeableRpcResult	decode
+	AppResponse setValue
+	\
+HeaderExchangeHandler received
+ 
+	HeaderExchangeHandler handleResponse
+		DefaultFuture.received
+			DefaultFuture doReceived
+
+AsyncToSyncInvoker get
+
+FailoverClusterInvoker
+	  Result result = invoker.invoke(invocation);
+
+
+下面是客户端接收响应包
+// ====================================================================
+
+
+InternalDecoder decode
+
+DubboCountCodec decode
+
+ExchangdeCodec decode
+
+DubboCodec decodeBody
+
+NettyClientHandler channelRead
+
+AbstractPeer received
+
+MultiMessageHandler received
+
+HeartbeatHandler received
+
+AllChannelHandler received
+	DefaultFuture getFuture
+	executor = ThreadlessExecutor
+		RunnableWrapper
+
+asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+
+下面是异步写server并从server角度处理和回传响应
+// ====================================================================
+	NettyClientHandler write
+
+	InternalEncoder encode
+
+	DubboCountCodec encode
+
+	ExchangeCodec encode
+
+	DubboCodec encodeRequestData 
+
+
+	// server
+	InternalDecoder decode
+
+	DubboCountCodec decode
+
+	ExchangeCodec decode
+
+	DubboCodec decodeBody
+
+	NettyServerHandler channelRead
+
+	AbstractPeer received
+
+	MultiMessageHandler received
+
+	HeartbeatHandler received
+
+	AllChannelHandler received
+
+	DecodeHandler received
+		DecodeHandler decode
+
+		DecodeableRpcInvocation decode
+
+	HeaderExchangeHandler received
+ 
+	requestHandler received
+
+	FilterNode invoke
+		ContextFilter invoke
+
+	FilterNode invoke
+		EchoFilter	invoke
+
+	FilterNode invoke
+		ClassLoaderFilter	invoke
+
+	FilterNode invoke
+		GenericFilter	invoke
+		.... 
+		TraceFilter
+		TimeoutFilter
+		MoniterFilter
+		ExceptionFilter
+	InvokerWrapper invoke - this 为 InvokerDelegate
+
+	DelegateProviderMetaDataInvoker invoke	
+
+	AbstractProxyInvoker invoke - this 为javassist生成的 注意 proxy 为DemoServiceImpl
+
+	JavassistProxyFactory$1 doInvoke
+
+	ExceptionFilter onResponse
+	TimeoutFilter onResponse
+	MoniterFilter onResponse
+
+	TraceFilter invoke
+	GenericFilter onResponse
+	ClassLoaderFilter invoke
+	ContextFilter onResponse
+
+	requestHandler reply
+
+
+	HeaderExchangeHandler handleRequest
+
+	HeaderExchangeChannel send
+
+	NettyChannel send
+
+	channel.writeAndFlush(message);
+
+// todo 需要debug跟踪的 ====================================================================
+TimeoutCheckTask
+
+// todo need pr ====================================================================
+ConsumerContextClusterInterceptor 
+ RpcContext context = RpcContext.getContext();
+        context.setInvocation(invocation).setLocalAddress(NetUtils.getLocalHost(), 0);
+        可以删除这部分，因为和ConsumerContextFilter重复了
+
+
+ AbstractInvoker       invocation.setInvoker(this);  和  ConsumerContextFilter 重复
+
+
+
+
+
+

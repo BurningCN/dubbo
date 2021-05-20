@@ -97,9 +97,11 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
         Set<String> packagesToScan = new LinkedHashSet<String>(Arrays.asList(value));
         packagesToScan.addAll(Arrays.asList(basePackages));
         for (Class<?> basePackageClass : basePackageClasses) {
+            // 获取类所在的包，这就是basePackageClasses的作用
             packagesToScan.add(ClassUtils.getPackageName(basePackageClass));
         }
         if (packagesToScan.isEmpty()) {
+            // 如果用户没有配置任何包相关的信息，那么默认的扫描路径就是metadata所在的包（也就是@EnableDubbo标记所在的包 #7757 issue就是这个例子）
             return Collections.singleton(ClassUtils.getPackageName(metadata.getClassName()));
         }
         return packagesToScan;

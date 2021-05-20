@@ -88,10 +88,15 @@ import static org.springframework.util.ClassUtils.resolveClassName;
  * @since 2.7.7
  */
 // OK
-//  即实现postProcessBeanDefinitionRegistry方法，可以修改增加BeanDefinition。
-//  此特性可以用来动态生成bean，比如读取某个配置项，然后根据配置项动态生成bean
-//  BeanClassLoaderAware接口和BeanFactoryAware接口同理，可以分别获取Bean的类装载器和bean工厂
-// ServiceClassPostProcessor implements BeanDefinitionRegistryPostProcessor，实现该接口的两个方法，postProcessBeanFactory方法空实现，关键看postProcessBeanDefinitionRegistry，这个方法的作用是注册更多的bean到spring容器中，因为该方法有一个BeanDefinitionRegistry类型参数，BeanDefinitionRegistry提供了丰富的方法来操作bean定义，判断、注册、反注册等方法都准备好了，我们在编写postProcessBeanDefinitionRegistry方法的内容时，就能直接使用入参registry的这些方法来完成判断和注册、反注册等操作（当然ServiceClassPostProcessor这个bean要保证被注册到spring容器（以@Bean、xml都可以），才会调这个postProcessBeanDefinitionRegistry）。
+// 即实现postProcessBeanDefinitionRegistry方法，可以修改增加BeanDefinition。
+// 此特性可以用来动态生成bean，比如读取某个配置项，然后根据配置项动态生成bean
+// BeanClassLoaderAware接口和BeanFactoryAware接口同理，可以分别获取Bean的类装载器和bean工厂
+
+// ServiceClassPostProcessor implements BeanDefinitionRegistryPostProcessor，实现该接口的两个方法，postProcessBeanFactory 方法空实现，
+// 关键看 postProcessBeanDefinitionRegistry，这个方法的作用是注册更多的bean到spring容器中，因为该方法有一个BeanDefinitionRegistry类型参数，
+// BeanDefinitionRegistry 提供了丰富的方法来操作bean定义，判断、注册、反注册等方法都准备好了，我们在编写postProcessBeanDefinitionRegistry方法的内容时，
+// 就能直接使用入参registry的这些方法来完成判断和注册、反注册等操作（当然ServiceClassPostProcessor这个bean要保证被注册到spring容器（以@Bean、xml都可以），
+// 才会调这个postProcessBeanDefinitionRegistry）。
 public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProcessor, EnvironmentAware,
         ResourceLoaderAware, BeanClassLoaderAware {
 
@@ -156,7 +161,7 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
      */
     private void registerServiceBeans(Set<String> packagesToScan, BeanDefinitionRegistry registry) {
 
-        // 先创建DubboClassPathBeanDefinitionScanner，一会调用其scan进行包扫描并注册BeanDefinition。
+        // 先创建 DubboClassPathBeanDefinitionScanner，一会调用其scan进行包扫描并注册BeanDefinition。
             // 注意：我们在使用ServiceClassPostProcessorTest测试程序的时候，其指定了package为org.apache.dubbo.config.spring.context.annotation.provider
             // 但是这里面的bean还是加了spring 的 @Service注解，其实是没必要的，因为 DubboClassPathBeanDefinitionScanner 这个扫描器内部传递给父类的
             // useDefaultFilters值为false，表示并不会处理这些带有spring原生注解的类，而下面我们通过addIncludeFilter指定了要扫描的（dubbo相关的注解）注解。
@@ -178,12 +183,12 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
 
         for (String packageToScan : packagesToScan) {
 
-            // 扫描指定的包，并注册beanDefinition   scan内部会调用DubboClassPathBeanDefinitionScanner#doScan
+            // 扫描指定的包，并注册 beanDefinition   scan内部会调用 DubboClassPathBeanDefinitionScanner#doScan
             // Registers @Service Bean first
             scanner.scan(packageToScan);
 
-            // 查找@Service的所有BeanDefinitionHolders，这里的@Service不是单单那个注解，而是泛指上面 scanner.addIncludeFilter 的 serviceAnnotationTypes
-            // 这里是获取到上面scan扫描并注册的beanDefinitionHolder，然后需要按照我们的格式再次注册一次（后面的registerServiceBean）
+            // 查找 @Service 的所有BeanDefinitionHolders，这里的@Service不是单单那个注解，而是泛指上面 scanner.addIncludeFilter 的 serviceAnnotationTypes
+            // 这里是获取到上面scan扫描并注册的 beanDefinitionHolder ，然后需要按照我们的格式再次注册一次（后面的registerServiceBean）
             Set<BeanDefinitionHolder> beanDefinitionHolders =
                     findServiceBeanDefinitionHolders(scanner, packageToScan, registry, beanNameGenerator);
 
@@ -217,6 +222,9 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
      * {@link ConfigurationClassPostProcessor#componentScanBeanNameGenerator},
      * thus it maybe a potential problem on bean name generation.
      *
+     * 最好使用引用{@link ConfigurationClassPostProcessor#componentScanBeanNameGenerator}的BeanNameGenerator实例，
+     * 因此这可能是bean名生成的一个潜在问题。
+     *
      * @param registry {@link BeanDefinitionRegistry}
      * @return {@link BeanNameGenerator} instance
      * @see SingletonBeanRegistry
@@ -228,7 +236,9 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
 
         BeanNameGenerator beanNameGenerator = null;
 
+        // registry 实际为 DefaultListableBeanFactory
         if (registry instanceof SingletonBeanRegistry) {
+            // 记住语法 cast
             SingletonBeanRegistry singletonBeanRegistry = SingletonBeanRegistry.class.cast(registry);
             beanNameGenerator = (BeanNameGenerator) singletonBeanRegistry.getSingleton(CONFIGURATION_BEAN_NAME_GENERATOR);
         }
@@ -305,13 +315,15 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
         /**
          * The {@link AnnotationAttributes} of @Service annotation
          */
+        // org.springframework.core.annotation.AnnotationUtils 工具类的方法
         AnnotationAttributes serviceAnnotationAttributes = getAnnotationAttributes(service, false, false);
 
-        // 加载服务接口类
+        // 加载服务接口类（就是获取beanClass这个实现类的接口class）
         Class<?> interfaceClass = resolveServiceInterfaceClass(serviceAnnotationAttributes, beanClass);
         // 获取beanName
         String annotatedServiceBeanName = beanDefinitionHolder.getBeanName();
 
+        // 进去 核心，build{ServiceBean}Definition
         AbstractBeanDefinition serviceBeanDefinition =
                 buildServiceBeanDefinition(service, serviceAnnotationAttributes, interfaceClass, annotatedServiceBeanName);
 
@@ -385,6 +397,7 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
     private Set<String> resolvePackagesToScan(Set<String> packagesToScan) {
         Set<String> resolvedPackagesToScan = new LinkedHashSet<String>(packagesToScan.size());
         for (String packageToScan : packagesToScan) {
+            // hasText内部原理和StringUtils.isNotBlank的效果是一样的
             if (StringUtils.hasText(packageToScan)) {
                 String resolvedPackageToScan = environment.resolvePlaceholders(packageToScan.trim());
                 resolvedPackagesToScan.add(resolvedPackageToScan);
@@ -420,6 +433,7 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
         String[] ignoreAttributeNames = of("provider", "monitor", "application", "module", "registry", "protocol",
                 "interface", "interfaceName", "parameters");
 
+        // AnnotationPropertyValuesAdapter 进去 ，这里就会把serviceAnnotation注解的部分值填充到了ServiceBean的propertyValues中
         propertyValues.addPropertyValues(new AnnotationPropertyValuesAdapter(serviceAnnotation, environment, ignoreAttributeNames));
 
 
@@ -428,6 +442,7 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
         // Convert parameters into map
         builder.addPropertyValue("parameters", convertParameters(serviceAnnotationAttributes.getStringArray("parameters")));
         // Add methods parameters
+        // 进去 注解上面带有methods，比如 @DubboService(methods = {@Method(name = "sayGoodbye", timeout = 250, retries = 0)})
         List<MethodConfig> methodConfigs = convertMethodConfigs(serviceAnnotationAttributes.get("methods"));
         if (!methodConfigs.isEmpty()) {
             builder.addPropertyValue("methods", methodConfigs);
@@ -435,8 +450,8 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
 
         // ====================================================================
 
-        // 如下代码是处理各个bean依赖，即处理的是这个ServiceBean里面非基本数据类型的的实体引用，且这些实体也是bean。这些信息都会保存在前面的propertyValues，
-        // 自己可以打断点看一下，只需要注意每一个entry的value部分是基本数据类型，还是其他bean，如下案例
+        // 如下代码是处理各个bean依赖，即处理的是这个ServiceBean里面{非基本数据类型}的的实体引用，且这些实体也是bean。这些信息都会保存在前面的propertyValues，
+        // 自己可以打断点看一下，只需要注意每一个entry的value部分是基本数据类型，还是其他bean（区别就是在于使用addPropertyValue还是addPropertyReference方法），如下案例
 
         // propertyValueList = {ArrayList@3477}  size = 8
         // 0 = {PropertyValue@3553} "bean property 'methods'"
@@ -532,6 +547,7 @@ public class ServiceClassPostProcessor implements BeanDefinitionRegistryPostProc
         if (methodsAnnotation == null) {
             return Collections.EMPTY_LIST;
         }
+        // 进去 methodsAnnotation 是数组 @DubboService的 methods属性就是数组
         return MethodConfig.constructMethodConfig((Method[]) methodsAnnotation);
     }
 

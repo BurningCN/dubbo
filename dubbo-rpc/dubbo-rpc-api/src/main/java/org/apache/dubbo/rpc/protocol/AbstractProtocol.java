@@ -76,6 +76,7 @@ public abstract class AbstractProtocol implements Protocol {
 
     @Override
     public void destroy() {
+        // 消费者的逻辑
         for (Invoker<?> invoker : invokers) {
             if (invoker != null) {
                 invokers.remove(invoker);
@@ -83,13 +84,17 @@ public abstract class AbstractProtocol implements Protocol {
                     if (logger.isInfoEnabled()) {
                         logger.info("Destroy reference: " + invoker.getUrl());
                     }
-                    // 注意
+                    // 注意 这里是DubboInvoker // 进去
                     invoker.destroy();
                 } catch (Throwable t) {
                     logger.warn(t.getMessage(), t);
                 }
             }
         }
+        // 提供者的逻辑
+        // exporterMap = {ConcurrentHashMap@4151}  size = 2
+        // "samples.annotation.api.GreetingService:1.0.0_annotation:20880" -> {DubboExporter@4373} "org.apache.dubbo.registry.integration.RegistryProtocol$InvokerDelegate@608f0e2c"
+        // "samples.annotation.api.HelloService:1.0.0_annotation:20880" -> {DubboExporter@4375} "org.apache.dubbo.registry.integration.RegistryProtocol$InvokerDelegate@41c31a3a"
         for (String key : new ArrayList<String>(exporterMap.keySet())) {
             Exporter<?> exporter = exporterMap.remove(key);
             if (exporter != null) {
@@ -97,7 +102,7 @@ public abstract class AbstractProtocol implements Protocol {
                     if (logger.isInfoEnabled()) {
                         logger.info("Unexport service: " + exporter.getInvoker().getUrl());
                     }
-                    // 注意
+                    // 进去 DubboExporter
                     exporter.unexport();
                 } catch (Throwable t) {
                     logger.warn(t.getMessage(), t);

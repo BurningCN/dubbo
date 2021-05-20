@@ -78,11 +78,12 @@ public class DubboLifecycleComponentApplicationListener extends OnceApplicationC
         ApplicationContext context = event.getApplicationContext();
         ClassLoader classLoader = context.getClassLoader();
         lifecycleComponents = new LinkedList<>();
-        // load the Beans of Lifecycle from ApplicationContext
+        // load the Beans of Lifecycle from ApplicationContext  注意这里注释
         loadLifecycleComponents(lifecycleComponents, context);
     }
 
     private void loadLifecycleComponents(List<Lifecycle> lifecycleComponents, ApplicationContext context) {
+        // 获取 Lifecycle 的实现类，且是属于 spring bean的，默认没有，除非加一个实现类，标注@Component
         lifecycleComponents.addAll(beansOfTypeIncludingAncestors(context, Lifecycle.class).values());
     }
 

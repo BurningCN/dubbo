@@ -94,6 +94,7 @@ public class TagRouter extends AbstractRouter implements ConfigurationListener {
         // 因为该规则可以通过config center更改，所以我们应该复制一个来使用。
         final TagRouterRule tagRouterRuleCopy = tagRouterRule;
         if (tagRouterRuleCopy == null || !tagRouterRuleCopy.isValid() || !tagRouterRuleCopy.isEnabled()) {
+            // 使用静态打标，（tagRouterRule属于动态打标，可以在admin配置）
             return filterUsingStaticTag(invokers, url, invocation);
         }
 
@@ -120,6 +121,7 @@ public class TagRouter extends AbstractRouter implements ConfigurationListener {
             }
             // If there's no tagged providers that can match the current tagged request. force.tag is set by default
             // to false, which means it will invoke any providers without a tag unless it's explicitly disallowed.
+            // 走到||表示若集群中不存在与请求标记对应的服务，默认将降级请求 tag为空的provider；如果要改变这种默认行为，即找不到匹配tag1的provider返回异常，需设置request.tag.force=true。
             if (CollectionUtils.isNotEmpty(result) || isForceUseTag(invocation)) {
                 return result;
             }
@@ -169,7 +171,7 @@ public class TagRouter extends AbstractRouter implements ConfigurationListener {
      */
     private <T> List<Invoker<T>> filterUsingStaticTag(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         List<Invoker<T>> result = invokers;
-        // 从inv或者（消费者）url获取dubbo.tag参数值
+        // 从inv或者（消费者）url获取dubbo.tag参数值(在xml直接在reference标签配置tag="tag1"即可，tag会被转化为dubbo.tag  ---     @Parameter(key = TAG_KEY, useKeyAsProperty = false))
         // Dynamic param
         String tag = StringUtils.isEmpty(invocation.getAttachment(TAG_KEY)) ? url.getParameter(TAG_KEY) :
                 invocation.getAttachment(TAG_KEY);
@@ -182,6 +184,7 @@ public class TagRouter extends AbstractRouter implements ConfigurationListener {
                 result = filterInvoker(invokers, invoker -> StringUtils.isEmpty(invoker.getUrl().getParameter(TAG_KEY)));
             }
         } else {
+            // 如果消费者没有指定tag，那么这里筛选出那些也米有tag的Provider
             result = filterInvoker(invokers, invoker -> StringUtils.isEmpty(invoker.getUrl().getParameter(TAG_KEY)));
         }
         return result;

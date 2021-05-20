@@ -169,6 +169,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
                 client.close();
 
             } else {
+                // 这里的client为HeaderExchangeClient
                 client.close(timeout);
             }
             // 进去
@@ -202,7 +203,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
          * if语句中的判断顺序不能改变。
          */
         if (!(client instanceof LazyConnectExchangeClient) || client.isClosed()) {
-            // 进去
+            // 进去 getExchangeHandler进去，这里拿到的其实就是requestHandler
             client = new LazyConnectExchangeClient(lazyUrl, client.getExchangeHandler());
             // 此时 ReferenceCountClient 变成LazyConnectClient，实际的客户端没有了，如果触发对该类ReferenceCountClient的请求时候，会跳转到LazyConnectClient
         }

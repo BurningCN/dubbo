@@ -93,6 +93,7 @@ public class DubboAnnotationUtils {
 
         ClassLoader classLoader = defaultInterfaceClass != null ? defaultInterfaceClass.getClassLoader() : Thread.currentThread().getContextClassLoader();
 
+        //  com.alibaba.spring.util.AnnotationUtils
         Class<?> interfaceClass = getAttribute(attributes, "interfaceClass");
 
         if (void.class.equals(interfaceClass)) { // default or set void.class for purpose. 指定默认值或设置void.class。

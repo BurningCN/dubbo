@@ -71,7 +71,9 @@ public class ConfigurationUtils {
     @SuppressWarnings("deprecation")
     public static int getServerShutdownTimeout() {
         int timeout = DEFAULT_SERVER_SHUTDOWN_TIMEOUT;
+        // 返回的一般是CompositeConfiguration
         Configuration configuration = getGlobalConfiguration();
+        // "dubbo.service.shutdown.wait"
         String value = StringUtils.trim(configuration.getString(SHUTDOWN_WAIT_KEY));
 
         if (value != null && value.length() > 0) {
@@ -81,6 +83,7 @@ public class ConfigurationUtils {
                 // ignore
             }
         } else {
+            //  "dubbo.service.shutdown.wait.seconds";
             value = StringUtils.trim(configuration.getString(SHUTDOWN_WAIT_SECONDS_KEY));
             if (value != null && value.length() > 0) {
                 try {

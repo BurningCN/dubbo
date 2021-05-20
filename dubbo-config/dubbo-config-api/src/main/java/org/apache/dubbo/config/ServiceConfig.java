@@ -179,6 +179,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         }
         // 因为暴露服务(ServiceConfig)是多协议多注册中心的。且每暴露一个之后会以Exporter类型对象返回，存到exporters容器里面，所以挨个调用unexport
         if (!exporters.isEmpty()) {
+            // 一般默认容器两个元素 inJvmExporter和DubboExporter
             for (Exporter<?> exporter : exporters) {
                 try {
                     // 挨个调用exporter.unexport()，进去

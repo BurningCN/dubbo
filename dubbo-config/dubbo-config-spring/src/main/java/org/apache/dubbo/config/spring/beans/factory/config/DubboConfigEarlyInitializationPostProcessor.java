@@ -41,11 +41,13 @@ import javax.annotation.PostConstruct;
  * execution, thus it's required to register the current instance as a {@link BeanPostProcessor} into
  * {@link DefaultListableBeanFactory the BeanFatory} using {@link BeanDefinitionRegistryPostProcessor} as early as
  * possible.
- *
+ * 例如执行，因此需要尽早使用{@link BeanDefinitionRegistryPostProcessor}将当前实例作为{@link BeanPostProcessor}注册到{@link DefaultListableBeanFactory BeanFatory}中。
  * @see GenericBeanPostProcessorAdapter
  * @since 2.7.9
  */
-// 注意继承的GenericBeanPostProcessorAdapter，这个是实现BeanPostProcessor接口的，主要是限定了泛型，在后面的processBeforeInitialization可以直接拿到的就是AbstractConfig类型的
+// 注意继承的 GenericBeanPostProcessorAdapter，这个是实现 BeanPostProcessor 接口的，主要是限定了泛型，在后面的 processBeforeInitialization 可以直接拿到的就是AbstractConfig类型的
+// BeanDefinitionRegistryPostProcessor 是 BeanFactoryPostProcessor
+// GenericBeanPostProcessorAdapter     是 BeanPostProcessor
 public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPostProcessorAdapter<AbstractConfig>
         implements BeanDefinitionRegistryPostProcessor, PriorityOrdered {
 
@@ -55,11 +57,12 @@ public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPost
 
     private DefaultListableBeanFactory beanFactory;
 
-    // 下两个方法是BeanDefinitionRegistryPostProcessor的，前者是直接的，后者是爷爷BeanFactoryPostProcessor的方法
+    // 下两个方法是 BeanDefinitionRegistryPostProcessor 的，前者是直接的，后者是爷爷BeanFactoryPostProcessor的方法
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
-        // 拿到beanFactory的意义在于两个：1.将本类这种BeanPostProcessor注入到容器。2.后面会获取所有的BeanPostProcessor
+        // 拿到beanFactory的意义在于两个：1.将本类这种BeanPostProcessor注入到容器(看类头注释)。2.后面会获取所有的BeanPostProcessor
         this.beanFactory = unwrap(registry);
+        // 进去
         initBeanFactory();
     }
 
@@ -81,7 +84,7 @@ public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPost
         }
 
         // If CommonAnnotationBeanPostProcessor is already registered,  the method addIntoConfigManager()
-        // will be invoked in Bean life cycle.
+        // will be invoked in Bean life cycle. ---- 这点可以看类头部注释，因为可能bean已经创建完成了，但是 CommonAnnotationBeanPostProcessor 还没有注册到容器
 
         // CommonAnnotationBeanPostProcessor是处理@PreDestroy、@PostConstruct、@Resource注解的，而AbstractConfig#addIntoConfigManager
         // 方法是标记@PostConstruct注解的，所以如果已经注册了CommonAnnotationBeanPostProcessor，addIntoConfigManager()方法将在Bean
@@ -142,10 +145,13 @@ public class DubboConfigEarlyInitializationPostProcessor extends GenericBeanPost
                  9 = {AutowiredAnnotationBeanPostProcessor@5678}  // 注意  这个是处理@Autowired注解的
                  10 = {ApplicationListenerDetector@5679}
 
-                 // 且注入上面的顺序，内部会挨个按照顺序调用每个BeanPostProcessor的processBeforeInitialization方法， 然后按顺序调用processAfterInitialization方法
+                 // 且注入上面的顺序，内部会挨个按照顺序调用每个BeanPostProcessor的processBeforeInitialization方法（或者postProcessAfterInitialization），
+                 然后按顺序调用processAfterInitialization方法（上面list的排序也取决于getOrder的值，即优先级，可以看到上面 DubboConfigEarlyInitializationPostProcessor 相对来说排在第一，前面几个应该是默认的）
         */
     }
 
+    // 拥有最高的优先级，因为 该类和DubboConfigAliasPostProcessor都实现了DubboConfigAliasPostProcessor和BeanPostProcessor，所以这两个bean的优先顺序得定一下
+    // 这样这两个类相同的实现方法会有一个优先级别，谁先触发
     @Override
     public int getOrder() {
         return HIGHEST_PRECEDENCE;

@@ -154,6 +154,10 @@ public class DubboShutdownHook extends Thread {
      */
     public static void destroyProtocols() {
         ExtensionLoader<Protocol> loader = ExtensionLoader.getExtensionLoader(Protocol.class);
+        // result = {Collections$UnmodifiableSet@5391}  size = 3
+        // 0 = "dubbo"
+        // 1 = "injvm"
+        // 2 = "registry"
         for (String protocolName : loader.getLoadedExtensions()) {
             try {
                 Protocol protocol = loader.getLoadedExtension(protocolName);

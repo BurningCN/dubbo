@@ -50,7 +50,7 @@ public class DubboBootstrapApplicationListener extends OnceApplicationContextEve
         this.dubboBootstrap = DubboBootstrap.getInstance();
     }
 
-    // 监听容器事件的，容器的刷新、关闭事件
+    // 监听容器事件的，容器的刷新、关闭事件 （实际断点经过的事件有 ContextRefreshedEvent 、ContextStartedEvent、ContextStoppedEvent、ContextClosedEvent ）
     @Override
     public void onApplicationContextEvent(ApplicationContextEvent event) {
         if (event instanceof ContextRefreshedEvent) {

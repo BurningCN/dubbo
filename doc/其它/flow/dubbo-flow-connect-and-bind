@@ -1,0 +1,152 @@
+
+
+// export ====================================================================
+
+
+ProtocolFilterWrapper export、buildInvokerChain
+
+ProtocolListenerWrapper export
+
+DubboProtocol export、DubboExporter、openServer、createServer
+
+Exchangers bind(URL url, ExchangeHandler handler)
+
+HeaderExchanger bind
+
+HeaderExchangeServer 构造 
+	startIdleCheckTask 	
+	IdleSensible
+	AbstractTimerTask CloseTimerTask
+
+Transporters bind
+
+NettyTransporter
+
+NettyServer 构造方法 、 doOpen 、
+
+AbstractServer 构造方法全部
+
+AbstractEndpoint 构造方法全部
+
+AbstractPeer 构造方法全部
+
+DefaultExecutorRepository#createExecutorIfAbsent
+
+FixedThreadPool
+
+
+
+// refer ====================================================================
+ServiceDiscoveryRegistryDirectory toInvokers
+
+ProtocolFilterWrapper export
+
+ProtocolListenerWrapper export
+
+AbstractProtocol refer 
+	-- this为 DubboProtocol
+
+DubboProtocol protocolBindingRefer 
+	DubboInvoker
+	
+
+getClients
+	getSharedClient
+	buildReferenceCountExchangeClientList
+	buildReferenceCountExchangeClient
+	initClient
+	ReferenceCountExchangeClient和ExchangeClient
+
+
+initClient 如下
+// ====================================================================
+
+Exchangers connect
+
+HeaderExchanger connect
+
+	HeaderExchangeClient
+
+Transporters.connect
+
+NettyTransporter connect
+
+NettyClient 构造
+
+AbstractPeer 构造
+
+AbstractEndpoint 构造
+
+AbstractClient 构造
+
+	initExecutor
+		DefaultExecutorRepository createExecutorIfAbsent
+		CachedThreadPool
+
+	NettyClient doOpen
+		NettyEventLoopFactory
+
+	connect
+		NettyClient#doConnect
+
+			client-bootstrap#initChannel
+			server-bootstrap#initChannel
+
+			client-channelActive
+				NettyChannel getOrAddChannel
+				AbstractPeer connected this 为NettyClient
+				AbstractChannelHandlerDelegate connected this为MultiMessageHandler
+				HeartbeatHandler connected
+					NettyChannel setAttribute
+				AllChannelHandler connected
+					WrappedChannelHandler getSharedExecutorService
+					DefaultExecutorRepository getExecutor
+				。。。。后续和server-channelActive一致
+				
+			server-channelActive
+				NettyChannel getOrAddChannel
+				AbstractServer connected this 为NettyServer
+				AbstractPeer connected   this 为NettyServer
+				AbstractChannelHandlerDelegate connected this为MultiMessageHandler
+				HeartbeatHandler connected
+					NettyChannel setAttribute
+				AllChannelHandler connected
+					WrappedChannelHandler getSharedExecutorService
+					DefaultExecutorRepository getExecutor
+				ChannelEventRunnable run
+				AbstractChannelHandlerDelegate connected this为DecodeHandler
+				HeaderExchangeHandler connected	
+					HeaderExchangeChannel getOrAddChannel 
+				DubboProtocol#requestHandler connected
+					createInvocation
+
+// ====================================================================
+
+buildReferenceCountExchangeClient ReferenceCountExchangeClient
+
+getClients  ExchangeClient[] 
+	
+protocolBindingRefer 
+	DubboInvoker gouzao 
+	return DubboInvoker
+
+AsyncToSyncInvoker
+
+ProtocolListenerWrapper
+	ListenerInvokerWrapper
+
+ProtocolFilterWrapper
+	buildInvokerChain
+
+ServiceDiscoveryRegistryDirectory toInvokers
+// todo ====================================================================
+LazyConnectExchangeClient
+
+
+
+
+
+
+
+
+

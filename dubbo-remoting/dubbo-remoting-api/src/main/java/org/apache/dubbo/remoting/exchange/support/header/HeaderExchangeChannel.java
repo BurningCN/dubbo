@@ -169,6 +169,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         try {
             // graceful close
             DefaultFuture.closeChannel(channel);
+            // NettyChannel 进去
             channel.close();
         } catch (Throwable e) {
             logger.warn(e.getMessage(), e);
@@ -200,6 +201,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     @Override
     public void startClose() {
+        // 进去 channel为NettyClient，进去AbstractPeer
         channel.startClose();
     }
 
@@ -230,6 +232,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     @Override
     public ExchangeHandler getExchangeHandler() {
+        // 这里是NettyClient
         return (ExchangeHandler) channel.getChannelHandler();
     }
 

@@ -1063,13 +1063,13 @@ public class DubboBootstrap extends GenericEventListener {
             if (!executorService.isShutdown()) {
                 // executeMutually去看下， 很简单，加锁+run
                 executeMutually(() -> {
-                    // 循环检测（awaited置为true的点跟下）
+                    // 循环检测（awaited置为true的点跟下）的目的是防止下面在唤醒后，又重新被置为false了（即DubboBootstrap关闭的瞬间又启动了）。
                     while (!awaited.get()) {
                         if (logger.isInfoEnabled()) {
                             logger.info(NAME + " awaiting ...");
                         }
                         try {
-                            // 无限等待
+                            // 无限等待  表示通过api方式使用dubbo进行demo演示，这里永不退出，知道调用销毁方法，即DubboBootstrap destroy
                             condition.await();
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
@@ -1445,6 +1445,7 @@ public class DubboBootstrap extends GenericEventListener {
                     unreferServices();
 
                     destroyRegistries();
+                    // 新版本还有  destroyServiceDiscoveries
                     DubboShutdownHook.destroyProtocols();
                     destroyServiceDiscoveries();
 

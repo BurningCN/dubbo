@@ -76,6 +76,8 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     void handlerEvent(Channel channel, Request req) throws RemotingException {
         if (req.getData() != null && req.getData().equals(READONLY_EVENT)) {
+            // 客户端接收到服务端这个，表示服务端准备关闭了，进入closing状态，所以会告诉该client，此链接的channel不能发消息了，加一个这个属性CHANNEL_ATTRIBUTE_READONLY_KEY
+            // 看下 CHANNEL_ATTRIBUTE_READONLY_KEY 的调用点
             channel.setAttribute(Constants.CHANNEL_ATTRIBUTE_READONLY_KEY, Boolean.TRUE);
         }
     }

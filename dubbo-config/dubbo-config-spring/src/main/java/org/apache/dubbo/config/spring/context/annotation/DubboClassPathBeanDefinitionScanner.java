@@ -53,7 +53,7 @@ public class DubboClassPathBeanDefinitionScanner extends ClassPathBeanDefinition
 
         setResourceLoader(resourceLoader);
 
-        // 注册后置处理器
+        // 注册注解后置处理器
         registerAnnotationConfigProcessors(registry);
 
     }
@@ -64,7 +64,7 @@ public class DubboClassPathBeanDefinitionScanner extends ClassPathBeanDefinition
         this(registry, false, environment, resourceLoader);
 
     }
-    // 下面两个方法之所以需要重写的原因是因为父类的方法是protected修饰的，外界无法访问，所以这里完全是为了改访问限制 - public
+    // 下面两个方法之所以需要重写的原因是因为父类的方法是protected修饰的，外界无法访问，所以这里完全是为了改访问限制 - public  可以看类头注释
     @Override
     public Set<BeanDefinitionHolder> doScan(String... basePackages) {
         // 扫描指定的包，并注册beanDefinition

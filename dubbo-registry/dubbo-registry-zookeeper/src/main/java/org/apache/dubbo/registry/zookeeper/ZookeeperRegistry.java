@@ -220,6 +220,14 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     String root = toRootPath();
                     zkClient.removeChildListener(root, zkListener);
                 } else {
+                    // 比如消费者就是
+                    //result = {String[3]@5919}
+                    // 0 = "/dubbo/samples.annotation.api.HelloService/providers"
+                    // 1 = "/dubbo/samples.annotation.api.HelloService/configurators"
+                    // 2 = "/dubbo/samples.annotation.api.HelloService/routers"
+
+                    //提供者就是
+                    //  /dubbo/samples.annotation.api.HelloService/configurators
                     for (String path : toCategoriesPath(url)) {
                         // 和前面 subscribe的 zkClient.addChildListener(path, zkListener); 对应
                         zkClient.removeChildListener(path, zkListener);

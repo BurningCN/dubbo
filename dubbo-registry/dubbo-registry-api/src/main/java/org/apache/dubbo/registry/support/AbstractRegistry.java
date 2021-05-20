@@ -543,6 +543,10 @@ public abstract class AbstractRegistry implements Registry {
         if (logger.isInfoEnabled()) {
             logger.info("Destroy registry:" + getUrl());
         }
+        // 比如consumer端的例子
+        //registered = {ConcurrentHashSet@4689}  size = 2
+        // 0 = {URL@4714} "consumer://30.25.58.166/samples.annotation.api.HelloService?application=samples-annotation-consumer&category=consumers&check=false&dubbo=2.0.2&init=false&interface=samples.annotation.api.HelloService&metadata-type=remote&methods=sayHello,sayGoodbye&pid=14153&revision=1.0.0_annotation&side=consumer&sticky=false&timeout=1000&timestamp=1621496587164&version=1.0.0_annotation"
+        // 1 = {URL@4715} "consumer://30.25.58.166/samples.annotation.api.GreetingService?application=samples-annotation-consumer&category=consumers&check=false&dubbo=2.0.2&greeting.retries=1&greeting.return=true&greeting.timeout=3000&init=false&interface=samples.annotation.api.GreetingService&metadata-type=remote&methods=greeting,replyGreeting&pid=14153&revision=1.0.0_annotation&side=consumer&sticky=false&timeout=1000&timestamp=1621496598172&version=1.0.0_annotation"
         Set<URL> destroyRegistered = new HashSet<>(getRegistered());
         if (!destroyRegistered.isEmpty()) {
             for (URL url : new HashSet<>(getRegistered())) {
@@ -559,6 +563,10 @@ public abstract class AbstractRegistry implements Registry {
                 }
             }
         }
+
+        // 从提供者角度来说 一般提供者上面getRegistered有几个，这里getSubscribed也有对应个，且这里的订阅的url是provider:// category=configurators
+        //  详见 RegistryProtocol的export方法 里面就有调用 subscribe 的过程
+        // 如果是消费者，那么这里的category就是 category=providers,configurators,routers
         Map<URL, Set<NotifyListener>> destroySubscribed = new HashMap<>(getSubscribed());
         if (!destroySubscribed.isEmpty()) {
             for (Map.Entry<URL, Set<NotifyListener>> entry : destroySubscribed.entrySet()) {

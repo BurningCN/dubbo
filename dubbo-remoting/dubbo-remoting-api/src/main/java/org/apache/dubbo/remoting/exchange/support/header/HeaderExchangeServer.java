@@ -104,11 +104,15 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     @Override
     public void close(final int timeout) {
-        startClose();// 进去
+        // 进去
+        startClose();
+        // 默认是10s
         if (timeout > 0) {
             final long max = (long) timeout;
             final long start = System.currentTimeMillis();
+            // channel.readonly.send
             if (getUrl().getParameter(Constants.CHANNEL_SEND_READONLYEVENT_KEY, true)) {
+                // // 进去
                 sendChannelReadOnlyEvent();
             }
             while (HeaderExchangeServer.this.isRunning()
@@ -126,19 +130,23 @@ public class HeaderExchangeServer implements ExchangeServer {
 
     @Override
     public void startClose() {
-        server.startClose();// 进去
+        // 进去 nettyServer -> AbstractPeer startClose 进去
+        server.startClose();
     }
 
     private void sendChannelReadOnlyEvent() {
         Request request = new Request();
+        // "R"
         request.setEvent(READONLY_EVENT);
         request.setTwoWay(false);
+        // 2.0.2
         request.setVersion(Version.getProtocolVersion());
 
         Collection<Channel> channels = getChannels();
         for (Channel channel : channels) {
             try {
                 if (channel.isConnected()) {
+                    // 向客户端发送信息，channel.readonly.sent，看对端怎么处理上面的 READONLY_EVENT
                     channel.send(request, getUrl().getParameter(Constants.CHANNEL_READONLYEVENT_SENT_KEY, true));
                 }
             } catch (RemotingException e) {

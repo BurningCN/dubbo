@@ -707,6 +707,7 @@ public class DubboProtocol extends AbstractProtocol {
 
     @Override
     public void destroy() {
+        // provider端
         for (String key : new ArrayList<>(serverMap.keySet())) {
             ProtocolServer protocolServer = serverMap.remove(key);
 
@@ -714,6 +715,7 @@ public class DubboProtocol extends AbstractProtocol {
                 continue;
             }
 
+            // 这里是  HeaderExchangeServer
             RemotingServer server = protocolServer.getRemotingServer();
 
             try {
@@ -721,6 +723,7 @@ public class DubboProtocol extends AbstractProtocol {
                     logger.info("Close dubbo server: " + server.getLocalAddress());
                 }
 
+                // 默认10s server为 HeaderExchangeServer 进去
                 server.close(ConfigurationUtils.getServerShutdownTimeout());
 
             } catch (Throwable t) {
@@ -728,6 +731,12 @@ public class DubboProtocol extends AbstractProtocol {
             }
         }
 
+        // consumer 端 新版本有变化，看master-cp。
+        //referenceClientMap = {ConcurrentHashMap@4710}  size = 1
+        // "30.25.58.166:20880" -> {ArrayList@4721}  size = 1   和 serverMap 的 key 一样，都是ip:port
+        //  key = "30.25.58.166:20880"
+        //  value = {ArrayList@4721}  size = 1
+        //   0 = {ReferenceCountExchangeClient@4723}
         for (String key : new ArrayList<>(referenceClientMap.keySet())) {
             List<ReferenceCountExchangeClient> clients = referenceClientMap.remove(key);
 
@@ -764,7 +773,8 @@ public class DubboProtocol extends AbstractProtocol {
             /*
              * At this time, ReferenceCountExchangeClient#client has been replaced with LazyConnectExchangeClient.
              * Do you need to call client.close again to ensure that LazyConnectExchangeClient is also closed?
-             */
+             * 目前，ReferenceCountExchangeClient＃client已被LazyConnectExchangeClient取代。 您是否需要再次调用client.close以确保LazyConnectExchangeClient也被关闭？
+             /
 
         } catch (Throwable t) {
             logger.warn(t.getMessage(), t);

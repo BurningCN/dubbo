@@ -153,6 +153,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
         Map<String, List<URL>> categoryUrls = urls.stream()
                 .filter(Objects::nonNull) // 这种用法和Optional.ofNullable(list).ifPresent效果一致
                 .filter(this::isValidCategory)
+                // 不含有这个参数，2.6版本会有这个参数，详见dubbo-admin（            	registry.register(old.toUrl().addParameter(Constants.COMPATIBLE_CONFIG, true));）
                 .filter(this::isNotCompatibleFor26x)
                 .collect(Collectors.groupingBy(this::judgeCategory)); // 进去
 

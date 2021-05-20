@@ -150,13 +150,14 @@ public class HeaderExchangeClient implements ExchangeClient {
     @Override
     public void close(int timeout) {
         // Mark the client into the closure process
-        startClose();// 进去
-        doClose();// 进去
-        channel.close(timeout);
+        startClose();// 进去  服务端的HeaderExchangeServer也有startClose
+        doClose();// 进去 服务端的HeaderExchangeServer也有doClose
+        channel.close(timeout);  // 进去 服务端的HeaderExchangeServer也有关闭所有客户端连接channel的过程
     }
 
     @Override
     public void startClose() {
+        // 这里是 HeaderExchangeChannel
         channel.startClose();
     }
 

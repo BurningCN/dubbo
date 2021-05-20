@@ -151,11 +151,13 @@ public class DefaultFuture extends CompletableFuture<Object> {
             if (channel.equals(entry.getValue())) {
                 DefaultFuture future = getFuture(entry.getKey());
                 if (future != null && !future.isDone()) {
+                    // 关闭"用于执行定时检测超时任务"的线程池，如果有的话
                     ExecutorService futureExecutor = future.getExecutor();
                     if (futureExecutor != null && !futureExecutor.isTerminated()) {
                         futureExecutor.shutdownNow();
                     }
 
+                    // 消费端直接构建请求，快速响应/失败
                     Response disconnectResponse = new Response(future.getId());
                     disconnectResponse.setStatus(Response.CHANNEL_INACTIVE);
                     disconnectResponse.setErrorMessage("Channel " +

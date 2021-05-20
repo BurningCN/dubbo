@@ -52,14 +52,16 @@ import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.ProviderModel;
 import org.apache.dubbo.rpc.protocol.InvokerWrapper;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
@@ -447,6 +449,7 @@ public class RegistryProtocol implements Protocol {
         }
 
     }
+
     // 方法作用将参数 的dubbo:// 变成 provider://，且加了&category=configurators&check=false参数对
     // eg : dubbo://30.25.58.102:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=30.25.58.102&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=11828&release=&side=provider&timestamp=1609920795524 ---> 变成 provider://30.25.58.102:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=30.25.58.102&bind.port=20880&category=configurators&check=false&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=11828&release=&side=provider&timestamp=1609920795524
     private URL getSubscribedOverrideUrl(URL registeredProviderUrl) {
@@ -589,6 +592,7 @@ public class RegistryProtocol implements Protocol {
         List<RegistryProtocolListener> listeners = ExtensionLoader.getExtensionLoader(RegistryProtocolListener.class)
                 .getLoadedExtensionInstances();
         if (CollectionUtils.isNotEmpty(listeners)) {
+            // 新版本有个spi扩展 MigrationRuleListener
             for (RegistryProtocolListener listener : listeners) {
                 listener.onDestroy();
             }
@@ -755,6 +759,130 @@ public class RegistryProtocol implements Protocol {
         }
     }
 
+    public static void main(String[] args) throws Exception {
+//        Lock lock = new ReentrantLock();
+//
+//        Condition conditionA = lock.newCondition();
+//        Condition conditionB = lock.newCondition();
+//        Condition conditionC = lock.newCondition();
+//
+//        Thread thread1 = new Thread(() -> {
+//            try {
+//                while (true) {
+//                    lock.lock();
+//                    System.out.print("A");
+//                    conditionA.signal();
+//                    conditionC.await();
+//                    lock.unlock();
+//                }
+//            } catch (Exception e) {
+//
+//            }
+//
+//        });
+//        Thread thread2 = new Thread(() -> {
+//            try {
+//                while (true) {
+//                    lock.lock();
+//                    conditionA.await();
+//                    System.out.print("B");
+//                    conditionB.signal();
+//                    lock.unlock();
+//                }
+//            } catch (Exception e) {
+//
+//            }
+//
+//        });
+//        Thread thread3 = new Thread(() -> {
+//            try {
+//                while (true) {
+//                    lock.lock();
+//                    conditionB.await();
+//                    System.out.print("C");
+//                    conditionC.signal();
+//                    lock.unlock();
+//                }
+//            } catch (Exception e) {
+//
+//            }
+//
+//        });
+//        thread3.start();
+//        Thread.sleep(1000);
+//        thread2.start();
+//        Thread.sleep(1000);
+//        thread1.start();
+//        Thread.sleep(1000);
+//        System.in.read();
+
+        Object oA = new Object();
+        Object oB = new Object();
+        Object oC = new Object();
+
+        Thread thread1 = new Thread(() -> {
+            try {
+                while (true) {
+                    System.out.print("A");
+
+                    synchronized (oA){
+                        oA.notify();
+                    }
+
+                    synchronized (oC) {
+                        oC.wait();
+                    }
+                }
+            } catch (Exception e) {
+
+            }
+
+        });
+        Thread thread2 = new Thread(() -> {
+            try {
+                while (true) {
+                    synchronized (oA) {
+                        oA.wait();
+                    }
+                    System.out.print("B");
+
+                    synchronized (oB){
+                        oB.notify();
+                    }
+
+                }
+            } catch (Exception e) {
+
+            }
+
+        });
+        Thread thread3 = new Thread(() -> {
+            try {
+                while (true) {
+                    synchronized (oB) {
+                        oB.wait();
+                    }
+                    System.out.print("C");
+
+                    synchronized (oC){
+                        oC.notify();
+                    }
+
+                }
+            } catch (Exception e) {
+
+            }
+
+        });
+        thread3.start();
+        Thread.sleep(1000);
+        thread2.start();
+        Thread.sleep(1000);
+        thread1.start();
+        Thread.sleep(1000);
+        System.in.read();
+    }
+
     // OK
     private class ServiceConfigurationListener extends AbstractConfiguratorListener {
         private URL providerUrl;
@@ -806,8 +934,9 @@ public class RegistryProtocol implements Protocol {
     /**
      * exporter proxy, establish the corresponding relationship between the returned exporter and the exporter
      * exported by the protocol, and can modify the relationship at the time of override.
+     * <p>
+     * exporter代理，在返回的exporter和协议导出的exporter之间建立对应关系，并可以在覆盖时修改该关系。
      *
-     *   exporter的代理，在 returned exporter 和 被协议导出的exporter之间建立相应的关系，并可在重写时修改关系。
      * @param <T>
      */
     private class ExporterChangeableWrapper<T> implements Exporter<T> {
@@ -847,11 +976,11 @@ public class RegistryProtocol implements Protocol {
             // 从内存容器移除
             bounds.remove(key);
 
-            // 和该类的export内某一步骤一样，getRegistry方法内部根据originInvoker找到registryUrl，根据此url找到Registry
+            // 和该类RegistryProtocol的export内某一步骤一样，getRegistry方法内部根据originInvoker找到registryUrl，根据此url找到Registry
             // originInvoker是Provider+Registry的url融合--->ServiceConfig的****标记处
             Registry registry = RegistryProtocol.this.getRegistry(originInvoker);
             try {
-                // 该类的export内有一步骤是register，这里是unregister，进去
+                // 该类RegistryProtocol的export内有一步骤是register，这里是unregister，进去
                 // registerUrl看下setXX的调用处
                 registry.unregister(registerUrl);
             } catch (Throwable t) {
@@ -863,6 +992,8 @@ public class RegistryProtocol implements Protocol {
                 // 取消注册，去进
                 registry.unsubscribe(subscribeUrl, listener);
                 // 治理规则仓库
+                // /dubbo/config/dubbo/samples.annotation.api.GreetingService:1.0.0_annotation.[configurators]
+                // 取消数据监听，最后会移除对应的 NodeCacheListenerImpl
                 ExtensionLoader.getExtensionLoader(GovernanceRuleRepository.class).getDefaultExtension()
                         .removeListener(subscribeUrl.getServiceKey() + CONFIGURATORS_SUFFIX,
                                 serviceConfigurationListeners.get(subscribeUrl.getServiceKey()));

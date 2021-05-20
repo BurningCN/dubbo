@@ -1,0 +1,206 @@
+AnnotationProviderBootstrap
+
+AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ProviderConfiguration.class);
+        context.start();
+
+@Configuration
+@EnableDubbo(scanBasePackages = "samples.annotation.impl")
+@PropertySource("classpath:/samples.annotation/dubbo-provider.properties")
+public class ProviderConfiguration {
+    @Bean
+    public ProviderConfig providerConfig() {
+        ProviderConfig providerConfig = new ProviderConfig();
+        providerConfig.setTimeout(1000);
+        return providerConfig;
+    }
+}   
+
+ 
+// ====================================================================
+
+@EnableDubbo(scanBasePackages = "samples.annotation.impl")
+
+@EnableDubboConfig
+
+	DubboConfigConfigurationRegistrar 
+
+		ImportBeanDefinitionRegistrar#registerBeanDefinitions
+
+		    registerBeans(registry, DubboConfigConfiguration.Single.class);
+
+		    	@EnableConfigurationBeanBinding(prefix = "dubbo.application", type = ApplicationConfig.class),
+
+			registerBeans(registry, DubboConfigConfiguration.Multiple.class);
+
+				@EnableConfigurationBeanBinding(prefix = "dubbo.applications", type = ApplicationConfig.class, multiple = true),
+
+			DubboBeanUtils#registerCommonBeans
+
+		ApplicationContextAware#setApplicationContext
+
+
+@DubboComponentScan
+
+	DubboComponentScanRegistrar	
+
+		ImportBeanDefinitionRegistrar#registerBeanDefinitions
+
+			getPackagesToScan
+				values + basePackages + basePackageClasses
+
+			registerServiceAnnotationBeanPostProcessor ---> ServiceAnnotationBeanPostProcessor
+
+			DubboBeanUtils#registerCommonBeans
+
+// ====================================================================
+
+DubboConfigEarlyInitializationPostProcessor 
+
+    BeanDefinitionRegistryPostProcessor#postProcessBeanDefinitionRegistry
+
+    	beanFactory.addBeanPostProcessor(this);
+
+ServiceAnnotationBeanPostProcessor
+
+	public ServiceAnnotationBeanPostProcessor(Set<String> packagesToScan) {
+        super(packagesToScan); // super -> ServiceClassPostProcessor
+    }
+
+ServiceClassPostProcessor
+
+	BeanDefinitionRegistryPostProcessor#postProcessBeanDefinitionRegistry
+
+		registerInfrastructureBean(registry, DubboBootstrapApplicationListener.BEAN_NAME, DubboBootstrapApplicationListener.class);
+
+		Set<String> resolvedPackagesToScan = resolvePackagesToScan(packagesToScan);
+
+		registerServiceBeans(resolvedPackagesToScan, registry);	
+
+			DubboClassPathBeanDefinitionScanner(registry, environment, resourceLoader);
+			BeanNameGenerator
+			scanner.addIncludeFilter(new AnnotationTypeFilter(annotationType));
+			scanner.scan(packageToScan);
+			findServiceBeanDefinitionHolders
+			registerServiceBean(beanDefinitionHolder, registry, scanner);
+
+@Configuration
+ProviderConfiguration
+	@Bean
+    public ProviderConfig providerConfig() {
+    ....
+
+
+DubboConfigEarlyInitializationPostProcessor
+
+	GenericBeanPostProcessorAdapter#processBeforeInitialization
+
+		if (!hasRegisteredCommonAnnotationBeanPostProcessor()) {
+	            config.addIntoConfigManager();
+	    }
+
+DubboConfigDefaultPropertyValueBeanPostProcessor
+	
+	GenericBeanPostProcessorAdapter#processBeforeInitialization
+
+		        setBeanNameAsDefaultValue(dubboConfigBean, "id", beanName);
+		        setBeanNameAsDefaultValue(dubboConfigBean, "name", beanName);
+
+		        	invokeMethod(setterMethod, bean, beanName);
+
+		        		AbstractConfig#setId(this为ProviderConfig eg)
+		        		ApplicationConfig/ProtocolConfig # setName
+
+@PostConstruct
+AbstractConfig#addIntoConfigManager
+	
+	ApplicationModel.getConfigManager().addConfig(this);
+
+
+
+DubboConfigAliasPostProcessor 
+
+	BeanPostProcessor#postProcessAfterInitialization
+
+// ↓====================================================================
+
+DubboApplicationListenerRegistrar
+
+	ApplicationContextAware#setApplicationContext
+
+		context.addApplicationListener(createDubboBootstrapApplicationListener(context));
+
+			DubboBootstrapApplicationListener
+
+				super(applicationContext);
+
+				DubboBootstrap.getInstance();
+
+					new DubboBootstrap();
+
+						configManager+environment+DubboShutdownHook
+
+							environment(五个Configuration)
+
+
+
+        context.addApplicationListener(createDubboLifecycleComponentApplicationListener(context));
+
+        	DubboLifecycleComponentApplicationListener
+
+        		super(applicationContext);
+
+// ↑====================================================================
+
+DubboConfigAliasPostProcessor 
+
+	BeanPostProcessor#postProcessAfterInitialization
+
+		registry.registerAlias(beanName, id); 
+
+			eg org.apache.dubbo.config.ApplicationConfig#0 <--> samples-annotation-provider
+
+
+ApplicationConfig
+	流程从 DubboConfigEarlyInitializationPostProcessor~DubboConfigAliasPostProcessor和providerConfig一致
+	区别就是中间调用了setName 而没有调用setID
+
+RegistryConfig
+	会调用setId方法，值为org.apache.dubbo.config.RegistryConfig#0
+
+ProtocolConfig
+	注意其setName方法，于是name和id属性值都为dubbo
+
+ServiceBean
+
+	setId 
+		eg ServiceBean:samples.annotation.api.GreetingService:1.0.0_annotation （setBeanNameAsDefaultValue触发）
+
+	InitializingBean#afterPropertiesSet
+
+		setPath
+
+// ====================================================================
+DubboBootstrapApplicationListener
+
+	OnceApplicationContextEventListener # onApplicationContextEvent
+
+		onContextRefreshedEvent
+
+			dubboBootstrap.start();
+
+DubboLifecycleComponentApplicationListener
+
+	onApplicationContextEvent
+
+		onContextRefreshedEvent
+
+			initLifecycleComponents(event);
+
+				lifecycleComponents.addAll(beansOfTypeIncludingAncestors(context, Lifecycle.class).values());
+
+        	startLifecycleComponents();
+
+        		lifecycleComponents.forEach(Lifecycle::start);
+
+
+
