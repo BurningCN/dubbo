@@ -17,6 +17,7 @@
 
 package samples.annotation.config;
 
+import org.apache.dubbo.common.context.Lifecycle;
 import org.apache.dubbo.config.ProviderConfig;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.context.annotation.Bean;
@@ -32,5 +33,27 @@ public class ProviderConfiguration {
         ProviderConfig providerConfig = new ProviderConfig();
         providerConfig.setTimeout(1000);
         return providerConfig;
+    }
+
+    @Bean
+    public Lifecycle xx(){
+        return new Lifecycle() {
+            @Override
+            public void initialize() throws IllegalStateException {
+                System.out.println("lalalal");
+            }
+
+            @Override
+            public void start() throws IllegalStateException {
+                System.out.println("start");
+
+            }
+
+            @Override
+            public void destroy() throws IllegalStateException {
+                System.out.println("destroy");
+
+            }
+        };
     }
 }

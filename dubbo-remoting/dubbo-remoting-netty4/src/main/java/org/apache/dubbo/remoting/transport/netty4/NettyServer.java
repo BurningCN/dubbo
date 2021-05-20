@@ -175,6 +175,7 @@ public class NettyServer extends AbstractServer implements RemotingServer {
         Collection<Channel> chs = new ArrayList<>(this.channels.size());
         chs.addAll(this.channels.values());
         // check of connection status is unnecessary since we are using channels in NettyServerHandler
+        // 不需要检查连接状态，因为我们在NettyServerHandler中使用通道
 //        for (Channel channel : this.channels.values()) {
 //            if (channel.isConnected()) {
 //                chs.add(channel);
