@@ -87,6 +87,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
      * {@link DubboReference @DubboReference} has been supported since 2.7.7
      */
     // 这个是直接通过构造函数直接传入注解，而 ServiceConfigPostProcessor 是 postXX方法给 scan#includeFilters 集合属性 填充的注解
+    // 当扫描到一个类含有这些注解的时候就会触发后面的doGetInjectedBean
     public ReferenceAnnotationBeanPostProcessor() {
         super(DubboReference.class, Reference.class, com.alibaba.dubbo.config.annotation.Reference.class);
     }
@@ -170,7 +171,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
         // 缓存
         cacheInjectedReferenceBean(referenceBean, injectedElement);
 
-        // 走refer
+        // 走refer 返回的是proxy，赋值给标记了@DubboService的属性
         return referenceBean.get();
     }
 

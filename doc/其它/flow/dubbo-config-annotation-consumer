@@ -1,0 +1,400 @@
+AnnotationConsumerBootstrap
+
+AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ConsumerConfiguration.class);
+context.start();
+
+@Configuration
+@EnableDubbo(scanBasePackages = "samples.annotation.action")
+@PropertySource("classpath:/samples.annotation/dubbo-consumer.properties")
+@ComponentScan(value = {"samples.annotation.action"})
+public class ConsumerConfiguration {
+
+}
+
+
+// ====================================================================
+
+@EnableDubbo(scanBasePackages = "samples.annotation.impl")
+
+@EnableDubboConfig
+
+	DubboConfigConfigurationRegistrar 
+
+		ImportBeanDefinitionRegistrar#registerBeanDefinitions
+
+		    registerBeans(registry, DubboConfigConfiguration.Single.class);
+
+		    	@EnableConfigurationBeanBinding(prefix = "dubbo.application", type = ApplicationConfig.class),
+
+			registerBeans(registry, DubboConfigConfiguration.Multiple.class);
+
+				@EnableConfigurationBeanBinding(prefix = "dubbo.applications", type = ApplicationConfig.class, multiple = true),
+
+			DubboBeanUtils#registerCommonBeans
+
+		ApplicationContextAware#setApplicationContext
+
+
+@DubboComponentScan
+
+	DubboComponentScanRegistrar	
+
+		ImportBeanDefinitionRegistrar#registerBeanDefinitions
+
+			getPackagesToScan
+				values + basePackages + basePackageClasses
+
+			registerServiceAnnotationBeanPostProcessor ---> ServiceAnnotationBeanPostProcessor
+
+			DubboBeanUtils#registerCommonBeans
+
+// ====================================================================
+
+DubboConfigEarlyInitializationPostProcessor 
+
+    BeanDefinitionRegistryPostProcessor#postProcessBeanDefinitionRegistry
+
+    	beanFactory.addBeanPostProcessor(this);
+
+ServiceAnnotationBeanPostProcessor
+
+	public ServiceAnnotationBeanPostProcessor(Set<String> packagesToScan) {
+        super(packagesToScan); // super -> ServiceClassPostProcessor
+    }
+
+
+DubboConfigAliasPostProcessor postProcessBeanDefinitionRegistry
+
+	this.registry = registry;
+
+ServiceClassPostProcessor
+
+	BeanDefinitionRegistryPostProcessor#postProcessBeanDefinitionRegistry
+
+		registerInfrastructureBean(registry, DubboBootstrapApplicationListener.BEAN_NAME, DubboBootstrapApplicationListener.class);
+
+		Set<String> resolvedPackagesToScan = resolvePackagesToScan(packagesToScan);
+
+		registerServiceBeans(resolvedPackagesToScan, registry);	
+
+			DubboClassPathBeanDefinitionScanner(registry, environment, resourceLoader);
+			BeanNameGenerator
+			scanner.addIncludeFilter(new AnnotationTypeFilter(annotationType));
+			scanner.scan(packageToScan);
+
+			No Spring Bean annotating Dubbo's @Service was found under package[samples.annotation.action
+
+DubboConfigEarlyInitializationPostProcessor postProcessBeanFactory
+
+ReferenceAnnotationBeanPostProcessor() // 构造
+
+	super(DubboReference.class, Reference.class, com.alibaba.dubbo.config.annotation.Reference.class);
+
+ReferenceAnnotationBeanPostProcessor setApplicationContext
+
+@Configuration
+public class ConsumerConfiguration {
+	
+}
+
+
+DubboConfigAliasPostProcessor postProcessBeforeInitialization(Object bean, String beanName) 
+	return bean; // beanName = consumerConfiguration
+
+DubboConfigAliasPostProcessor postProcessAfterInitialization // beanName = consumerConfiguration
+
+
+ReferenceAnnotationBeanPostProcessor doGetInjectedBean
+
+	String referencedBeanName = buildReferencedBeanName(attributes, injectedType);
+
+		serviceBeanNameBuilder.build(); 
+		// eg ServiceBean:samples.annotation.api.GreetingService:1.0.0_annotation
+
+    String referenceBeanName = getReferenceBeanName(attributes, injectedType);
+    	// eg @Reference(interfaceClass=interface samples.annotation.api.GreetingService,methods=[{name=greeting, retries=1, timeout=3000}],timeout=1000,version=1.0.0_annotation) samples.annotation.api.GreetingService
+
+    referencedBeanNameIdx.computeIfAbsent(referencedBeanName, k -> new TreeSet<String>()).add(referenceBeanName);
+
+    ReferenceBean referenceBean = buildReferenceBeanIfAbsent(referenceBeanName, attributes, injectedType);
+
+    	 ReferenceBean<?> referenceBean = referenceBeanCache.get(referenceBeanName)
+
+    		if (referenceBean == null)
+
+    			ReferenceBeanBuilder.create(attributes, applicationContext).interfaceClass(referencedType).build()
+
+    				checkDependencies();
+
+			        C configBean = doBuild();
+
+			        	return new ReferenceBean<Object>();
+			        		 super();
+			        		 	super();
+			        		 		serviceMetadata = new ServiceMetadata();
+        							serviceMetadata.addAttribute("ORIGIN_CONFIG", this);
+        						this.repository = ApplicationModel.getServiceRepository();
+
+			        configureBean(configBean); // AnnotatedInterfaceConfigBeanBuilder的方法，this为ReferenceBeanBuilder
+
+			        	preConfigureBean(attributes, configBean);
+
+			        		DataBinder dataBinder = new DataBinder(referenceBean)
+			        		dataBinder.registerCustomEditor
+			        		dataBinder.bind(new AnnotationPropertyValuesAdapter(attributes, applicationContext.getEnvironment(), IGNORE_FIELD_NAMES));
+
+				        configureRegistryConfigs(configBean);
+
+				        	String[] registryConfigBeanIds = resolveRegistryConfigBeanNames(attributes)
+				        		 getAttribute(attributes, "registry"); // AnnotationAttributes attributes
+
+							List<RegistryConfig> registryConfigs = getBeans(applicationContext, registryConfigBeanIds, RegistryConfig.class);
+
+							configBean.setRegistries(registryConfigs);
+
+				        configureMonitorConfig(configBean);
+				        	// 同上
+
+				        configureModuleConfig(configBean);
+				        	// 同上
+
+				        configureApplicationConfig(configBean);
+				        	String applicationConfigBeanName = resolveApplicationConfigBeanName(attributes);
+				        		getAttribute(attributes, "application");
+
+					        ApplicationConfig applicationConfig =
+					                getOptionalBean(applicationContext, applicationConfigBeanName, ApplicationConfig.class);
+
+					                DubboBeanUtils getOptionalBean
+					               		if (beanName == null) {
+					                		getOptionalBeanByType(beanFactory, beanType);
+					                			String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(beanFactory, beanType, true, false);
+					                			(T) beanFactory.getBean(beanNames[0]);
+
+					        configBean.setApplication(applicationConfig)
+
+					        	AbstractInterfaceConfig setApplication
+					        		this.application = application;
+					        		configManager.setApplication(application);
+
+				        postConfigureBean(attributes, configBean); // AnnotationAttributes attributes, ReferenceBean bean
+
+				        	bean.setApplicationContext(applicationContext);
+				        		this.applicationContext = applicationContext;
+       							SpringExtensionFactory.addApplicationContext(applicationContext);
+       								CONTEXTS.add(context)
+       								context.registerShutdownHook()	
+
+					        configureInterface(attributes, bean);
+					        	....
+					        	....
+					        	referenceBean.setInterface(serviceInterfaceClass)
+					        		this.interfaceClass = interfaceClass
+					        		this.interfaceName = interfaceName
+
+					        configureConsumerConfig(attributes, bean);
+
+					        	String consumerBeanName = getAttribute(attributes, "consumer");
+
+						        ConsumerConfig consumerConfig = getOptionalBean(applicationContext, consumerBeanName, ConsumerConfig.class);
+
+						        referenceBean.setConsumer(consumerConfig);
+
+					        configureMethodConfig(attributes, bean);
+					        	// 同上
+
+					        bean.afterPropertiesSet(); // Reference
+
+					        	prepareDubboConfigBeans();
+					        		beansOfTypeIncludingAncestors(applicationContext, ApplicationConfig.class, includeNonSingletons, allowEagerInit);
+
+						        if (init == null) 
+						            init = false;
+
+						        if (shouldInit()) 
+						            getObject();
+
+    			referenceBeanCache.put(referenceBeanName, referenceBean);
+
+    boolean localServiceBean = isLocalServiceBean(referencedBeanName, referenceBean, attributes);
+    	existsServiceBean(referencedBeanName) && !isRemoteReferenceBean(referenceBean, attributes);
+
+    	existsServiceBean
+    		applicationContext.containsBean(referencedBeanName) &&
+                applicationContext.isTypeMatch(referencedBeanName, ServiceBean.class)
+
+        isRemoteReferenceBean
+        	Boolean.FALSE.equals(referenceBean.isInjvm()) || Boolean.FALSE.equals(attributes.get("injvm"));
+
+    prepareReferenceBean(referencedBeanName, referenceBean, localServiceBean);
+    	// 一般不走
+
+    registerReferenceBean(referencedBeanName, referenceBean, attributes, localServiceBean, injectedType);
+
+    	ConfigurableListableBeanFactory beanFactory = getBeanFactory()
+
+    	String beanName = getReferenceBeanName(attributes, interfaceClass);
+
+    	if(localServiceBean)
+    		todo
+
+    	else // Remote @Service Bean
+            if (!beanFactory.containsBean(beanName))
+                beanFactory.registerSingleton(beanName, referenceBean);
+
+    cacheInjectedReferenceBean(referenceBean, injectedElement);
+
+    	if (injectedElement.getMember() instanceof Field) {
+            injectedFieldReferenceBeanCache.put(injectedElement, referenceBean);
+        } else if (injectedElement.getMember() instanceof Method) {
+            injectedMethodReferenceBeanCache.put(injectedElement, referenceBean);
+        }
+
+    return referenceBean.get();
+
+    	ReferenceConfig get
+
+	    	if (destroyed) {
+	            throw new IllegalStateException("The invoker of ReferenceConfig(" + url + ") has already destroyed!");
+	        }
+	        if (ref == null) {
+	            init();
+	            // 这里详细过程不展示
+
+	        }
+	        return ref;
+
+
+
+
+/ ↓====================================================================
+
+DubboApplicationListenerRegistrar
+
+	ApplicationContextAware # setApplicationContext
+
+		addApplicationListeners((ConfigurableApplicationContext) applicationContext);
+
+			context.addApplicationListener(createDubboBootstrapApplicationListener(context));
+
+				DubboBootstrapApplicationListener
+
+					super(applicationContext);
+
+					DubboBootstrap.getInstance();
+
+						new DubboBootstrap();
+
+							configManager+environment+DubboShutdownHook
+
+								environment(五个Configuration)
+								
+					 DubboBootstrapStartStopListenerSpringAdapter.applicationContext = applicationContext;
+
+	        context.addApplicationListener(createDubboLifecycleComponentApplicationListener(context));
+
+	        	DubboLifecycleComponentApplicationListener
+
+	        		super(applicationContext);
+
+// ↑====================================================================
+
+
+ReferenceAnnotationBeanPostProcessor onApplicationEvent
+	if (event instanceof ContextRefreshedEvent) {
+        referencedBeanNameIdx.entrySet().stream().filter(e -> e.getValue().size() > 1).forEach(e -> {
+            String logPrefix = e.getKey() + " has " + e.getValue().size() + " reference instances, there are: ";
+            logger.warn(e.getValue().stream().collect(Collectors.joining(", ", logPrefix, "")));
+        });
+        referencedBeanNameIdx.clear();
+    }
+
+// ====================================================================
+
+ApplicationConfig、RegistryConfig、ConsumerConfig，下面先以ApplicationConfig举例
+
+
+DubboConfigEarlyInitializationPostProcessor
+
+	GenericBeanPostProcessorAdapter#processBeforeInitialization
+
+		if (!hasRegisteredCommonAnnotationBeanPostProcessor()) {
+	            config.addIntoConfigManager();
+	    }
+
+DubboConfigDefaultPropertyValueBeanPostProcessor
+	
+	GenericBeanPostProcessorAdapter#processBeforeInitialization
+
+		        setBeanNameAsDefaultValue(dubboConfigBean, "id", beanName);
+		        setBeanNameAsDefaultValue(dubboConfigBean, "name", beanName);
+
+		        	invokeMethod(setterMethod, bean, beanName);
+
+		        		AbstractConfig#setId(this为ProviderConfig eg)
+		        		ApplicationConfig/ProtocolConfig # setName
+
+@PostConstruct
+AbstractConfig#addIntoConfigManager
+	
+	ApplicationModel.getConfigManager().addConfig(this);
+
+
+
+DubboConfigAliasPostProcessor 
+
+	BeanPostProcessor#postProcessAfterInitialization
+
+
+DubboConfigAliasPostProcessor 
+
+	BeanPostProcessor#postProcessAfterInitialization
+
+		registry.registerAlias(beanName, id); 
+
+			eg org.apache.dubbo.config.ApplicationConfig#0 <--> samples-annotation-provider
+
+RegistryConfig  和 ConsumerConfig 同理
+
+
+ApplicationConfig、RegistryConfig、ConsumerConfig 这三个config的触发点分别在
+
+ReferenceBeanBuilder configureApplicationConfig(configBean);
+
+beansOfTypeIncludingAncestors(applicationContext, RegistryConfig.class, includeNonSingletons, allowEagerInit);
+
+ReferenceBeanBuilder configureConsumerConfig(attributes, bean);
+
+
+
+// ====================================================================
+DubboBootstrapApplicationListener
+
+	OnceApplicationContextEventListener # onApplicationContextEvent
+
+		onContextRefreshedEvent
+
+			dubboBootstrap.start();
+
+				DubboBootstrapStartStopListenerSpringAdapter start
+
+					applicationContext.publishEvent(new DubboBootstrapStatedEvent(bootstrap));
+
+
+DubboLifecycleComponentApplicationListener
+
+	onApplicationContextEvent
+
+		onContextRefreshedEvent
+
+			initLifecycleComponents(event);
+
+				lifecycleComponents.addAll(beansOfTypeIncludingAncestors(context, Lifecycle.class).values());
+
+        	startLifecycleComponents();
+
+        		lifecycleComponents.forEach(Lifecycle::start);
+
+
+
+

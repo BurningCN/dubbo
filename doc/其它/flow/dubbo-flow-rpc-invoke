@@ -11,21 +11,53 @@ ref = {proxy0@4260}
 String hello = demoService.sayHello("world");
 
 InvokerInvocationHandler invoke
+
+	method.getDeclaringClass() == Object.class
+		return method.invoke(invoker, args);
+
+	toString、hashCode、$destroy、equals
+
+	RpcInvocation rpcInvocation = new RpcInvocation(method, invoker.getInterface().getName(), protocolServiceKey, args);
+	rpcInvocation.setTargetServiceUniqueName(invoker.getUrl().getServiceKey());
+		invoker.getUrl
+			MigrationInvoker getUrl
+				if (invoker != null) {
+            				invoker.getUrl();
+            					MockClusterInvoker getUrl
+            						directory.getConsumerUrl()
+            							RegistryDirectory.getConsumerUrl
+            								overrideDirectoryUrl;
 	RpcContext.setRpcContext(invoker.getUrl());
-	RpcInvocation
+
+		RpcContext.getContext().setConsumerUrl(url);
+       
 	invoker.invoke(rpcInvocation).recreate();
 
-ServiceDiscoveryMigrationInvoker invoke
+		if (!checkInvokerAvailable(serviceDiscoveryInvoker)) {
 
-MockClusterInvoker invoke
+			invoker.invoke(invocation);
 
-InterceptorInvokerNode invoke
+				MockClusterInvoker invoke
 
-ConsumerContextClusterInterceptor before
+		if (!checkInvokerAvailable(invoker)) 
 
+			ServiceDiscoveryMigrationInvoker invoke
 
-ClusterInterceptor intercept - this为ConsumerContextClusterInterceptor
+				MockClusterInvoker invoke
 
+					InterceptorInvokerNode invoke
+
+						ConsumerContextClusterInterceptor before
+							context.setInvocation(invocation).setLocalAddress(NetUtils.getLocalHost(), 0);
+							((RpcInvocation) invocation).setInvoker(invoker);
+							RpcContext.removeServerContext();
+
+						ConsumerContextClusterInterceptor  intercept 
+
+							ClusterInterceptor intercept
+							
+								clusterInvoker.invoke(invocation);
+								
 AbstractClusterInvoker invoke  - this为 FailoverClusterInvoker
 
 	AbstractClusterInvoker list
