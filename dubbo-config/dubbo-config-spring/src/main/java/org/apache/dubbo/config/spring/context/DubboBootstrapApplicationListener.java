@@ -60,7 +60,7 @@ public class DubboBootstrapApplicationListener extends OnceApplicationContextEve
         }
         if (event instanceof ContextRefreshedEvent) {
             onContextRefreshedEvent((ContextRefreshedEvent) event);
-        } else if (event instanceof ContextClosedEvent) {
+        } else if (event instanceof ContextClosedEvent) {// ContextStoppedEvent
             onContextClosedEvent((ContextClosedEvent) event);
         }
     }

@@ -1267,8 +1267,8 @@ public class DubboBootstrap extends GenericEventListener {
                     unreferServices();
 
                     destroyRegistries();
-
                     destroyServiceDiscoveries();
+
                     destroyExecutorRepository();
                     clear();
                     shutdown();

@@ -35,6 +35,7 @@ import org.apache.dubbo.rpc.model.ApplicationModel;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.dubbo.common.constants.RegistryConstants.INIT;
 
