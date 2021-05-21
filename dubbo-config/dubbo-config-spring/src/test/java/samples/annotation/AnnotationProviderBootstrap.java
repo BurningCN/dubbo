@@ -35,8 +35,8 @@ public class AnnotationProviderBootstrap {
 
         System.out.println("dubbo service started.");
 
-        context.stop(); // for know destroy
-       // new CountDownLatch(1).await();
+        //context.stop(); // for know destroy
+        new CountDownLatch(1).await();
     }
 
 }
