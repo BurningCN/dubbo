@@ -5,6 +5,13 @@ ref = {proxy0@4260}
   consumerModel = {ConsumerModel@4281} 
   url = {URL@4282} "dubbo://30.25.58.158/samples.servicediscovery.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.2&init=false&interface=samples.servicediscovery.demo.DemoService&mapping-type=metadata&mapping.type=metadata&metadata-type=remote&methods=sayHello&pid=64096&provided-by=demo-provider&register.ip=30.25.58.158&side=consumer&sticky=false&timestamp=1620702737234"
   protocolServiceKey = "samples.servicediscovery.demo.DemoService:dubbo"
+
+
+  
+// ====================================================================
+
+客户端发起rpc的正向流程
+
 // ====================================================================
 
 
@@ -241,56 +248,200 @@ ListenerInvokerWrapper invoke
 
             			Runnable runnable = queue.take();
 
+            				waiting = false;
+
             				runnable.run();
 
+            					RunnableWrapper run
+
+            						runnable.run();
+
+            					// eg task1
+            					ChannelEventRunnable run
+            						
+            						if (state == ChannelState.RECEIVED) 
+            							
+            							handler.received(channel, message);
+            								
+            								DecodeHandler received
+            									
+            									if (message instanceof Response)
+            										
+            										((Decodeable) message).decode();
+            											
+            											DecodeableRpcResult decode
+            												 
+            												 decode(channel, inputStream);
+            												 	
+            												 	handleValue(in);
+            												 		
+            												 		Type[] returnTypes = invocation.getReturnTypes();
+            												 		
+            												 		in.readObject((Class<?>) returnTypes[0], returnTypes[1])
+            												 		
+            												 		setValue(value); // Annotation, hello world
+            												 			
+            												 			AppResponse setValue // this 为DecodeableRpcResult
+            												 				
+            												 				this.result = value;
+                												
+                												handleAttachment(in);
+                													
+                													addObjectAttachments(in.readAttachments());
+
+                								handler.received(channel, message);
+
+                									HeaderExchangeHandler received
+
+                										ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
+                										else if (message instanceof Response)
+                											handleResponse(channel, (Response) message);
+                												DefaultFuture.received(channel, response);
+                													future.doReceived(response);
+                														if (res.getStatus() == Response.OK) {
+            																this.complete(res.getResult());
+            														CHANNELS.remove(response.getId());
+
+            					// eg task2
             					TimeoutCheckTask#run () -> notifyTimeout(future)
 
             						Response timeoutResponse = new Response(future.getId());
+						            timeoutResponse.setStatus(future.isSent() ? SERVER_TIMEOUT : CLIENT_TIMEOUT);
+						            timeoutResponse.setErrorMessage(future.getTimeoutMessage(true));
+
+						            DefaultFuture.received(future.getChannel(), timeoutResponse, true);
 
             							 DefaultFuture.received(future.getChannel(), timeoutResponse, true);
-            							 
-            							 // todo 继续
-            			// todo 继续
-        
+
+            							 	DefaultFuture future = FUTURES.remove(response.getId());
+            							 	Timeout t = future.timeoutCheckTask;
+            							 	if (!timeout) 
+            							 		t.cancel();
+            							 	future.doReceived(response);
+
+            							 		if (res.getStatus() == Response.OK) {
+										            this.complete(res.getResult());
+										        } else if (res.getStatus() == Response.CLIENT_TIMEOUT || res.getStatus() == Response.SERVER_TIMEOUT) {
+										            this.completeExceptionally(new TimeoutException(res.getStatus() == Response.SERVER_TIMEOUT, channel, res.getErrorMessage()));
+										        } else {
+										            this.completeExceptionally(new RemotingException(channel, res.getErrorMessage()));
+										        }
+
+										        if (threadlessExecutor.isWaiting()) {
+               										threadlessExecutor.notifyReturn
+            			
+        				runnable = queue.poll();
+        				while (runnable != null) {
+				            runnable.run();
+				            runnable = queue.poll();
+				        }
+
+				        finished = true;
+
+				    return responseFuture.get(timeout, unit);
+
         return asyncResult;
 
-// todo 继续
+        // ====================================================================
+        // 另起行结果回流流程如下
+        // ====================================================================
+
+ListenerInvokerWrapper invoke
+	return invoker.invoke(invocation);
+
+Moniter invoke
+	return invoker.invoke(invocation);
+
+FutureFilter invoke
+	return invoker.invoke(invocation);
+
+ConsumerContextFilter invoke
+	return invoker.invoke(invocation);
+
+InvokerWrapper invoke
+	return invoker.invoke(invocation);
+
+FailoverClusterInvoker doInvoke
+	Result result = invoker.invoke(invocation);
+	return result;
+
+AbstractClusterInvoker invoke
+	return doInvoke(invocation, invokers, loadbalance);
+
+ClusterInterceptor intercept
+	return clusterInvoker.invoke(invocation);
+
+InterceptorInvokerNode invoke
+	asyncResult = interceptor.intercept(next, invocation);
+	interceptor.after(next, invocation);
+		ConsumerContextClusterInterceptor after
+			RpcContext.removeContext(true);
+				LOCAL.remove();
+	asyncResult.whenCompleteWithContext((r, t) -> {
+		listener.onMessage(r, clusterInvoker, invocation);
+			 RpcContext.getServerContext().setObjectAttachments(appResponse.getObjectAttachments());
+
+MockClusterInvoker invoke
+	result = this.invoker.invoke(invocation);
+	return result;
+
+MigrationInvoker invoke
+	return invoker.invoke(invocation);
+
+InvokerInvocationHandler invoke
+	return invoker.invoke(rpcInvocation).recreate();
+		AsyncRpcResult recreate
+			 getAppResponse().recreate();
+			 	if (exception != null) {
+			 		// .....
+		            throw exception;
+		        }
+		        return result;
+
+AnnotationAction doSayHello
+	return helloService.sayHello(name);
+
+AnnotationConsumerBootstrap main
+	System.out.println("hello : " + annotationAction.doSayHello("world"));
+
 
 // ====================================================================
-下面是客户端同步处理剩余逻辑
 
-.....
-AsyncToSyncInvoker  asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+客户端接收响应包
 
-AsyncRpcResult get
-
-threadlessExecutor.waitAndDrain();
-
-ChannelEventRunnable run
-
-DecodeHandler received
-	decode
-
-DecodeableRpcResult	decode
-	AppResponse setValue
-	\
-HeaderExchangeHandler received
- 
-	HeaderExchangeHandler handleResponse
-		DefaultFuture.received
-			DefaultFuture doReceived
-
-AsyncToSyncInvoker get
-
-FailoverClusterInvoker
-	  Result result = invoker.invoke(invocation);
-
-
-下面是客户端接收响应包
 // ====================================================================
 
 
-InternalDecoder decode
+NettyCodecAdapter # InternalDecoder
+
+	InternalDecoder decode(ChannelHandlerContext ctx, ByteBuf input, List<Object> out)
+
+		ChannelBuffer message = new NettyBackedChannelBuffer(input);
+
+			NettyBackedChannelBuffer(ByteBuf buffer)
+
+				this.buffer = buffer;
+
+        NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+
+        	NettyChannel ret = CHANNEL_MAP.get(ch); // double-check
+
+        do {
+            int saveReaderIndex = message.readerIndex();
+            Object msg = codec.decode(channel, message);
+            if (msg == Codec2.DecodeResult.NEED_MORE_INPUT) {
+                message.readerIndex(saveReaderIndex);
+                break;
+            } else {
+                //is it possible to go here ?
+                if (saveReaderIndex == message.readerIndex()) {
+                    throw new IOException("Decode without read data.");
+                }
+                if (msg != null) {
+                    out.add(msg);
+                }
+            }
+        } while (message.readable());
 
 DubboCountCodec decode
 

@@ -64,7 +64,8 @@ public class AsyncToSyncInvoker<T> implements Invoker<T> {
                  * {@link java.util.concurrent.CompletableFuture#get()} was proved to have serious performance drop.
                  * 必须使用CompletableFuture#get(long, TimeUnit)}，因为CompletableFuture#get()被证明有严重的性能下降
                  */
-                // get 进去，看AsyncRPCResult的
+                // get 进去，看 AsyncRPCResult 的。内部会调用 CompletableFuture.get(timeout,unit) ，但是这里并不是限制调用超时的时间的，因为
+                // 这里是 Integer.MAX_VALUE ，无限等待的，控制超时的是 DefaultFuture 的 TimeoutTask 任务
                 asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
             }
         } catch (InterruptedException e) {
