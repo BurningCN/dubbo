@@ -99,6 +99,7 @@ public class DubboCodec extends ExchangeCodec {
                         } else {
                             // 创建 DecodeableRpcResult 对象
                             result = new DecodeableRpcResult(channel, res,
+                                    // 注意readMessageData会掐掉头部，返回的字节数组数组是ByteBuf的body部分
                                     new UnsafeByteArrayInputStream(readMessageData(is)),
                                     (Invocation) getRequestData(id), proto);
                         }

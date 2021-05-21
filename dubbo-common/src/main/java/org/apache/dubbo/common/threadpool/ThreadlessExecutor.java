@@ -157,6 +157,7 @@ public class ThreadlessExecutor extends AbstractExecutorService {
     // 2.使用shared executor执行回调。
     @Override
     public void execute(Runnable runnable) {
+        // 这里加锁和前面的synchronized (lock) 一致，控制是否是waiting，做相应的操作的，比如前面在执行，waiting为false。那么这里就直接用sharedExecutor执行
         synchronized (lock) {
             if (!waiting) {
                 sharedExecutor.execute(runnable);
