@@ -1,0 +1,1111 @@
+ServiceConfig export()
+    if (bootstrap == null) {
+        bootstrap = DubboBootstrap.getInstance();
+        bootstrap.initialize();
+        // 另换行
+    }
+    checkAndUpdateSubConfigs();
+        // 另换行
+
+    initServiceMetadata(provider);
+        AbstractInterfaceConfig initServiceMetadata
+            serviceMetadata.setVersion(getVersion(interfaceConfig));
+            serviceMetadata.setGroup(getGroup(interfaceConfig));
+            serviceMetadata.setDefaultGroup(getGroup(interfaceConfig));
+            serviceMetadata.setServiceInterfaceName(getInterface());
+   
+    serviceMetadata.setServiceType(getInterfaceClass());
+    
+    serviceMetadata.setTarget(getRef());
+        ServiceMetadata setTarget(Object target) {
+            this.target = target;
+    
+    serviceMetadata.generateServiceKey();
+        BaseServiceMetadata generateServiceKey
+            this.serviceKey = buildServiceKey(serviceInterfaceName, group, version);
+
+    if (!shouldExport()) {
+            Boolean export = getExport();
+            return export == null ? true : export;
+        return;
+    }
+
+    if (shouldDelay()) {
+            Integer delay = getDelay();
+            return delay != null && delay > 0;
+        DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
+    } else {
+        doExport();
+            if (unexported) {
+                throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
+            }
+            if (exported) {
+                return;
+            }
+            exported = true;
+
+            if (StringUtils.isEmpty(path)) {
+                path = interfaceName;
+            }
+            doExportUrls();
+                // 另换行
+            bootstrap.setReady(true);
+    }
+
+    exported();
+        
+        List<URL> exportedURLs = this.getExportedUrls();
+            AbstractInterfaceConfig getExportedUrls
+                return urls;
+        
+        exportedURLs.forEach(url -> {
+            
+            Map<String, String> parameters = getApplication().getParameters();
+            
+            ServiceNameMapping.getExtension(parameters != null ? parameters.get("mapping-type") : null).map(url);
+                
+                return getExtensionLoader(ServiceNameMapping.class).getExtension(name == null ? CONFIG_MAPPING_TYPE : name);
+
+                    DynamicConfigurationServiceNameMapping map(URL url) {
+
+                        String serviceInterface = url.getServiceInterface();
+                        String group = url.getParameter(GROUP_KEY);
+
+                        if (asList(MetadataService.class.getName()).contains(serviceInterface)) {
+                            return;
+                        }
+
+                        DynamicConfiguration dynamicConfiguration = DynamicConfiguration.getDynamicConfiguration();
+
+                        String key = getName();
+                        String content = valueOf(System.currentTimeMillis());
+
+                        execute(() -> {
+                            dynamicConfiguration.publishConfig(key, ServiceNameMapping.buildGroup(serviceInterface), content);
+                              
+                                ServiceNameMapping buildGroup
+                                    // /mapping/{url.getServiceInterface()}
+                                    
+                                    return DEFAULT_MAPPING_GROUP + SLASH + serviceInterface;
+                            
+                        });
+
+                    MetadataServiceNameMapping map(URL url) {
+
+                        String serviceInterface = url.getServiceInterface();
+
+                        if (IGNORED_SERVICE_INTERFACES.contains(serviceInterface)) {
+                            return;
+                        }
+                        
+                        String registryCluster = getRegistryCluster(url);
+                       
+                        MetadataReport metadataReport = MetadataReportInstance.getMetadataReport(registryCluster);
+                              return url.getParameter(REGISTRY_CLUSTER_KEY, DEFAULT_KEY);
+                        
+                        metadataReport.registerServiceAppMapping(ServiceNameMapping.buildGroup(serviceInterface), getName(), url);
+                            
+                            ZookeeperMetadataReport registerServiceAppMapping
+                                
+                                String path = toRootDir() + serviceKey + PATH_SEPARATOR + application;
+                            
+                                if (StringUtils.isBlank(zkClient.getContent(path))) {
+                                    Map<String, String> value = new HashMap<>();
+                                    value.put("timestamp", String.valueOf(System.currentTimeMillis()));
+                                    zkClient.create(path, gson.toJson(value), false);
+                                }
+        });
+       
+        dispatch(new ServiceConfigExportedEvent(this));
+
+// ====================================================================
+DubboBootstrap initialize
+    public void initialize() {
+        if (!initialized.compareAndSet(false, true)) {
+            return;
+        }
+
+        ApplicationModel.initFrameworkExts();
+            Set<FrameworkExt> exts = ExtensionLoader.getExtensionLoader(FrameworkExt.class).getSupportedExtensionInstances();
+            for (FrameworkExt ext : exts) {
+                ext.initialize();
+                    Environment initialize
+                        ConfigManager configManager = ApplicationModel.getConfigManager();
+                        Optional<Collection<ConfigCenterConfig>> defaultConfigs = configManager.getDefaultConfigCenter();
+                        defaultConfigs.ifPresent(configs -> {
+                            for (ConfigCenterConfig config : configs) {
+                                this.setExternalConfigMap(config.getExternalConfiguration());
+                                this.setAppExternalConfigMap(config.getAppExternalConfiguration());
+                            }
+                        });
+
+                        this.externalConfiguration.setProperties(externalConfigurationMap);
+                        this.appExternalConfiguration.setProperties(appExternalConfigurationMap);
+            }
+
+        startConfigCenter();
+            useRegistryAsConfigCenterIfNecessary();
+
+                if (environment.getDynamicConfiguration().isPresent()) {
+                    return;
+                }
+
+                if (CollectionUtils.isNotEmpty(configManager.getConfigCenters())) {
+                    return;
+                }
+
+                configManager
+                        .getDefaultRegistries()
+                            getDefaultConfigs(getConfigsMap(getTagName(RegistryConfig.class)));
+                        
+                        .stream()
+                        .filter(this::isUsedRegistryAsConfigCenter)
+                            
+                            isUsedRegistryAsCenter(registryConfig, registryConfig::getUseAsConfigCenter, "config",DynamicConfigurationFactory.class);
+
+                                final boolean supported;
+                                Boolean configuredValue = usedRegistryAsCenter.get();
+                                if (configuredValue != null) { // If configured, take its value.
+                                    supported = configuredValue.booleanValue();
+                                } else {                       // Or check the extension existence
+                                    String protocol = registryConfig.getProtocol();
+                                    supported = supportsExtension(extensionClass, protocol);
+                                }
+                                return supported;
+                                     
+                        .map(this::registryAsConfigCenter)
+                            String protocol = registryConfig.getProtocol();
+                            Integer port = registryConfig.getPort();
+                            String id = "config-center-" + protocol + "-" + port;
+                            ConfigCenterConfig cc = new ConfigCenterConfig();
+                            cc.setId(id);
+                            if (cc.getParameters() == null) {
+                                cc.setParameters(new HashMap<>());
+                            }
+                            if (registryConfig.getParameters() != null) {
+                                cc.getParameters().putAll(registryConfig.getParameters()); // copy the parameters
+                            }
+                            cc.getParameters().put(CLIENT_KEY, registryConfig.getClient());
+                            cc.setProtocol(protocol);
+                            cc.setPort(port);
+                            if (StringUtils.isNotEmpty(registryConfig.getGroup())) {
+                                cc.setGroup(registryConfig.getGroup());
+                            }
+                            cc.setAddress(getRegistryCompatibleAddress(registryConfig));
+                            cc.setNamespace(registryConfig.getGroup());
+                            cc.setUsername(registryConfig.getUsername());
+                            cc.setPassword(registryConfig.getPassword());
+                            if (registryConfig.getTimeout() != null) {
+                                cc.setTimeout(registryConfig.getTimeout().longValue());
+                            }
+                            cc.setHighestPriority(false);
+                            return cc;
+
+                        .forEach(configManager::addConfigCenter);
+                            addConfig(AbstractConfig config)
+                                addConfig(config, false);
+                                    addConfig(AbstractConfig config, boolean unique)
+                                        write(() -> {
+                                            Map<String, AbstractConfig> configsMap = configsCache.computeIfAbsent(getTagName(config.getClass()), type -> newMap());
+                                            addIfAbsent(config, configsMap, unique);
+                                        });
+
+            Collection<ConfigCenterConfig> configCenters = configManager.getConfigCenters();
+                return getConfigs(getTagName(ConfigCenterConfig.class));
+
+            // check Config Center
+            if (CollectionUtils.isEmpty(configCenters)) {
+                ConfigCenterConfig configCenterConfig = new ConfigCenterConfig();
+                configCenterConfig.refresh();
+                if (configCenterConfig.isValid()) {
+                    configManager.addConfigCenter(configCenterConfig);
+                    configCenters = configManager.getConfigCenters();
+                }
+            } else {
+                for (ConfigCenterConfig configCenterConfig : configCenters) {
+                    configCenterConfig.refresh();
+                    ConfigValidationUtils.validateConfigCenterConfig(configCenterConfig);
+                        checkParameterName(config.getParameters());
+                }
+            }
+
+            if (CollectionUtils.isNotEmpty(configCenters)) {
+                
+                CompositeDynamicConfiguration compositeDynamicConfiguration = new CompositeDynamicConfiguration();
+                
+                for (ConfigCenterConfig configCenter : configCenters) {
+                    
+                    compositeDynamicConfiguration.addConfiguration(prepareEnvironment(configCenter));
+                        
+                        DynamicConfiguration prepareEnvironment(ConfigCenterConfig configCenter)
+                            
+                            DynamicConfiguration dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl());
+                                
+                                DynamicConfiguration getDynamicConfiguration(URL connectionURL) {
+
+                                    String protocol = connectionURL.getProtocol();
+                                    
+                                    DynamicConfigurationFactory factory = getDynamicConfigurationFactory(protocol);
+                                    
+                                    return factory.getDynamicConfiguration(connectionURL);
+                                        
+                                        AbstractDynamicConfigurationFactory getDynamicConfiguration
+                                            
+                                            String key = url == null ? DEFAULT_KEY : url.toServiceString();
+                                            
+                                            return dynamicConfigurations.computeIfAbsent(key, k -> createDynamicConfiguration(url));
+                                                
+                                                ZookeeperDynamicConfigurationFactory createDynamicConfiguration
+                                                    
+                                                    return new ZookeeperDynamicConfiguration(url, zookeeperTransporter);
+                                                        super(url);
+                                                            TreePathDynamicConfiguration (URL url)
+                                                                super(url);
+                                                                    AbstractDynamicConfiguration(URL url) 
+                                                                    
+                                                                    this(getThreadPoolPrefixName(url), getThreadPoolSize(url),  getThreadPoolKeepAliveTime(url), getGroup(url),
+                                                                    getTimeout(url));
+
+                                                                        this.workersThreadPool = initWorkersThreadPool(threadPoolPrefixName, threadPoolSize, keepAliveTime);
+                                                                        this.group = group;
+                                                                        this.timeout = timeout;
+
+                                                                this.rootPath = getRootPath(url);
+                                                                    return PATH_SEPARATOR + getConfigNamespace(url) + getConfigBasePath(url);
+                                                                    // /dubbo/config
+                                                            
+                                                        this.url = url;
+                                                        
+                                                        rootPath = getRootPath(url);
+
+                                                        
+                                                        this.cacheListener = new CacheListener(rootPath);
+                                                            CacheListener(String rootPath) {
+                                                                this.rootPath = rootPath;
+                                                        
+                                                        this.executor = Executors.newFixedThreadPool(1, new NamedThreadFactory(this.getClass().getSimpleName(), true));
+                                                        
+                                                        zkClient = zookeeperTransporter.connect(url);
+                                                            
+                                                            AbstractZookeeperTransporter connect(URL url) {
+
+                                                                List<String> addressList = getURLBackupAddress(url);
+                                                                
+                                                                if ((zookeeperClient = fetchAndUpdateZookeeperClientCache(addressList)) != null && zookeeperClient.isConnected()) {
+                                                                    // ...
+                                                                    return zookeeperClient;
+                                                                }
+                                                                
+                                                                synchronized (zookeeperClientMap) {
+                                                                    // double check ....
+
+                                                                    zookeeperClient = createZookeeperClient(url);
+                                                                        
+                                                                        CuratorZookeeperTransporter createZookeeperClient(URL url)
+                                                                            
+                                                                            return new CuratorZookeeperClient(url);
+
+                                                                                super(url);
+                                                                                    AbstractZookeeperClient(URL url)
+                                                                                    this.url = url;
+
+                                                                                int timeout = 
+                                                                                int sessionExpireMs = ;
+                                                                                CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
+                                                                                        .connectString()
+                                                                                        .retryPolicy()
+                                                                                        .connectionTimeoutMs(timeout)
+                                                                                        .sessionTimeoutMs(sessionExpireMs);
+                                                                                String authority = url.getAuthority();
+                                                                                if (authority != null && authority.length() > 0) {
+                                                                                    builder = builder.authorization("digest", authority.getBytes());
+                                                                                }
+                                                                                client = builder.build();
+                                                                                
+                                                                                client.getConnectionStateListenable().addListener(new CuratorConnectionStateListener(url));
+                                                                                
+                                                                                client.start();
+                                                                                
+                                                                                boolean connected = client.blockUntilConnected(timeout, TimeUnit.MILLISECONDS);
+                                                                                
+                                                                                if (!connected) {
+                                                                                    throw new IllegalStateException
+                                                                                }
+                                                                   
+                                                                    writeToClientMap(addressList, zookeeperClient);
+                                                                        for (String address : addressList) 
+                                                                            zookeeperClientMap.put(address, zookeeperClient);
+                                                                }
+
+                                                                return zookeeperClient;
+                                                        
+                                                        boolean isConnected = zkClient.isConnected();
+                                                        
+                                                        if (!isConnected) {
+                                                            
+                                                            throw new IllegalStateException("Failed to connect with zookeeper, pls check if url " + url + " is correct.");
+                                                        }
+
+                            String configContent = dynamicConfiguration.getProperties(configCenter.getConfigFile(), configCenter.getGroup());
+
+                            String appGroup = getApplication().getName();
+                            String appConfigContent = null;
+                            if (isNotEmpty(appGroup)) {
+                                appConfigContent = dynamicConfiguration.getProperties
+                                        (isNotEmpty(configCenter.getAppConfigFile()) ? configCenter.getAppConfigFile() : configCenter.getConfigFile(),
+                                                appGroup
+                                        );
+                            }
+                            try {
+                                environment.setConfigCenterFirst(configCenter.isHighestPriority());
+                                environment.updateExternalConfigurationMap(parseProperties(configContent));
+                                environment.updateAppExternalConfigurationMap(parseProperties(appConfigContent));
+                            } catch (IOException e) {
+                                throw new IllegalStateException("Failed to parse configurations from Config Center.", e);
+                            }
+                            return dynamicConfiguration;
+                }
+                environment.setDynamicConfiguration(compositeDynamicConfiguration);
+            }
+            configManager.refreshAll();
+
+        loadRemoteConfigs();
+
+            // registry ids to registry configs
+            // ....
+            
+            configManager.addRegistries(tmpRegistries);
+            
+            // protocol ids to protocol configs
+            // ....
+            configManager.addProtocols(tmpProtocols);
+
+        checkGlobalConfigs();
+            configsCache = {HashMap@1874}  size = 9
+             "registry" -> {HashMap@2548}  size = 1
+             "application" -> {HashMap@2550}  size = 1
+             "provider" -> {HashMap@2730}  size = 1
+             "module" -> {HashMap@2732}  size = 1
+             "monitor" -> {HashMap@2734}  size = 1
+             "metrics" -> {HashMap@2736}  size = 1
+             "ssl" -> {HashMap@2738}  size = 1
+             "consumer" -> {HashMap@2740}  size = 1
+             "config-center" -> {HashMap@2552}  size = 1
+
+        // @since 2.7.8
+        startMetadataCenter();
+            useRegistryAsMetadataCenterIfNecessary();
+                Collection<MetadataReportConfig> metadataConfigs = configManager.getMetadataConfigs();
+
+                if (CollectionUtils.isNotEmpty(metadataConfigs)) {
+                    return;
+                }
+
+                configManager
+                        .getDefaultRegistries()
+                        .stream()
+                        .filter(this::isUsedRegistryAsMetadataCenter)
+                             return isUsedRegistryAsCenter(registryConfig, registryConfig::getUseAsMetadataCenter, "metadata",
+                                MetadataReportFactory.class);
+                                // 参考 config-center
+
+                        .map(this::registryAsMetadataCenter)
+                            String protocol = registryConfig.getProtocol();
+                            Integer port = registryConfig.getPort();
+                            String id = "metadata-center-" + protocol + "-" + port;
+                            MetadataReportConfig metadataReportConfig = new MetadataReportConfig();
+                            metadataReportConfig.setId(id);
+                            if (metadataReportConfig.getParameters() == null) {
+                                metadataReportConfig.setParameters(new HashMap<>());
+                            }
+                            if (registryConfig.getParameters() != null) {
+                                metadataReportConfig.getParameters().putAll(registryConfig.getParameters()); // copy the parameters
+                            }
+                            metadataReportConfig.getParameters().put(CLIENT_KEY, registryConfig.getClient());
+                            metadataReportConfig.setGroup(registryConfig.getGroup());
+                            metadataReportConfig.setAddress(getRegistryCompatibleAddress(registryConfig));
+                            metadataReportConfig.setUsername(registryConfig.getUsername());
+                            metadataReportConfig.setPassword(registryConfig.getPassword());
+                            metadataReportConfig.setTimeout(registryConfig.getTimeout());
+                            return metadataReportConfig;
+                        .forEach(configManager::addMetadataReport);
+
+            ApplicationConfig applicationConfig = getApplication();
+            
+            String metadataType = applicationConfig.getMetadataType();
+            
+            Collection<MetadataReportConfig> metadataReportConfigs = configManager.getMetadataConfigs();
+            
+            if (CollectionUtils.isEmpty(metadataReportConfigs)) {
+                if (REMOTE_METADATA_STORAGE_TYPE.equals(metadataType)) {
+                    throw new IllegalStateException("No MetadataConfig found, Metadata Center address is required when 'metadata=remote' is enabled.");
+                }
+                return;
+            }
+
+            for (MetadataReportConfig metadataReportConfig : metadataReportConfigs) {
+                ConfigValidationUtils.validateMetadataConfig(metadataReportConfig);
+                if (!metadataReportConfig.isValid()) {
+                        return StringUtils.isNotEmpty(address);
+                    return;
+                }
+               
+                MetadataReportInstance.init(metadataReportConfig);
+
+                    if (!init.compareAndSet(false, true)) {
+                        return;
+                    }
+                    URL url = config.toUrl();
+                         String address = this.getAddress();
+                            if (isEmpty(address)) {
+                                throw new IllegalArgumentException("The address of metadata report is invalid.");
+                            }
+                            Map<String, String> map = new HashMap<String, String>();
+                            URL url = URL.valueOf(address);
+                            map.putAll(url.getParameters());
+                            appendParameters(map, this);
+                            map.putAll(convert(map, null));
+                            map.put("metadata", url.getProtocol());
+                            return new URL("metadata", url.getUsername(), url.getPassword(), url.getHost(),
+                                    url.getPort(), url.getPath(), map);
+
+                    if (METADATA_REPORT_KEY.equals(url.getProtocol())) {
+                        String protocol = url.getParameter(METADATA_REPORT_KEY, DEFAULT_DIRECTORY);
+                        url = URLBuilder.from(url)
+                                .setProtocol(protocol)
+                                .removeParameter(METADATA_REPORT_KEY)
+                                .build();
+                    }
+                    url = url.addParameterIfAbsent(APPLICATION_KEY, ApplicationModel.getApplicationConfig().getName());
+                    
+                    String relatedRegistryId = config.getRegistry() == null ? DEFAULT_KEY : config.getRegistry();
+                    
+                    MetadataReportFactory metadataReportFactory = ExtensionLoader.getExtensionLoader(MetadataReportFactory.class).getAdaptiveExtension();
+                    
+                    metadataReports.put(relatedRegistryId, metadataReportFactory.getMetadataReport(url));
+                        
+                        AbstractMetadataReportFactory getMetadataReport(URL url)
+                           
+                            url = url.setPath(MetadataReport.class.getName())
+                                    .removeParameters(EXPORT_KEY, REFER_KEY);
+                            String key = url.toServiceString();
+
+                            MetadataReport metadataReport = SERVICE_STORE_MAP.get(key);
+                            if (metadataReport != null) {
+                                return metadataReport;
+                            }
+
+                            LOCK.lock();
+                            try {
+                                // .... double check 
+                                
+                                // zookeeper://127.0.0.1:2181/org.apache.dubbo.metadata.report.MetadataReport?application=first-dubbo-provider&client=
+                                
+                                metadataReport = createMetadataReport(url);
+
+                                    ZookeeperMetadataReportFactory createMetadataReport(URL url)
+
+                                         return new ZookeeperMetadataReport(url, zookeeperTransporter);
+
+                                            super(url);
+                                                AbstractMetadataReport(URL reportServerURL) {
+                                                    
+                                                    setUrl(reportServerURL);
+                                                        this.reportURL = url;
+                                                    
+                                                    String defaultFilename = ;
+                                                    
+                                                    String filename = reportServerURL.getParameter(FILE_KEY, defaultFilename);
+                                                    
+                                                    File file = null;
+                                                    
+                                                    if (ConfigUtils.isNotEmpty(filename)) {
+                                                        file = new File(filename);
+                                                        if (!file.exists() && file.getParentFile() != null && !file.getParentFile().exists()) {
+                                                            if (!file.getParentFile().mkdirs()) {
+                                                                throw new IllegalArgumentException
+                                                            }
+                                                        }
+                                                        if (!initialized.getAndSet(true) && file.exists()) {
+                                                            file.delete();
+                                                        }
+                                                    }
+                                                    
+                                                    this.file = file;
+                                                    
+                                                    loadProperties();
+                                                        try (InputStream in = new FileInputStream(file)) {
+                                                            properties.load(in);
+                                                    
+                                                    syncReport = reportServerURL.getParameter(SYNC_REPORT_KEY, false);
+                                                    
+                                                    metadataReportRetry = new MetadataReportRetry(retryPeriod,retryLimit);
+                                                    
+                                                    if (reportServerURL.getParameter(....)) {
+                                                        
+                                                        ScheduledExecutorService scheduler = ;
+                                                        
+                                                        scheduler.scheduleAtFixedRate(this::publishAll, calculateStartTime(), ONE_DAY_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
+                                                    }
+
+                                            if (url.isAnyHost()) {
+                                                throw new IllegalStateException("registry address == null");
+                                            }
+                                            
+                                            String group = url.getParameter(GROUP_KEY, DEFAULT_ROOT);
+                                            
+                                            if (!group.startsWith(PATH_SEPARATOR)) {
+                                                group = PATH_SEPARATOR + group;
+                                            }
+                                            
+                                            this.root = group; // /dubbo
+                                            
+                                            zkClient = zookeeperTransporter.connect(url);
+                                                // 参考 ZookeeperDynamicConfiguration 的
+                                
+                                SERVICE_STORE_MAP.put(key, metadataReport);
+                                
+                                return metadataReport;
+                            } finally {
+                                // Release the lock
+                                LOCK.unlock();
+                            }
+            }
+
+        initMetadataService();
+            this.metadataService = getDefaultExtension();
+                WritableMetadataService getDefaultExtension() 
+                    return getExtensionLoader(WritableMetadataService.class).getDefaultExtension();
+
+            this.metadataServiceExporter = new ConfigurableMetadataServiceExporter(metadataService);
+                ConfigurableMetadataServiceExporter(MetadataService metadataService) {
+                this.metadataService = metadataService;
+
+        initEventListener();
+             addEventListener(this);
+                eventDispatcher.addEventListener(listener);
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " has been initialized!");
+        }
+    }
+
+// ====================================================================
+ServiceConfig export # checkAndUpdateSubConfigs()
+    
+    completeCompoundConfigs();
+    
+    checkDefault();
+        if (provider == null) {
+            provider = ApplicationModel.getConfigManager()
+                    .getDefaultProvider()
+                    .orElse(new ProviderConfig());
+        }
+    
+    checkProtocol();
+        if (provider != null && notHasSelfProtocolProperty()) {
+            setProtocols(provider.getProtocols());
+            setProtocolIds(provider.getProtocolIds());
+        }
+
+        if (CollectionUtils.isEmpty(protocols) && provider != null) {
+            setProtocols(provider.getProtocols());
+        }
+        convertProtocolIdsToProtocols();
+            if (StringUtils.isEmpty(protocolIds)) {
+                if (CollectionUtils.isEmpty(protocols)) {
+                    List<ProtocolConfig> protocolConfigs = ApplicationModel.getConfigManager().getDefaultProtocols();
+                    if (protocolConfigs.isEmpty()) {
+                        protocolConfigs = new ArrayList<>(1);
+                        ProtocolConfig protocolConfig = new ProtocolConfig();
+                        protocolConfig.setDefault(true);
+                        protocolConfig.refresh();
+                        protocolConfigs.add(protocolConfig);
+                        ApplicationModel.getConfigManager().addProtocol(protocolConfig);
+                    }
+                    setProtocols(protocolConfigs);
+                }
+    // init some null configuration.
+    List<ConfigInitializer> configInitializers = ExtensionLoader.getExtensionLoader(ConfigInitializer.class)
+            .getActivateExtension(URL.valueOf("configInitializer://"), (String[]) null);
+    configInitializers.forEach(e -> e.initServiceConfig(this));
+
+    // if protocol is not injvm checkRegistry
+    if (!isOnlyInJvm()) {
+            return getProtocols().size() == 1
+                && LOCAL_PROTOCOL.equalsIgnoreCase(getProtocols().get(0).getName());
+        
+        checkRegistry();
+            convertRegistryIdsToRegistries();
+
+            for (RegistryConfig registryConfig : registries) {
+                if (!registryConfig.isValid()) {
+                    throw new IllegalStateException("No registry config found or it's not a valid config! " +
+                            "The registry config is: " + registryConfig);
+                }
+            }
+    }
+    this.refresh();
+
+    if (StringUtils.isEmpty(interfaceName)) {
+        throw new IllegalStateException("<dubbo:service interface=\"\" /> interface not allow null!");
+    }
+
+    if (ref instanceof GenericService) {
+        interfaceClass = GenericService.class;
+        if (StringUtils.isEmpty(generic)) {
+            generic = Boolean.TRUE.toString();
+        }
+    } else {
+        try {
+            interfaceClass = Class.forName(interfaceName, true, Thread.currentThread()
+                    .getContextClassLoader());
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException(e.getMessage(), e);
+        }
+        checkInterfaceAndMethods(interfaceClass, getMethods());
+        checkRef();
+        generic = Boolean.FALSE.toString();
+    }
+    if (local != null) {
+        // ... 
+    }
+    if (stub != null) {
+        // ... 
+    }
+    
+    checkStubAndLocal(interfaceClass);
+    
+    ConfigValidationUtils.checkMock(interfaceClass, this);
+    
+    ConfigValidationUtils.validateServiceConfig(this);
+    
+    postProcessConfig();
+        List<ConfigPostProcessor> configPostProcessors = ExtensionLoader.getExtensionLoader(ConfigPostProcessor.class)
+                .getActivateExtension(URL.valueOf("configPostProcessor://"), (String[]) null);
+        configPostProcessors.forEach(component -> component.postProcessServiceConfig(this));
+
+// ====================================================================
+doExportUrls();
+
+    ServiceRepository repository = ApplicationModel.getServiceRepository();
+        (ServiceRepository) LOADER.getExtension(ServiceRepository.NAME);
+    
+    ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass());
+        
+        services.computeIfAbsent(interfaceClazz.getName(),
+                _k -> new ServiceDescriptor(interfaceClazz));
+
+            ServiceDescriptor(Class<?> interfaceClass) {
+                
+                this.serviceInterfaceClass = interfaceClass;
+                this.serviceName = interfaceClass.getName();
+                initMethods();
+                    // ....
+    
+    repository.registerProvider(
+            getUniqueServiceName(),
+            ref,
+            serviceDescriptor,
+            this,
+            serviceMetadata
+    );
+
+    List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
+
+        List<URL> registryList = new ArrayList<URL>();
+        ApplicationConfig application = interfaceConfig.getApplication();
+        List<RegistryConfig> registries = interfaceConfig.getRegistries();
+        if (CollectionUtils.isNotEmpty(registries)) {
+            for (RegistryConfig config : registries) {
+                String address = config.getAddress();
+                if (StringUtils.isEmpty(address)) {
+                    address = ANYHOST_VALUE;
+                }
+                if (!RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
+                    Map<String, String> map = new HashMap<String, String>();
+                    
+                    AbstractConfig.appendParameters(map, application);
+                    
+                    AbstractConfig.appendParameters(map, config);
+                    
+                    map.put(PATH_KEY, RegistryService.class.getName());
+                    
+                    AbstractInterfaceConfig.appendRuntimeParameters(map);
+                        map.put(DUBBO_VERSION_KEY, Version.getProtocolVersion());
+                        map.put(RELEASE_KEY, Version.getVersion());
+                        map.put(TIMESTAMP_KEY, String.valueOf(System.currentTimeMillis()));
+                        if (ConfigUtils.getPid() > 0) {
+                            map.put(PID_KEY, String.valueOf(ConfigUtils.getPid()));
+                                if (PID < 0) {
+                                    try {
+                                        RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
+                                        String name = runtime.getName(); // format: "pid@hostname"
+                                        PID = Integer.parseInt(name.substring(0, name.indexOf('@')));
+                                    } catch (Throwable e) {
+                                        PID = 0;
+                                    }
+                                }
+                                return PID;
+                        }
+                    if (!map.containsKey(PROTOCOL_KEY)) {
+                        map.put(PROTOCOL_KEY, DUBBO_PROTOCOL);
+                    }
+                    List<URL> urls = UrlUtils.parseURLs(address, map);
+
+                    for (URL url : urls) {
+
+                        url = URLBuilder.from(url)
+                                .addParameter(REGISTRY_KEY, url.getProtocol())
+                                .setProtocol(extractRegistryType(url))
+                                    return isServiceDiscoveryRegistryType(url) ? SERVICE_REGISTRY_PROTOCOL : REGISTRY_PROTOCOL;
+                                         return isServiceDiscoveryRegistryType(url == null ? emptyMap() : url.getParameters());
+                                            return SERVICE_REGISTRY_TYPE.equals(parameters.get(REGISTRY_TYPE_KEY));
+
+                                .build();
+                        if ((provider && url.getParameter(REGISTER_KEY, true))
+                                || (!provider && url.getParameter(SUBSCRIBE_KEY, true))) {
+                            registryList.add(url);
+                        }
+                    }
+                }
+            }
+        }
+        return genCompatibleRegistries(registryList, provider);
+            // ....
+
+    for (ProtocolConfig protocolConfig : protocols) {
+        
+        String pathKey = URL.buildKey(getContextPath(protocolConfig)
+                .map(p -> p + "/" + path)
+                .orElse(path), group, version);
+        
+        repository.registerService(pathKey, interfaceClass);
+            ServiceDescriptor serviceDescriptor = registerService(interfaceClass);
+            // if path is different with interface name, add extra path mapping
+            if (!interfaceClass.getName().equals(path)) {
+                services.putIfAbsent(path, serviceDescriptor);
+            }
+            return serviceDescriptor;
+        
+        doExportUrlsFor1Protocol(protocolConfig, registryURLs);
+            // 另换行
+    }
+// ====================================================================
+doExportUrlsFor1Protocol(protocolConfig, registryURLs);
+
+    String name = protocolConfig.getName();
+    if (StringUtils.isEmpty(name)) {
+        name = DUBBO;
+    }
+
+    Map<String, String> map = preProcessParamsMap(protocolConfig);
+        Map<String, String> map = new HashMap<>();
+        map.put(SIDE_KEY, PROVIDER_SIDE);
+
+        ServiceConfig.appendRuntimeParameters(map);
+        AbstractConfig.appendParameters(map, getMetrics());
+        AbstractConfig.appendParameters(map, getApplication());
+        AbstractConfig.appendParameters(map, getModule());
+        AbstractConfig.appendParameters(map, provider);
+        AbstractConfig.appendParameters(map, protocolConfig);
+        AbstractConfig.appendParameters(map, this);
+        MetadataReportConfig metadataReportConfig = getMetadataReportConfig();
+        if (metadataReportConfig != null && metadataReportConfig.isValid()) {
+            map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
+        }
+        return map;
+
+    processMethods(map);
+        //....
+
+    processGeneric_revision_methodsKey(map);
+
+    processToken(map);
+        if (ConfigUtils.isEmpty(token) && provider != null) {
+            token = provider.getToken();
+        }
+
+        if (!ConfigUtils.isEmpty(token)) {
+            if (ConfigUtils.isDefault(token)) {
+                map.put(TOKEN_KEY, UUID.randomUUID().toString());
+            } else {
+                map.put(TOKEN_KEY, token);
+            }
+        }
+
+    serviceMetadata.getAttachments().putAll(map);
+
+    String host = findConfigedHosts(protocolConfig, registryURLs, map);
+        boolean anyhost = false;
+
+        String hostToBind = getValueFromConfig(protocolConfig, DUBBO_IP_TO_BIND);
+            String protocolPrefix = protocolConfig.getName().toUpperCase() + "_";
+            String value = ConfigUtils.getSystemProperty(protocolPrefix + key);
+            if (StringUtils.isEmpty(value)) {
+                value = ConfigUtils.getSystemProperty(key);
+            }
+            return value;
+        
+        if (StringUtils.isNotEmpty(hostToBind) && isInvalidLocalHost(hostToBind)) {
+            throw new IllegalArgumentException("Specified invalid bind ip from property:" + DUBBO_IP_TO_BIND + ", value:" + hostToBind);
+        }
+
+        // if bind ip is not found in environment, keep looking up
+        if (StringUtils.isEmpty(hostToBind)) {
+            
+            hostToBind = protocolConfig.getHost();
+            
+            if (provider != null && StringUtils.isEmpty(hostToBind)) {
+                hostToBind = provider.getHost();
+            }
+            
+            if (isInvalidLocalHost(hostToBind)) {
+                anyhost = true;
+                try {
+                    logger.info("No valid ip found from environment, try to find valid host from DNS.");
+                    hostToBind = InetAddress.getLocalHost().getHostAddress();
+                } catch (UnknownHostException e) {
+                    logger.warn(e.getMessage(), e);
+                }
+                if (isInvalidLocalHost(hostToBind)) {
+                    if (CollectionUtils.isNotEmpty(registryURLs)) {
+                        for (URL registryURL : registryURLs) {
+                            if (MULTICAST.equalsIgnoreCase(registryURL.getParameter("registry"))) {
+                                // skip multicast registry since we cannot connect to it via Socket
+                                continue;
+                            }
+                            try (Socket socket = new Socket()) {
+                                SocketAddress addr = new InetSocketAddress(registryURL.getHost(), registryURL.getPort());
+                                socket.connect(addr, 1000);
+                                hostToBind = socket.getLocalAddress().getHostAddress();
+                                break;
+                            } catch (Exception e) {
+                                logger.warn(e.getMessage(), e);
+                            }
+                        }
+                    }
+                    if (isInvalidLocalHost(hostToBind)) {
+                        hostToBind = getLocalHost();
+                    }
+                }
+            }
+        }
+
+        map.put(BIND_IP_KEY, hostToBind);
+
+        String hostToRegistry = getValueFromConfig(protocolConfig, DUBBO_IP_TO_REGISTRY);
+        if (hostToRegistry != null && hostToRegistry.length() > 0 && isInvalidLocalHost(hostToRegistry)) {
+            throw new IllegalArgumentException("Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
+        } else if (StringUtils.isEmpty(hostToRegistry)) {
+            // bind ip is used as registry ip by default
+            hostToRegistry = hostToBind;
+        }
+
+        map.put(ANYHOST_KEY, String.valueOf(anyhost));
+
+        return hostToRegistry;
+    
+    Integer port = findConfigedPorts(protocolConfig, name, map);
+        Integer portToBind;
+
+        // parse bind port from environment
+        String port = getValueFromConfig(protocolConfig, DUBBO_PORT_TO_BIND);
+        portToBind = parsePort(port);
+
+        // if there's no bind port found from environment, keep looking up.
+        if (portToBind == null) {
+            portToBind = protocolConfig.getPort();
+            if (provider != null && (portToBind == null || portToBind == 0)) {
+                portToBind = provider.getPort();
+            }
+            final int defaultPort = ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(name).getDefaultPort();
+            if (portToBind == null || portToBind == 0) {
+                portToBind = defaultPort;
+            }
+            if (portToBind <= 0) {
+                portToBind = getRandomPort(name);
+                if (portToBind == null || portToBind < 0) {
+                    portToBind = getAvailablePort(defaultPort);
+                    putRandomPort(name, portToBind);
+                }
+            }
+        }
+
+        // save bind port, used as url's key later
+        map.put(BIND_PORT_KEY, String.valueOf(portToBind));
+
+        // registry port, not used as bind port by default
+        String portToRegistryStr = getValueFromConfig(protocolConfig, DUBBO_PORT_TO_REGISTRY);
+        Integer portToRegistry = parsePort(portToRegistryStr);
+        if (portToRegistry == null) {
+            portToRegistry = portToBind;
+        }
+
+        return portToRegistry;
+    
+    URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
+
+        // dubbo://192.168.1.5:20880/samples.api_.api.GreetingsService?anyhost=true&application=first-dubbo-provider&bind.ip=192.168.1.5&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=samples.api_.api.GreetingsService&metadata-type=remote&methods=sayHi&pid=49153&release=&side=provider&timestamp=1621782281470
+
+    // You can customize Configurator to append extra parameters
+    if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class).hasExtension(url.getProtocol())) {
+        url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
+                .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
+    }
+
+    String scope = url.getParameter(SCOPE_KEY);
+    // don't export when none is configured
+    if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
+
+        // export to local if the config is not remote (export to remote only when config is remote)
+        if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
+            exportLocal(url);
+
+                URL local = URLBuilder.from(url)
+                .setProtocol(LOCAL_PROTOCOL)
+                .setHost(LOCALHOST_VALUE)
+                .setPort(0)
+                .build();
+                
+                Exporter<?> exporter = PROTOCOL.export(
+                        PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, local));
+
+                            StubProxyFactoryWrapper getInvoker(T proxy, Class<T> type, URL url)
+                                return proxyFactory.getInvoker(proxy, type, url);
+                                    JavassistProxyFactory getInvoker
+                                        final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
+                                        return new AbstractProxyInvoker<T>(proxy, type, url) {
+                                            @Override
+                                            protected Object doInvoke(T proxy, String methodName,
+                                                                      Class<?>[] parameterTypes,
+                                                                      Object[] arguments) throws Throwable {
+                                                return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
+                                            }
+                                        };
+                
+                            ProtocolFilterWrapper export(Invoker<T> invoker)
+                                // ....
+                                
+                                protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
+                                    
+                                    ProtocolListenerWrapper export(Invoker<T> invoker)
+                                       
+                                        new ListenerExporterWrapper<T>(protocol.export(invoker),
+                                            
+                                            InjvmProtocol export
+                                                
+                                                return new InjvmExporter<T>(invoker, invoker.getUrl().getServiceKey(), 
+                                                exporterMap);
+                                                    
+                                                    super(invoker);
+                                                        AbstractExporter(Invoker<T> invoker)
+                                                            this.invoker = invoker;
+                                                    this.key = key;
+                                                    this.exporterMap = exporterMap;
+                                                    exporterMap.put(key, this);
+
+                                        Collections.unmodifiableList(ExtensionLoader.getExtensionLoader(ExporterListener.class)
+                                                .getActivateExtension(invoker.getUrl(), EXPORTER_LISTENER_KEY)));
+
+                exporters.add(exporter);
+        }
+        // export to remote if the config is not local (export to local only when config is local)
+        
+        if (!SCOPE_LOCAL.equalsIgnoreCase(scope)) {
+           
+            if (CollectionUtils.isNotEmpty(registryURLs)) {
+                
+                for (URL registryURL : registryURLs) {
+                    //if protocol is only injvm ,not register
+                    
+                    if (LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
+                        continue;
+                    }
+                    
+                    url = url.addParameterIfAbsent(DYNAMIC_KEY, registryURL.getParameter(DYNAMIC_KEY));
+                    
+                    URL monitorUrl = ConfigValidationUtils.loadMonitor(this, registryURL);
+                    if (monitorUrl != null) {
+                        url = url.addParameterAndEncoded(MONITOR_KEY, monitorUrl.toFullString());
+                    }
+                    
+                    if (logger.isInfoEnabled()) {
+                        if (url.getParameter(REGISTER_KEY, true)) {
+                            logger.info("Register dubbo service " + interfaceClass.getName() + " url " + url + " to registry " + registryURL);
+                        } else {
+                            logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
+                        }
+                    }
+
+                    // For providers, this is used to enable custom proxy to generate invoker
+                    String proxy = url.getParameter(PROXY_KEY);
+                    if (StringUtils.isNotEmpty(proxy)) {
+                        registryURL = registryURL.addParameter(PROXY_KEY, proxy);
+                    }
+
+                    Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
+                    
+                    DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
+                        this.invoker = invoker;
+                        this.metadata = metadata;
+
+                    Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
+                        // RegistryProtocol 别的 doc描述这个flow
+                    
+                    exporters.add(exporter);
+                }
+            } else {
+                // 一般不会走这个分支
+                if (logger.isInfoEnabled()) {
+                    logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
+                }
+                Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, url);
+                DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
+
+                Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
+                exporters.add(exporter);
+            }
+
+            MetadataUtils.publishServiceDefinition(url);
+                
+                WritableMetadataService.getDefaultExtension().publishServiceDefinition(url);
+                    InMemoryWritableMetadataService publishServiceDefinition(URL providerUrl)
+                        if (!ProtocolUtils.isGeneric(providerUrl.getParameter(GENERIC_KEY))) {
+                            String interfaceName = providerUrl.getParameter(INTERFACE_KEY);
+                            if (StringUtils.isNotEmpty(interfaceName)) {
+                                Class interfaceClass = Class.forName(interfaceName);
+                                ServiceDefinition serviceDefinition = ServiceDefinitionBuilder.build(interfaceClass);
+                                Gson gson = new Gson();
+                                String data = gson.toJson(serviceDefinition);
+                                serviceDefinitions.put(providerUrl.getServiceKey(), data);
+                                return;
+                            }
+                        }
+                
+                getRemoteMetadataService().publishServiceDefinition(url);
+                    
+                    MetadataUtils getRemoteMetadataService
+                        if (remoteMetadataService == null) {
+                            synchronized (REMOTE_LOCK) {
+                                if (remoteMetadataService == null) {
+                                    remoteMetadataService = new RemoteMetadataServiceImpl(WritableMetadataService.getDefaultExtension());
+                                }
+                            }
+                        }
+                    RemoteMetadataServiceImpl publishServiceDefinition(URL url)
+                        String side = url.getParameter(SIDE_KEY);
+                        if (PROVIDER_SIDE.equalsIgnoreCase(side)) {
+                            publishProvider(url);
+                             // todo 
+                        } else {
+                            publishConsumer(url);
+                        }
+        }
+    }
+    this.urls.add(url);
+
+// ====================================================================
+// todo 
+CuratorConnectionStateListener
+
+publishProvider(url);

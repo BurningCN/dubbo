@@ -151,6 +151,7 @@ public class RemoteMetadataServiceImpl {
         providerUrl = providerUrl.removeParameters(PID_KEY, TIMESTAMP_KEY, Constants.BIND_IP_KEY,
                 Constants.BIND_PORT_KEY, TIMESTAMP_KEY);
 
+        // dubbo://192.168.1.5:20880/samples.api_.api.GreetingsService?anyhost=true&application=first-dubbo-provider&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=samples.api_.api.GreetingsService&metadata-type=remote&methods=sayHi&release=&side=provider
         try {
             String interfaceName = providerUrl.getParameter(INTERFACE_KEY);
             if (StringUtils.isNotEmpty(interfaceName)) {

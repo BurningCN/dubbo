@@ -760,7 +760,7 @@ public class DubboBootstrap extends GenericEventListener {
     }
 
     private boolean isUsedRegistryAsConfigCenter(RegistryConfig registryConfig) {
-        // 进去，第二个参数是supplier
+        // 进去，第二个参数是supplier，第三个是DynamicConfigurationFactory，用以判断是否支持有prefix+DynamicConfigurationFactory的spi
         return isUsedRegistryAsCenter(registryConfig, registryConfig::getUseAsConfigCenter, "config",
                 DynamicConfigurationFactory.class);
     }
@@ -843,7 +843,7 @@ public class DubboBootstrap extends GenericEventListener {
                                            String centerType,
                                            Class<?> extensionClass) {
         final boolean supported;
-        Boolean configuredValue = usedRegistryAsCenter.get();
+        Boolean configuredValue = usedRegistryAsCenter.get(); // 一般返回null
         // If configured, take its value.
         if (configuredValue != null) {
             // api(和intValue一样)
@@ -972,9 +972,6 @@ public class DubboBootstrap extends GenericEventListener {
      * Initialize {@link MetadataService} from {@link WritableMetadataService}'s extension
      */
     private void initMetadataService() {
-        // 在initialize调用过了，不知道再来一次的意义是什么
-        startMetadataCenter();
-
         // 进去
         this.metadataService = getDefaultExtension();
         // 进去

@@ -201,6 +201,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     // 加锁 并发只允许一个线程进行暴露
     public synchronized void export() {
+        // 一般什么时候是空呢？就是api方式启动的时候
         if (bootstrap == null) {
             // 通过静态方法（可以理解为工厂方法）获取bootstrap实例，内部用了单例模式，进去
             bootstrap = DubboBootstrap.getInstance();
@@ -418,9 +419,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // 遍历 protocols，并在每个协议下导出服务，并且在导出服务的过程中，将服务注册到注册中心
         for (ProtocolConfig protocolConfig : protocols) { // protocols的填充实际注意下（checkProtocol）
             String pathKey = URL.buildKey(
-                    getContextPath(protocolConfig) // 返回的为Optional，进去
+                    getContextPath(protocolConfig) // 返回的为Optional，进去 一般是null
                     .map(p -> p + "/" + path)
-                    .orElse(path), group, version
+                    .orElse(path), group, version // 一般走这里的orElse(path)
             );// eg org.apache.dubbo.demo.DemoService
             // In case user specified path, register service one more time to map it to path.
             repository.registerService(pathKey, interfaceClass);
