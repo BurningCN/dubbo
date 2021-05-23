@@ -103,7 +103,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
             channel.send(res);
             return;
         }
-        // 获取 data 字段值，也就是 RpcInvocation 对象
+        // 获取 data 字段值，也就是 RpcInvocation 对象，这里一般是DecodeableRpcInvocation
         Object msg = req.getData();
         try {
             // 这里的handler就是我们的业务handler（除了ExchangeHandler/Adapter，也有可能是ExchangeHandlerDispatcher），进去
@@ -158,7 +158,8 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         Throwable exception = null;
         try {
             ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
-            handler.sent(exchangeChannel, message);// 进去
+            // 进去 handler为requestHandler
+            handler.sent(exchangeChannel, message);
         } catch (Throwable t) {
             exception = t;
             HeaderExchangeChannel.removeChannelIfDisconnected(channel);

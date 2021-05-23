@@ -137,7 +137,7 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private Result doMockInvoke(Invocation invocation, RpcException e) {
-        Result result = null;
+        Result result;
         Invoker<T> minvoker;
 
         // 筛选出 MockInvoker类型的那些invokers（用户可能提前塞到了dir）
@@ -191,7 +191,7 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
             invocation.setAttachment(INVOCATION_NEED_MOCK, Boolean.TRUE.toString());
             //directory will return a list of normal invokers if Constants.INVOCATION_NEED_MOCK is present in invocation, otherwise, a list of mock invokers will return.
             try {
-                // list内部有一个MockInvokerSelector router，其发现inv含有INVOCATION_NEED_MOCK = true的时候（上一步我们故意加上此参数）
+                // list内部有一个 MockInvokerSelector router，其发现inv含有INVOCATION_NEED_MOCK = true的时候（上一步我们故意加上此参数）
                 // 则会选出那些mock://协议的MockInvoker
                 invokers = directory.list(invocation);
             } catch (RpcException e) {

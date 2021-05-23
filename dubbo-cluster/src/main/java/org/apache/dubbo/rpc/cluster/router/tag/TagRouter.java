@@ -99,15 +99,18 @@ public class TagRouter extends AbstractRouter implements ConfigurationListener {
         }
 
         List<Invoker<T>> result = invokers;
+
+        // 获取消费者的tag值
         String tag = StringUtils.isEmpty(invocation.getAttachment(TAG_KEY)) ? url.getParameter(TAG_KEY) :
                 invocation.getAttachment(TAG_KEY);
 
         // if we are requesting for a Provider with a specific tag
         if (StringUtils.isNotEmpty(tag)) {
+            // 获取动态配置，即比如说在admin配置的，获取该tag允许的那些address列表，也就是这个消费者允许的地址列表
             List<String> addresses = tagRouterRuleCopy.getTagnameToAddresses().get(tag);
             // filter by dynamic tag group first 先按动态标签组过滤
             if (CollectionUtils.isNotEmpty(addresses)) {
-                // 地址匹配
+                // 看哪些Provider的地址是满足的，地址匹配
                 result = filterInvoker(invokers, invoker -> addressMatches(invoker.getUrl(), addresses));
                 // if result is not null OR it's null but force=true, return result directly
                 if (CollectionUtils.isNotEmpty(result) || tagRouterRuleCopy.isForce()) {
@@ -135,6 +138,9 @@ public class TagRouter extends AbstractRouter implements ConfigurationListener {
         } else {
             // List<String> addresses = tagRouterRule.filter(providerApp);
             // return all addresses in dynamic tag group.
+
+            // 既然else分支是消费者没有tag值才会进入的，而tagRouterRuleCopy在admin配置必须指定tag，所以这些address都是挂在这个tag下的
+            // 所以一个有tag，一个没有tag，那么肯定是将那些provider的address不在这些addresses中的筛选出来
             List<String> addresses = tagRouterRuleCopy.getAddresses();
             if (CollectionUtils.isNotEmpty(addresses)) {
                 result = filterInvoker(invokers, invoker -> addressNotMatches(invoker.getUrl(), addresses));
@@ -145,6 +151,7 @@ public class TagRouter extends AbstractRouter implements ConfigurationListener {
                 // 2. if there are some addresses that are not in any dynamic tag group, continue to filter using the
                 // static tag group.
             }
+            // 前面筛选一次后，再将那些没有tag值，或者tag值不在tagRouterRuleCopy中的筛选出来
             return filterInvoker(result, invoker -> {
                 String localTag = invoker.getUrl().getParameter(TAG_KEY);
                 return StringUtils.isEmpty(localTag) || !tagRouterRuleCopy.getTagNames().contains(localTag);
@@ -176,7 +183,7 @@ public class TagRouter extends AbstractRouter implements ConfigurationListener {
         String tag = StringUtils.isEmpty(invocation.getAttachment(TAG_KEY)) ? url.getParameter(TAG_KEY) :
                 invocation.getAttachment(TAG_KEY);
         // Tag request
-        if (!StringUtils.isEmpty(tag)) {
+        if (StringUtils.isNotEmpty(tag)) {
             // 过滤出提供者的url的dubbo.tag参数值和前面的tag匹配的提供者列表
             result = filterInvoker(invokers, invoker -> tag.equals(invoker.getUrl().getParameter(TAG_KEY)));
             // 如果为空，但是不是强制使用dubbo.tag参数（dubbo.force.tag = false，就是不强制），那么筛选出那些提供者的dubbo.tag参数值为空的填充result

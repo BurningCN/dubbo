@@ -97,6 +97,13 @@ public class ContextFilter implements Filter, Filter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        //attachments = {HashMap@4275}  size = 6
+        // "input" -> "273"
+        // "path" -> "samples.annotation.api.HelloService"
+        // "remote.application" -> "samples-annotation-consumer"
+        // "dubbo" -> "2.0.2"
+        // "interface" -> "samples.annotation.api.HelloService"
+        // "version" -> "1.0.0_annotation"
         Map<String, Object> attachments = invocation.getObjectAttachments();
         if (attachments != null) {
             Map<String, Object> newAttach = new HashMap<>(attachments.size());
@@ -109,6 +116,9 @@ public class ContextFilter implements Filter, Filter.Listener {
             }
             attachments = newAttach;
         }
+        //attachments = {HashMap@4303}  size = 2
+        // "input" -> "273"
+        // "remote.application" -> "samples-annotation-consumer"
 
         RpcContext context = RpcContext.getContext();
         context.setInvoker(invoker)

@@ -74,7 +74,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
         RpcException le = null; // last exception.
         // 存放每次选择出来的invoker todo need pr 如下的默认长度应该是len，因为最多len次
         List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
-        // 存放调用失败的invoker的address（后面打日志用）
+        // 存放每次调用的invoker的address（后面打日志用）
         Set<String> providers = new HashSet<String>(len);
         // 循环调用，失败重试
         for (int i = 0; i < len; i++) {

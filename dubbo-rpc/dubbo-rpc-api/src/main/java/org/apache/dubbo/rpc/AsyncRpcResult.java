@@ -230,7 +230,7 @@ public class AsyncRpcResult implements Result {
     }
 
     public Result whenCompleteWithContext(BiConsumer<Result, Throwable> fn) {
-        // whenComplete阻塞直到完成（v是responseFuture的值，去看下
+        // whenComplete在结果完成的时候会触发内部逻辑（v是responseFuture的值，去看下
         this.responseFuture = this.responseFuture.whenComplete((v, t) -> {
             // 去看下beforeContext、afterContext
             beforeContext.accept(v, t);

@@ -61,6 +61,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
         this.channel = channel;
         this.response = response;
         this.inputStream = is;
+        // 注意inv的填充来源，以及这个在该类的作用
         this.invocation = invocation;
         this.serializationType = id;
     }

@@ -89,7 +89,7 @@ public class DubboCodec extends ExchangeCodec {
                         data = decodeEventData(channel, in);
                     } else {
                         DecodeableRpcResult result;
-                        // 根据 url 参数决定是否在 IO 线程上执行解码逻辑
+                        // 根据 url 参数决定是否在 IO 线程(也就是Netty的io线程)上执行解码逻辑
                         if (channel.getUrl().getParameter(DECODE_IN_IO_THREAD_KEY, DEFAULT_DECODE_IN_IO_THREAD)) {
                             // 创建 DecodeableRpcResult 对象
                             result = new DecodeableRpcResult(channel, res, is,
@@ -101,6 +101,7 @@ public class DubboCodec extends ExchangeCodec {
                             result = new DecodeableRpcResult(channel, res,
                                     // 注意readMessageData会掐掉头部，返回的字节数组数组是ByteBuf的body部分
                                     new UnsafeByteArrayInputStream(readMessageData(is)),
+                                    // 进去
                                     (Invocation) getRequestData(id), proto);
                         }
                         data = result;
@@ -173,6 +174,7 @@ public class DubboCodec extends ExchangeCodec {
 
     private byte[] readMessageData(InputStream is) throws IOException {
         if (is.available() > 0) {
+            // 注意只读取一个完整包大小，available利用len做了上限，is内部的ByteBuf是完整的
             byte[] result = new byte[is.available()];
             is.read(result);
             return result;

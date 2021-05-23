@@ -68,7 +68,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         Class<?>[] parameterTypes = method.getParameterTypes();
         // 如果方法没有参数
         if (parameterTypes.length == 0) {
-            // 调用invoker相关方法  --- > 和以往通过反射调用方式，即method.invoke(invoker,args)不同，这里是直接对象.方法
+            // 调用invoker相关方法  --- > 和以往/前面通过反射调用方式，即method.invoke(invoker,args)不同，这里是直接对象.方法
             if ("toString".equals(methodName)) {
                 return invoker.toString();
             } else if ("$destroy".equals(methodName)) { // 因为客户端的代理类的生成是实现了内置的AbstractProxyFactory.Destroyable。这个是有该方法的

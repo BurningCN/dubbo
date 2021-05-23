@@ -74,7 +74,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
         this.serializationType = id;
     }
 
-    // decode的逻辑可以在netty的io线程中进行(DubbCodec)，也可以在派发线程池中执行(DecodeHandler <- 该handler是是AllChannelHandler里
+    // decode的逻辑可以在netty的io线程中进行(DubbCodec)，也可以在派发线程池（服务端线程池，在NettyServer初始化的）中执行(DecodeHandler <- 该handler是是AllChannelHandler里
     // 面使用线程提交ChannelEventRunnable)
     @Override
     public void decode() throws Exception {

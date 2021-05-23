@@ -55,6 +55,7 @@ public class DubboMonitorFactory extends AbstractMonitorFactory {
     protected Monitor createMonitor(URL url) {
         URLBuilder urlBuilder = URLBuilder.from(url);
         urlBuilder.setProtocol(url.getParameter(PROTOCOL_KEY, DUBBO_PROTOCOL));
+        // 下面没必要，因为在上层。即父类已经加了path值
         if (StringUtils.isEmpty(url.getPath())) {
             urlBuilder.setPath(MonitorService.class.getName());
         }

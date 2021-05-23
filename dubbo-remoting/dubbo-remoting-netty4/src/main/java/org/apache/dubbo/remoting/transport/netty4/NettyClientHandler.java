@@ -102,7 +102,7 @@ public class NettyClientHandler extends ChannelDuplexHandler {
         // We add listeners to make sure our out bound event is correct.
         // If our out bound event has an error (in most cases the encoder fails),
         // we need to have the request return directly instead of blocking the invoke process.
-        //添加监听器以确保out bound事件是正确的。如果我们的out bound事件有错误(在大多数情况下编码器失败)，我们需要直接返回请求，而不是阻塞调用进程。
+        // 添加监听器以确保out bound事件是正确的。如果我们的out bound事件有错误(在大多数情况下编码器失败)，我们需要直接返回请求，而不是阻塞调用进程。
         promise.addListener(future -> {
             if (future.isSuccess()) {
                 // if our future is success, mark the future to sent.

@@ -68,6 +68,7 @@ public abstract class AbstractMonitorFactory implements MonitorFactory {
 
     @Override
     public Monitor getMonitor(URL url) {
+        // 惯用法，将path修改为 MonitorService 、 RegistryService 、 MetadataReport 等
         url = url.setPath(MonitorService.class.getName()).addParameter(INTERFACE_KEY, MonitorService.class.getName());
         String key = url.toServiceStringWithoutResolving();
 

@@ -146,6 +146,8 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         invocation.setInvoker(this);
         if (CollectionUtils.isNotEmptyMap(attachment)) {
             invocation.addObjectAttachmentsIfAbsent(attachment); // 填充处1  从属性attachment
+            // attachment = {Collections$UnmodifiableMap@5979}  size = 1
+            // "interface" -> "samples.annotation.api.HelloService"
         }
 
         // 注意上面是获取inv的，这里是获取rpcContext的

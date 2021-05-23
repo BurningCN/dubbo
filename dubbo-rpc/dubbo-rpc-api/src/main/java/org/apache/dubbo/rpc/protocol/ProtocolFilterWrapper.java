@@ -122,6 +122,7 @@ public class ProtocolFilterWrapper implements Protocol {
                                 } finally {
                                     listenableFilter.removeListener(invocation);
                                 }
+                                //  一般是这个
                             } else if (filter instanceof Filter.Listener) {
                                 Filter.Listener listener = (Filter.Listener) filter;
                                 if (t == null) {

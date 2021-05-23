@@ -122,6 +122,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
         } else if (value instanceof CompletableFuture) {
             return (CompletableFuture<Object>) value;
         }
+        // 一般是这个
         return CompletableFuture.completedFuture(value);
     }
 
