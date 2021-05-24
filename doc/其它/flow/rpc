@@ -274,7 +274,34 @@ ListenerInvokerWrapper invoke
 				invocation.addObjectAttachmentsIfAbsent(attachment);
 				invocation.addObjectAttachments(contextAttachments);
 				invocation.setInvokeMode(RpcUtils.getInvokeMode(url, invocation));
+					// 同步异步相关-注意异步
+					RpcUtils getInvokeMode
+						if (inv instanceof RpcInvocation) {
+				            RpcInvocation rpcInvocation = (RpcInvocation) inv;
+				            if (rpcInvocation.getInvokeMode() != null) {
+				                return rpcInvocation.getInvokeMode();
+				            }
+				        }
+
+				        if (isReturnTypeFuture(inv)) {
+					        	Class<?> clazz;
+						        if (inv instanceof RpcInvocation) {
+						            clazz = ((RpcInvocation) inv).getReturnType();
+						        } else {
+						            clazz = getReturnType(inv);
+						        }
+						        return (clazz != null && CompletableFuture.class.isAssignableFrom(clazz)) || isGenericAsync(inv);
+				            return InvokeMode.FUTURE;
+				        } else if (isAsync(url, inv)) {
+				            return InvokeMode.ASYNC;
+				        } else {
+				            return InvokeMode.SYNC;
+				        }
+
 				RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+					// 同步异步相关-注意异步
+					// 这个和上面紧密关联的，上面是有可能设置为InvokeMode.FUTURE给inv的
+
 				invocation.put(SERIALIZATION_ID_KEY, serializationId);
 
 				 AsyncRpcResult asyncResult = (AsyncRpcResult) doInvoke(invocation);
@@ -305,11 +332,16 @@ ListenerInvokerWrapper invoke
 
 							AbstractInvoker getCallbackExecutor
 
-								InvokeMode.SYNC == RpcUtils.getInvokeMode(getUrl(), inv)
+								if (InvokeMode.SYNC == RpcUtils.getInvokeMode(getUrl(), inv))
 
 									ThreadlessExecutor(ExecutorService sharedExecutor) 
 
 										this.sharedExecutor = sharedExecutor;
+								else {
+									// 同步异步相关-注意异步
+									// 异步调用就是这个，即getInvokeMode不是SYNC
+						            return sharedExecutor;
+						        }
 
 						CompletableFuture<AppResponse> appResponseFuture =
 	                        currentClient.request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
@@ -417,8 +449,11 @@ ListenerInvokerWrapper invoke
 			                return result;
 			    
 			    RpcContext.getContext().setFuture(new FutureAdapter(asyncResult.getResponseFuture()));
+			    	// 注意异步调用，会使用到这个。会调用recreate->RpcContext.getContext().getFuture
+	        	
 	        	return asyncResult;            
 
+	    // 同步异步相关-注意异步，异步直接不走下面的if
 	    if (InvokeMode.SYNC == ((RpcInvocation) invocation).getInvokeMode()) 
 
 	     	asyncResult.get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
@@ -620,7 +655,23 @@ MigrationInvoker invoke
 InvokerInvocationHandler invoke
 	return invoker.invoke(rpcInvocation).recreate();
 		AsyncRpcResult recreate
-			 getAppResponse().recreate();
+
+			RpcInvocation rpcInvocation = (RpcInvocation) invocation;
+
+			// 同步异步相关，注意异步
+	        if (InvokeMode.FUTURE == rpcInvocation.getInvokeMode()) {
+	            
+	            return RpcContext.getContext().getFuture();
+	            	
+	            	return FutureContext.getContext().getCompletableFuture();
+	            		
+	            		// CompletableFuture<String> future = greetingService.greeting("async call request", SIGNAL);
+        				// 调用方执行上面后，回流到如下调用
+        				
+        				System.out.println("async call returned: " + future.get());
+	        }
+			
+			getAppResponse().recreate();
 			 	if (exception != null) {
 			 		 try {
 		                Object stackTrace = InvokerInvocationHandler.stackTraceField.get(exception);

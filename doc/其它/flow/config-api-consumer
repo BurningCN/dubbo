@@ -1,0 +1,48 @@
+public static void main(String[] args) {
+    ReferenceConfig<GreetingsService> reference = new ReferenceConfig<>();
+
+        public ReferenceConfig() {
+            super();
+                serviceMetadata = new ServiceMetadata();
+                serviceMetadata.addAttribute("ORIGIN_CONFIG", this);
+            this.repository = ApplicationModel.getServiceRepository();
+
+    
+    reference.setApplication(new ApplicationConfig("first-dubbo-consumer"));
+        AbstractInterfaceConfig setApplication(ApplicationConfig application) {
+            this.application = application;
+            if (application != null) {
+                ConfigManager configManager = ApplicationModel.getConfigManager();
+                configManager.getApplication().orElseGet(() -> {
+                    configManager.setApplication(application);
+                    return application;
+                });
+            }
+    
+    reference.setRegistry(new RegistryConfig(
+            "zookeeper://" + zookeeperHost + ":" + zookeeperPort));
+    
+    reference.setInterface(GreetingsService.class);
+        ReferenceConfigBase setInterface(Class<?> interfaceClass) 
+            if (interfaceClass != null && !interfaceClass.isInterface()) {
+                throw new IllegalStateException("The interface class " + interfaceClass + " is not a interface!");
+            }
+            this.interfaceClass = interfaceClass;
+            setInterface(interfaceClass == null ? null : interfaceClass.getName());
+                AbstractInterfaceConfig setInterface(String interfaceName) 
+                        this.interfaceName = interfaceName;
+    
+    GreetingsService service = reference.get();
+        if (destroyed) {
+            throw new IllegalStateException("The invoker of ReferenceConfig(" + url + ") has already destroyed!");
+        }
+        if (ref == null) {
+            init();
+                // 省略 
+        }
+        return ref;
+    
+    String message = service.sayHi("dubbo");
+    
+    System.out.println(message);
+}

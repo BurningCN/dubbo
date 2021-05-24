@@ -54,8 +54,8 @@ public static void main(String[] args) throws Exception {
             }
             this.interfaceClass = interfaceClass;
             setInterface(interfaceClass == null ? null : interfaceClass.getName());
-                    AbstractInterfaceConfig setInterface(String interfaceName) 
-                        this.interfaceName = interfaceName;
+                AbstractInterfaceConfig setInterface(String interfaceName) 
+                    this.interfaceName = interfaceName;
     service.setRef(new GreetingsServiceImpl());
         ServiceConfigBase setRef(T ref)
             this.ref = ref;

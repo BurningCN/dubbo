@@ -163,9 +163,12 @@ public class RemoteMetadataServiceImpl {
                 for (Map.Entry<String, MetadataReport> entry : getMetadataReports().entrySet()) {
                     MetadataReport metadataReport = entry.getValue();
                     // 方法的两个参数可以理解为 {唯一id ：具体接口的元数据信息}
-                    metadataReport.storeProviderMetadata(new MetadataIdentifier(providerUrl.getServiceInterface(),
-                            providerUrl.getParameter(VERSION_KEY), providerUrl.getParameter(GROUP_KEY),
-                            PROVIDER_SIDE, providerUrl.getParameter(APPLICATION_KEY)), fullServiceDefinition);
+                    metadataReport.storeProviderMetadata(new MetadataIdentifier(
+                            providerUrl.getServiceInterface(),
+                            providerUrl.getParameter(VERSION_KEY),
+                            providerUrl.getParameter(GROUP_KEY),
+                            PROVIDER_SIDE,
+                            providerUrl.getParameter(APPLICATION_KEY)), fullServiceDefinition);
                 }
                 return;
             }
