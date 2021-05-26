@@ -17,16 +17,26 @@
 
 package samples.autowire.action;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 import samples.autowire.api.HelloService;
 
 @Component("helloServiceConsumer")
-public class HelloServiceConsumer {
+public class HelloServiceConsumer implements ApplicationContextAware {
     @Autowired
     private HelloService helloService;
 
     public String helloServiceConsumerSayHello(String name) {
         return "HelloServiceConsumer say " + helloService.sayHello(name);
+    }
+
+    private ApplicationContext app;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.app = applicationContext;
     }
 }

@@ -14,23 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package samples.sd.transfer.provider;
 
-package samples.autowire.config;
+import org.apache.dubbo.rpc.RpcContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import samples.sd.transfer.demo.DemoService;
 
-import org.apache.dubbo.config.ProviderConfig;
-import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+public class DemoServiceImpl implements DemoService {
+    private static final Logger logger = LoggerFactory.getLogger(DemoServiceImpl.class);
 
-@Configuration
-@EnableDubbo(scanBasePackages = "samples.autowire.impl")
-@PropertySource("classpath:/samples.autowire/dubbo-provider.properties")
-public class ProviderConfiguration {
-    @Bean
-    public ProviderConfig providerConfig() {
-        ProviderConfig providerConfig = new ProviderConfig();
-        providerConfig.setTimeout(1000);
-        return providerConfig;
+    @Override
+    public String sayHello(String name) {
+        logger.info("Hello " + name + ", request from consumer: " + RpcContext.getContext().getRemoteAddress());
+        return "Hello " + name + ", response from provider: " + RpcContext.getContext().getLocalAddress();
     }
+
 }

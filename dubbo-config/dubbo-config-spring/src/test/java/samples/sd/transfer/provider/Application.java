@@ -14,23 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package samples.sd.transfer.provider;
 
-package samples.autowire.config;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import org.apache.dubbo.config.ProviderConfig;
-import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import java.util.concurrent.CountDownLatch;
 
-@Configuration
-@EnableDubbo(scanBasePackages = "samples.autowire.impl")
-@PropertySource("classpath:/samples.autowire/dubbo-provider.properties")
-public class ProviderConfiguration {
-    @Bean
-    public ProviderConfig providerConfig() {
-        ProviderConfig providerConfig = new ProviderConfig();
-        providerConfig.setTimeout(1000);
-        return providerConfig;
+public class Application {
+    public static void main(String[] args) throws Exception {
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("samples.sd.transfer/dubbo-provider.xml");
+        context.start();
+
+        System.out.println("dubbo service started");
+        new CountDownLatch(1).await();
     }
 }
