@@ -66,6 +66,7 @@ public class ExpiringMap<K, V> implements Map<K, V> {
 
     private ExpiringMap(ConcurrentHashMap<K, ExpiryObject> delegateMap, int timeToLive, int expirationInterval) {
         this.delegateMap = delegateMap;
+        // 进去
         this.expireThread = new ExpireThread();
         expireThread.setTimeToLive(timeToLive);
         expireThread.setExpirationInterval(expirationInterval);
@@ -73,6 +74,7 @@ public class ExpiringMap<K, V> implements Map<K, V> {
 
     @Override
     public V put(K key, V value) {
+        // 返回的是之前的entry
         ExpiryObject answer = delegateMap.put(key, new ExpiryObject(key, value, System.currentTimeMillis()));
         if (answer == null) {
             return null;
@@ -84,6 +86,13 @@ public class ExpiringMap<K, V> implements Map<K, V> {
     public V get(Object key) {
         ExpiryObject object = delegateMap.get(key);
         if (object != null) {
+            long timeIdle = System.currentTimeMillis() - object.getLastAccessTime();
+            int timeToLive = expireThread.getTimeToLive();
+            // 主动检查和被动检查配合，被动就是get的时候顺带检查一下，主动就是内部的线程检查
+            if (timeToLive > 0 && timeIdle >= timeToLive * 1000) {
+                delegateMap.remove(object.getKey());
+                return null;
+            }
             object.setLastAccessTime(System.currentTimeMillis());
             return object.getValue();
         }
@@ -283,6 +292,7 @@ public class ExpiringMap<K, V> implements Map<K, V> {
         private void processExpires() {
             long timeNow = System.currentTimeMillis();
             for (ExpiryObject o : delegateMap.values()) {
+                // 负数 表示永久，不死亡
                 if (timeToLiveMillis <= 0) {
                     continue;
                 }
@@ -319,6 +329,7 @@ public class ExpiringMap<K, V> implements Map<K, V> {
         public void stopExpiring() {
             if (running) {
                 running = false;
+                // 中断线程，注意在InterruptedException异常中置为running=false了
                 expirerThread.interrupt();
             }
         }

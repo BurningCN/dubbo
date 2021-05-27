@@ -118,6 +118,28 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
 	private CompletableFuture<Object> wrapWithFuture(Object value) {
         if (RpcContext.getContext().isAsyncStarted()) {
             // 如果是异步(开始)的，那么直接返回先前的AsyncContext实例
+            // 这个异步适用于provider，怎么应用的，请看dubbo-samples的async-provider测试用例 截取部分如下
+            // @Override
+            //    public String sayHello(String name) {
+            //        AsyncContext asyncContext = RpcContext.startAsync();
+            //        logger.info("sayHello start");
+            //
+            //        new Thread(() -> {
+            //            asyncContext.signalContextSwitch();
+            //            logger.info("Attachment from consumer: " + RpcContext.getContext().getAttachment("consumer-key1"));
+            //            logger.info("async start");
+            //            try {
+            //                Thread.sleep(5000);
+            //            } catch (InterruptedException e) {
+            //                e.printStackTrace();
+            //            }
+            //            asyncContext.write("Hello " + name + ", response from provider.");
+            //            logger.info("async end");
+            //        }).start();
+            //
+            //        logger.info("sayHello end");
+            //        return "hello, " + name;
+            //    }
             return ((AsyncContextImpl)(RpcContext.getContext().getAsyncContext())).getInternalFuture();
         } else if (value instanceof CompletableFuture) {
             return (CompletableFuture<Object>) value;

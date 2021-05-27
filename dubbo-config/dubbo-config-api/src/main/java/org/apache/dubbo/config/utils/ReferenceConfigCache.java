@@ -105,13 +105,16 @@ public class ReferenceConfigCache {
 
     @SuppressWarnings("unchecked")
     public <T> T get(ReferenceConfigBase<T> referenceConfig) {
+        // 进去 生成serviceKey
         String key = generator.generateKey(referenceConfig);
         Class<?> type = referenceConfig.getInterfaceClass();
 
+        // proxies 为二级缓存 ，结构为<type,<serviceKey,referenceConfig.get()/proxy0>>
         proxies.computeIfAbsent(type, _t -> new ConcurrentHashMap<>());
 
         ConcurrentMap<String, Object> proxiesOfType = proxies.get(type);
         proxiesOfType.computeIfAbsent(key, _k -> {
+            // 进去
             Object proxy = referenceConfig.get();
             referredReferences.put(key, referenceConfig);
             return proxy;

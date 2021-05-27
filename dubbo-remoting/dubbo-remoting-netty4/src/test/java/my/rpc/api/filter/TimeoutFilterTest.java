@@ -3,11 +3,15 @@ package my.rpc.api.filter;
 import my.common.extension.ExtensionLoader;
 import my.rpc.Protocol;
 import my.rpc.ProxyFactory;
+import my.rpc.RpcContext;
+import my.rpc.TimeoutCountDown;
 import my.rpc.support.DemoService;
 import my.rpc.support.DemoServiceImpl;
 import my.server.RemotingException;
 import my.server.URL;
 import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author geyu
@@ -24,6 +28,7 @@ public class TimeoutFilterTest {
         url.addParameter("timeout-countdown","xx");
         protocol.export(proxyFactory.getInvoker(new DemoServiceImpl(), DemoService.class,url));
         DemoService proxy = proxyFactory.getProxy(protocol.refer(DemoService.class, url));
+        RpcContext.getContext().set("timeout-countdown", TimeoutCountDown.newCountDown(1, TimeUnit.MILLISECONDS));
         System.out.println(proxy.timestamp());
         System.out.println(Thread.currentThread().getName());
     }

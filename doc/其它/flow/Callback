@@ -1,0 +1,508 @@
+
+// ====================================================================
+callback-provider.xml
+
+    <dubbo:application name="callback-provider"/>
+
+    <dubbo:registry address="zookeeper://${zookeeper.address:127.0.0.1}:2181"/>
+
+    <dubbo:protocol name="dubbo" port="20880"/>
+
+    <bean id="callbackService" class="samples.callback.CallbackServiceImpl"/>
+
+    <dubbo:service interface="samples.callback.CallbackService" ref="callbackService"
+                   connections="1" callbacks="1000">
+        <dubbo:method name="addListener">
+            <dubbo:argument index="1" callback="true"/>
+        </dubbo:method>
+    </dubbo:service>
+
+// ====================================================================
+
+DubboBeanDefinitionParser ServiceBean
+
+for (Method setter : beanClass.getMethods()) {
+    // ....
+
+    else if ("methods".equals(property)) {
+        parseMethods(id, element.getChildNodes(), beanDefinition, parserContext);
+            // .... 
+
+            RootBeanDefinition methodBeanDefinition = parse(element,
+                        parserContext, MethodConfig.class, false);
+
+                else if ("arguments".equals(property)) {
+                        parseArguments(id, element.getChildNodes(), beanDefinition, parserContext);
+            // ....
+
+    }
+// ====================================================================
+
+ServiceConfig doExportUrlsFor1Protocol
+
+    processMethods(Map<String, String> map) { // master-cp
+        if (CollectionUtils.isNotEmpty(getMethods())) {
+            for (MethodConfig method : getMethods()) {
+                // ....
+                List<ArgumentConfig> arguments = method.getArguments();
+                if (CollectionUtils.isNotEmpty(arguments)) {
+                    for (ArgumentConfig argument : arguments) {
+                        // convert argument type
+                        if (argument.getType() != null && argument.getType().length() > 0) 
+                            // ...
+                        else if (argument.getIndex() != -1) { 
+                            AbstractConfig.appendParameters(map, argument, method.getName() + "." + argument.getIndex());
+                                // ....
+                                parameters.put(key, str); 
+                                    "addListener.1.callback" -> true
+                        }
+
+// ====================================================================
+public class CallbackConsumer {
+
+    public static void main(String[] args) throws Exception {
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("samples.callback/callback-consumer.xml");
+        context.start();
+
+        
+        CallbackService callbackService = context.getBean("callbackService", CallbackService.class);
+        
+        // 这里 触发 rpc
+        callbackService.addListener("foo.bar", msg -> System.out.println("callback:" + msg));
+            // ......细节看rpc-flow
+
+            client DubboCodec encodeRequestData
+
+                Object[] args = inv.getArguments();
+                if (args != null) {
+                    for (int i = 0; i < args.length; i++) {
+                        // 注意 i很重要，内部会判定是否是callback
+                        out.writeObject(encodeInvocationArgument(channel, inv, i));
+
+                            CallbackServiceCodec encodeInvocationArgument
+                            // 另换行
+                    }
+                }
+                out.writeAttachments(inv.getObjectAttachments());
+// ====================================================================
+CallbackServiceCodec encodeInvocationArgument
+    
+    URL url = inv.getInvoker() == null ? null : inv.getInvoker().getUrl();
+    
+    byte callbackStatus = isCallBack(url, inv.getProtocolServiceKey(), inv.getMethodName(), paraIndex);
+        
+        CallbackServiceCodec isCallBack(URL url, String protocolServiceKey, String methodName, int argIndex)
+            
+            byte isCallback = CALLBACK_NONE;
+            
+            if (url != null && url.hasServiceMethodParameter(protocolServiceKey, methodName)) {
+
+                    return getMethodParameters().containsKey(method);// 包含addListener方法
+                
+                // addListener.1.callback
+                String callback = url.getServiceParameter(protocolServiceKey, methodName + "." + argIndex + ".callback");
+                
+                if (callback != null) {
+                    if ("true".equalsIgnoreCase(callback)) {
+                        isCallback = CALLBACK_CREATE;
+                    } else if ("false".equalsIgnoreCase(callback)) {
+                        isCallback = CALLBACK_DESTROY;
+                    }
+                }
+            }
+            return isCallback;
+
+    Object[] args = inv.getArguments();
+    
+    Class<?>[] pts = inv.getParameterTypes();   
+
+    switch (callbackStatus) {
+        case CallbackServiceCodec.CALLBACK_CREATE:
+            inv.setAttachment(INV_ATT_CALLBACK_KEY + paraIndex, exportOrUnexportCallbackService(channel, url, pts[paraIndex], args[paraIndex], true));
+            
+                exportOrUnexportCallbackService
+                    // 另换行 
+                
+                inv.setAttachment
+                    setObjectAttachment(key, value);
+                        attachments.put(key, value);// sys_callback_arg-1 : 1218927443
+
+            return null;
+        case CallbackServiceCodec.CALLBACK_DESTROY:
+            inv.setAttachment(INV_ATT_CALLBACK_KEY + paraIndex, exportOrUnexportCallbackService(channel, url, pts[paraIndex], args[paraIndex], false));
+            return null;
+        default:
+            return args[paraIndex];
+    }
+// ====================================================================
+private static String exportOrUnexportCallbackService(Channel channel, URL url, Class clazz, Object inst, Boolean export) throws IOException {
+
+        int instid = System.identityHashCode(inst);
+
+        Map<String, String> params = new HashMap<>(3);
+        params.put(IS_SERVER_KEY, Boolean.FALSE.toString());
+        params.put(IS_CALLBACK_SERVICE, Boolean.TRUE.toString());
+        String group = (url == null ? null : url.getParameter(GROUP_KEY));
+        if (group != null && group.length() > 0) {
+            params.put(GROUP_KEY, group);
+        }
+        params.put(METHODS_KEY, StringUtils.join(Wrapper.getWrapper(clazz).getDeclaredMethodNames(), ","));
+
+        Map<String, String> tmpMap = new HashMap<>();
+        if (url != null) {
+            Map<String, String> parameters = url.getParameters();
+            if (parameters != null && !parameters.isEmpty()) {
+                tmpMap.putAll(parameters);
+            }
+        }
+        tmpMap.putAll(params);
+        //params = {HashMap@5695}  size = 3
+         "is_callback_service" -> "true"
+         "methods" -> "changed"
+         "isserver" -> "false"
+        
+        tmpMap.remove(VERSION_KEY);// doesn't need to distinguish version for callback
+        tmpMap.remove(Constants.BIND_PORT_KEY); //callback doesn't needs bind.port
+        tmpMap.put(INTERFACE_KEY, clazz.getName());
+        
+        URL exportUrl = new URL(DubboProtocol.NAME, channel.getLocalAddress().getAddress().getHostAddress(), channel.getLocalAddress().getPort(), clazz.getName() + "." + instid, tmpMap);
+
+        String cacheKey = getClientSideCallbackServiceCacheKey(instid);
+        String countKey = getClientSideCountKey(clazz.getName());
+        if (export) {
+            if (!channel.hasAttribute(cacheKey)) {
+                if (!isInstancesOverLimit(channel, url, clazz.getName(), instid, false)) {
+                    
+                    ApplicationModel.getServiceRepository().registerService(clazz);
+                    
+                    Invoker<?> invoker = PROXY_FACTORY.getInvoker(inst, clazz, exportUrl);
+                    
+                    Exporter<?> exporter = PROTOCOL.export(invoker);
+                        DubboProtocol expport
+                            URL url = invoker.getUrl();
+
+                            // export service.
+                            String key = serviceKey(url);
+                            DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
+                            exporterMap.put(key, exporter);
+
+                            // ....
+
+                            openServer(url);
+                            // 不会开启server
+                            optimizeSerialization(url);
+
+                            return exporter;
+                    
+                    channel.setAttribute(cacheKey, exporter);
+                    
+                    logger.info("Export a callback service :" + exportUrl + ", on " + channel + ", url is: " + url);
+                    
+                    increaseInstanceCount(channel, countKey);
+                        Integer count = (Integer) channel.getAttribute(countkey);
+                        if (count == null) {
+                            count = 1;
+                        } else {
+                            count++;
+                        }
+                        channel.setAttribute(countkey, count);
+                }
+            }
+        } else {
+            if (channel.hasAttribute(cacheKey)) {
+                Exporter<?> exporter = (Exporter<?>) channel.getAttribute(cacheKey);
+                exporter.unexport();
+                channel.removeAttribute(cacheKey);
+                decreaseInstanceCount(channel, countKey);
+            }
+        }
+        return String.valueOf(instid);
+// ====================================================================
+isInstancesOverLimit
+
+    Integer count = (Integer) channel.getAttribute(isServer ? getServerSideCountKey(channel, interfaceClass) : getClientSideCountKey(interfaceClass));
+    
+    // xml配置为1000 默认为 1
+    int limit = url.getParameter(CALLBACK_INSTANCES_LIMIT_KEY, DEFAULT_CALLBACK_INSTANCES);
+    
+    if (count != null && count >= limit) {
+        //client side error
+        throw new IllegalStateException();
+    } else {
+        return false;
+    }
+
+
+// ====================================================================
+server  DecodeableRpcInvocation decode
+
+    // ....
+    //decode argument ,may be callback
+    for (int i = 0; i < args.length; i++) {
+        args[i] = decodeInvocationArgument(channel, this, pts, i, args[i]);
+
+            CallbackServiceCodec decodeInvocationArgument
+                URL url = null;
+                try {
+                    url = DubboProtocol.getDubboProtocol().getInvoker(channel, inv).getUrl();
+                } catch (RemotingException e) {
+                    if (logger.isInfoEnabled()) {
+                        logger.info(e.getMessage(), e);
+                    }
+                    return inObject;
+                }
+                byte callbackstatus = isCallBack(url, inv.getProtocolServiceKey(), inv.getMethodName(), paraIndex);
+                    // 讲述过了
+                switch (callbackstatus) {
+                    case CallbackServiceCodec.CALLBACK_CREATE:
+                        try {
+                            return referOrDestroyCallbackService(channel, url, pts[paraIndex], inv, Integer.parseInt(inv.getAttachment(INV_ATT_CALLBACK_KEY + paraIndex)), true);
+                                // 另换行
+                        } catch (Exception e) {
+                            logger.error(e.getMessage(), e);
+                            throw new IOException(StringUtils.toString(e));
+                        }
+                    case CallbackServiceCodec.CALLBACK_DESTROY:
+                        try {
+                            return referOrDestroyCallbackService(channel, url, pts[paraIndex], inv, Integer.parseInt(inv.getAttachment(INV_ATT_CALLBACK_KEY + paraIndex)), false);
+                        } catch (Exception e) {
+                            throw new IOException(StringUtils.toString(e));
+                        }
+                    default:
+                        return inObject;
+                }
+    }
+
+referOrDestroyCallbackService
+
+    Object proxy;
+    String invokerCacheKey = getServerSideCallbackInvokerCacheKey(channel, clazz.getName(), instid);
+    String proxyCacheKey = getServerSideCallbackServiceCacheKey(channel, clazz.getName(), instid);
+    proxy = channel.getAttribute(proxyCacheKey);
+    String countkey = getServerSideCountKey(channel, clazz.getName());
+    if (isRefer) {
+        if (proxy == null) {
+            URL referurl = URL.valueOf("callback://" + url.getAddress() + "/" + clazz.getName() + "?" + INTERFACE_KEY + "=" + clazz.getName());
+            referurl = referurl.addParametersIfAbsent(url.getParameters()).removeParameter(METHODS_KEY);
+            if (!isInstancesOverLimit(channel, referurl, clazz.getName(), instid, true)) {
+                ApplicationModel.getServiceRepository().registerService(clazz);
+                
+                Invoker<?> invoker = new ChannelWrappedInvoker(clazz, channel, referurl, String.valueOf(instid));
+                    super(serviceType, url, new String[]{GROUP_KEY, TOKEN_KEY});
+                        AbstractInvoker(Class<T> type, URL url, String[] keys) {
+                            this.type = type;
+                            this.url = url;
+                            this.attachment = attachment == null ? null : Collections.unmodifiableMap(attachment);
+                    this.channel = channel;
+                    this.serviceKey = serviceKey;
+                    this.currentClient = new HeaderExchangeClient(new ChannelWrapper(this.channel), false);
+                        
+                        ChannelWrapper extends ClientDelegate 
+                            this.channel = channel;
+                            this.url = channel.getUrl().addParameter("codec", DubboCodec.NAME);
+
+                        HeaderExchangeClient
+                            this.client = client;
+                            this.channel = new HeaderExchangeChannel(client);
+
+                            if (startTimer) {
+                                URL url = client.getUrl();
+                                startReconnectTask(url);
+                                startHeartBeatTask(url);
+                            }
+
+                proxy = PROXY_FACTORY.getProxy(new AsyncToSyncInvoker<>(invoker));
+                    
+                    AsyncToSyncInvoker(Invoker<T> invoker) 
+                        this.invoker = invoker;
+                    
+                    JavassistProxyFactory getProxy(Invoker<T> invoker, Class<?>[] interfaces)
+                        (T) Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));
+                
+                channel.setAttribute(proxyCacheKey, proxy);
+                channel.setAttribute(invokerCacheKey, invoker);
+                
+                increaseInstanceCount(channel, countkey);
+
+                Set<Invoker<?>> callbackInvokers = (Set<Invoker<?>>) channel.getAttribute(CHANNEL_CALLBACK_KEY);
+                if (callbackInvokers == null) {
+                    callbackInvokers = new ConcurrentHashSet<>(1);
+                    channel.setAttribute(CHANNEL_CALLBACK_KEY, callbackInvokers);
+                }
+                callbackInvokers.add(invoker);
+
+                logger.info("method " + inv.getMethodName() + " include a callback service :" + invoker.getUrl() + ", a proxy :" + invoker + " has been created.");
+            }
+        }
+    } else {
+        if (proxy != null) {
+            Invoker<?> invoker = (Invoker<?>) channel.getAttribute(invokerCacheKey);
+            try {
+                Set<Invoker<?>> callbackInvokers = (Set<Invoker<?>>) channel.getAttribute(CHANNEL_CALLBACK_KEY);
+                if (callbackInvokers != null) {
+                    callbackInvokers.remove(invoker);
+                }
+                invoker.destroy();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+            // cancel refer, directly remove from the map
+            channel.removeAttribute(proxyCacheKey);
+            channel.removeAttribute(invokerCacheKey);
+            decreaseInstanceCount(channel, countkey);
+        }
+    }
+    return proxy;
+// ====================================================================
+
+server ..... HeaderExchangeHandler handleRequest
+
+// ...
+Object msg = req.getData();
+try {
+    CompletionStage<Object> future = handler.reply(channel, msg);
+        requestHandler reply
+            //...
+            RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
+            Result result = invoker.invoke(inv);
+                // filterNode ....
+                // ....
+                // 
+                AbstractProxyInvoker invoke
+                    Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
+                        
+                        CallbackServiceImpl addListener(String key, CallbackListener listener)
+                            
+                            listeners.put(key, listener);
+                            
+                            listener.changed(getChanged(key));
+
+                                private String getChanged(String key) {
+                                    return "Changed: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                                }
+
+                                // listener的信息
+                                listener = {proxy0@5380} 
+                                 handler = {InvokerInvocationHandler@5670} 
+                                  invoker = {AsyncToSyncInvoker@5364} 
+                                  consumerModel = null
+                                  url = {URL@5143} "callback://30.25.58.200:20880/samples.callback.CallbackListener?addListener.1.callback=true&anyhost=true&application=callback-provider&bind.ip=30.25.58.200&bind.port=20880&callbacks=1000&connections=1&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=samples.callback.CallbackListener&metadata-type=remote&pid=91092&release=&side=provider&timestamp=1621936760512"
+                                  protocolServiceKey = "samples.callback.CallbackListener:callback"   
+
+                                listener.changed
+                                    InvokerInvocationHandler invoke 
+                                        AsyncToSyncInvoker invoke
+                                            Result asyncResult = invoker.invoke(invocation);
+                                                AbstractInvoker invoke // this为ChannelWrapperInvoker
+                                                    // ... 
+                                                    asyncResult = (AsyncRpcResult) doInvoke(invocation);
+                                                        // 另换行  ChannelWrappedInvoker doInvoke
+
+
+
+                    // ...
+
+            return result.thenApply(Function.identity());
+// ====================================================================
+server ChannelWrappedInvoker doInvoke
+
+    RpcInvocation inv = (RpcInvocation) invocation;
+    inv.setAttachment(PATH_KEY, getInterface().getName());
+    inv.setAttachment(CALLBACK_SERVICE_KEY, serviceKey);
+
+     if (RpcUtils.isOneway(getUrl(), inv)) { // may have concurrency issue
+        currentClient.send(inv, getUrl().getMethodParameter(invocation.getMethodName(), SENT_KEY, false));
+        return AsyncRpcResult.newDefaultAsyncResult(invocation);
+    } else {
+        CompletableFuture<AppResponse> appResponseFuture = currentClient.request(inv).thenApply(obj -> (AppResponse) obj);
+            HeaderExchangeClient request
+                return channel.request(request);
+                    HeaderExchangeChannel request(Object request)
+                         return request(request, null);
+                            return request(request, channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT), executor);
+
+                                Request req = new Request();
+                                req.setVersion(Version.getProtocolVersion());
+                                req.setTwoWay(true);
+                                req.setData(request);
+                                DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout, executor);
+                                try {
+                                    channel.send(req);
+                                    // 看client的ChannelRead
+                                } catch (RemotingException e) {
+                                    future.cancel();
+                                    throw e;
+                                }
+                                return future;
+
+        return new AsyncRpcResult(appResponseFuture, inv);
+    }
+
+// ====================================================================
+Client channelRead 
+// ....
+// 
+DubboProtocol requestHandler reply
+    if (!(message instanceof Invocation)) {
+        throw new RemotingException(channel, "Unsupported request: "
+                + (message == null ? null : (message.getClass().getName() + ": " + message))
+                + ", channel: consumer: " + channel.getRemoteAddress() + " --> provider: " + channel.getLocalAddress());
+    }
+
+    Invocation inv = (Invocation) message;
+    Invoker<?> invoker = getInvoker(channel, inv);
+        // ...
+        //callback
+        isCallBackServiceInvoke = isClientSide(channel) && !isStubServiceInvoke;
+        if (isCallBackServiceInvoke) {
+            // samples.callback.CallbackListener.1726351902
+            path += "." + inv.getObjectAttachments().get(CALLBACK_SERVICE_KEY);
+            inv.getObjectAttachments().put(IS_CALLBACK_SERVICE_INVOKE, Boolean.TRUE.toString());
+        }
+
+    if (Boolean.TRUE.toString().equals(inv.getObjectAttachments().get(IS_CALLBACK_SERVICE_INVOKE))) {
+        // changed 
+        String methodsStr = invoker.getUrl().getParameters().get("methods");
+        boolean hasMethod = false;
+        if (methodsStr == null || !methodsStr.contains(",")) {
+            // 这里分支
+            hasMethod = inv.getMethodName().equals(methodsStr);
+        } else {
+            String[] methods = methodsStr.split(",");
+            for (String method : methods) {
+                if (inv.getMethodName().equals(method)) {
+                    hasMethod = true;
+                    break;
+                }
+            }
+        }
+        if (!hasMethod) {
+            logger.warn(new IllegalStateException("The methodName " + inv.getMethodName()
+                    + " not found in callback service interface ,invoke will be ignored."
+                    + " please update the api interface. url is:"
+                    + invoker.getUrl()) + " ,invocation is :" + inv);
+            return null;
+        }
+    }    
+
+    RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
+    Result result = invoker.invoke(inv);
+    // client 的 invoker
+        AbstractProxyInvoker invoke(Invocation invocation)
+             Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
+                JavassistProxyFactory doInvoke
+                    wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
+                        CallbackConsumer main
+                            callbackService.addListener("foo.bar", msg -> System.out.println("callback:" + msg));
+                                System.out.println("callback:" + msg)
+             // ...
+    return result.thenApply(Function.identity());
+
+
+
+
+
+
+
+
+

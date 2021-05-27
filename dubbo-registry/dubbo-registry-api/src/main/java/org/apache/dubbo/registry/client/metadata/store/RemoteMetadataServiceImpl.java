@@ -62,6 +62,7 @@ public class RemoteMetadataServiceImpl {
     // 这里的serviceName不是传统的接口全限定名称，而是appName，代表一个服务
     public void publishMetadata(String serviceName) {
         Map<String, MetadataInfo> metadataInfos = localMetadataService.getMetadataInfos();
+        // key比如为service-discovery
         metadataInfos.forEach((registryCluster, metadataInfo) -> {
             if (!metadataInfo.hasReported()) {
                  //todo need pr 这个没用

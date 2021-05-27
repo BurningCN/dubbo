@@ -106,6 +106,7 @@ public abstract class ReferenceConfigBase<T> extends AbstractReferenceConfig {
         if (shouldInit == null) {
             // default is true, spring will still init lazily by setting init's default value to false,
             // the def default setting happens in {@link ReferenceBean#afterPropertiesSet}.
+            // default为true，spring仍会通过将init的默认值设置为false来进行惰性初始化，def默认设置发生在{@link ReferenceBean#afterPropertiesSet}.
             return true;
         }
         return shouldInit;

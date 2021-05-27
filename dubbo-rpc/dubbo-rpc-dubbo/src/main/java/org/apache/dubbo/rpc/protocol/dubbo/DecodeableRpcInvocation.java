@@ -175,7 +175,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
             //decode argument ,may be callback // 对 callback 类型的参数进行处理
             for (int i = 0; i < args.length; i++) {
-                args[i] = decodeInvocationArgument(channel, this, pts, i, args[i]);
+                args[i] = decodeInvocationArgument(channel, this, pts[i], i, args[i]);
             }
 
             // 设置参数列表

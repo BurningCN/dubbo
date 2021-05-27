@@ -31,7 +31,7 @@ import org.apache.dubbo.rpc.Invocation;
 public interface CacheFactory {
 
     /**
-     * CacheFactory implementation class needs to implement this return underlying cache instance for method against
+     * CacheFactory implementation class needs to implement this return underlying(基础) cache instance for method against
      * url and invocation.
      * @param url
      * @param invocation

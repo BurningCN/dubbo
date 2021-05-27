@@ -1,0 +1,411 @@
+
+触发点1
+
+ DubboBootstrap bootstrap = DubboBootstrap.getInstance();
+        bootstrap.application(new ApplicationConfig("dubbo-demo-api-consumer"))
+                .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
+                .reference(reference)
+                // 这里
+                .start();
+
+
+触发点2
+DubboBootstrapApplicationListener
+    onApplicationContextEvent
+        if (DubboBootstrapStartStopListenerSpringAdapter.applicationContext == null) {
+            DubboBootstrapStartStopListenerSpringAdapter.applicationContext = event.getApplicationContext();
+        }
+        if (event instanceof ContextRefreshedEvent) {
+            onContextRefreshedEvent((ContextRefreshedEvent) event);
+                dubboBootstrap.start();
+                // 另换行
+        } else if (event instanceof ContextClosedEvent) {// ContextStoppedEvent
+            onContextClosedEvent((ContextClosedEvent) event);
+        } 
+// ====================================================================
+DubboBootstrap start() {    
+    
+    if (started.compareAndSet(false, true)) {
+        
+        ready.set(false);
+        
+        initialize();
+            // 不赘述，详情看ServiceConfig export flow
+        
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " is starting...");
+        }
+        
+        // 1. export Dubbo Services
+        exportServices();
+
+            configManager.getServices().forEach(sc -> {
+                ServiceConfig serviceConfig = (ServiceConfig) sc;
+                serviceConfig.setBootstrap(this);
+
+                if (exportAsync) {
+                    ExecutorService executor = executorRepository.getServiceExporterExecutor();
+                       
+                        DefaultExecutorRepository getServiceExporterExecutor
+                            private ScheduledExecutorService serviceExporterExecutor;
+                            public DefaultExecutorRepository() {
+                                // ....
+                                serviceExporterExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("Dubbo-exporter-scheduler"));
+                            }
+                    
+                    Future<?> future = executor.submit(() -> {
+                        try {
+                            sc.export();
+                            exportedServices.add(sc);
+                        }catch (Throwable t) {
+                            logger.error("export async catch error : " + t.getMessage(), t);
+                        }
+                    });
+                    asyncExportingFutures.add(future);
+                } else {
+                    // 一般这个分支
+                    sc.export();
+                        // 不赘述，详情看ServiceConfig export flow
+                    
+                    exportedServices.add(sc);
+                }
+            });
+
+        // Not only provider register 一般 sd://满足第二个条件
+        if (!isOnlyRegisterProvider() || hasExportedServices()) {
+
+            !isOnlyRegisterProvider() || hasExportedServices()
+                
+                isOnlyRegisterProvider
+                    Boolean registerConsumer = getApplication().getRegisterConsumer();
+                        return registerConsumer;
+                    return registerConsumer == null || !registerConsumer;    
+                
+                hasExportedServices    
+                    return !metadataService.getExportedURLs().isEmpty();
+                        
+                        MetadataService getExportedURLs
+                            
+                            return getExportedURLs(ALL_SERVICE_INTERFACES);
+                                
+                                SortedSet<String> getExportedURLs(String serviceInterface)
+                                    
+                                    return getExportedURLs(serviceInterface, null);
+                                        
+                                        SortedSet<String> getExportedURLs(String serviceInterface, String group)
+                                            return getExportedURLs(serviceInterface, group, null);
+                                        
+                                        SortedSet<String> getExportedURLs(String serviceInterface, String group, String version)
+                                            getExportedURLs(serviceInterface, group, version, null);
+
+                                            InMemoryWritableMetadataService getExportedURLs
+                                                if ("*".equals(serviceInterface)) {
+                                                    return getAllUnmodifiableServiceURLs(exportedServiceURLs);
+                                                        SortedSet<URL> bizURLs = new TreeSet<>(URLComparator.INSTANCE);
+                                                        for (Map.Entry<String, SortedSet<URL>> entry : serviceURLs.entrySet()) {
+                                                            SortedSet<URL> urls = entry.getValue();
+                                                            if (urls != null) {
+                                                                for (URL url : urls) {
+                                                                    if (!MetadataService.class.getName().equals(url.getServiceInterface())) {
+                                                                        bizURLs.add(url);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        return MetadataService.toSortedStrings(bizURLs);
+                                                            toSortedStrings(StreamSupport.stream(iterable.spliterator(), false));
+                                                                unmodifiableSortedSet(stream.map(URL::toFullString).collect(TreeSet::new, Set::add, Set::addAll));
+                                                }
+                                                // ...
+
+            // 2. export MetadataService
+            exportMetadataService();
+                
+                metadataServiceExporter.export();
+                    
+                    ConfigurableMetadataServiceExporter export
+
+                        if (!isExported()) {
+                            ServiceConfig<MetadataService> serviceConfig = new ServiceConfig<>();
+                            serviceConfig.setApplication(getApplicationConfig());
+                            serviceConfig.setRegistries(getRegistries());
+                            serviceConfig.setProtocol(generateMetadataProtocol());
+                            serviceConfig.setInterface(MetadataService.class);
+                            serviceConfig.setRef(metadataService);
+                            serviceConfig.setGroup(getApplicationConfig().getName());
+                            serviceConfig.setVersion(metadataService.version());
+
+                            // export
+                            serviceConfig.export();
+
+                            if (logger.isInfoEnabled()) {
+                                logger.info("The MetadataService exports urls : " + serviceConfig.getExportedUrls());
+                            }
+
+                            this.serviceConfig = serviceConfig;
+                
+            //3. Register the local ServiceInstance if required
+            registerServiceInstance();
+                
+                if (CollectionUtils.isEmpty(getServiceDiscoveries())) {
+                        AbstractRegistryFactory getServiceDiscoveries
+                            return AbstractRegistryFactory.getRegistries()
+                                .stream()
+                                .filter(registry -> registry instanceof ServiceDiscoveryRegistry)
+                                .map(registry -> (ServiceDiscoveryRegistry) registry)
+                                .map(ServiceDiscoveryRegistry::getServiceDiscovery)
+                                .collect(Collectors.toList());
+                    return;
+                }
+
+                ApplicationConfig application = getApplication();
+
+                String serviceName = application.getName();
+
+                URL exportedURL = selectMetadataServiceExportedURL();
+                    URL selectedURL = null;
+
+                    SortedSet<String> urlValues = metadataService.getExportedURLs();
+                        return getExportedURLs(ALL_SERVICE_INTERFACES);
+                        // 不赘述，前面说了
+
+                    for (String urlValue : urlValues) {
+                        URL url = URL.valueOf(urlValue);
+                        if (MetadataService.class.getName().equals(url.getServiceInterface())) {
+                            continue;
+                        }
+                        if ("rest".equals(url.getProtocol())) { // REST first
+                            selectedURL = url;
+                            break;
+                        } else {
+                            selectedURL = url; // If not found, take any one
+                        }
+                    }
+
+                    if (selectedURL == null && CollectionUtils.isNotEmpty(urlValues)) {
+                        selectedURL = URL.valueOf(urlValues.iterator().next());
+                    }
+
+                    return selectedURL;
+
+                String host = exportedURL.getHost();
+
+                int port = exportedURL.getPort();
+
+                ServiceInstance serviceInstance = createServiceInstance(serviceName, host, port);
+
+                    this.serviceInstance = new DefaultServiceInstance(serviceName, host, port);
+                         
+                         this(host + ":" + port, serviceName, host, port);
+
+                            if (port != null && port.intValue() < 1) {
+                                throw new IllegalArgumentException("The port must be greater than zero!");
+                            }
+                            this.id = id;
+                            this.serviceName = serviceName;
+                            this.host = host;
+                            this.port = port;
+                            this.enabled = true;
+                            this.healthy = true;
+                    
+                    setMetadataStorageType(serviceInstance, getMetadataType());
+                        ServiceInstanceMetadataUtils setMetadataStorageType
+                            Map<String, String> metadata = serviceInstance.getMetadata();
+                            metadata.put(METADATA_STORAGE_TYPE_PROPERTY_NAME, metadataType);
+
+                    ExtensionLoader<ServiceInstanceCustomizer> loader =
+                            ExtensionLoader.getExtensionLoader(ServiceInstanceCustomizer.class);
+                    
+                    loader.getSupportedExtensionInstances().forEach(customizer -> {
+                        // customizes
+                        customizer.customize(this.serviceInstance);
+                            
+                            ServiceInstanceMetadataCustomizer
+                            ServiceInstancePortCustomizer
+                            MetadataServiceURLParamsMetadataCustomizer
+                            ProtocolPortsMetadataCustomizer
+                    });
+
+                    return this.serviceInstance;
+
+                doRegisterServiceInstance(serviceInstance);
+
+                    publishMetadataToRemote(serviceInstance);
+                        
+                        RemoteMetadataServiceImpl remoteMetadataService = MetadataUtils.getRemoteMetadataService();
+                        
+                        remoteMetadataService.publishMetadata(serviceInstance.getServiceName());
+                                
+                                Map<String, MetadataInfo> metadataInfos = localMetadataService.getMetadataInfos();
+                                metadataInfos.forEach((registryCluster, metadataInfo) -> {
+                                    if (!metadataInfo.hasReported()) {
+                                        metadataInfo.getExtendParams().put(REGISTRY_CLUSTER_KEY, registryCluster);
+                                        MetadataReport metadataReport = getMetadataReports().get(registryCluster);
+                                        if (metadataReport == null) {
+                                            metadataReport = getMetadataReports().entrySet().iterator().next().getValue();
+                                        }
+                                        logger.info("Publishing metadata to " + metadataReport.getClass().getSimpleName());
+                                        if (logger.isDebugEnabled()) {
+                                            logger.debug(metadataInfo.toString());
+                                        }
+                                        SubscriberMetadataIdentifier identifier = new SubscriberMetadataIdentifier(serviceName, metadataInfo.calAndGetRevision());
+                                        metadataReport.publishAppMetadata(identifier, metadataInfo);
+                                            ZookeeperMetadataReport publishAppMetadata
+                                                String path = getNodePath(identifier);
+                                                if (StringUtils.isBlank(zkClient.getContent(path))) {
+                                                    zkClient.create(path, gson.toJson(metadataInfo), false);
+                                                }
+                                        metadataInfo.markReported();
+                                             reported.compareAndSet(false, true);
+                                    }
+                                });
+                    getServiceDiscoveries().forEach(serviceDiscovery ->
+                    {
+                        calInstanceRevision(serviceDiscovery, serviceInstance);
+                        serviceDiscovery.register(serviceInstance);
+                            EventPublishingServiceDiscovery register
+                                () -> serviceDiscovery.register(serviceInstance),
+                                    AbstractServiceDiscovery register
+                                        this.serviceInstance = serviceInstance;
+                                        doRegister(serviceInstance);
+                                            ZookeeperServiceDiscovery doRegister
+                                                doInServiceRegistry(serviceDiscovery -> {
+                                                    serviceDiscovery.registerService(build(serviceInstance));
+                                                        build ....
+                                                });
+                    });
+
+                // scheduled task for updating Metadata and ServiceInstance
+                executorRepository.nextScheduledExecutor().scheduleAtFixedRate(() -> {
+                    try {
+                        InMemoryWritableMetadataService localMetadataService = (InMemoryWritableMetadataService) WritableMetadataService.getDefaultExtension();
+                        
+                        localMetadataService.blockUntilUpdated();
+                        
+                        ServiceInstanceMetadataUtils.refreshMetadataAndInstance();
+                    } catch (Throwable e) {
+                        logger.error("refresh metadata and instance failed", e);
+                    }
+                }, 0, ConfigurationUtils.get(METADATA_PUBLISH_DELAY_KEY, DEFAULT_METADATA_PUBLISH_DELAY), TimeUnit.MILLISECONDS);
+
+                // 上面的 executorRepository.nextScheduledExecutor()
+
+                    DefaultExecutorRepository nextScheduledExecutor
+                        return scheduledExecutors.pollItem();
+
+                    private Ring<ScheduledExecutorService> scheduledExecutors = new Ring<>();
+                        
+                        class Ring<T>     
+                            AtomicInteger count = new AtomicInteger();
+                            private List<T> itemList = new CopyOnWriteArrayList<T>();
+                        
+                    public DefaultExecutorRepository() {
+                        for (int i = 0; i < DEFAULT_SCHEDULER_SIZE; i++) {
+                            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("Dubbo-framework-scheduler"));
+                            // 进去
+                            scheduledExecutors.addItem(scheduler);
+                        }
+                        serviceExporterExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("Dubbo-exporter-scheduler"));
+                    }
+
+            
+        }
+
+        referServices();
+            if (cache == null) {
+                cache = ReferenceConfigCache.getCache();
+                    return getCache(DEFAULT_NAME);
+                        return getCache(name, DEFAULT_KEY_GENERATOR);
+                            return CACHE_HOLDER.computeIfAbsent(name, k -> new ReferenceConfigCache(k, keyGenerator));
+            }
+
+            configManager.getReferences().forEach(rc -> {
+                // TODO, compatible with  ReferenceConfig.refer()
+                ReferenceConfig referenceConfig = (ReferenceConfig) rc;
+                referenceConfig.setBootstrap(this);
+
+                if (rc.shouldInit()) {
+                    rc.shouldInit()
+                        Boolean shouldInit = isInit();
+                        if (shouldInit == null && getConsumer() != null) {
+                            shouldInit = getConsumer().isInit();
+                        }
+                        if (shouldInit == null) {
+                            return true;
+                        }
+                        return shouldInit;
+
+                    if (referAsync) {
+                        CompletableFuture<Object> future = ScheduledCompletableFuture.submit(
+                                executorRepository.getServiceExporterExecutor(),
+                                () -> cache.get(rc)
+                        );
+                        asyncReferringFutures.add(future);
+                    } else {
+                        cache.get(rc);
+                            String key = generator.generateKey(referenceConfig);
+                                buildServiceKey(iName,referenceConfig.getGroup(),referenceConfig.getVersion());
+                           
+                            Class<?> type = referenceConfig.getInterfaceClass();
+
+                            proxies.computeIfAbsent(type, _t -> new ConcurrentHashMap<>());
+
+                            ConcurrentMap<String, Object> proxiesOfType = proxies.get(type);
+                            proxiesOfType.computeIfAbsent(key, _k -> {
+                                Object proxy = referenceConfig.get();
+                                    // 不赘述，详见ReferenceConfig_get flow
+                                referredReferences.put(key, referenceConfig);
+                                return proxy;
+                            });
+
+                            return (T) proxiesOfType.get(key);
+                    }
+                }
+            });
+        
+        // 一般不走这个
+        if (asyncExportingFutures.size() > 0) {
+            new Thread(() -> {
+                try {
+                    this.awaitFinish();
+                        
+                        if (exportAsync && asyncExportingFutures.size() > 0) {
+                            CompletableFuture future = CompletableFuture.allOf(asyncExportingFutures.toArray(new CompletableFuture[0]));
+                            future.get();
+                        }
+                        
+                        if (referAsync && asyncReferringFutures.size() > 0) {
+                            CompletableFuture future = CompletableFuture.allOf(asyncReferringFutures.toArray(new CompletableFuture[0]));
+                            future.get();
+                        }
+                        return this;
+                } catch (Exception e) {
+                    logger.warn(NAME + " exportAsync occurred an exception.");
+                }
+                
+                ready.set(true);
+                
+                if (logger.isInfoEnabled()) {
+                    logger.info(NAME + " is ready.");
+                }
+                
+                ExtensionLoader<DubboBootstrapStartStopListener> exts = getExtensionLoader(DubboBootstrapStartStopListener.class);
+                exts.getSupportedExtensionInstances().forEach(ext -> ext.onStart(this));
+
+            }).start();
+        } else {
+            ready.set(true);
+            if (logger.isInfoEnabled()) {
+                logger.info(NAME + " is ready.");
+            }
+            ExtensionLoader<DubboBootstrapStartStopListener> exts = getExtensionLoader(DubboBootstrapStartStopListener.class);
+            exts.getSupportedExtensionInstances().forEach(ext -> ext.onStart(this));
+        }
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " has started.");
+        }
+    }
+    return this;
+
+
+

@@ -1,0 +1,479 @@
+// ====================================================================
+
+// 注解引发的触发
+
+@Configuration
+@EnableDubbo(scanBasePackages = "org.apache.dubbo.samples.autowire.action")
+@PropertySource("classpath:/samples.autowire/dubbo-consumer.properties")
+@ComponentScan(value = {"samples.autowire.action"})
+public class ConsumerConfiguration {
+    @DubboReference
+    private HelloService helloService;  // 触发点1
+	    ReferenceAnnotationBeanPostProcessor doGetInjectedBean
+		// ....
+		return referenceBean.get();
+}
+
+// xml引发的触发
+
+public static void main(String[] args) {
+    ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("samples.attachment/attachment-consumer.xml");
+    context.start();
+
+    AttachmentService attachmentService = context.getBean("demoService", AttachmentService.class); // 触发点2
+    	ReferenceBean FactoryBean # getObject
+			return get();
+}
+
+
+// api引发的触发
+
+ReferenceConfig<GreetingsService> reference = new ReferenceConfig<>();
+reference.setApplication(new ApplicationConfig("first-dubbo-consumer"));
+reference.setRegistry(new RegistryConfig(
+        "zookeeper://" + zookeeperHost + ":" + zookeeperPort));
+reference.setInterface(GreetingsService.class);
+GreetingsService service = reference.get(); // 触发点3
+
+// ====================================================================
+
+ReferenceConfig get
+
+	if (destroyed) {
+            throw new IllegalStateException("The invoker of ReferenceConfig(" + url + ") has already destroyed!");
+    }
+    if (ref == null) {
+        init();
+        	if (initialized) {
+	            return;
+	        }
+
+
+	        // 不赘述，详情看ServiceConfig export flow
+	        if (bootstrap == null) {
+	            bootstrap = DubboBootstrap.getInstance();
+	            bootstrap.initialize();
+	        }
+	        // 不赘述，详情看ServiceConfig export flow
+	        checkAndUpdateSubConfigs();
+
+	        checkStubAndLocal(interfaceClass);
+	        	// todo 
+	        ConfigValidationUtils.checkMock(interfaceClass, this);
+	        	// todo 
+
+	        Map<String, String> map = new HashMap<String, String>();
+	        map.put(SIDE_KEY, CONSUMER_SIDE);
+
+	        ReferenceConfigBase.appendRuntimeParameters(map);
+	        	// 不赘述，详情看ServiceConfig export flow
+	        
+	        if (!ProtocolUtils.isGeneric(generic)) {
+	            String revision = Version.getVersion(interfaceClass, version);
+	            	Package pkg = cls.getPackage();
+		            String version = null;
+		            if (pkg != null) {
+		                version = pkg.getImplementationVersion();
+		                if (StringUtils.isNotEmpty(version)) {
+		                    return version;
+		                }
+
+		                version = pkg.getSpecificationVersion();
+		                if (StringUtils.isNotEmpty(version)) {
+		                    return version;
+		                }
+		            }
+
+		            CodeSource codeSource = cls.getProtectionDomain().getCodeSource();
+		            if (codeSource == null) {
+		                logger.info("No codeSource for class " + cls.getName() + " when getVersion, use default version " + defaultVersion);
+		                return defaultVersion;
+		            }
+
+		            URL location = codeSource.getLocation();
+		            if (location == null){
+		                logger.info("No location for class " + cls.getName() + " when getVersion, use default version " + defaultVersion);
+		                return defaultVersion;
+		            }
+		            String file =  location.getFile();
+		            if (!StringUtils.isEmpty(file) && file.endsWith(".jar")) {
+		                version = getFromFile(file);
+		            }
+
+		            return StringUtils.isEmpty(version) ? defaultVersion : version;
+
+	            if (revision != null && revision.length() > 0) {
+	                map.put(REVISION_KEY, revision);
+	            }
+
+	            String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
+	            if (methods.length == 0) {
+	                logger.warn("No method found in service interface " + interfaceClass.getName());
+	                map.put(METHODS_KEY, ANY_VALUE);
+	            } else {
+	                map.put(METHODS_KEY, StringUtils.join(new HashSet<String>(Arrays.asList(methods)), COMMA_SEPARATOR));
+	            }
+	        }
+	        map.put(INTERFACE_KEY, interfaceName);
+	        AbstractConfig.appendParameters(map, getMetrics());
+	        AbstractConfig.appendParameters(map, getApplication());
+	        AbstractConfig.appendParameters(map, getModule());
+	        // remove 'default.' prefix for configs from ConsumerConfig
+	        // appendParameters(map, consumer, Constants.DEFAULT_KEY);
+	        AbstractConfig.appendParameters(map, consumer);
+	        AbstractConfig.appendParameters(map, this);
+	        MetadataReportConfig metadataReportConfig = getMetadataReportConfig();
+	        	// 不赘述，详情看ServiceConfig export flow
+	        if (metadataReportConfig != null && metadataReportConfig.isValid()) {
+	            map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
+	        }
+
+
+	        Map<String, AsyncMethodInfo> attributes = null;
+	        if (CollectionUtils.isNotEmpty(getMethods())) {
+	            attributes = new HashMap<>();
+	            for (MethodConfig methodConfig : getMethods()) {
+	                AbstractConfig.appendParameters(map, methodConfig, methodConfig.getName());
+	                String retryKey = methodConfig.getName() + ".retry";
+	                if (map.containsKey(retryKey)) {
+	                    String retryValue = map.remove(retryKey);
+	                    if ("false".equals(retryValue)) {
+	                        map.put(methodConfig.getName() + ".retries", "0");
+	                    }
+	                }
+	                AsyncMethodInfo asyncMethodInfo = AbstractConfig.convertMethodConfig2AsyncInfo(methodConfig);
+	                if (asyncMethodInfo != null) {
+	//                    consumerModel.getMethodModel(methodConfig.getName()).addAttribute(ASYNC_KEY, asyncMethodInfo);
+	                    attributes.put(methodConfig.getName(), asyncMethodInfo);
+	                }
+	            }
+	        }
+
+	        String hostToRegistry = ConfigUtils.getSystemProperty(DUBBO_IP_TO_REGISTRY);
+	        	String value = System.getenv(key);
+		        if (StringUtils.isEmpty(value)) {
+		            value = System.getProperty(key);
+		        }
+		        return value;
+	        if (StringUtils.isEmpty(hostToRegistry)) {
+	            hostToRegistry = NetUtils.getLocalHost();
+	        } else if (isInvalidLocalHost(hostToRegistry)) {
+	            throw new IllegalArgumentException(
+	                    "Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
+	        }
+	        map.put(REGISTER_IP_KEY, hostToRegistry);
+
+	        serviceMetadata.getAttachments().putAll(map);
+
+	        ref = createProxy(map);
+	        	// 另换行
+
+	        serviceMetadata.setTarget(ref);
+	        serviceMetadata.addAttribute(PROXY_CLASS_REF, ref);
+	        ConsumerModel consumerModel = repository.lookupReferredService(serviceMetadata.getServiceKey());
+	        consumerModel.setProxyObject(ref);
+	        consumerModel.init(attributes);
+
+	        initialized = true;
+
+	        
+	        checkInvokerAvailable();
+	        	
+	        	if (shouldCheck() && !invoker.isAvailable()) {
+	        			
+	        			ReferenceConfigBase shouldCheck
+	        				Boolean shouldCheck = isCheck();
+	        					AbstractReferenceConfig isCheck
+	        						return check;
+					        if (shouldCheck == null && getConsumer() != null) {
+					            shouldCheck = getConsumer().isCheck();
+					        }
+					        if (shouldCheck == null) {
+					            // default true 一般这里
+					            shouldCheck = true;
+					        }
+					        return shouldCheck;
+					    
+					    MigrationInvoker isAvailable
+					    	// 另换行 搜 MigrationInvoker isAvailable
+               					 
+	            	invoker.destroy();
+	            	throw new IllegalStateException("Failed to check the status of the service "
+
+	        // dispatch a ReferenceConfigInitializedEvent since 2.7.4
+	        dispatch(new ReferenceConfigInitializedEvent(this, invoker));
+    }
+    return ref;
+// ====================================================================
+T createProxy(Map<String, String> map) {
+
+if (shouldJvmRefer(map)) { // 一般不走这里
+
+	shouldJvmRefer
+		URL tmpUrl = new URL("temp", "localhost", 0, map);
+        boolean isJvmRefer;
+        if (isInjvm() == null) {
+            // if a url is specified, don't do local reference
+            if (url != null && url.length() > 0) {
+                isJvmRefer = false;
+            } else {
+                // by default, reference local service if there is
+                isJvmRefer = InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl);
+
+            }
+        } else {
+            isJvmRefer = isInjvm();
+        }
+        return isJvmRefer
+
+    URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
+    invoker = REF_PROTOCOL.refer(interfaceClass, url);
+    if (logger.isInfoEnabled()) {
+        logger.info("Using injvm service " + interfaceClass.getName());
+    }
+} else {
+    urls.clear();
+    // 一般不走这里
+    if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
+        String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
+        if (us != null && us.length > 0) {
+            for (String u : us) {
+                URL url = URL.valueOf(u);
+                if (StringUtils.isEmpty(url.getPath())) {
+                    url = url.setPath(interfaceName);
+                }
+                if (UrlUtils.isRegistry(url)) {
+                    urls.add(url.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
+                } else {
+                    urls.add(ClusterUtils.mergeUrl(url, map));
+                }
+            }
+        }
+        // 一般走这里
+    } else { 
+        if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
+            
+            checkRegistry();
+            	// 不赘述，详情看ServiceConfig export flow	
+            
+            List<URL> us = ConfigValidationUtils.loadRegistries(this, false);
+            	// 不赘述，详情看ServiceConfig export flow	
+
+            if (CollectionUtils.isNotEmpty(us)) {
+                
+                for (URL u : us) {
+                    URL monitorUrl = ConfigValidationUtils.loadMonitor(this, u);
+                    if (monitorUrl != null) {
+                        map.put(MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
+                    }
+                    urls.add(u.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
+                    	StringUtils toQueryString
+	                    	StringBuilder buf = new StringBuilder();
+						        if (ps != null && ps.size() > 0) {
+						            for (Map.Entry<String, String> entry : new TreeMap<String, String>(ps).entrySet()) {
+						                String key = entry.getKey();
+						                String value = entry.getValue();
+						                if (isNoneEmpty(key, value)) {
+						                    if (buf.length() > 0) {
+						                        buf.append("&");
+						                    }
+						                    buf.append(key);
+						                    buf.append("=");
+						                    buf.append(value);
+						                }
+						            }
+						        }
+						        return buf.toString();
+                }
+            }
+            
+            if (urls.isEmpty()) {
+                throw new IllegalStateException(
+                        "No such any registry to reference " + interfaceName + " on the consumer " + NetUtils.getLocalHost() +
+                                " use dubbo version " + Version.getVersion() +
+                                ", please config <dubbo:registry address=\"...\" /> to your spring config.");
+            }
+        }
+    }
+
+    if (urls.size() == 1) {
+    	// 一般是这个
+        invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
+       		// 这里不展开
+    } else {
+        List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
+        URL registryURL = null;
+        for (URL url : urls) {
+            Invoker<?> referInvoker = REF_PROTOCOL.refer(interfaceClass, url);
+            if (shouldCheck()) {
+                if (referInvoker.isAvailable()) {
+                    invokers.add(referInvoker);
+                } else {
+                    referInvoker.destroy();
+                }
+            } else {
+                invokers.add(referInvoker);
+            }
+
+            if (UrlUtils.isRegistry(url)) {
+                registryURL = url; // use last registry url
+            }
+        }
+
+        if (shouldCheck() && invokers.size() == 0) {
+            throw new IllegalStateException("Failed to check the status of the service "
+                    + interfaceName
+                    + ". No provider available for the service "
+                    + (group == null ? "" : group + "/")
+                    + interfaceName +
+                    (version == null ? "" : ":" + version)
+                    + " from the multi registry cluster"
+                    + " use dubbo version " + Version.getVersion());
+        }
+
+        if (registryURL != null) { // registry url is available
+            // for multi-subscription scenario, use 'zone-aware' policy by default
+            String cluster = registryURL.getParameter(CLUSTER_KEY, ZoneAwareCluster.NAME);
+            // The invoker wrap sequence would be: ZoneAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker(RegistryDirectory, routing happens here) -> Invoker
+            invoker = Cluster.getCluster(cluster, false).join(new StaticDirectory(registryURL, invokers));
+        } else { // not a registry url, must be direct invoke.
+            String cluster = CollectionUtils.isNotEmpty(invokers)
+                    ?
+                    (invokers.get(0).getUrl() != null ? invokers.get(0).getUrl().getParameter(CLUSTER_KEY, ZoneAwareCluster.NAME) :
+                            Cluster.DEFAULT)
+                    : Cluster.DEFAULT;
+            invoker = Cluster.getCluster(cluster).join(new StaticDirectory(invokers));
+        }
+    }
+}
+
+if (logger.isInfoEnabled()) {
+    logger.info("Refer dubbo service " + interfaceClass.getName() + " from url " + invoker.getUrl());
+}
+
+URL consumerURL = new URL(CONSUMER_PROTOCOL, map.remove(REGISTER_IP_KEY), 0, map.get(INTERFACE_KEY), map);
+MetadataUtils.publishServiceDefinition(consumerURL);
+	// 不赘述，详情看ServiceConfig export flow	 不过这里展示不同的地方
+	
+	WritableMetadataService.getDefaultExtension().publishServiceDefinition(url);
+    
+    getRemoteMetadataService().publishServiceDefinition(url);
+	    	
+	    	RemoteMetadataServiceImpl publishServiceDefinition
+		    	
+		    	String side = url.getParameter(SIDE_KEY);
+		        if (PROVIDER_SIDE.equalsIgnoreCase(side)) {
+		            
+		            publishProvider(url);
+		        } else {
+		            
+		            publishConsumer(url);
+
+		            	final URL url = consumerURL.removeParameters(PID_KEY, TIMESTAMP_KEY, Constants.BIND_IP_KEY,
+				                Constants.BIND_PORT_KEY, TIMESTAMP_KEY);
+				        
+				        getMetadataReports().forEach((registryKey, config) -> {
+				            
+				            config.storeConsumerMetadata(new MetadataIdentifier(url.getServiceInterface(),
+				                    url.getParameter(VERSION_KEY), url.getParameter(GROUP_KEY), CONSUMER_SIDE,
+				                    url.getParameter(APPLICATION_KEY)), url.getParameters());
+				                
+				                // 主要和provider的区别就是这里的第二个参数是map
+								AbstractMetadataReport storeConsumerMetadata(MetadataIdentifier consumerMetadataIdentifier, Map<String, String> serviceParameterMap) {		
+									
+									if (syncReport) {
+							            storeConsumerMetadataTask(consumerMetadataIdentifier, serviceParameterMap);
+							        } else {
+							            reportCacheExecutor.execute(() -> storeConsumerMetadataTask(consumerMetadataIdentifier, serviceParameterMap));
+							        }	             
+							        
+							        storeConsumerMetadataTask   不赘述，详情看ServiceConfig export flow	
+
+				        });
+		        }
+
+// create service proxy
+return (T) PROXY_FACTORY.getProxy(invoker, ProtocolUtils.isGeneric(generic));
+	
+	StubProxyFactoryWrapper <T> T getProxy(Invoker<T> invoker, boolean generic)
+		
+		T proxy = proxyFactory.getProxy(invoker, generic);
+			
+			AbstractProxyFactory getProxy
+				// ...
+				interfaces.add(invoker.getInterface());
+		        interfaces.addAll(Arrays.asList(INTERNAL_INTERFACES));
+
+		        return getProxy(invoker, interfaces.toArray(new Class<?>[0]));
+		        	
+		        	JavassistProxyFactory	getProxy(Invoker<T> invoker, Class<?>[] interfaces) {
+       						
+       						return (T) Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));
+        // ....
+        return proxy;
+
+ref = {proxy0@6564} 
+ handler = {InvokerInvocationHandler@6603} 
+
+
+
+// ====================================================================
+MigrationInvoker isAvailable
+
+return (invoker != null && invoker.isAvailable()) || (serviceDiscoveryInvoker != null && serviceDiscoveryInvoker.isAvailable());		
+		// 这里展示 invoker != null && invoker.isAvailable()
+
+		MockClusterInvoker isAvailable
+			
+			return directory.isAvailable();	
+				
+				RegistryDirectory isAvailable
+					
+					if (isDestroyed()) {
+							AbstractDirectory isDestroyed
+								return destroyed;
+			            return false;
+			        }
+			        
+			        Map<URL, Invoker<T>> localUrlInvokerMap = urlInvokerMap;
+			        try {
+			            if (CollectionUtils.isNotEmptyMap(localUrlInvokerMap)
+			                    && localUrlInvokerMap.values().stream().anyMatch(Invoker::isAvailable)) {
+
+			                    	InvokerWrapper isAvailable // this 为 RegistryDirectory$InvokeDeledate
+			                    		FilterNode isAvailable // ConsumerContextFilter
+			                    			invoker.isAvailable();
+			                    				ListenerInvokerWrapper isAvailable
+			                    					invoker.isAvailable();
+			                    						AsyncToSyncInvoker isAvailable
+			                    							invoker.isAvailable();
+			                    								DubboInvoker isAvailable
+			                    									if (!super.isAvailable()) {
+			                    											AbstractInvoker isAvailable
+			                    												return available;
+															            return false;
+															        }
+															        for (ExchangeClient client : clients) {
+															            if (client.isConnected() && !client.hasAttribute(Constants.CHANNEL_ATTRIBUTE_READONLY_KEY)) {
+															                //cannot write == not Available ?
+															                return true;
+															            }
+															        }
+															        return false;
+
+			                return true;
+			            }
+			        } catch (Throwable throwable) {
+			            return true;
+			        }
+			        return false;
+
+									        
+
+
+
+
+
+
+
+

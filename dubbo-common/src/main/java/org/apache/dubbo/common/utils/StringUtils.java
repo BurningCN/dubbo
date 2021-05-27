@@ -878,6 +878,7 @@ public final class StringUtils {
     public static String toQueryString(Map<String, String> ps) {
         StringBuilder buf = new StringBuilder();
         if (ps != null && ps.size() > 0) {
+            // TreeMap保证有序
             for (Map.Entry<String, String> entry : new TreeMap<String, String>(ps).entrySet()) {
                 String key = entry.getKey();
                 String value = entry.getValue();

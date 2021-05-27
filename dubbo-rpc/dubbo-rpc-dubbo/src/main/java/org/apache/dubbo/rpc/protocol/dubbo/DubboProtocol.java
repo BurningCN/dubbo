@@ -282,6 +282,7 @@ public class DubboProtocol extends AbstractProtocol {
         //callback
         isCallBackServiceInvoke = isClientSide(channel) && !isStubServiceInvoke;
         if (isCallBackServiceInvoke) {
+            // eg samples.callback.CallbackListener.1726351902 client+回调
             path += "." + inv.getObjectAttachments().get(CALLBACK_SERVICE_KEY);
             inv.getObjectAttachments().put(IS_CALLBACK_SERVICE_INVOKE, Boolean.TRUE.toString());
         }
@@ -297,6 +298,7 @@ public class DubboProtocol extends AbstractProtocol {
         // 从 exporterMap 查找与 serviceKey 相对应的 DubboExporter 对象，
         // 服务导出过程中会将 <serviceKey, DubboExporter> 映射关系存储到 exporterMap 集合中
         DubboExporter<?> exporter = (DubboExporter<?>) exporterMap.get(serviceKey);
+        // 如果是client+回调，则有serviceKey = samples.callback.CallbackListener.1726351902:62123
 
         if (exporter == null) {
             throw new RemotingException(channel, "Not found exported service: " + serviceKey + " in " + exporterMap.keySet() + ", may be version or group mismatch " +
@@ -490,7 +492,7 @@ public class DubboProtocol extends AbstractProtocol {
         // whether to share connection
         // 是否共享连接
         boolean useShareConnect = false;
-        // 获取连接数，默认为0，表示未配置
+        // 获取连接数，默认为0，表示未配置  // 比如在<dubbo:service  connections="1"> 表示不使用共享连接
         int connections = url.getParameter(CONNECTIONS_KEY, 0); // connections 为 0就是使用连接复用
         List<ReferenceCountExchangeClient> shareClients = null;
         // if not configured, connection is shared, otherwise, one connection for one service
@@ -774,7 +776,7 @@ public class DubboProtocol extends AbstractProtocol {
              * At this time, ReferenceCountExchangeClient#client has been replaced with LazyConnectExchangeClient.
              * Do you need to call client.close again to ensure that LazyConnectExchangeClient is also closed?
              * 目前，ReferenceCountExchangeClient＃client已被LazyConnectExchangeClient取代。 您是否需要再次调用client.close以确保LazyConnectExchangeClient也被关闭？
-             /
+             */
 
         } catch (Throwable t) {
             logger.warn(t.getMessage(), t);

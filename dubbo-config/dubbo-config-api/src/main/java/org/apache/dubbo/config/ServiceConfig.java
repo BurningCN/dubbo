@@ -513,7 +513,16 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                                     }
                                 }
                             }
+                            // dubbo-sample 的callback-provider.xml
+                            //<dubbo:service interface="samples.callback.CallbackService" ref="callbackService"
+                            //                   connections="1" callbacks="1000">
+                            //        <dubbo:method name="addListener">
+                            //            <dubbo:argument index="1" callback="true"/>  // 注意这里
+                            //        </dubbo:method>
+                            //    </dubbo:service>
                         } else if (argument.getIndex() != -1) {
+                            // method.getName() + "." + argument.getIndex() 为 addListener.1
+                            // appendParameters 内部会添加参数 addListener.1.callback到map中
                             AbstractConfig.appendParameters(map, argument, method.getName() + "." + argument.getIndex());
                         } else {
                             throw new IllegalArgumentException("Argument config must set index or type attribute.eg: <dubbo:argument index='0' .../> or <dubbo:argument type=xxx .../>");

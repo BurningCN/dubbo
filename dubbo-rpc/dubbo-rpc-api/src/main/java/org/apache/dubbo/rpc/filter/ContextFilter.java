@@ -161,7 +161,7 @@ public class ContextFilter implements Filter, Filter.Listener {
         } finally {
             context.clearAfterEachInvoke(true);
             // IMPORTANT! For async scenario, we must remove context from current thread, so we always create a new RpcContext for the next invoke for the same thread.
-            // 重要!对于异步场景，我们必须从当前线程中删除context，因此我们总是为同一线程的下一个调用创建一个新的RpcContext。
+            // 重要!对于异步场景，我们必须从当前线程中删除context，因此我们总是为同一线程的下一个调用创建一个新的RpcContext。每次invoke完成后都会清空RpcContext
             RpcContext.removeContext(true);
             RpcContext.removeServerContext();
         }

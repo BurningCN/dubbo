@@ -72,6 +72,7 @@ public class LFUCache<K, V> {
         // 驱逐阈值率校验，注意这个参数不是说存储空间的阈值为 evictionFactor * maxCapacity，存储的阈值一直是maxCapacity
         // 只是阈值到达之后，还put新的元素，会驱逐一些元素，驱逐的元素个数就是evictionFactor控制的，详见下面的evictionCount
         boolean factorInRange = evictionFactor <= 1 || evictionFactor < 0;
+        // 注意 Float.isNaN 方法
         if (!factorInRange || Float.isNaN(evictionFactor)) {
             throw new IllegalArgumentException("Illegal eviction factor value:"
                     + evictionFactor);

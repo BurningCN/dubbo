@@ -1262,7 +1262,7 @@ public class DubboBootstrap extends GenericEventListener {
             // TODO, compatible with  ReferenceConfig.refer()
             ReferenceConfig referenceConfig = (ReferenceConfig) rc;
             referenceConfig.setBootstrap(this);
-
+            // 进去
             if (rc.shouldInit()) {
                 if (referAsync) {
                     // 提交任务，submit进去
@@ -1319,6 +1319,7 @@ public class DubboBootstrap extends GenericEventListener {
         // 进去
         doRegisterServiceInstance(serviceInstance);
 
+        // nextScheduledExecutor 进去
         executorRepository.nextScheduledExecutor().scheduleAtFixedRate(() -> {
             try {
                 InMemoryWritableMetadataService localMetadataService = (InMemoryWritableMetadataService) WritableMetadataService.getDefaultExtension();
@@ -1329,6 +1330,7 @@ public class DubboBootstrap extends GenericEventListener {
             } catch (Throwable e) {
                 logger.error("refresh metadata and instance failed", e);
             }
+            // 每5s
         }, 0, ConfigurationUtils.get(METADATA_PUBLISH_DELAY_KEY, DEFAULT_METADATA_PUBLISH_DELAY), TimeUnit.MILLISECONDS);
     }
 
@@ -1392,6 +1394,7 @@ public class DubboBootstrap extends GenericEventListener {
     private ServiceInstance createServiceInstance(String serviceName, String host, int port) {
         // 进去
         this.serviceInstance = new DefaultServiceInstance(serviceName, host, port);
+        // 进去
         setMetadataStorageType(serviceInstance, getMetadataType());
 
         ExtensionLoader<ServiceInstanceCustomizer> loader =

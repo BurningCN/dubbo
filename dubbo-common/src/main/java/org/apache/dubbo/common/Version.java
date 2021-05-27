@@ -167,11 +167,12 @@ public final class Version {
             Package pkg = cls.getPackage();// eg org.apache.dubbo.demo
             String version = null;
             if (pkg != null) {
+                // 一般为null
                 version = pkg.getImplementationVersion();
                 if (StringUtils.isNotEmpty(version)) {
                     return version;
                 }
-
+                // 一般为null
                 version = pkg.getSpecificationVersion();
                 if (StringUtils.isNotEmpty(version)) {
                     return version;
@@ -185,7 +186,8 @@ public final class Version {
                 return defaultVersion;
             }
 
-            String file = codeSource.getLocation().getFile();// 获取类所在的上层文件路径，记住这种api，比如/Users/gy821075/IdeaProjects/dubbo/dubbo-demo/dubbo-demo-interface/target/classes/（这个下有org/apache/dubbo/DemoService）
+            // 获取类所在的上层文件路径，记住这种api，比如/Users/gy821075/IdeaProjects/dubbo/dubbo-demo/dubbo-demo-interface/target/classes/（这个下有org/apache/dubbo/DemoService）
+            String file = codeSource.getLocation().getFile();
             if (!StringUtils.isEmpty(file) && file.endsWith(".jar")) {
                 version = getFromFile(file);
             }

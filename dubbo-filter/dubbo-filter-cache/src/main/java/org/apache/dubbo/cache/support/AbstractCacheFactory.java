@@ -28,8 +28,9 @@ import static org.apache.dubbo.common.constants.CommonConstants.METHOD_KEY;
 
 /**
  * AbstractCacheFactory is a default implementation of {@link CacheFactory}. It abstract out the key formation from URL along with
- * invocation method. It initially check if the value for key already present in own local in-memory store then it won't check underlying storage cache {@link Cache}.
+ * invocation method（它从URL以及调用方法中抽象出密钥的形成。）. It initially check if the value for key already present in own local in-memory store then it won't check underlying storage cache {@link Cache}.
  * Internally it used {@link ConcurrentHashMap} to store do level-1 caching.
+ * 它最初会检查自己的本地内存存储中是否已存在密钥的值，然后将不检查基础存储缓存{@link Cache}。内部使用{@link ConcurrentHashMap}来存储一级缓存。
  *
  * @see CacheFactory
  * @see org.apache.dubbo.cache.support.jcache.JCacheFactory

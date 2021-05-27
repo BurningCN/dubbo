@@ -1,3 +1,5 @@
+dubbo-samples api
+
 public static void main(String[] args) {
     ReferenceConfig<GreetingsService> reference = new ReferenceConfig<>();
 

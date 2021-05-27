@@ -63,6 +63,7 @@ public class DefaultProtocol extends AbstractProtocol {
     }
 
     private Client[] getClients(URL url) {
+
         int connections = url.getParameter(CONNECTIONS_KEY, 0);
         if (connections == 0) { // 1.isShared = true;
             int shardConnections = url.getParameter(SHARE_CONNECTIONS_KEY, 1);

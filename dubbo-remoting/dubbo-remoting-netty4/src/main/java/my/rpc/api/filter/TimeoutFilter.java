@@ -22,7 +22,7 @@ public class TimeoutFilter implements Filter, Filter.Listener {
 
     @Override
     public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
-        forTest(invoker.getURL());
+        // forTest(invoker.getURL());
         Object obj = RpcContext.getContext().get("timeout-countdown");
         if (obj != null) {
             TimeoutCountDown timeoutCountDown = (TimeoutCountDown) obj;

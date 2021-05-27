@@ -1,0 +1,31 @@
+CompletableFuture<String> f = RpcContext.getContext().asyncCall(() -> asyncService.sayHello("async call request"));
+// ====================================================================
+try {
+    try {
+        // 注意这里，这样在AbstractClusterInvoker就会添加id，同时给inv添加async参数，在AsyncToSyncInvoker就不会阻塞
+        // 同时注意inv的attachments会传递给provider
+        
+        setAttachment(ASYNC_KEY, Boolean.TRUE.toString());
+        
+        final T o = callable.call();
+        
+        //local invoke will return directly
+        if (o != null) {
+            if (o instanceof CompletableFuture) {
+                return (CompletableFuture<T>) o;
+            }
+            return CompletableFuture.completedFuture(o);
+        } else {
+            // The service has a normal sync method signature, should get future from RpcContext.
+        }
+    } catch (Exception e) {
+        throw new RpcException(e);
+    } finally {
+        removeAttachment(ASYNC_KEY);
+    }
+} catch (final RpcException e) {
+    CompletableFuture<T> exceptionFuture = new CompletableFuture<>();
+    exceptionFuture.completeExceptionally(e);
+    return exceptionFuture;
+}
+return ((CompletableFuture<T>) getContext().getFuture());

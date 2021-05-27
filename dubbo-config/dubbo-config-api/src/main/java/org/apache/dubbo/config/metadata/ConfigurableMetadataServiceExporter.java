@@ -77,10 +77,20 @@ public class ConfigurableMetadataServiceExporter implements MetadataServiceExpor
             serviceConfig.setRegistries(getRegistries());
             serviceConfig.setProtocol(generateMetadataProtocol());
             serviceConfig.setInterface(MetadataService.class);
-            serviceConfig.setRef(metadataService);
+            serviceConfig.setRef(metadataService); // InMemoryWritableMetadataService
             serviceConfig.setGroup(getApplicationConfig().getName());// 注意 是有值的
             serviceConfig.setVersion(metadataService.version());// 注意 是有值的
             serviceConfig.setMethods(generateMethodConfig());
+
+            //serviceConfig = {ServiceConfig@4149} "<dubbo:service exported="false" unexported="false" />"
+            // interfaceClass = {Class@3136} "interface org.apache.dubbo.metadata.MetadataService"
+            // ref = {InMemoryWritableMetadataService@4033}
+            // version = "1.0.0"
+            // group = "servicediscovery-transfer-provider"
+            // dynamic = {Boolean@4159} true
+            // interfaceName = "org.apache.dubbo.metadata.MetadataService"
+            // registries = {ArrayList@4155}  size = 2
+            // application = {ApplicationConfig@4161} "<dubbo:application hostname="B-RHDTJG5H-2145.local" name="servicediscovery-transfer-provider" />"
 
             // export
             serviceConfig.export();

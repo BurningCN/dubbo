@@ -42,7 +42,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.PORT_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.TIMESTAMP_KEY;
 import static org.apache.dubbo.common.utils.StringUtils.isBlank;
-import static org.apache.dubbo.registry.integration.InterfaceCompatibleRegistryProtocol.DEFAULT_REGISTER_PROVIDER_KEYS;
+import static org.apache.dubbo.registry.client.RegistryProtocol.DEFAULT_REGISTER_PROVIDER_KEYS;
 import static org.apache.dubbo.rpc.Constants.DEPRECATED_KEY;
 import static org.apache.dubbo.rpc.Constants.ID_KEY;
 
@@ -258,7 +258,9 @@ public class ServiceInstanceMetadataUtils {
                 // 将metadataInfo.calAndGetRevision()的信息保存到ServiceInstance的metadata属性中，metadataInfo本身是app级别的，他有唯一一个Revision
                 // 我们把这个值塞到ServiceInstance的目的是，表示ServiceInstance隶属于这个app下
                 instance.getMetadata().put(EXPORTED_SERVICES_REVISION_PROPERTY_NAME, metadataInfo.calAndGetRevision());
-                if (existingInstanceRevision != null) {// skip the first registration.
+                // skip the first registration. 如果为null，表示这个 ServiceInstance是第一次注册，没有 dubbo.metadata.revision 参数值，
+                // 直接跳过即可，如果不是第一次，那么就要加上这个true标记，表示这个更新了，再看下这个参数的调用点，旧值ZookeeperServiceDiscovery的update方法
+                if (existingInstanceRevision != null) {
                     instance.getExtendParams().put(INSTANCE_REVISION_UPDATED_KEY, "true");
                 }
                 // eg

@@ -173,6 +173,20 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
 
         // 走refer 返回的是proxy，赋值给标记了@DubboService的属性
         return referenceBean.get();
+
+        //注意这里返回的ref是这个，
+
+        //	result = {proxy0@4273}
+        //	 handler = {InvokerInvocationHandler@4284}
+        //	  invoker = {MigrationInvoker@4276}
+        //	  consumerModel = {ConsumerModel@4338}
+        //	  url = {URL@4339} "dubbo://30.25.58.200/samples.autowire.api.HelloService?application=samples-annotation-consumer&dubbo=2.0.2&init=false&interface=samples.autowire.api.HelloService&metadata-type=remote&methods=sayHello&pid=5057&register.ip=30.25.58.200&side=consumer&sticky=false&timeout=1000&timestamp=1621995974719"
+        //	  protocolServiceKey = "samples.autowire.api.HelloService:dubbo"
+
+        // 也即注入类型为HellService的bean，返回这个bean，所以在其他地方我们可以直接如下，（前提是扫描到了@DubboReference HellSerice helloService）
+        //	@Autowired
+        //	HelloService helloService
+        // 这个例子可以看dubbo-samples的autowire案例
     }
 
     // 结合测试程序5次@Reference注解，从而5次触发上面的方法（下面sb为ServiceBean，rb为ReferenceBean）

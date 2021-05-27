@@ -52,7 +52,7 @@ public interface ExecutorRepository {
     /**
      * Returns a scheduler from the scheduler list, call this method whenever you need a scheduler for a cron job.
      * If your cron cannot burden the possible schedule delay caused by sharing the same scheduler, please consider define a dedicate one.
-     *
+     * 从调度程序列表中返回一个调度程序，只要您需要cron作业的调度程序，就调用此方法。 如果您的Cron无法负担由于共享同一调度程序而可能造成的调度延迟，请考虑定义一个专用的调度程序。
      * @return
      */
     ScheduledExecutorService nextScheduledExecutor();

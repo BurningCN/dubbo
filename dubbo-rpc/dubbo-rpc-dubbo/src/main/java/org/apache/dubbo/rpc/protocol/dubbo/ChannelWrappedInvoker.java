@@ -55,7 +55,7 @@ class ChannelWrappedInvoker<T> extends AbstractInvoker<T> {
     ChannelWrappedInvoker(Class<T> serviceType, Channel channel, URL url, String serviceKey) {
         super(serviceType, url, new String[]{GROUP_KEY, TOKEN_KEY});
         this.channel = channel;
-        this.serviceKey = serviceKey;
+        this.serviceKey = serviceKey; // instid
         this.currentClient = new HeaderExchangeClient(new ChannelWrapper(this.channel), false);
     }
 

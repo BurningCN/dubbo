@@ -1,0 +1,90 @@
+
+provider信息，不重要
+// ====================================================================
+public class ProviderBootstrap {
+    public static void main(String[] args) throws Exception {
+
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ProviderConfiguration.class);
+        context.start();
+
+        System.out.println("dubbo service started.");
+        new CountDownLatch(1).await();
+    }
+}
+
+
+@Configuration
+@EnableDubbo(scanBasePackages = "samples.autowire.impl")
+@PropertySource("classpath:/samples.autowire/dubbo-provider.properties")
+public class ProviderConfiguration {
+    @Bean
+    public ProviderConfig providerConfig() {
+        ProviderConfig providerConfig = new ProviderConfig();
+        providerConfig.setTimeout(1000);
+        return providerConfig;
+    }
+}
+
+consumer 信息
+// ====================================================================
+
+public static void main(String[] args) {
+    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ConsumerConfiguration.class);
+    context.start();
+    final HelloServiceConsumer helloServiceConsumer = (HelloServiceConsumer) context.getBean("helloServiceConsumer");
+
+    System.out.println("hello : " + helloServiceConsumer.helloServiceConsumerSayHello("world"));
+}
+// ====================================================================
+
+@Configuration
+@EnableDubbo(scanBasePackages = "org.apache.dubbo.samples.autowire.action")
+@PropertySource("classpath:/samples.autowire/dubbo-consumer.properties")
+
+@ComponentScan(value = {"samples.autowire.action"}) // 注意这里 看 后一个 ====
+
+public class ConsumerConfiguration {
+    
+    // 触发 doGetInjectedBean 
+    @DubboReference
+    private HelloService helloService;
+
+    ReferenceAnnotationBeanPostProcessor # Object doGetInjectedBean(AnnotationAttributes attributes, Object bean, String beanName, Class<?> injectedType,InjectionMetadata.InjectedElement injectedElement)
+        // ....
+        return referenceBean.get();
+        // 返回的就是HelloService类型的bean，注入到了容器
+
+        看下变量信息
+        
+        beanName = "consumerConfiguration" // 注意
+        
+        injectedType = {Class@2647} "interface samples.autowire.api.HelloService" // 注意
+        
+        injectedElement = {AbstractAnnotationBeanPostProcessor$AnnotatedFieldElement@4289} "AnnotatedFieldElement for private  samples.autowire.api.HelloService samples.autowire.config.ConsumerConfiguration.helloService" // 注意
+        
+        referencedBeanName = "ServiceBean:samples.autowire.api.HelloService"
+        referenceBeanName = "@Reference samples.autowire.api.HelloService"
+        referenceBean = {ReferenceBean@2642} "<dubbo:reference />"
+        localServiceBean = false
+}
+
+// ====================================================================
+
+@Component("helloServiceConsumer")
+public class HelloServiceConsumer implements ApplicationContextAware {
+    
+    // 注意这里
+    @Autowired
+    private HelloService helloService;
+
+    public String helloServiceConsumerSayHello(String name) {
+        return "HelloServiceConsumer say " + helloService.sayHello(name);
+    }
+
+    private ApplicationContext app;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.app = applicationContext;
+    }
+}

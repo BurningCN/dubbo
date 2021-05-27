@@ -109,6 +109,7 @@ InvokerInvocationHandler invoke
 							context.setInvocation(invocation).setLocalAddress(NetUtils.getLocalHost(), 0);
 							((RpcInvocation) invocation).setInvoker(invoker);
 							RpcContext.removeServerContext();
+								SERVER_LOCAL.remove(); // consumer端的，还有一个after是清除LOCAL
 
 						ConsumerContextClusterInterceptor intercept 
 
@@ -158,6 +159,41 @@ InvokerInvocationHandler invoke
 											getExtension(invokers.get(0).getUrl().getMethodParameter("loadbalance","random"))
 
 										RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+											if (isAttachInvocationId(url, inv) && getInvocationId(inv) == null && inv instanceof RpcInvocation) {
+									            inv.setAttachment(ID_KEY, String.valueOf(INVOKE_ID.getAndIncrement()));
+									        }
+
+									        isAttachInvocationId
+									        	String value = url.getMethodParameter(invocation.getMethodName(), AUTO_ATTACH_INVOCATIONID_KEY);
+										        if (value == null) {
+										            // add invocationid in async operation by default
+										            return isAsync(url, invocation);
+										            	public static boolean isAsync(URL url, Invocation inv) {
+												        boolean isAsync;
+
+												        if (inv instanceof RpcInvocation) {
+												            RpcInvocation rpcInvocation = (RpcInvocation) inv;
+												            if (rpcInvocation.getInvokeMode() != null) {
+												                return rpcInvocation.getInvokeMode() == InvokeMode.ASYNC;
+												            }
+												        }
+
+												        if (Boolean.TRUE.toString().equals(inv.getAttachment(ASYNC_KEY))) {
+												            isAsync = true;
+												        } else {
+												            isAsync = url.getMethodParameter(getMethodName(inv), ASYNC_KEY, false);
+												        }
+												        return isAsync;
+												    }
+										        } else if (Boolean.TRUE.toString().equalsIgnoreCase(value)) {
+										            return true;
+										        } else {
+										            return false;
+										        }
+
+									        getInvocationId
+									        	String id = inv.getAttachment(ID_KEY);
+        										return id == null ? null : new Long(id);
 
 										doInvoke(invocation, invokers, loadbalance);
 
@@ -259,6 +295,30 @@ MonitorFilter invoke
     }
     return invoker.invoke(invocation);
 
+// 额外补充 CacheFilter，只有含有cache="lru"这种类似的参数才有效，在<dubbo:reference cache="lru">
+
+CacheFilter invoke
+if (cacheFactory != null && ConfigUtils.isNotEmpty(invoker.getUrl().getMethodParameter(invocation.getMethodName(), CACHE_KEY))) {
+    Cache cache = cacheFactory.getCache(invoker.getUrl(), invocation);
+    if (cache != null) {
+        String key = StringUtils.toArgumentString(invocation.getArguments());
+        Object value = cache.get(key);
+        if (value != null) {
+            if (value instanceof ValueWrapper) {
+                return AsyncRpcResult.newDefaultAsyncResult(((ValueWrapper) value).get(), invocation);
+            } else {
+                return AsyncRpcResult.newDefaultAsyncResult(value, invocation);
+            }
+        }
+        Result result = invoker.invoke(invocation);
+        if (!result.hasException()) {
+            cache.put(key, new ValueWrapper(result.getValue()));
+        }
+        return result;
+    }
+}
+return invoker.invoke(invocation);
+
 ListenerInvokerWrapper invoke
 
 	AsyncToSyncInvoker invoke
@@ -284,6 +344,7 @@ ListenerInvokerWrapper invoke
 				        }
 
 				        if (isReturnTypeFuture(inv)) {
+				        		// 这种一般是方法返回值为CompletableFuture
 					        	Class<?> clazz;
 						        if (inv instanceof RpcInvocation) {
 						            clazz = ((RpcInvocation) inv).getReturnType();
@@ -291,8 +352,24 @@ ListenerInvokerWrapper invoke
 						            clazz = getReturnType(inv);
 						        }
 						        return (clazz != null && CompletableFuture.class.isAssignableFrom(clazz)) || isGenericAsync(inv);
+				            
 				            return InvokeMode.FUTURE;
 				        } else if (isAsync(url, inv)) {
+				        		// 这种一般是url含有async参数，比如在xml或者注解中配置
+					        	boolean isAsync;
+						        if (inv instanceof RpcInvocation) {
+						            RpcInvocation rpcInvocation = (RpcInvocation) inv;
+						            if (rpcInvocation.getInvokeMode() != null) {
+						                return rpcInvocation.getInvokeMode() == InvokeMode.ASYNC;
+						            }
+						        }
+
+						        if (Boolean.TRUE.toString().equals(inv.getAttachment(ASYNC_KEY))) {
+						            isAsync = true;
+						        } else {
+						            isAsync = url.getMethodParameter(getMethodName(inv), ASYNC_KEY, false);
+						        }
+						        return isAsync;
 				            return InvokeMode.ASYNC;
 				        } else {
 				            return InvokeMode.SYNC;
@@ -608,6 +685,7 @@ ListenerInvokerWrapper invoke
 ListenerInvokerWrapper invoke
 	return invoker.invoke(invocation);
 
+
 Moniter invoke
 	return invoker.invoke(invocation);
 
@@ -640,6 +718,7 @@ InterceptorInvokerNode invoke
 		ConsumerContextClusterInterceptor after
 			RpcContext.removeContext(true);
 				LOCAL.remove();
+				// 	这样保证每次invoke调用，都会清除一次RpcContext 详见dubbo-samples - attachments  这个是consumer端的
 	
 	asyncResult.whenCompleteWithContext((r, t) -> {
 		listener.onMessage(r, clusterInvoker, invocation);
@@ -1487,14 +1566,17 @@ FilterNode invoke
 
 	        try {
 	            context.clearAfterEachInvoke(false);
+	            	// 默认值为true
 	            	this.remove = remove;
 	            return invoker.invoke(invocation);
 	            	// 另换行
 	        } finally {
 	            context.clearAfterEachInvoke(true);
+	            // 注意这句话，每次invoke完成后都会清空RpcContext
 	            // IMPORTANT! For async scenario, we must remove context from current thread, so we always create a new RpcContext for the next invoke for the same thread.
 	            RpcContext.removeContext(true);
 	            RpcContext.removeServerContext();
+	            	SERVER_LOCAL.remove();
 	        }
 
 FilterNode invoke
@@ -1583,7 +1665,78 @@ InvokerWrapper invoke // this 为 RegistryProtocol#InvokerDelegate
 							AnnotationHelloServiceImpl	sayHello
 
 	            CompletableFuture<Object> future = wrapWithFuture(value);
-	            	// ....
+	            	
+	            	// 这个异步适用于provider，怎么应用的，请看dubbo-samples的async-provider测试用例
+	            	if (RpcContext.getContext().isAsyncStarted()) {
+			            
+			            return ((AsyncContextImpl)(RpcContext.getContext().getAsyncContext())).getInternalFuture();
+			            	
+			            	CompletableFuture<Object> getInternalFuture() {
+       							return future;
+			        } else if (value instanceof CompletableFuture) {
+			            
+			            return (CompletableFuture<Object>) value;
+			        }	
+			        	// 截取samples的案例
+			        	AsyncContext asyncContext = RpcContext.startAsync();
+			        		
+			        		RpcContext currentContext = getContext();
+					        
+					        if (currentContext.asyncContext == null) {
+					            currentContext.asyncContext = new AsyncContextImpl();
+					        }
+					        
+					        currentContext.asyncContext.start();
+					        	AsyncContextImpl start
+						        	if (this.started.compareAndSet(false, true)) {
+							            this.future = new CompletableFuture<>();
+							        }
+					        
+					        return currentContext.asyncContext;
+
+				        logger.info("sayHello start");
+
+				        new Thread(() -> {
+				            
+				            asyncContext.signalContextSwitch();
+				            	RpcContext.restoreContext(storedContext);
+				            		LOCAL.set(oldContext);
+        						RpcContext.restoreServerContext(storedServerContext);
+        							SERVER_LOCAL.set(oldServerContext);
+				            
+				            logger.info("Attachment from consumer: " + RpcContext.getContext().getAttachment("consumer-key1"));
+				            logger.info("async start");
+				            try {
+				                Thread.sleep(5000);
+				            } catch (InterruptedException e) {
+				                e.printStackTrace();
+				            }
+				            
+				            asyncContext.write("Hello " + name + ", response from provider.");
+				            	AsyncContextImpl write
+					            	if (isAsyncStarted() && stop()) {
+							            if (value instanceof Throwable) {
+							                Throwable bizExe = (Throwable) value;
+							                future.completeExceptionally(bizExe);
+							            } else {
+							                future.complete(value);
+							            }
+							        } else {
+							            throw new IllegalStateException("The async response has probably been wrote back by another thread, or the asyncContext has been closed.");
+							        }
+							        
+							        isAsyncStarted() && stop()	
+								        return started.get();
+								        return stopped.compareAndSet(false, true);
+
+				            logger.info("async end");
+				        }).start();
+
+				        logger.info("sayHello end");
+				        return "hello, " + name;
+
+
+			        // 一般是直接走到这里
 			        return CompletableFuture.completedFuture(value);
 
 	            CompletableFuture<AppResponse> appResponseFuture = future.handle((obj, t) -> {

@@ -68,6 +68,7 @@ class CallbackServiceCodec {
         // parameter callback rule: method-name.parameter-index(starting from 0).callback
         byte isCallback = CALLBACK_NONE;
         if (url != null && url.hasServiceMethodParameter(protocolServiceKey, methodName)) {
+            // addListener.0.callback
             String callback = url.getServiceParameter(protocolServiceKey, methodName + "." + argIndex + ".callback");
             if (callback != null) {
                 if ("true".equalsIgnoreCase(callback)) {
@@ -90,12 +91,15 @@ class CallbackServiceCodec {
      * @param export
      * @throws IOException
      */
+    // 给客户端使用的方法
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static String exportOrUnexportCallbackService(Channel channel, URL url, Class clazz, Object inst, Boolean export) throws IOException {
+        // clazz和inst分别是对应index参数的类型和参数值
+        // inst就是index对应的值 比如 dubbo-samples # CallbackConsumer  的 callbackService.addListener("foo.bar", msg -> System.out.println("callback:" + msg)); 的第1个参数（index从0开始）
         int instid = System.identityHashCode(inst);
 
         Map<String, String> params = new HashMap<>(3);
-        // no need to new client again
+        // no need to new client again  影响 openServer方法
         params.put(IS_SERVER_KEY, Boolean.FALSE.toString());
         // mark it's a callback, for troubleshooting
         params.put(IS_CALLBACK_SERVICE, Boolean.TRUE.toString());
@@ -104,8 +108,14 @@ class CallbackServiceCodec {
             params.put(GROUP_KEY, group);
         }
         // add method, for verifying against method, automatic fallback (see dubbo protocol)
+        // 注意clazz不是常规service的接口，而是service的方法的index对应参数的class类型，比如dubbo-samples的 CallbackService void addListener(String key, CallbackListener listener); 的第二个参数
         params.put(METHODS_KEY, StringUtils.join(Wrapper.getWrapper(clazz).getDeclaredMethodNames(), ","));
+        //params = {HashMap@6399}  size = 3
+        // "is_callback_service" -> "true"
+        // "methods" -> "changed"
+        // "isserver" -> "false"
 
+        // 将url和params的填充到tmpMap
         Map<String, String> tmpMap = new HashMap<>();
         if (url != null) {
             Map<String, String> parameters = url.getParameters();
@@ -118,25 +128,35 @@ class CallbackServiceCodec {
         tmpMap.remove(VERSION_KEY);// doesn't need to distinguish version for callback
         tmpMap.remove(Constants.BIND_PORT_KEY); //callback doesn't needs bind.port
         tmpMap.put(INTERFACE_KEY, clazz.getName());
+        // clazz.getName() + "." + instid  eg samples.callback.CallbackListener.483505398
         URL exportUrl = new URL(DubboProtocol.NAME, channel.getLocalAddress().getAddress().getHostAddress(), channel.getLocalAddress().getPort(), clazz.getName() + "." + instid, tmpMap);
 
         // no need to generate multiple exporters for different channel in the same JVM, cache key cannot collide.
+        // 无需为同一JVM中的不同通道生成多个导出器，高速缓存键不会发生冲突。
+        //cacheKey = "callback.service.instid.483505398"
+        //countKey = "callback.service.instid.samples.callback.CallbackListener.COUNT"
         String cacheKey = getClientSideCallbackServiceCacheKey(instid);
         String countKey = getClientSideCountKey(clazz.getName());
         if (export) {
             // one channel can have multiple callback instances, no need to re-export for different instance.
+            // 一个通道可以有多个回调实例，而无需为其他实例重新导出。
             if (!channel.hasAttribute(cacheKey)) {
+                // 进去
                 if (!isInstancesOverLimit(channel, url, clazz.getName(), instid, false)) {
                     ApplicationModel.getServiceRepository().registerService(clazz);
                     Invoker<?> invoker = PROXY_FACTORY.getInvoker(inst, clazz, exportUrl);
                     // should destroy resource?
+                    // 进去 因为side不是sever，所以内部并不会openServer
                     Exporter<?> exporter = PROTOCOL.export(invoker);
                     // this is used for tracing if instid has published service or not.
+                    // 将exporter填充到channel的属性
                     channel.setAttribute(cacheKey, exporter);
                     logger.info("Export a callback service :" + exportUrl + ", on " + channel + ", url is: " + url);
+                    // 进去
                     increaseInstanceCount(channel, countKey);
                 }
             }
+            // unexport 和前面相反
         } else {
             if (channel.hasAttribute(cacheKey)) {
                 Exporter<?> exporter = (Exporter<?>) channel.getAttribute(cacheKey);
@@ -156,25 +176,31 @@ class CallbackServiceCodec {
     @SuppressWarnings("unchecked")
     private static Object referOrDestroyCallbackService(Channel channel, URL url, Class<?> clazz, Invocation inv, int instid, boolean isRefer) {
         Object proxy;
+        //invokerCacheKey = "callback.service.proxy.2065514340.samples.callback.CallbackListener.483505398.invoker"
+        //proxyCacheKey = "callback.service.proxy.2065514340.samples.callback.CallbackListener.483505398"
         String invokerCacheKey = getServerSideCallbackInvokerCacheKey(channel, clazz.getName(), instid);
         String proxyCacheKey = getServerSideCallbackServiceCacheKey(channel, clazz.getName(), instid);
         proxy = channel.getAttribute(proxyCacheKey);
+        // callback.service.proxy.2065514340.samples.callback.CallbackListener.COUNT
         String countkey = getServerSideCountKey(channel, clazz.getName());
         if (isRefer) {
             if (proxy == null) {
+                // callback://30.25.58.200:20880/samples.callback.CallbackListener?interface=samples.callback.CallbackListener
                 URL referurl = URL.valueOf("callback://" + url.getAddress() + "/" + clazz.getName() + "?" + INTERFACE_KEY + "=" + clazz.getName());
                 referurl = referurl.addParametersIfAbsent(url.getParameters()).removeParameter(METHODS_KEY);
                 if (!isInstancesOverLimit(channel, referurl, clazz.getName(), instid, true)) {
                     ApplicationModel.getServiceRepository().registerService(clazz);
-                    @SuppressWarnings("rawtypes")
+                    // 这是关键
                     Invoker<?> invoker = new ChannelWrappedInvoker(clazz, channel, referurl, String.valueOf(instid));
                     proxy = PROXY_FACTORY.getProxy(new AsyncToSyncInvoker<>(invoker));
                     channel.setAttribute(proxyCacheKey, proxy);
                     channel.setAttribute(invokerCacheKey, invoker);
+                    // callback.service.proxy.1250055066.samples.callback.CallbackListener.COUNT ++
                     increaseInstanceCount(channel, countkey);
 
                     //convert error fail fast .
                     //ignore concurrent problem.
+                    // channel.callback.invokers.key
                     Set<Invoker<?>> callbackInvokers = (Set<Invoker<?>>) channel.getAttribute(CHANNEL_CALLBACK_KEY);
                     if (callbackInvokers == null) {
                         callbackInvokers = new ConcurrentHashSet<>(1);
@@ -226,7 +252,9 @@ class CallbackServiceCodec {
     }
 
     private static boolean isInstancesOverLimit(Channel channel, URL url, String interfaceClass, int instid, boolean isServer) {
+        // 第一次client 进来的时候 count为null
         Integer count = (Integer) channel.getAttribute(isServer ? getServerSideCountKey(channel, interfaceClass) : getClientSideCountKey(interfaceClass));
+        // 比如值为1000 ，看dubbo-samples callback demo 的 provider.xml里面就给<dubbo:service callbacks=1000>配置了值
         int limit = url.getParameter(CALLBACK_INSTANCES_LIMIT_KEY, DEFAULT_CALLBACK_INSTANCES);
         if (count != null && count >= limit) {
             //client side error
@@ -274,6 +302,7 @@ class CallbackServiceCodec {
         Class<?>[] pts = inv.getParameterTypes();
         switch (callbackStatus) {
             case CallbackServiceCodec.CALLBACK_CREATE:
+                // sys_callback_arg-1 -> 483505398
                 inv.setAttachment(INV_ATT_CALLBACK_KEY + paraIndex, exportOrUnexportCallbackService(channel, url, pts[paraIndex], args[paraIndex], true));
                 return null;
             case CallbackServiceCodec.CALLBACK_DESTROY:
@@ -284,10 +313,12 @@ class CallbackServiceCodec {
         }
     }
 
+    // 给服务端使用的方法
     public static Object decodeInvocationArgument(Channel channel, RpcInvocation inv, Class<?>[] pts, int paraIndex, Object inObject) throws IOException {
         // if it's a callback, create proxy on client side, callback interface on client side can be invoked through channel
         // need get URL from channel and env when decode
-        URL url = null;
+        // 如果是回调，请在客户端上创建代理，可以通过通道调用客户端上的回调接口，需要在解码时从通道获取URL和env
+        URL url;
         try {
             url = DubboProtocol.getDubboProtocol().getInvoker(channel, inv).getUrl();
         } catch (RemotingException e) {
@@ -300,6 +331,8 @@ class CallbackServiceCodec {
         switch (callBackStatus) {
             case CallbackServiceCodec.CALLBACK_CREATE:
                 try {
+                    // Integer.parseInt(inv.getAttachment(INV_ATT_CALLBACK_KEY + paraIndex) 这个值是client传过来的，得到的值为 instId
+                    // 进去
                     return referOrDestroyCallbackService(channel, url, pts[paraIndex], inv, Integer.parseInt(inv.getAttachment(INV_ATT_CALLBACK_KEY + paraIndex)), true);
                 } catch (Exception e) {
                     logger.error(e.getMessage(), e);

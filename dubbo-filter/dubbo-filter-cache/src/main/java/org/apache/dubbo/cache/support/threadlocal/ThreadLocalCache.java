@@ -30,8 +30,8 @@ import java.util.Map;
  *      e.g. &lt;dubbo:service cache="threadlocal" /&gt;
  *  </pre>
  * <pre>
- * As this ThreadLocalCache stores key-value in memory without any expiry or delete support per thread wise, if number threads and number of key-value are high then jvm should be
- * configured with appropriate memory.
+ * As this ThreadLocalCache stores key-value in memory without any expiry or delete support(不支持过期和删除) per thread wise, if number threads and number of key-value are high then jvm should be
+ * configured with appropriate(合适的) memory.
  * </pre>
  *
  * @see org.apache.dubbo.cache.support.AbstractCacheFactory
@@ -55,7 +55,7 @@ public class ThreadLocalCache implements Cache {
     }
 
     /**
-     * API to store value against a key in the calling thread scope.
+     * API to store value against(根据) a key in the calling thread scope.
      * @param key  Unique identifier for the object being store.
      * @param value Value getting store
      */

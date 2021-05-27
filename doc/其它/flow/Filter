@@ -1,0 +1,159 @@
+TimeoutFilter
+	// 1-consumer ====================================================================
+
+	@Activate(group = CONSUMER, order = -10000)
+	public class ConsumerContextFilter implements Filter {
+
+	    @Override
+	    public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+	        RpcContext context = RpcContext.getContext();
+	        context.setInvoker(invoker)
+	                .setInvocation(invocation)
+	                .setLocalAddress(NetUtils.getLocalHost(), 0)
+	                .setRemoteAddress(invoker.getUrl().getHost(), invoker.getUrl().getPort())
+	                .setRemoteApplicationName(invoker.getUrl().getParameter(REMOTE_APPLICATION_KEY))
+	                .setAttachment(REMOTE_APPLICATION_KEY, invoker.getUrl().getParameter(APPLICATION_KEY));
+	        if (invocation instanceof RpcInvocation) {
+	            ((RpcInvocation) invocation).setInvoker(invoker);
+	        }
+
+	        // pass default timeout set by end user (ReferenceConfig)
+	        Object countDown = context.get(TIME_COUNTDOWN_KEY); // 注意这里 key为 TIME_COUNTDOWN_KEY
+	        if (countDown != null) {
+	            TimeoutCountDown timeoutCountDown = (TimeoutCountDown) countDown;
+	            if (timeoutCountDown.isExpired()) {
+	                return AsyncRpcResult.newDefaultAsyncResult(new RpcException(RpcException.TIMEOUT_TERMINATE,
+	                        "No time left for making the following call: " + invocation.getServiceName() + "."
+	                                + invocation.getMethodName() + ", terminate directly."), invocation);
+	            }
+	        }
+	        return invoker.invoke(invocation);
+	    }
+
+	}
+
+	// 2-consumer ====================================================================
+
+	DubboInvoker  doInvoke(final Invocation invocation)
+
+		// ..... 
+	    try {
+	        boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
+	        
+	        // 注意
+	        int timeout = calculateTimeout(invocation, methodName);
+	        	// 另换行
+	        
+	        // 注意
+	        invocation.put(TIMEOUT_KEY, timeout);
+	        
+	        if (isOneway) {
+	            boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
+	            currentClient.send(inv, isSent);
+	            return AsyncRpcResult.newDefaultAsyncResult(invocation);
+	        } else {
+	            ExecutorService executor = getCallbackExecutor(getUrl(), inv);
+	            
+	            CompletableFuture<AppResponse> appResponseFuture =
+	            		// 注意
+	                    currentClient.request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
+	            
+	            // save for 2.6.x compatibility, for example, TraceFilter in Zipkin uses com.alibaba.xxx.FutureAdapter
+	            FutureContext.getContext().setCompatibleFuture(appResponseFuture);
+	            AsyncRpcResult result = new AsyncRpcResult(appResponseFuture, inv);
+	            result.setExecutor(executor);
+	            return result;
+	        }
+	    } catch (TimeoutException e) {
+	    	// ....
+	    }
+
+
+		private int calculateTimeout(Invocation invocation, String methodName) {
+	        
+	        Object countdown = RpcContext.getContext().get(TIME_COUNTDOWN_KEY);
+	        
+	        int timeout = DEFAULT_TIMEOUT;
+	        
+	        if (countdown == null) {
+	            timeout = (int) RpcUtils.getTimeout(getUrl(), methodName, RpcContext.getContext(), DEFAULT_TIMEOUT);
+	            if (getUrl().getParameter(ENABLE_TIMEOUT_COUNTDOWN_KEY, false)) {
+	                invocation.setObjectAttachment(TIMEOUT_ATTACHMENT_KEY, timeout); // pass timeout to remote server
+	            }
+	        } else {
+	       		// 注意这里
+	            TimeoutCountDown timeoutCountDown = (TimeoutCountDown) countdown;
+	            
+	            timeout = (int) timeoutCountDown.timeRemaining(TimeUnit.MILLISECONDS);
+	            	
+	            	final long currentNanos = System.nanoTime();
+				    if (!expired && deadlineInNanos - currentNanos <= 0) {
+				      expired = true;
+				    }
+				    return unit.convert(deadlineInNanos - currentNanos, TimeUnit.NANOSECONDS);
+	            
+	            invocation.setObjectAttachment(TIMEOUT_ATTACHMENT_KEY, timeout);// pass timeout to remote server
+	            	// 这个 TIMEOUT_ATTACHMENT_KEY 为 "_TO"
+	        }
+	        return timeout;
+	    }
+
+	// 3-provider ====================================================================
+	ContextFilter invoke
+		// .....
+			long timeout = RpcUtils.getTimeout(invocation, -1);
+				long timeout = defaultTimeout;
+		        Object genericTimeout = invocation.getObjectAttachment(TIMEOUT_ATTACHMENT_KEY); // "_TO"
+		        if (genericTimeout != null) {
+		            timeout = convertToNumber(genericTimeout, defaultTimeout);
+		            	if (obj instanceof String) {
+			                timeout = Long.parseLong((String) obj);
+			            } else if (obj instanceof Number) {
+			                timeout = ((Number) obj).longValue();
+			            } else {
+			                timeout = Long.parseLong(obj.toString());
+			            }
+
+		        }
+		        return timeout;
+	        if (timeout != -1) {
+	            context.set(TIME_COUNTDOWN_KEY, TimeoutCountDown.newCountDown(timeout, TimeUnit.MILLISECONDS));
+	        }
+	    // ...
+	// 4-consumer ====================================================================
+	@Activate(group = CommonConstants.PROVIDER)
+	public class TimeoutFilter implements Filter, Filter.Listener {
+
+	    // ....
+
+	    @Override
+	    public void onResponse(Result appResponse, Invoker<?> invoker, Invocation invocation) {
+	        Object obj = RpcContext.getContext().get(TIME_COUNTDOWN_KEY);
+	        if (obj != null) {
+	            TimeoutCountDown countDown = (TimeoutCountDown) obj;
+	            
+	            // 注意
+	            if (countDown.isExpired()) {
+	                
+	                ((AppResponse) appResponse).clear(); // clear response in case of timeout.
+	                
+	                if (logger.isWarnEnabled()) {
+	                    logger.warn("invoke timed out. method: " + invocation.getMethodName() + " arguments: " +
+	                            Arrays.toString(invocation.getArguments()) + " , url is " + invoker.getUrl() +
+
+	                            	// 注意countDown.elapsedMillis()
+	                            ", invoke elapsed " + countDown.elapsedMillis() + " ms.");
+
+	                            	countDown.elapsedMillis()
+		                            	if (isExpired()) {
+									      return timeoutInMillis + TimeUnit.MILLISECONDS.convert(System.nanoTime() - deadlineInNanos, TimeUnit.NANOSECONDS);
+									    } else {
+									      return timeoutInMillis - TimeUnit.MILLISECONDS.convert(deadlineInNanos - System.nanoTime(), TimeUnit.NANOSECONDS);
+									    }
+	                }
+	            }
+	        }
+	    }
+
+	    //....
+	}

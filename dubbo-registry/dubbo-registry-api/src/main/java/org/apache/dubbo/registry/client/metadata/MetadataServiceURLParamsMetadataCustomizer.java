@@ -40,6 +40,7 @@ public class MetadataServiceURLParamsMetadataCustomizer implements ServiceInstan
 
         String propertyName = resolveMetadataPropertyName(serviceInstance);
         String propertyValue = resolveMetadataPropertyValue(serviceInstance);
+        // dubbo.metadata-service.url-params -> {"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}
 
         if (!isBlank(propertyName) && !isBlank(propertyValue)) {
             metadata.put(propertyName, propertyValue);

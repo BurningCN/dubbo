@@ -159,6 +159,7 @@ public class RpcContext {
     }
 
     public static void restoreContext(RpcContext oldContext) {
+        // 这样保证每次invoke调用，都会清除一次RpcContext 详见dubbo-samples - attachments  这个是consumer端的
         LOCAL.set(oldContext);
     }
 

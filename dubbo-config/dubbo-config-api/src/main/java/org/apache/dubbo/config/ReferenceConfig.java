@@ -272,6 +272,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 logger.warn("No method found in service interface " + interfaceClass.getName());
                 map.put(METHODS_KEY, ANY_VALUE);
             } else {
+                // 进去
                 map.put(METHODS_KEY, StringUtils.join(new HashSet<String>(Arrays.asList(methods)), COMMA_SEPARATOR));
             }
         }
@@ -354,6 +355,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
         initialized = true;
 
+        // 进去
         checkInvokerAvailable();
 
         // dispatch a ReferenceConfigInitializedEvent since 2.7.4
@@ -417,11 +419,13 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                     if (CollectionUtils.isNotEmpty(us)) {
                         for (URL u : us) {
                             URL monitorUrl = ConfigValidationUtils.loadMonitor(this, u);
+                            // 一般返回的就是null
                             if (monitorUrl != null) {
                                 map.put(MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
                             }
                             // 添加 refer 参数到 url 中，并将 url 添加到 urls 中。提供方也有这个，不过是直接编码的url并以export参数拼接
                             urls.add(u.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
+                            // eg registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=samples-annotation-consumer&dubbo=2.0.2&id=org.apache.dubbo.config.RegistryConfig#0&pid=5489&refer=application%3Dsamples-annotation-consumer%26dubbo%3D2.0.2%26init%3Dfalse%26interface%3Dsamples.autowire.api.HelloService%26metadata-type%3Dremote%26methods%3DsayHello%26pid%3D5489%26register.ip%3D30.25.58.200%26side%3Dconsumer%26sticky%3Dfalse%26timeout%3D1000%26timestamp%3D1621998984760&registry=zookeeper&timestamp=1622000178573
                         }
                     }
                     // 未配置注册中心，抛出异常
@@ -470,6 +474,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             logger.info("Refer dubbo service " + interfaceClass.getName() + " from url " + invoker.getUrl());
         }
 
+        // eg   consumer://30.25.58.200/samples.autowire.api.HelloService?application=samples-annotation-consumer&dubbo=2.0.2&init=false&interface=samples.autowire.api.HelloService&metadata-type=remote&methods=sayHello&pid=5489&release=&side=consumer&sticky=false&timeout=1000&timestamp=1621998984760
         URL consumerURL = new URL(CONSUMER_PROTOCOL, map.remove(REGISTER_IP_KEY), 0, map.get(INTERFACE_KEY), map);
         // 进去
         MetadataUtils.publishServiceDefinition(consumerURL);
@@ -489,6 +494,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     }
 
     private void checkInvokerAvailable() throws IllegalStateException {
+        // 进去 invoker为MigrationInvoker flow详见ReferenceConfig_Get的关于这 方法的流程描述
         if (shouldCheck() && !invoker.isAvailable()) {
             invoker.destroy();
             throw new IllegalStateException("Failed to check the status of the service "
@@ -585,7 +591,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         // temp://localhost?xxxx
         URL tmpUrl = new URL("temp", "localhost", 0, map);
         boolean isJvmRefer;
-        // 默认是null（很少有人在xml配置injvm=true）
+        // 默认是null（很少有人在xml配置injvm=true ，一般是scope=local，可以进去看方法上面的注释）
         if (isInjvm() == null) {
             // if a url is specified, don't do local reference
             // 一开始调用该方法的时候，url是null的，不会走if
