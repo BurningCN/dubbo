@@ -1,0 +1,206 @@
+// ====================================================================
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+       http://dubbo.apache.org/schema/dubbo http://dubbo.apache.org/schema/dubbo/dubbo.xsd">
+
+    <dubbo:application name="servicediscovery-transfer-provider"/>
+
+    <dubbo:registry id="service-discovery" address="zookeeper://127.0.0.1:2181?registry-type=service"/>
+    <dubbo:registry id="normal" address="zookeeper://127.0.0.1:2181"/>
+
+    <dubbo:protocol name="dubbo"/>
+
+    <bean id="demoService" class="samples.sd.transfer.provider.DemoServiceImpl"/>
+    <bean id="greetingService" class="samples.sd.transfer.provider.GreetingServiceImpl"/>
+
+    
+    <!-- only to normal registry -->
+    <dubbo:service registry="normal" interface="samples.sd.transfer.demo.DemoService" ref="demoService"/>
+    
+    <!-- to both sides -->
+    <dubbo:service interface="samples.sd.transfer.demo.GreetingService" ref="greetingService"/>
+
+</beans>
+
+// ====================================================================
+
+不赘述xml的流程
+DubboBeanDefinitionParser 
+// ...
+else if ("provider".equals(property) || "registry".equals(property) || ("protocol".equals(property) && 	AbstractServiceConfig.class.isAssignableFrom(beanClass))) {
+   
+    beanDefinition.getPropertyValues().addPropertyValue(beanProperty + "Ids", value);
+
+// ====================================================================
+this = {ServiceBean@2467} "<dubbo:service />" // 第一个dubbo:service
+registryIds = "normal"
+this.registryIds = null
+
+	public void setRegistryIds(String registryIds) {
+        this.registryIds = registryIds; // normal 
+    }
+
+// ====================================================================
+
+configsCache = {HashMap@2577}  size = 4
+ "registry" -> {HashMap@2594}  size = 2
+  
+  key = "registry"
+  value = {HashMap@2594}  size = 2
+   
+   "normal" -> {RegistryConfig@2605} "<dubbo:registry address="zookeeper://127.0.0.1:2181" protocol="zookeeper" port="2181" />"
+   
+   "service-discovery" -> {RegistryConfig@2607} "<dubbo:registry address="zookeeper://127.0.0.1:2181?registry-type=service" protocol="zookeeper" port="2181" />"
+ 
+ "protocol" -> {HashMap@2596}  size = 1
+ "application" -> {HashMap@2598}  size = 1
+ "service" -> {HashMap@2600}  size = 2
+
+
+// ====================================================================
+
+startConfigCenter
+	useRegistryAsConfigCenterIfNecessary
+		if (environment.getDynamicConfiguration().isPresent()) {
+            return;
+        }
+
+        if (CollectionUtils.isNotEmpty(configManager.getConfigCenters())) {
+            return;
+        }
+
+        configManager
+                .getDefaultRegistries()
+                	return getDefaultConfigs(getConfigsMap(getTagName(RegistryConfig.class)));
+                		return configsMap.values()
+				                .stream()
+				                .filter(ConfigManager::isDefaultConfig)
+				                	Boolean isDefault = getProperty(config, "isDefault");
+        							return isDefault == null || TRUE.equals(isDefault);
+				                .collect(Collectors.toList());
+				                // 发现两个registry都识别为default
+                .stream()
+                .filter(this::isUsedRegistryAsConfigCenter) // 调用两次
+                .map(this::registryAsConfigCenter)// 调用两次
+                .forEach(configManager::addConfigCenter);// 因为两次的id相同，后者没意义
+
+// ====================================================================
+针对 demoService 的 ServiceConfig export 逻辑如下
+
+    if (!isOnlyInJvm()) {
+            
+        checkRegistry();
+			
+			convertRegistryIdsToRegistries() {
+				 
+				 if (StringUtils.isEmpty(registryIds)) {
+				 	// ....
+				 }else{
+
+				 	// 走这里，因为 demoService 是含有registryIds属性的，值为normal
+			 		String[] ids = COMMA_SPLIT_PATTERN.split(registryIds);
+			        
+			        List<RegistryConfig> tmpRegistries = new ArrayList<>();
+			        
+			        Arrays.stream(ids).forEach(id -> {
+			            if (tmpRegistries.stream().noneMatch(reg -> reg.getId().equals(id))) {
+			                Optional<RegistryConfig> globalRegistry = ApplicationModel.getConfigManager().getRegistry(id);
+			                if (globalRegistry.isPresent()) {
+			                    tmpRegistries.add(globalRegistry.get());
+			                } else {
+			                    RegistryConfig registryConfig = new RegistryConfig();
+			                    registryConfig.setId(id);
+			                    registryConfig.refresh();
+			                    tmpRegistries.add(registryConfig);
+			                }
+			            }
+			        });
+
+			        if (tmpRegistries.size() > ids.length) {
+			            throw new IllegalStateException("Too much registries found, the registries assigned to this service " +
+			                    "are :" + registryIds + ", but got " + tmpRegistries.size() + " registries!");
+			        }
+
+			        setRegistries(tmpRegistries);
+			        	AbstractInterfaceConfig setRegistries
+			        		this.registries = (List<RegistryConfig>) registries;
+
+				 }
+
+			// ....
+
+// demoService 的 ServiceConfig export 的后续逻辑 和 平常普通的一样，不赘述
+
+// ====================================================================
+针对 greetingService 的 ServiceConfig export 逻辑如下 
+
+	private void convertRegistryIdsToRegistries() {
+        
+        computeValidRegistryIds();
+        
+        if (StringUtils.isEmpty(registryIds)) {
+            
+            if (CollectionUtils.isEmpty(registries)) {
+            	// 走这里分支，和前面正好相反
+                List<RegistryConfig> registryConfigs = ApplicationModel.getConfigManager().getDefaultRegistries();
+                if (registryConfigs.isEmpty()) {
+                    registryConfigs = new ArrayList<>();
+                    RegistryConfig registryConfig = new RegistryConfig();
+                    registryConfig.refresh();
+                    registryConfigs.add(registryConfig);
+                } else {
+                    registryConfigs = new ArrayList<>(registryConfigs);
+                }
+                setRegistries(registryConfigs);
+
+ // registryConfigs = {ArrayList@3890}  size = 2
+ 0 = {RegistryConfig@3896} "<dubbo:registry address="zookeeper://127.0.0.1:2181" protocol="zookeeper" port="2181" />"
+ 1 = {RegistryConfig@3897} "<dubbo:registry address="zookeeper://127.0.0.1:2181?registry-type=service" protocol="zookeeper" port="2181" />"
+
+
+doExportUrls
+	// ...
+	List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
+
+// 生成两个registryURLs如下
+
+"registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=servicediscovery-transfer-provider&dubbo=2.0.2&id=normal&pid=30648&registry=zookeeper&timestamp=1622110686637"
+
+"service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=servicediscovery-transfer-provider&dubbo=2.0.2&id=service-discovery&pid=30648&registry=zookeeper&registry-type=service&timestamp=1622110708003"
+
+// 后续逻辑不赘述，就是两种模式的export过程了
+
+
+===========================================================
+consumer-old
+
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	// ...
+
+    <dubbo:application name="servicediscovery-transfer-consumer-old"/>
+
+    <dubbo:registry address="zookeeper://127.0.0.1:2181"/>
+
+    <dubbo:reference id="demoService" check="false" interface="org.apache.dubbo.demo.DemoService"/>
+    <dubbo:reference id="greetingService" check="false" interface="org.apache.dubbo.demo.GreetingService"/>
+
+</beans>
+// ==================================================================== 
+consumer-new
+
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       // ....
+
+    <dubbo:application name="servicediscovery-transfer-consumer"/>
+
+    // 带有 registry-type 的会会生成service-discovery-registry:// 协议
+    <dubbo:registry address="zookeeper://127.0.0.1:2181?registry-type=service"/>
+
+    <dubbo:reference id="greetingService" check="false" interface="org.apache.dubbo.demo.GreetingService"/>
+
+</beans>
+
+
+

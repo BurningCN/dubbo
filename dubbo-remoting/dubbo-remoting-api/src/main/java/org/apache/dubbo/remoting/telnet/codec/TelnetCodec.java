@@ -195,7 +195,8 @@ public class TelnetCodec extends TransportCodec {
         // 最后一个字节是'\b'
         if (message[message.length - 1] == '\b') { // Windows backspace echo
             try {
-                boolean doublechar = message.length >= 3 && message[message.length - 3] < 0; // double byte char
+                // double byte char 意思就是说Windows最后必须两个\b
+                boolean doublechar = message.length >= 3 && message[message.length - 3] < 0;
                 // new String(new byte[]{32, 32, 8, 8})是"\b\b"，new byte[]{32, 8}是 "\b"
                 // 可以看下AbstractMockChannel的send方法和getReceivedMessage
                 channel.send(new String(doublechar ? new byte[]{32, 32, 8, 8} : new byte[]{32, 8}, getCharset(channel).name()));

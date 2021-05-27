@@ -79,6 +79,7 @@ public class AnnotationBeanDefinitionParser extends AbstractSingleBeanDefinition
         return true;
     }
 
+    // 注意这里
     @Override
     protected Class<?> getBeanClass(Element element) {
         return ServiceAnnotationBeanPostProcessor.class;

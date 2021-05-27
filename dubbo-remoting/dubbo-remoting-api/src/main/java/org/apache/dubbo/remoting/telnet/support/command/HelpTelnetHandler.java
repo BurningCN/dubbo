@@ -67,6 +67,22 @@ public class HelpTelnetHandler implements TelnetHandler {
                 }
             }
             return "Please input \"help [command]\" show detail.\r\n" + TelnetUtils.toList(table);
+            // table = {ArrayList@7379}  size = 5
+            // 0 = {ArrayList@7399}  size = 2
+            //  0 = " clear [lines]"
+            //  1 = "Clear screen."
+            // 1 = {ArrayList@7433}  size = 2
+            //  0 = " exit "
+            //  1 = "Exit the telnet."
+            // 2 = {ArrayList@7446}  size = 2
+            //  0 = " help [command]"
+            //  1 = "Show help."
+            // 3 = {ArrayList@7447}  size = 2
+            //  0 = " status [-l]"
+            //  1 = "Show status."
+            // 4 = {ArrayList@7448}  size = 2
+            //  0 = " log level"
+            //  1 = "Change log level or show log "
         }
     }
 

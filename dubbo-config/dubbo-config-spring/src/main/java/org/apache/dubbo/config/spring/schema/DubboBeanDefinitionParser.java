@@ -85,7 +85,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
         RootBeanDefinition beanDefinition = new RootBeanDefinition();
         // 根据构造方法传入的类型设置beanClass，这里的beanClass就是标签（比如 <dubbo:application /> ）对应的类（比如ApplicationConfig、RegistryConfig）
         beanDefinition.setBeanClass(beanClass);
-        // 设置懒加载为false
+        // 设置懒加载为false，表示立即加载
         beanDefinition.setLazyInit(false);
         // 获取元素里的id 进去
         String id = resolveAttribute(element, "id", parserContext);
@@ -151,7 +151,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                 classDefinition.setLazyInit(false);
                 /* 解析<property/>子标签 */
                 parseProperties(element.getChildNodes(), classDefinition, parserContext);
-                // 添加ServiceBean ref属性的依赖
+                // 添加ServiceBean ref属性的依赖  一般service标签不会指定id，但是其有interface属性，在最上面会获取这个属性值作为beanId，就是这里的id，所以beanName为id+Impl
                 beanDefinition.getPropertyValues().addPropertyValue("ref", new BeanDefinitionHolder(classDefinition, id + "Impl"));
             }
 

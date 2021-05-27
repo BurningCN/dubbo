@@ -161,9 +161,11 @@ DubboNamespaceHandler extends NamespaceHandlerSupport implements ConfigurableSou
     }
 
 DubboBeanDefinitionParser parse(Element element, ParserContext parserContext) {
+	
 	return parse(element, parserContext, beanClass, required);
+		
 		RootBeanDefinition parse(Element element, ParserContext parserContext, Class<?> beanClass, boolean required)
-		// todo 
+		// 非常复杂，不在这里展示了，去看源码 
 	
 
 上面parse全部解析完成，走BeanFactoryPostProcessor相关及调用顺序，如下

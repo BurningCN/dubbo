@@ -1,0 +1,205 @@
+NettyServerHandler
+	 public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+        if (channel != null) {
+            channels.put(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()), channel);
+        }
+        handler.connected(channel);
+        	AbstractServer connected(Channel ch)
+        		if (this.isClosing() || this.isClosed()) {
+		            logger.warn("Close new channel " + ch + ", cause: server is closing or has been closed. For example, receive a new connect request while in shutdown process.");
+		            ch.close();
+		            return;
+		        }
+
+		        if (accepts > 0 && getChannels().size() > accepts) {
+		            logger.error("Close channel " + ch + ", cause: The server " + ch.getLocalAddress() + " connections greater than max config " + accepts);
+		            ch.close();
+		            return;
+		        }
+		        super.connected(ch);
+		        	AbstractPeer connected(Channel ch)
+		        		if (closed) {
+			            return;
+			        }
+			        handler.connected(ch);
+
+			        	AbstractChannelHandlerDelegate connected(Channel channel) // this 为 MultiMessageHandler
+			        		 handler.connected(channel); 
+
+			        		 HeartbeatHandler connected(Channel channel)
+			        		 	setReadTimestamp(channel);
+						        setWriteTimestamp(channel);
+						        handler.connected(channel);
+
+						        	AllChannelHandler connected(Channel channel) 
+
+								        ExecutorService executor = getExecutorService();
+								        	return getSharedExecutorService();
+								        		// ....
+								        try {
+								            executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.CONNECTED));
+								            	// 另换行
+								        } catch (Throwable t) {
+								            throw new ExecutionException("connect event", channel, getClass() + " error when process connected event .", t);
+								        }
+								    }
+
+        if (logger.isInfoEnabled()) {
+            logger.info("The connection of " + channel.getRemoteAddress() + " -> " + channel.getLocalAddress() + " is established.");
+        }
+    }
+
+// ====================================================================
+
+
+
+ChannelEventRunnable run() {
+else {
+    switch (state) {
+    case CONNECTED:
+        try {
+            handler.connected(channel);
+            	
+            	AbstractChannelHandlerDelegate connected(Channel channel) // this为decodehandler
+			        
+			        handler.connected(channel);
+			        	
+			        	HeaderExchangeHandler connected(Channel channel)
+			        		
+			        		ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
+			        			if (ch == null) {
+						            return null;
+						        }
+						        HeaderExchangeChannel ret = (HeaderExchangeChannel) ch.getAttribute(CHANNEL_KEY);
+						        if (ret == null) {
+						            ret = new HeaderExchangeChannel(ch);
+						            	this.channel = channel;
+						            if (ch.isConnected()) {
+						                ch.setAttribute(CHANNEL_KEY, ret);
+						            }
+						        }
+						        return ret;
+        					
+        					handler.connected(exchangeChannel);
+        						
+        						DubboProtocol requestHandler connected(Channel channel)
+									
+									invoke(channel, ON_CONNECT_KEY);
+
+										Invocation invocation = createInvocation(channel, channel.getUrl(), methodKey);
+											// 为null
+							            if (invocation != null) {
+							                try {
+							                    received(channel, invocation);
+							                } catch (Throwable t) {
+							                    logger.warn("Failed to invoke event method " + invocation.getMethodName() + "(), cause: " + t.getMessage(), t);
+							                }
+							            }
+			    }
+        } catch (Exception e) {
+            logger.warn("ChannelEventRunnable handle " + state + " operation error, channel is " + channel, e);
+        }
+        break;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    

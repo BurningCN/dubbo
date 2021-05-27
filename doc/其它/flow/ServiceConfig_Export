@@ -684,7 +684,44 @@ ServiceConfig export # checkAndUpdateSubConfigs()
         
         checkRegistry();
             convertRegistryIdsToRegistries();
+                computeValidRegistryIds();
+                if (StringUtils.isEmpty(registryIds)) {
+                    if (CollectionUtils.isEmpty(registries)) {
+                        List<RegistryConfig> registryConfigs = ApplicationModel.getConfigManager().getDefaultRegistries();
+                        if (registryConfigs.isEmpty()) {
+                            registryConfigs = new ArrayList<>();
+                            RegistryConfig registryConfig = new RegistryConfig();
+                            registryConfig.refresh();
+                            registryConfigs.add(registryConfig);
+                        } else {
+                            registryConfigs = new ArrayList<>(registryConfigs);
+                        }
+                        setRegistries(registryConfigs);
+                    }
+                } else {
+                    String[] ids = COMMA_SPLIT_PATTERN.split(registryIds);
+                    List<RegistryConfig> tmpRegistries = new ArrayList<>();
+                    Arrays.stream(ids).forEach(id -> {
+                        if (tmpRegistries.stream().noneMatch(reg -> reg.getId().equals(id))) {
+                            Optional<RegistryConfig> globalRegistry = ApplicationModel.getConfigManager().getRegistry(id);
+                            if (globalRegistry.isPresent()) {
+                                tmpRegistries.add(globalRegistry.get());
+                            } else {
+                                RegistryConfig registryConfig = new RegistryConfig();
+                                registryConfig.setId(id);
+                                registryConfig.refresh();
+                                tmpRegistries.add(registryConfig);
+                            }
+                        }
+                    });
 
+                    if (tmpRegistries.size() > ids.length) {
+                        throw new IllegalStateException("Too much registries found, the registries assigned to this service " +
+                                "are :" + registryIds + ", but got " + tmpRegistries.size() + " registries!");
+                    }
+
+                    setRegistries(tmpRegistries);
+                }    
             for (RegistryConfig registryConfig : registries) {
                 if (!registryConfig.isValid()) {
                     throw new IllegalStateException("No registry config found or it's not a valid config! " +

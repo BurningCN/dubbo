@@ -64,7 +64,7 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
         // 解析<dubbo:application/>标签  全局配置，用于配置当前应用信息，不管该应用是提供者还是消费者
             // (1).每个大标签都有与之对应的类，比如 <dubbo:application/> 有对应 ApplicationConfig，标签里的一些信息会通过对应类的set等方法赋值进去
             // <dubbo:application name="csp-service"/> 的name值会调用ApplicationConfig的setName方法赋值到自己的name属性上
-            // (2).required参数表示是不是必须要具有这个标签/XXConfig类
+            // (2).required参数表示标签控制id相关
             // (3).有多少个element/标签就会创建多少个DubboBeanDefinitionParser实例
         registerBeanDefinitionParser("application", new DubboBeanDefinitionParser(ApplicationConfig.class, true));
 
@@ -119,10 +119,11 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
          * @since 2.7.8
          * issue : https://github.com/apache/dubbo/issues/6275
          */
-        // 注册自己定义的一些通用组件
+        // 注册自己定义的一些通用组件（内部会注册ReferenceAnnotationBeanPostProcessor，而前面registerBeanDefinitionParser("annotation", new AnnotationBeanDefinitionParser()); 也注册了ServiceAnnotationBeanPostProcessor）
         registerCommonBeans(registry);
-        // 解析xml的Element并生成BeanDefinition，内部会调用DubboBeanDefinitionParser的parse方法。// 进去
+        // 解析xml的Element并生成BeanDefinition，内部会调用DubboBeanDefinitionParser的parse两参数重载的方法。// 进去
         BeanDefinition beanDefinition = super.parse(element, parserContext);
+        // 进去，不过这个不知道干么的
         setSource(beanDefinition);
         return beanDefinition;
     }

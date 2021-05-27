@@ -1,11 +1,11 @@
 // ====================================================================
 todo  其他filter
 todo  telnet研究 TraceTelnetHandler
-
-
+todo ls,trace,count,invoke,select,shutdown,pwd,cd,ps
+todo Telnet-flow 除了 help的其他扩展
 // ====================================================================
 sd-transfer - provider 测试程序
 
 todo ConfigurableMetadataServiceExporter serviceConfig.export();
 todo HeeloService 和 GrettingSerive用的不同的registry
-todo 多注册中心 -MultiRegistry 
+todo 多注册中心 -MultiRegistry -- done
