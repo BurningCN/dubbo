@@ -26,6 +26,7 @@ import org.apache.dubbo.rpc.InvokeMode;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.service.GenericService;
+import org.apache.dubbo.rpc.TimeoutCountDown;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -37,6 +38,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.$INVOKE_ASYNC;
 import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_PARAMETER_DESC;
 import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_ATTACHMENT_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_KEY;
 import static org.apache.dubbo.rpc.Constants.$ECHO;
 import static org.apache.dubbo.rpc.Constants.$ECHO_PARAMETER_DESC;
 import static org.apache.dubbo.rpc.Constants.ASYNC_KEY;
@@ -233,6 +235,18 @@ public class RpcUtils {
             return null;
         }
         return method;
+    }
+
+    public static boolean checkTimeout(RpcContext context) {
+        // pass default timeout set by end user (ReferenceConfig)
+        Object countDown = context.get(TIME_COUNTDOWN_KEY);
+        if (countDown != null) {
+            TimeoutCountDown timeoutCountDown = (TimeoutCountDown) countDown;
+            if (timeoutCountDown.isExpired()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static long getTimeout(Invocation invocation, long defaultTimeout) {

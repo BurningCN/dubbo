@@ -26,12 +26,11 @@ import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.RpcInvocation;
-import org.apache.dubbo.rpc.TimeoutCountDown;
+import org.apache.dubbo.rpc.support.RpcUtils;
 
 import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER;
 import static org.apache.dubbo.common.constants.CommonConstants.REMOTE_APPLICATION_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.TIME_COUNTDOWN_KEY;
 
 /**
  * ConsumerContextFilter set current RpcContext with invoker,invocation, local host, remote host and port
@@ -56,15 +55,10 @@ public class ConsumerContextFilter implements Filter {
             ((RpcInvocation) invocation).setInvoker(invoker);
         }
 
-        // pass default timeout set by end user (ReferenceConfig)
-        Object countDown = context.get(TIME_COUNTDOWN_KEY);
-        if (countDown != null) {
-            TimeoutCountDown timeoutCountDown = (TimeoutCountDown) countDown;
-            if (timeoutCountDown.isExpired()) {
-                return AsyncRpcResult.newDefaultAsyncResult(new RpcException(RpcException.TIMEOUT_TERMINATE,
-                        "No time left for making the following call: " + invocation.getServiceName() + "."
-                                + invocation.getMethodName() + ", terminate directly."), invocation);
-            }
+        if (RpcUtils.checkTimeout(context)) {
+            return AsyncRpcResult.newDefaultAsyncResult(new RpcException(RpcException.TIMEOUT_TERMINATE,
+                    "No time left for making the following call: " + invocation.getServiceName() + "."
+                            + invocation.getMethodName() + ", terminate directly."), invocation);
         }
         return invoker.invoke(invocation);
     }

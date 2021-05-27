@@ -17,15 +17,18 @@
 package org.apache.dubbo.rpc.filter;
 
 import org.apache.dubbo.common.URL;
-import org.apache.dubbo.rpc.AppResponse;
-import org.apache.dubbo.rpc.Invocation;
-import org.apache.dubbo.rpc.Invoker;
-import org.apache.dubbo.rpc.Result;
+import org.apache.dubbo.common.extension.ExtensionLoader;
+import org.apache.dubbo.remoting.RemotingException;
+import org.apache.dubbo.rpc.*;
 import org.apache.dubbo.rpc.support.BlockMyInvoker;
 
+import org.apache.dubbo.rpc.support.DemoService;
+import org.apache.dubbo.rpc.support.DemoServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
@@ -62,5 +65,18 @@ public class TimeoutFilterTest {
         Result result = timeoutFilter.invoke(invoker, invocation);
         Assertions.assertEquals("Dubbo", result.getValue());
 
+    }
+
+    @Test
+    public void TestInvokeTimeout() throws RemotingException {
+        Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
+        ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
+        URL url = URL.valueOf("test://localhost:9999/test?timeout=6000000");
+        url.addParameter("timeout-countdown","1");
+        protocol.export(proxyFactory.getInvoker(new DemoServiceImpl(), DemoService.class,url));
+        DemoService proxy = proxyFactory.getProxy(protocol.refer(DemoService.class, url));
+        RpcContext.getContext().set("timeout-countdown", TimeoutCountDown.newCountDown(1, TimeUnit.MILLISECONDS));
+        System.out.println(proxy.timestamp());
+        System.out.println(Thread.currentThread().getName());
     }
 }
