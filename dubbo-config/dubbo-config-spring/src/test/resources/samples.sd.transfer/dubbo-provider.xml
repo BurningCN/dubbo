@@ -21,12 +21,12 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
        http://dubbo.apache.org/schema/dubbo http://dubbo.apache.org/schema/dubbo/dubbo.xsd">
 
-    <dubbo:application name="servicediscovery-transfer-provider"/>
+    <dubbo:application name="servicediscovery-transfer-provider" />
 
     <dubbo:registry id="service-discovery" address="zookeeper://127.0.0.1:2181?registry-type=service"/>
     <dubbo:registry id="normal" address="zookeeper://127.0.0.1:2181"/>
 
-    <dubbo:protocol name="dubbo" telnet="clear,exit,help,status,log"/> <!--,ls,trace,count,invoke,select,shutdown,pwd,cd,ps-->
+    <dubbo:protocol name="dubbo" telnet="clear,exit,help,status,log,ls,trace,count,invoke,select,shutdown,pwd,cd,ps"/>
 
     <bean id="demoService" class="samples.sd.transfer.provider.DemoServiceImpl"/>
     <bean id="greetingService" class="samples.sd.transfer.provider.GreetingServiceImpl"/>

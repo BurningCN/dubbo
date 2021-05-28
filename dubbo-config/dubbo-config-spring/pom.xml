@@ -136,6 +136,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-qos</artifactId>
+            <version>${revision}</version>
+        </dependency>
+
         <!-- Zookeeper dependencies for testing -->
         <dependency>
             <groupId>org.apache.dubbo</groupId>

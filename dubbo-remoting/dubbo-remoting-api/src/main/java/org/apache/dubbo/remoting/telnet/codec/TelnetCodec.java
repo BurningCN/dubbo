@@ -195,6 +195,8 @@ public class TelnetCodec extends TransportCodec {
             }
         }
 
+
+
         boolean up = endsWith(message, UP);
         boolean down = endsWith(message, DOWN);
         if (up || down) {
