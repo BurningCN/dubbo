@@ -740,3 +740,46 @@ ClusterInvoker<T> doCreateInvoker(DynamicDirectory<T> directory, Cluster cluster
 
 ServiceDiscoveryRegistry
 	subscribeURLs(URL url, NotifyListener listener, Set<String> serviceNames) 
+		String serviceNamesKey = serviceNames.toString();
+        String protocolServiceKey = url.getServiceKey() + GROUP_CHAR_SEPARATOR + url.getParameter(PROTOCOL_KEY, DUBBO);
+        serviceToAppsMapping.put(protocolServiceKey, serviceNamesKey);
+
+        // register ServiceInstancesChangedListener
+        ServiceInstancesChangedListener serviceListener = serviceListeners.computeIfAbsent(serviceNamesKey,
+                k -> new ServiceInstancesChangedListener(serviceNames, serviceDiscovery));
+        serviceListener.setUrl(url);
+        serviceListener.addListener(protocolServiceKey, listener);
+
+        listener.addServiceListener(serviceListener);
+
+        registerServiceInstancesChangedListener(url, serviceListener);
+        	String listenerId = createListenerId(url, listener);
+	        if (registeredListeners.add(listenerId)) {
+	            serviceDiscovery.addServiceInstancesChangedListener(listener);
+	        		EventPublishingServiceDiscovery addServiceInstancesChangedListener
+	        			serviceDiscovery.addServiceInstancesChangedListener(listener);
+	        				ZookeeperServiceDiscovery addServiceInstancesChangedListener
+	        					listener.getServiceNames().forEach(serviceName -> registerServiceWatcher(serviceName, listener));
+	        						String path = buildServicePath(serviceName);
+							        curatorFramework.create().creatingParentsIfNeeded().forPath(path);
+							        CuratorWatcher watcher = watcherCaches.computeIfAbsent(path, key ->
+							                new ZookeeperServiceDiscoveryChangeWatcher(this, serviceName, listener));
+							            curatorFramework.getChildren().usingWatcher(watcher).forPath(path);
+        							eventDispatcher.addEventListener(listener);
+	        }
+        serviceNames.forEach(serviceName -> {
+            
+            List<ServiceInstance> serviceInstances = serviceDiscovery.getInstances(serviceName);
+            	EventPublishingServiceDiscovery
+            		ZookeeperServiceDiscovery
+            			doInServiceDiscovery(s -> build(s.queryForInstances(serviceName)));
+            
+            if (CollectionUtils.isNotEmpty(serviceInstances)) {
+                serviceListener.onEvent(new ServiceInstancesChangedEvent(serviceName, serviceInstances));
+                // todo
+            } else {
+                logger.info("getInstances by serviceName=" + serviceName + " is empty, waiting for serviceListener callback. url=" + url);
+            }
+        });
+
+        listener.notify(serviceListener.getUrls(protocolServiceKey));

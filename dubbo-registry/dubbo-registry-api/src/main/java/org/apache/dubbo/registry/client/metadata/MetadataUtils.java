@@ -92,6 +92,7 @@ public class MetadataUtils {
             if (StringUtils.isNotEmpty(dubboURLsJSON)) {
                 builder = loader.getExtension(SpringCloudMetadataServiceURLBuilder.NAME);
             } else {
+                // 默认这个
                 builder = loader.getExtension(StandardMetadataServiceURLBuilder.NAME);
             }
 

@@ -361,7 +361,7 @@ public class ServiceDiscoveryRegistry implements Registry {
         // listener为ServiceDiscoveryRegistryDirectory进去 ，这个也感觉没啥用处，设置进去后也没有调用
         listener.addServiceListener(serviceListener);
 
-        // 将 listener 即ServiceDiscoveryDirectory保存到ServiceInstancesChangedListener（和前面步骤相反）
+        // 将 listener 即ServiceDiscoveryRegistryDirectory保存到ServiceInstancesChangedListener（和前面步骤相反）
         // 这样后者得到通知的时候回调用listener#notify方法
         serviceListener.addListener(protocolServiceKey, listener);
 

@@ -252,7 +252,9 @@ public class ServiceInstancesChangedListener implements ConditionalEventListener
                 //  "demo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo" -> {MetadataInfo$ServiceInfo@4808} "service{name='org.apache.dubbo.metadata.MetadataService',group='demo-provider',version='1.0.0',protocol='dubbo',params={deprecated=false, dubbo=2.0.2, version=1.0.0, group=demo-provider},consumerParams=null}"
                 //  "samples.servicediscovery.demo.DemoService:dubbo" -> {MetadataInfo$ServiceInfo@4810} "service{name='samples.servicediscovery.demo.DemoService',group='null',version='null',protocol='dubbo',params={deprecated=false, weight=12, dubbo=2.0.2},consumerParams=null}"
 
-                // local
+                // local 是否是local还是remote取决于有没有在xml配置过，比如在<dubbo:application "metadata-type" = "remote">那么就是remote。否则默认为local
+                // 所谓local就是向远端的某个服务发起调用，谁呢？就是 ConfigurableMetadataServiceExporter ，这个会在提供方进行暴露，其有很多方法
+                // 就是为了查询其他service的元数据服务的
             } else {
                 // 进去
                 MetadataService metadataServiceProxy = MetadataUtils.getMetadataServiceProxy(instance, serviceDiscovery);

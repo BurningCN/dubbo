@@ -159,6 +159,11 @@ public class ServiceInstanceMetadataUtils {
     public static String getExportedServicesRevision(ServiceInstance serviceInstance) {
         Map<String, String> metadata = serviceInstance.getMetadata();
         return metadata.get(EXPORTED_SERVICES_REVISION_PROPERTY_NAME);
+        // metadata = {LinkedHashMap@4424}  size = 4
+        // "dubbo.metadata-service.url-params" -> "{"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}"
+        // "dubbo.endpoints" -> "[{"port":20880,"protocol":"dubbo"}]"
+        // "dubbo.metadata.revision" -> "925054C373BEC1A1970ED7226902B83B"
+        // "dubbo.metadata.storage-type" -> "local"
     }
 
     /**

@@ -47,6 +47,7 @@ public class ZookeeperServiceDiscoveryChangeWatcher implements CuratorWatcher {
     public ZookeeperServiceDiscoveryChangeWatcher(ZookeeperServiceDiscovery zookeeperServiceDiscovery,
                                                   String serviceName,
                                                   ServiceInstancesChangedListener listener) {
+        // 保存这个是为了重复注册监听
         this.zookeeperServiceDiscovery = zookeeperServiceDiscovery;
         this.serviceName = serviceName;
         this.listener = listener;
@@ -61,7 +62,7 @@ public class ZookeeperServiceDiscoveryChangeWatcher implements CuratorWatcher {
             // 是否保持监听，外界可以调用stopWatching来取消监听
             if (shouldKeepWatching()) {
                 // 事件触发， 通知监听器，我们在外界肯定指定了要对哪个path进行监听，而path信息肯定是和这里的serviceName映射了的
-                // getInstances返回 List<ServiceInstance> 列表
+                // getInstances返回 List<ServiceInstance> 列表 ，onEvent是ServiceInstancesChangedListener的方法
                 listener.onEvent(new ServiceInstancesChangedEvent(serviceName, zookeeperServiceDiscovery.getInstances(serviceName)));
                 // 继续注册
                 zookeeperServiceDiscovery.registerServiceWatcher(serviceName, listener);
