@@ -646,6 +646,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         // 去看 Protocol$Adaptive.export 方法，内部会调用wrapperInvoker.getUrl(可以进去看下)，这个url是一般是
                         // registry://xx的，所以肯定会取到RegistryProtocol，当然会被一些Wrapper包装
                         Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
+                        // exporter = {RegistryProtocol$DestroyableExporter@5969}
+                        //  exporter = {RegistryProtocol$ExporterChangeableWrapper@5084}
                         exporters.add(exporter);
                     }
                 } else {

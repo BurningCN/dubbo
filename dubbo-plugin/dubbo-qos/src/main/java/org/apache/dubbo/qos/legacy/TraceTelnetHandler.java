@@ -46,6 +46,7 @@ public class TraceTelnetHandler implements TelnetHandler {
         String method;
         String times;
         // message like : XxxService , XxxService 10 , XxxService xxxMethod , XxxService xxxMethod 10
+        // 格式如上，可以不带方法名，但是service和次数必须带，次数也可以不带，默认值如下为1
         if (StringUtils.isEmpty(service)) {
             service = parts.length > 0 ? parts[0] : null;
             method = parts.length > 1 ? parts[1] : null;
@@ -63,6 +64,7 @@ public class TraceTelnetHandler implements TelnetHandler {
         }
         Invoker<?> invoker = null;
         for (Exporter<?> exporter : DubboProtocol.getDubboProtocol().getExporters()) {
+            // 根据service找到对应的invoker，至于多次||比较是因为可能键入的不是完全限定名
             if (service.equals(exporter.getInvoker().getInterface().getSimpleName())
                     || service.equals(exporter.getInvoker().getInterface().getName())
                     || service.equals(exporter.getInvoker().getUrl().getPath())) {
@@ -83,6 +85,7 @@ public class TraceTelnetHandler implements TelnetHandler {
                     return "No such method " + method + " in class " + invoker.getInterface().getName();
                 }
             }
+            // 进去
             TraceFilter.addTracer(invoker.getInterface(), method, channel, Integer.parseInt(times));
         } else {
             return "No such service " + service;

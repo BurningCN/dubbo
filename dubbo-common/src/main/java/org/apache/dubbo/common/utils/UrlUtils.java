@@ -484,6 +484,7 @@ public class UrlUtils {
                 value.getParameter(VERSION_KEY));
     }
 
+    // 参数是predicate
     public static List<URL> classifyUrls(List<URL> urls, Predicate<URL> predicate) {
         return urls.stream().filter(predicate).collect(Collectors.toList());
     }

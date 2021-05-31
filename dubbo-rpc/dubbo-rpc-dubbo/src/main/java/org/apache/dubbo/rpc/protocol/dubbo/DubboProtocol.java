@@ -173,6 +173,9 @@ public class DubboProtocol extends AbstractProtocol {
             // 这里仍然省略一些中间调用，直接分析具体的编码逻辑。ExchangeCodec#encodeResponse
         }
 
+
+
+        // 所有方法的channel都是HeaderExchangeChannel，具体看HeaderExchangHandler
         @Override
         public void received(Channel channel, Object message) throws RemotingException {
             if (message instanceof Invocation) {
@@ -323,12 +326,31 @@ public class DubboProtocol extends AbstractProtocol {
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         URL url = invoker.getUrl(); // 这个invoker是在ProtocolFilterWrapper的buildInvokerChain方法最后返回的（一个过滤器链）
 
+        // invoker大概如下
+        //invoker = {FilterNode@4741} "org.apache.dubbo.registry.integration.RegistryProtocol$InvokerDelegate@997d532"
+        // invoker = {RegistryProtocol$InvokerDelegate@4638}
+        //    invoker = {DelegateProviderMetaDataInvoker@3433}
+        //      invoker = {JavassistProxyFactory$1@3403}
+        // next = {FilterNode@4767}
+        // filter = {ContextFilter@4768}
+
         // 获取服务标识，理解成服务坐标也行，进去看下。由服务组名，服务名，服务版本号以及端口组成。比如：
         // demoGroup/com.alibaba.dubbo.demo.DemoService:1.0.1:20880
         String key = serviceKey(url);
         // 创建 DubboExporter，进去（我们看过InjvmExporter的构造，也是这三个参数，其调用处在对应的InjvmProtocol的export方法）
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
         // 将 <key, exporter> 键值对放入缓存中  ---> 用以在消费者请求这边的时候，取出保存在map的提供方，调用相关方法
+        //exporter = {DubboExporter@4670}
+        // key = "samples.sd.transfer.demo.DemoService:20880"
+        // exporterMap = {ConcurrentHashMap@4646}  size = 1
+        // invoker = {FilterNode@4635} "org.apache.dubbo.registry.integration.RegistryProtocol$InvokerDelegate@7004e3d"
+        //  invoker = {RegistryProtocol$InvokerDelegate@4620}
+        //   invoker = {DelegateProviderMetaDataInvoker@3444}
+        //   InvokerWrapper.invoker = {DelegateProviderMetaDataInvoker@3444}
+        //   url = {URL@3826} "dubbo://30.25.58.121:20880/samples.sd.transfer.demo.DemoService?anyhost=true&application=servicediscovery-transfer-provider&bind.ip=30.25.58.121&bind.port=20880&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=samples.sd.transfer.demo.DemoService&metadata-type=remote&methods=sayHello&pid=9970&qos.port=33333&release=&side=provider&telnet=clear,exit,help,status,log,ls,trace,count,invoke,select,shutdown,pwd,cd,ps&timestamp=1622427980852"
+        //  next = {FilterNode@4693}
+        //  filter = {ContextFilter@4627}
+        // unexported = false
         exporterMap.put(key, exporter);
 
         // 本地存根相关代码
@@ -387,6 +409,7 @@ public class DubboProtocol extends AbstractProtocol {
     private ProtocolServer createServer(URL url) {
         url = URLBuilder.from(url)
                 // 当服务器关闭时发送readonly事件，它是默认启用的  channel.readonly.sent=true
+                // 注意下这个CHANNEL_READONLYEVENT_SENT_KEY参数的调用点 sendChannelReadOnlyEvent
                 .addParameterIfAbsent(CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString())
                 // 默认启用心跳，添加心跳检测配置到 url 中  &heartbeat=60000
                 .addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT))

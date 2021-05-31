@@ -33,11 +33,14 @@ import io.netty.channel.SimpleChannelInboundHandler;
 /**
  * Telnet process handler
  */
+// 注意泛型
 public class TelnetProcessHandler extends SimpleChannelInboundHandler<String> {
 
     private static final Logger log = LoggerFactory.getLogger(TelnetProcessHandler.class);
     private static CommandExecutor commandExecutor = new DefaultCommandExecutor();
 
+    // channelRead0 是 SimpleChannelInboundHandler特有的方法， 其重写了ChannelRead方法，里面能自动释放引用，可以进去看下源码
+    // 方法的参数为msg，和类的泛型对应
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
 
@@ -48,6 +51,7 @@ public class TelnetProcessHandler extends SimpleChannelInboundHandler<String> {
             commandContext.setRemote(ctx.channel());
 
             try {
+                // 进去 默认是DefaultCommandExecutor
                 String result = commandExecutor.execute(commandContext);
                 if (StringUtils.isEquals(QosConstants.CLOSE, result)) {
                     ctx.writeAndFlush(getByeLabel()).addListener(ChannelFutureListener.CLOSE);

@@ -121,7 +121,6 @@ public abstract class Wrapper {
     }
 
 
-
     // 以DemoServiceImpl+testGeneric为例，生成wrapper0文件在doc/wrapper-testGeneric包下，自己可以对照看
     // 以demo模块的provider模块的Application，生成wrapper0文件在doc/wrapper-demo...包下，自己可以对照看
     private static Wrapper makeWrapper(Class<?> c) {
@@ -144,6 +143,33 @@ public abstract class Wrapper {
         c1.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
         c2.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
         c3.append(name).append(" w; try{ w = ((").append(name).append(")$1); }catch(Throwable e){ throw new IllegalArgumentException(e); }");
+
+        /*
+        public void setPropertyValue(Object o, String n, Object v) {
+        samples.sd.transfer.demo.DemoService w;
+        try {
+            w = ((samples.sd.transfer.demo.DemoService) $1);
+        } catch (Throwable e) {
+            throw new IllegalArgumentException(e);
+        }
+        public Object getPropertyValue (Object o, String n){
+            samples.sd.transfer.demo.DemoService w;
+            try {
+                w = ((samples.sd.transfer.demo.DemoService) $1);
+            } catch (Throwable e) {
+                throw new IllegalArgumentException(e);
+            }
+
+        public Object invokeMethod (Object o, String n, Class[]p, Object[]v) throws
+        java.lang.reflect.InvocationTargetException {
+            samples.sd.transfer.demo.DemoService w;
+            try {
+                w = ((samples.sd.transfer.demo.DemoService) $1);
+            } catch (Throwable e) {
+                throw new IllegalArgumentException(e);
+            }
+
+        */
 
         // pts 用于存储成员变量名和类型
         Map<String, Class<?>> pts = new HashMap<>(); // <property name, property types>

@@ -43,25 +43,31 @@ public class LogTelnetHandler implements TelnetHandler {
     @Override
     public String telnet(Channel channel, String message) {
         long size = 0;
+        // log有没有文件存储
         File file = LoggerFactory.getFile();
         StringBuffer buf = new StringBuffer();
         if (message == null || message.trim().length() == 0) {
+            // 表示dubbo>可以输入log debug或者log 100(数字)
             buf.append("EXAMPLE: log error / log 100");
         } else {
             String[] str = message.split(" ");
+            // 非数字，直接设置级别
             if (!StringUtils.isInteger(str[0])) {
                 LoggerFactory.setLevel(Level.valueOf(message.toUpperCase()));
             } else {
+                // 是数字，表示的是要输出文件的多少字节数
                 int showLogLength = Integer.parseInt(str[0]);
 
                 if (file != null && file.exists()) {
                     try {
                         try (FileInputStream fis = new FileInputStream(file)) {
                             try (FileChannel filechannel = fis.getChannel()) {
+                                // 文件的当前大小
                                 size = filechannel.size();
                                 ByteBuffer bb;
                                 if (size <= showLogLength) {
                                     bb = ByteBuffer.allocate((int) size);
+                                    // 将文件读到指定size大小的ByteBuffer中
                                     filechannel.read(bb, 0);
                                 } else {
                                     int pos = (int) (size - showLogLength);
@@ -69,6 +75,7 @@ public class LogTelnetHandler implements TelnetHandler {
                                     filechannel.read(bb, pos);
                                 }
                                 bb.flip();
+                                // 将字节转化为字符串
                                 String content = new String(bb.array()).replace("<", "&lt;")
                                         .replace(">", "&gt;").replace("\n", "<br/><br/>");
                                 buf.append("\r\ncontent:" + content);

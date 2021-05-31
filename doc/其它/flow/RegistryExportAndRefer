@@ -1,0 +1,742 @@
+// ====================================================================
+   export registry://
+// ====================================================================
+
+doExportUrlsFor1Protocol
+	
+	// ====================================================================
+	if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
+        exportLocal(url);
+        	
+        	URL local = URLBuilder.from(url)
+            .setProtocol(LOCAL_PROTOCOL)
+            .setHost(LOCALHOST_VALUE)
+            .setPort(0)
+            .build();
+	        
+	        Exporter<?> exporter = PROTOCOL.export(PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, local));
+	            StubProxyFactoryWrapper getInvoker
+	            	
+	            	JavassistProxyFactory getInvoker
+	            
+	            QosProtocolWrapper export
+	            	
+	            	if (UrlUtils.isRegistry(invoker.getUrl())) {
+			            startQosServer(invoker.getUrl());
+			            return protocol.export(invoker);
+			        }
+			        
+			        return protocol.export(invoker);
+			        	
+			        	ProtocolFilterWrapper export
+			        		
+			        		protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
+			        			
+			        			ProtocolListenerWrapper
+			        				//....
+			        				return new ListenerExporterWrapper<T>(protocol.export(invoker),...
+			        					
+			        					InjvmProtocol export
+
+			        						return new InjvmExporter<T>(invoker, invoker.getUrl().getServiceKey(), exporterMap);
+			        							super(invoker);
+										        this.key = key;
+										        this.exporterMap = exporterMap;
+										        exporterMap.put(key, this);
+	        exporters.add(exporter);
+	        logger.info("Export dubbo service " + interfaceClass.getName() + " to local registry url : " + local);
+	    }
+	// ====================================================================
+	Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
+
+		StubProxyFactoryWrapper Invoker<T> getInvoker(T proxy, Class<T> type, URL url) 
+       		
+       		return proxyFactory.getInvoker(proxy, type, url);
+       			
+       			JavassistProxyFactory getInvoker
+			       	
+			       	final Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
+			       		// Wrapper看对应flow 这里不赘述
+			        
+			        return new AbstractProxyInvoker<T>(proxy, type, url) {
+			            @Override
+			            protected Object doInvoke(T proxy, String methodName,
+			                                      Class<?>[] parameterTypes,
+			                                      Object[] arguments) throws Throwable {
+			                return wrapper.invokeMethod(proxy, methodName, parameterTypes, arguments);
+			            }
+			        };
+			        AbstractProxyInvoker	
+			        	this.proxy = proxy;
+				        this.type = type;
+				        this.url = url;
+    DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
+
+    	public DelegateProviderMetaDataInvoker(Invoker<T> invoker, ServiceConfig<?> metadata) {
+	        this.invoker = invoker;
+	        this.metadata = metadata;
+	    }
+
+    Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
+
+    	QosProtocolWrapper export
+
+    		if (UrlUtils.isRegistry(invoker.getUrl())) {
+	            
+	            startQosServer(invoker.getUrl());
+	            	// 不赘述
+	            
+	            return protocol.export(invoker);
+	            	// 走这里分支 
+	            	ProtocolFilterWrapper export(Invoker<T> invoker) 
+	            		if (UrlUtils.isRegistry(invoker.getUrl())) {
+				            return protocol.export(invoker);
+				            	ProtocolListenerWrapper export
+				            		if (UrlUtils.isRegistry(invoker.getUrl())) {
+								        return protocol.export(invoker);
+								        	RegistryProtocol export
+								        		// 另换行
+								    }
+								        // ...
+				        }
+				        // 这里不走
+				        return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
+	        }
+	        return protocol.export(invoker);
+
+
+    exporters.add(exporter);
+
+
+// ====================================================================
+RegistryProtocol export // this为 InterfaceCompatibleRegistryProtocol
+	URL registryUrl = getRegistryUrl(originInvoker);
+
+		InterfaceCompatibleRegistryProtocol getRegistryUrl(Invoker<?> originInvoker)
+			URL registryUrl = originInvoker.getUrl();
+	        if (REGISTRY_PROTOCOL.equals(registryUrl.getProtocol())) {
+	            String protocol = registryUrl.getParameter(REGISTRY_KEY, DEFAULT_REGISTRY);
+	            registryUrl = registryUrl.setProtocol(protocol).removeParameter(REGISTRY_KEY);
+	        }
+	        return registryUrl;
+
+	URL providerUrl = getProviderUrl(originInvoker);
+	
+	final URL overrideSubscribeUrl = getSubscribedOverrideUrl(providerUrl);
+	
+	final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker);
+	
+	overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
+	
+	providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
+	
+	final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
+		// ...
+		return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
+			
+			QosProtocolWrapper export
+				// ...
+				return protocol.export(invoker);
+
+			ProtocolFilterWrapper export(Invoker<T> invoker) throws RpcException {
+		        if (UrlUtils.isRegistry(invoker.getUrl())) {
+		            return protocol.export(invoker);
+		        }
+		        // 走这里
+		        return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
+		        	
+		        	buildInvokerChain
+		        	
+		        	export
+		        		
+		        		ProtocolListenerWrapper export
+		        			if (UrlUtils.isRegistry(invoker.getUrl())) {
+					            return protocol.export(invoker);
+					        }
+					        // 走这里
+					        return new ListenerExporterWrapper<T>(protocol.export(invoker),
+					                Collections.unmodifiableList(ExtensionLoader.getExtensionLoader(ExporterListener.class)
+					                        .getActivateExtension(invoker.getUrl(), EXPORTER_LISTENER_KEY)));
+					           	DubboProtocol export
+					           		URL url = invoker.getUrl();
+							        String key = serviceKey(url);
+							        DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
+							        exporterMap.put(key, exporter);
+
+							        // ..
+
+							        openServer(url);
+							        	String key = url.getAddress();
+								        boolean isServer = url.getParameter(IS_SERVER_KEY, true);
+								        if (isServer) {
+								            ProtocolServer server = serverMap.get(key);
+								            if (server == null) {
+								                synchronized (this) {
+								                    server = serverMap.get(key);
+								                    if (server == null) {
+								                        serverMap.put(key, createServer(url));
+								                        	// 另换行
+								                    }
+								                }
+								            } else {
+								                // server supports reset, use together with override
+								                server.reset(url);
+								            }
+								        }
+							        optimizeSerialization(url);
+
+							        return exporter;
+		    }
+
+	final Registry registry = getRegistry(originInvoker);
+		URL registryUrl = getRegistryUrl(originInvoker);
+        return getRegistry(registryUrl);
+        	return registryFactory.getRegistry(url);
+        		RegistryFactoryWrapper getRegistry
+	        		AbstractRegistryFactory getRegistry
+	        			// ...
+	        			registry = createRegistry(url);
+	        				ZookeeperRegistryFactory  createRegistry
+	        					new ZookeeperRegistry(url, zookeeperTransporter);
+	        						
+	        						ZookeeperRegistry、 FailbackRegistry、 AbstractRegistry
+
+	        						zookeeperTransporter.connect
+	        			// ..
+	
+	final URL registeredProviderUrl = getUrlToRegistry(providerUrl, registryUrl);
+
+	
+	boolean register = providerUrl.getParameter(REGISTER_KEY, true);
+	if (register) {
+	    registry.register(registeredProviderUrl);
+	    	ListenerRegistryWrapper register(URL url)
+	    		registry.register(url);
+	    			FailbackRegistry register
+	    				AbstractRegistry register
+	    				ZookeeperRegistry doRegister
+	}
+
+	registerStatedUrl(registryUrl, registeredProviderUrl, register);
+
+
+	exporter.setRegisterUrl(registeredProviderUrl);
+	exporter.setSubscribeUrl(overrideSubscribeUrl);
+
+	// Deprecated! Subscribe to override rules in 2.6.x or before.
+	registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
+		
+		ListenerRegistryWrapper subscribe
+
+			ZookeeperRegistry、 FailbackRegistry、 AbstractRegistry
+				
+				ZookeeperRegistry subscribe
+					
+					CountDownLatch latch = new CountDownLatch(1);
+	                List<URL> urls = new ArrayList<>();
+	                for (String path : toCategoriesPath(url)) {
+	                    ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
+	                    ChildListener zkListener = listeners.computeIfAbsent(listener, k -> new RegistryChildListenerImpl(url, k, latch));
+	                    if (zkListener instanceof RegistryChildListenerImpl) {
+	                        ((RegistryChildListenerImpl) zkListener).setLatch(latch);
+	                    }
+	                    zkClient.create(path, false);
+	                    List<String> children = zkClient.addChildListener(path, zkListener);
+	                    if (children != null) {
+	                        urls.addAll(toUrlsWithEmpty(url, path, children));
+	                    }
+	                }
+	                notify(url, listener, urls);
+	                	AbstractRegistry notify
+	                		// ....
+	                		OverrideListener notify
+	                		saveProperties(url);
+
+	                // tells the listener to run only after the sync notification of main thread finishes.
+	                latch.countDown();
+
+	notifyExport(exporter);
+		List<RegistryProtocolListener> listeners = ExtensionLoader.getExtensionLoader(RegistryProtocolListener.class)
+                .getActivateExtension(exporter.getOriginInvoker().getUrl(), "registry.protocol.listener");
+        if (CollectionUtils.isNotEmpty(listeners)) {
+            for (RegistryProtocolListener listener : listeners) {
+                listener.onExport(this, exporter);
+	                MigrationRuleListener onExport
+						// 空
+            }
+        }
+		
+	return new DestroyableExporter<>(exporter);
+
+// ====================================================================
+	
+ProtocolServer createServer(URL url)
+
+	url = URLBuilder.from(url)
+            // send readonly event when server closes, it's enabled by default
+            .addParameterIfAbsent(CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString())
+            // enable heartbeat by default
+            .addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT))
+            .addParameter(CODEC_KEY, DubboCodec.NAME)
+            .build();
+    String str = url.getParameter(SERVER_KEY, DEFAULT_REMOTING_SERVER);
+
+    if (str != null && str.length() > 0 && !ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str)) {
+        throw new RpcException("Unsupported server type: " + str + ", url: " + url);
+    }
+
+    ExchangeServer server;
+    try {
+        server = Exchangers.bind(url, requestHandler);
+        	if (url == null) {
+	            throw new IllegalArgumentException("url == null");
+	        }
+	        if (handler == null) {
+	            throw new IllegalArgumentException("handler == null");
+	        }
+	        
+	        url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
+	        
+	        return getExchanger(url).bind(url, handler);
+
+	        	HeaderExchanger 
+	        		
+	        		ExchangeServer bind(URL url, ExchangeHandler handler)
+	        			
+	        			return new HeaderExchangeServer(Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler))));
+	        			
+	        			Transporters.bind
+	        				ChannelHandler handler;
+					        if (handlers.length == 1) {
+					            handler = handlers[0];
+					        } else {
+					            handler = new ChannelHandlerDispatcher(handlers);
+					        }
+					        return getTransporter().bind(url, handler);
+					        	NettyTransporter bind(URL url, ChannelHandler handler)
+					        		return new NettyServer(url, handler);
+					        		// 另换行
+
+
+					    HeaderExchangeServer
+					    	this.server = server;
+        					startIdleCheckTask(getUrl());
+
+    } catch (RemotingException e) {
+        throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);
+    }
+
+    str = url.getParameter(CLIENT_KEY);
+    if (str != null && str.length() > 0) {
+        Set<String> supportedTypes = ExtensionLoader.getExtensionLoader(Transporter.class).getSupportedExtensions();
+        if (!supportedTypes.contains(str)) {
+            throw new RpcException("Unsupported client type: " + str);
+        }
+    }
+
+    return new DubboProtocolServer(server);
+
+// ====================================================================
+
+NettyServer(URL url, ChannelHandler handler)
+	
+	super(ExecutorUtil.setThreadName(url, SERVER_THREAD_POOL_NAME), ChannelHandlers.wrap(handler, url));	
+		
+		ChannelHandlers.wrap
+			new MultiMessageHandler(new HeartbeatHandler(ExtensionLoader.getExtensionLoader(Dispatcher.class)
+                .getAdaptiveExtension().dispatch(handler, url)));
+        
+        
+        AbstractServer 
+        	super(url, handler);
+	        	AbstractEndpoint
+	        		super(url, handler);
+		        		AbstractPeer
+		        			this.url = url;
+		        			this.handler = handler;
+		        	// ...
+		    //....
+		    doOpen()
+		    // ....
+
+// ====================================================================
+	export sd://
+// ==================================================================== 
+	仅列出和registry://的不同点
+	RegistryProtocol export
+		
+		final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
+			// ....
+			openServer
+				server.reset(url);
+					DubboProtocolServer reset(URL url) 
+						server.reset(url);
+							HeaderExchangeServer reset
+								server.reset(url);
+									
+									AbstractServer reset // this为NettyServer
+								        super.setUrl(getUrl().addParameters(url.getParameters()));
+
+								    int currHeartbeat = getHeartbeat(getUrl());
+						            int currIdleTimeout = getIdleTimeout(getUrl());
+						            int heartbeat = getHeartbeat(url);
+						            int idleTimeout = getIdleTimeout(url);
+						            if (currHeartbeat != heartbeat || currIdleTimeout != idleTimeout) {
+						                cancelCloseTask();
+						                startIdleCheckTask(url);
+						            }
+		
+		Registry registry = getRegistry(originInvoker);	
+		 	
+		 	URL registryUrl = getRegistryUrl(originInvoker);
+		 		RegistryProtocol getRegistryUrl
+		 			return originInvoker.getUrl();
+        	
+        	return getRegistry(registryUrl);	
+        		return registryFactory.getRegistry(url);
+        			AbstractRegistryFactory	getRegistry
+        					ServiceDiscoveryRegistryFactory  createRegistry
+        						Registry createRegistry(URL url) {
+							        if (SERVICE_REGISTRY_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
+							            String protocol = url.getParameter(REGISTRY_KEY, DEFAULT_REGISTRY);
+							            url = url.setProtocol(protocol).removeParameter(REGISTRY_KEY);
+							        }
+							        return new ServiceDiscoveryRegistry(url);
+							        	// 另换行
+							    }            
+
+		// ....
+		boolean register = providerUrl.getParameter(REGISTER_KEY, true);
+        if (register) {
+            registry.register(registeredProviderUrl);
+            	ListenerRegistryWrapper register
+            		registry.register(url);
+            			ServiceDiscoveryRegistry register
+            				if (!shouldRegister(url)) { // Should Not Register
+            					shouldRegister
+            						String side = providerURL.getParameter(SIDE_KEY);
+
+							        boolean should = PROVIDER_SIDE.equals(side); // Only register the Provider.
+
+							        if (!should) {
+							            if (logger.isDebugEnabled()) {
+							                logger.debug(String.format("The URL[%s] should not be registered.", providerURL.toString()));
+							            }
+							        }
+
+							        return should;
+					            return;
+					        }
+					        doRegister(url);
+					        	String registryCluster = serviceDiscovery.getUrl().getParameter(ID_KEY);
+						        if (registryCluster != null && url.getParameter(REGISTRY_CLUSTER_KEY) == null) {
+						            url = url.addParameter(REGISTRY_CLUSTER_KEY, registryCluster);
+						        }
+						        writableMetadataService.exportURL(url)
+						        	String registryCluster = RegistryClusterIdentifier.getExtension(url).providerKey(url);
+							        String[] clusters = registryCluster.split(",");
+							        for (String cluster : clusters) {
+							            MetadataInfo metadataInfo = metadataInfos.computeIfAbsent(cluster, k -> new MetadataInfo(ApplicationModel.getName()));
+							            metadataInfo.addService(new ServiceInfo(url));
+							        }
+							        metadataSemaphore.release();
+							        return addURL(exportedServiceURLs, url);
+							        	executeMutually
+								        	lock.lock()
+								        		SortedSet<URL> urls = serviceURLs.computeIfAbsent(url.getServiceKey(), this::newSortedURLs);
+								            	return urls.add(url);
+								        	lock.unlock()
+							        	
+        }
+
+        registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
+        	ListenerRegistryWrapper subscribe
+        		registry.subscribe(url, listener);
+        			ServiceDiscoveryRegistry subscribe
+        				if (!shouldSubscribe(url)) { // Should Not Subscribe
+        					// overrideSubscribeUrl不含有side。直接return
+				            return;
+				        }
+				        String registryCluster = serviceDiscovery.getUrl().getParameter(ID_KEY);
+				        if (registryCluster != null && url.getParameter(REGISTRY_CLUSTER_KEY) == null) {
+				            url = url.addParameter(REGISTRY_CLUSTER_KEY, registryCluster);
+				        }
+				        doSubscribe(url, listener);
+// ====================================================================
+ServiceDiscoveryRegistry(URL registryURL) {
+	
+	this.registryURL = registryURL;
+    
+    this.serviceDiscovery = createServiceDiscovery(registryURL);
+    	ServiceDiscovery originalServiceDiscovery = getServiceDiscovery(registryURL);
+    		ServiceDiscoveryFactory factory = getExtension(registryURL);
+        	return factory.getServiceDiscovery(registryURL);
+        		AbstractServiceDiscoveryFactory getServiceDiscovery
+        			String key = registryURL.toServiceStringWithoutResolving();
+        			return discoveries.computeIfAbsent(key, k -> createDiscovery(registryURL));
+        				ZookeeperServiceDiscoveryFactory createDiscovery
+        					return new ZookeeperServiceDiscovery();
+        ServiceDiscovery serviceDiscovery = enhanceEventPublishing(originalServiceDiscovery);
+        execute(() -> {
+            serviceDiscovery.initialize(registryURL.addParameter(INTERFACE_KEY, ServiceDiscovery.class.getName())
+                    .removeParameter(REGISTRY_TYPE_KEY));
+
+                EventPublishingServiceDiscovery initialize
+	                assertInitialized(INITIALIZE_ACTION);
+			        if (isInitialized()) {
+			            return;
+			        }
+
+			        executeWithEvents(
+			                of(new ServiceDiscoveryInitializingEvent(this, serviceDiscovery)),
+			                () -> serviceDiscovery.initialize(registryURL),
+			                	
+			                	this.registryURL = registryURL;
+						        
+						        this.curatorFramework = buildCuratorFramework(registryURL);
+						        	CuratorFramework curatorFramework = CuratorFrameworkFactory.builder()
+							                .connectString(connectionURL.getIp() + ":" + connectionURL.getPort())
+							                .retryPolicy(buildRetryPolicy(connectionURL))
+							                .build();
+							        curatorFramework.start();
+							        curatorFramework.blockUntilConnected(BLOCK_UNTIL_CONNECTED_WAIT.getParameterValue(connectionURL),
+							                BLOCK_UNTIL_CONNECTED_UNIT.getParameterValue(connectionURL));
+							        return curatorFramework;
+						        
+						        this.rootPath = ROOT_PATH.getParameterValue(registryURL);
+						        	ROOT_PATH("rootPath", "/services", value -> value)
+						        
+						        this.serviceDiscovery = buildServiceDiscovery(curatorFramework, rootPath);
+						        	ServiceDiscoveryBuilder.builder(ZookeeperInstance.class)
+					                .client(curatorFramework)
+					                .basePath(basePath)
+					                .build();
+						        
+						        this.serviceDiscovery.start();
+			                of(new ServiceDiscoveryInitializedEvent(this, serviceDiscovery))
+			        );
+
+			        initialized.compareAndSet(false, true);
+        });
+        return serviceDiscovery;
+    
+    this.subscribedServices = parseServices(registryURL.getParameter(SUBSCRIBED_SERVICE_NAMES_KEY));
+    	// ....
+    
+    this.serviceNameMapping = ServiceNameMapping.getExtension(registryURL.getParameter(MAPPING_KEY));
+    	return getExtensionLoader(ServiceNameMapping.class).getExtension(name == null ? CONFIG_MAPPING_TYPE : name);
+    
+    this.writableMetadataService = WritableMetadataService.getDefaultExtension();
+
+// ====================================================================
+	todo refer registry://
+// ==================================================================== 
+
+
+// ====================================================================
+	refer sd://
+// ====================================================================
+
+ReferenceConfig
+	createProxy(map);
+		// ...
+		if (urls.size() == 1) {
+            invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
+
+            	QosProtocolWrapper refer
+	            	Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+				        if (UrlUtils.isRegistry(url)) {
+				            startQosServer(url);
+				            return protocol.refer(type, url);
+				            	ProtocolFilterWrapper refer
+				            		if (UrlUtils.isRegistry(url)) {
+							            return protocol.refer(type, url);
+							            	ProtocolListenerWrapper refer
+							            		if (UrlUtils.isRegistry(url)) {
+										            return protocol.refer(type, url);
+										            	// 另换行
+										        }
+										        // ...
+							        }
+							        // ...
+				        }
+				        return protocol.refer(type, url);
+				    }
+		// ...		    
+
+RegistryProtocol refer
+	Invoker<T> refer(Class<T> type, URL url)
+		
+		url = getRegistryUrl(url);
+			
+			RegistryProtocol getRegistryUrl // sd这个方法，registry://是子类的方法
+        
+        Registry registry = getRegistry(url);
+        	return registryFactory.getRegistry(url);
+        		RegistryFactoryWrapper getRegistry
+        			return new ListenerRegistryWrapper(registryFactory.getRegistry(url),. ....
+        				AbstractRegistryFactory getRegistry
+        					// ...
+        					registry = createRegistry(url);
+        						if (SERVICE_REGISTRY_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
+						            String protocol = url.getParameter(REGISTRY_KEY, DEFAULT_REGISTRY);
+						            url = url.setProtocol(protocol).removeParameter(REGISTRY_KEY);
+						        }
+						        return new ServiceDiscoveryRegistry(url);
+						        	// 不赘述 注意consumer和provider的工厂都是自己的
+        					// ...
+
+
+        if (RegistryService.class.equals(type)) {
+            return proxyFactory.getInvoker((T) registry, type, url);
+        }
+
+        // group="a,b" or group="*"
+        Map<String, String> qs = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
+        String group = qs.get(GROUP_KEY);
+        if (group != null && group.length() > 0) {
+            if ((COMMA_SPLIT_PATTERN.split(group)).length > 1 || "*".equals(group)) {
+                return doRefer(Cluster.getCluster(MergeableCluster.NAME), registry, type, url, qs);
+            }
+        }
+
+        
+        Cluster cluster = Cluster.getCluster(qs.get(CLUSTER_KEY));
+        	getCluster(name, true);
+        		if (StringUtils.isEmpty(name)) {
+		            name = Cluster.DEFAULT;
+		        }
+		        return ExtensionLoader.getExtensionLoader(Cluster.class).getExtension(name, wrap);
+        
+        return doRefer(cluster, registry, type, url, qs);	
+        	
+        	URL consumerUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
+	        
+	        
+	        ClusterInvoker<T> migrationInvoker = getMigrationInvoker(this, cluster, registry, type, url, consumerUrl);
+	        	
+	        	return new ServiceDiscoveryMigrationInvoker<T>(registryProtocol, cluster, registry, type, url, consumerUrl);
+	        		
+	        		super(registryProtocol, cluster, registry, type, url, consumerUrl);
+	        			
+	        			this.invoker = invoker;
+				        this.serviceDiscoveryInvoker = serviceDiscoveryInvoker;
+				        this.registryProtocol = registryProtocol;
+				        this.cluster = cluster;
+				        this.registry = registry;
+				        this.type = type;
+				        this.url = url;
+				        this.consumerUrl = consumerUrl;
+				        this.migrationMultiRegistry = url.getParameter(RegistryConstants.MIGRATION_MULTI_REGISTRY, false);
+	        
+	        return interceptInvoker(migrationInvoker, url, consumerUrl);
+	        	
+	        	List<RegistryProtocolListener> listeners = findRegistryProtocolListeners(url);
+		        
+		        if (CollectionUtils.isEmpty(listeners)) {
+		            return invoker;
+		        }
+
+		        for (RegistryProtocolListener listener : listeners) {
+		            
+		            listener.onRefer(this, invoker, consumerUrl);
+		            	
+		            	MigrationRuleListener onRefer
+		            		
+		            		MigrationInvoker<?> migrationInvoker = (MigrationInvoker<?>) invoker;
+					        MigrationRuleHandler<?> migrationListener = new MigrationRuleHandler<>(migrationInvoker);
+					        listeners.add(migrationListener);
+					        migrationListener.doMigrate(rawRule);
+					        	// ....
+					        	migrationInvoker.migrateToServiceDiscoveryInvoker(false);
+					        		ServiceDiscoveryMigrationInvoker migrateToServiceDiscoveryInvoker
+					        			refreshServiceDiscoveryInvoker();
+					        				MigrationInvoker refreshServiceDiscoveryInvoker
+					        					// ..
+					        					serviceDiscoveryInvoker = registryProtocol.getServiceDiscoveryInvoker(cluster, registry, type, url);
+					        						RegistryProtocol getServiceDiscoveryInvoker
+					        							DynamicDirectory<T> directory = new ServiceDiscoveryRegistryDirectory<>(type, url);
+					        								super(serviceType, url);
+					        									DynamicDirectory
+					        										// ...
+					        										AbstractDirectory
+					        											// ...
+        												return doCreateInvoker(directory, cluster, registry, type);
+        													// 另换行
+		        }
+		        return invoker;
+
+
+ClusterInvoker<T> doCreateInvoker(DynamicDirectory<T> directory, Cluster cluster, Registry registry, Class<T> type)
+
+	
+	directory.setRegistry(registry);
+		DynamicDirectory setRegistry
+    
+    directory.setProtocol(protocol);
+    	DynamicDirectory setProtocol
+    
+    Map<String, String> parameters = new HashMap<String, String>(directory.getConsumerUrl().getParameters());
+    
+    URL urlToRegistry = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
+    
+    if (directory.isShouldRegister()) {
+        directory.setRegisteredConsumerUrl(urlToRegistry);
+        registry.register(directory.getRegisteredConsumerUrl());
+    }
+    
+    directory.buildRouterChain(urlToRegistry);
+    	DynamicDirectory buildRouterChain
+    		this.setRouterChain(RouterChain.buildChain(url));
+    			return new RouterChain<>(url);
+    				List<RouterFactory> extensionFactories = ExtensionLoader.getExtensionLoader(RouterFactory.class)
+			                .getActivateExtension(url, "router");
+
+			        List<Router> routers = extensionFactories.stream()
+			                .map(factory -> factory.getRouter(url))
+			                .collect(Collectors.toList());
+
+			        initWithRouters(routers);
+			        	this.builtinRouters = builtinRouters;
+				        this.routers = new ArrayList<>(builtinRouters);
+				        this.sort();
+				        	Collections.sort(routers);
+    
+    directory.subscribe(toSubscribeUrl(urlToRegistry));
+    	toSubscribeUrl(urlToRegistry)
+    		return url.addParameter(CATEGORY_KEY, PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY);
+    	subscribe
+    		DynamicDirectory subscribe
+    			setConsumerUrl(url);	
+    				AbstractDirectory setConsumerUrl
+    					this.consumerUrl = consumerUrl;
+        		registry.subscribe(url, this); // this 为 ServiceDiscoveryRegistryDirectory
+        			ListenerRegistryWrapper subscribe
+        				registry.subscribe(url, listener);
+        					ServiceDiscoveryRegistry subscribe(URL url, NotifyListener listener)
+        						if (!shouldSubscribe(url)) { // Should Not Subscribe
+						            return;
+						        }
+						        String registryCluster = serviceDiscovery.getUrl().getParameter(ID_KEY);
+						        if (registryCluster != null && url.getParameter(REGISTRY_CLUSTER_KEY) == null) {
+						            url = url.addParameter(REGISTRY_CLUSTER_KEY, registryCluster);
+						        }
+						        doSubscribe(url, listener);
+						        	writableMetadataService.subscribeURL(url);
+						        		return addURL(subscribedServiceURLs, url);
+
+							        Set<String> serviceNames = getServices(url, listener);
+							        	// ...
+
+							        if (CollectionUtils.isEmpty(serviceNames)) {
+							            return;
+							        }
+
+							        subscribeURLs(url, listener, serviceNames);
+							        	// 另换行
+
+    return (ClusterInvoker<T>) cluster.join(directory);
+
+
+ServiceDiscoveryRegistry
+	subscribeURLs(URL url, NotifyListener listener, Set<String> serviceNames) 

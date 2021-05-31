@@ -39,6 +39,7 @@ public class ClearTelnetHandler implements TelnetHandler {
             lines = Integer.parseInt(message);
         }
         StringBuilder buf = new StringBuilder();
+        // 所谓的清屏就是加了100行的换行（\r\n） - - 而且尴尬的是dubbo>还停留在窗口最后一行，并不会顶行
         for (int i = 0; i < lines; i++) {
             buf.append("\r\n");
         }

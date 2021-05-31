@@ -52,6 +52,7 @@ public class QosProcessHandler extends ByteToMessageDecoder {
 
     @Override
     public void channelActive(final ChannelHandlerContext ctx) throws Exception {
+        // 延迟500ms后发送
         welcomeFuture = ctx.executor().schedule(new Runnable() {
 
             @Override
@@ -75,6 +76,7 @@ public class QosProcessHandler extends ByteToMessageDecoder {
         final int magic = in.getByte(in.readerIndex());
 
         ChannelPipeline p = ctx.pipeline();
+        // // 进去 检测外来ip
         p.addLast(new LocalHostPermitHandler(acceptForeignIp));
         if (isHttp(magic)) {
             // no welcome output for http protocol
@@ -84,6 +86,7 @@ public class QosProcessHandler extends ByteToMessageDecoder {
             p.addLast(new HttpServerCodec());
             p.addLast(new HttpObjectAggregator(1048576));
             p.addLast(new HttpProcessHandler());
+            // 移除当前handler，因为后续的decode交给 HttpProcessHandler 和下面的 TelnetProcessHandler
             p.remove(this);
         } else {
             p.addLast(new LineBasedFrameDecoder(2048));

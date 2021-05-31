@@ -83,6 +83,9 @@ public class SpringStatusChecker implements StatusChecker {
                     method.setAccessible(true);
                 }
                 String[] configs = (String[]) method.invoke(context, new Object[0]);
+                // samples.sd.transfer/dubbo-provider.xml    配置路径
+                // 比如提供方在main有如下
+                // ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("samples.sd.transfer/dubbo-provider.xml");
                 if (configs != null && configs.length > 0) {
                     for (String config : configs) {
                         if (buf.length() > 0) {

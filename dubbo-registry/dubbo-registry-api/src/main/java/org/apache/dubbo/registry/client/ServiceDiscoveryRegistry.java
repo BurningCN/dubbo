@@ -161,7 +161,7 @@ public class ServiceDiscoveryRegistry implements Registry {
         execute(() -> {
             // 进去 EventPublishingServiceDiscovery#initialize
             // 这里将interface参数值从org.apache.dubbo.registry.RegistryService变成
-            // org.apache.dubbo.registry.client.ServiceDiscovery，并且把 registry-type=service 参数去掉了
+            // org.apache.dubbo.registry.client.ServiceDiscovery，并且把 registry-type=service 参数去掉了(这个参数是在xml配置的，比如    <dubbo:registry id="service-discovery" address="zookeeper://127.0.0.1:2181?registry-type=service"/>)
             serviceDiscovery.initialize(registryURL.addParameter(INTERFACE_KEY, ServiceDiscovery.class.getName())
                     .removeParameter(REGISTRY_TYPE_KEY));
         });
@@ -228,9 +228,13 @@ public class ServiceDiscoveryRegistry implements Registry {
     public void doRegister(URL url) {
         // 获取"id"参数值，比如 id -> org.apache.dubbo.config.RegistryConfig#0
         // 注意参数url是provider url，serviceDiscovery.getUrl()是sd的url，一个是dubbo://，一个是zookeeper://127.0.0.1:2181/。。。
+        // 这个id值就是你在xml配置的，如果没有配置，那么就是自动生成的，比如上面的就是application.properties自动生成的
+        //  <dubbo:registry id="service-discovery" address="zo ... /> 比如 这个 id 为"service-discovery"
         String registryCluster = serviceDiscovery.getUrl().getParameter(ID_KEY);
         if (registryCluster != null && url.getParameter(REGISTRY_CLUSTER_KEY) == null) {
-            url = url.addParameter(REGISTRY_CLUSTER_KEY, registryCluster);// 如果"id"参数值不空，但是"REGISTRY_CLUSTER"参数为空，则将"id"参数值赋值给"REGISTRY_CLUSTER"参数值
+            // 如果"id"参数值不空，但是"REGISTRY_CLUSTER"参数为空，则将"id"参数值赋值给"REGISTRY_CLUSTER"参数值
+            // 下面exportURL方法 会用到
+            url = url.addParameter(REGISTRY_CLUSTER_KEY, registryCluster);
         }
         // 暴露提供者url（一般是InMemory），进去
         if (writableMetadataService.exportURL(url)) {

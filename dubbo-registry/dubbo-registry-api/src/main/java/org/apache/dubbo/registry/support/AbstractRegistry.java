@@ -134,6 +134,7 @@ public abstract class AbstractRegistry implements Registry {
             loadProperties();
             // 从注册中心url中找到backup属性值，这个backup属性值就是需要恢复的一些服务提供者url，再调用notify进行通知，将那些恢复的url通知给订阅方
             // 进去
+            // 因为注册中心启动了（先前可能宕机了），这样动态让消费者感知到该provider已经上线了，可以消费了
             notify(url.getBackupUrls());
         }
     }

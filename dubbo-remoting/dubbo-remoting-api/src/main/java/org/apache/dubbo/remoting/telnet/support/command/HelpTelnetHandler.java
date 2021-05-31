@@ -38,7 +38,9 @@ public class HelpTelnetHandler implements TelnetHandler {
 
     @Override
     public String telnet(Channel channel, String message) {
+        // help ls ，这里的message就是ls
         if (message.length() > 0) {
+            // 是否含有ls扩展
             if (!extensionLoader.hasExtension(message)) {
                 return "No such command " + message;
             }

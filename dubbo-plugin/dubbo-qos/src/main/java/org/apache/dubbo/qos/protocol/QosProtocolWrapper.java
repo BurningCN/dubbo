@@ -49,6 +49,10 @@ public class QosProtocolWrapper implements Protocol {
         if (protocol == null) {
             throw new IllegalArgumentException("protocol == null");
         }
+        // protocol如下
+        //protocol = {ProtocolFilterWrapper@3222}
+        // protocol = {ProtocolListenerWrapper@3225}
+        //  protocol = {DubboProtocol@3226}
         this.protocol = protocol;
     }
 
@@ -68,6 +72,7 @@ public class QosProtocolWrapper implements Protocol {
 
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+        // 同上面，cs有各自的qosServer
         if (UrlUtils.isRegistry(url)) {
             startQosServer(url);
             return protocol.refer(type, url);

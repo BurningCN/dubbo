@@ -84,6 +84,7 @@ public class ProviderModel {
         return urls;
     }
 
+    // gx 对应跟踪下上面的getStatedUrl
     public void addStatedUrl(RegisterStatedURL url) {
         this.urls.add(url);
     }

@@ -85,6 +85,9 @@ public class TelnetHandlerAdapter extends ChannelHandlerAdapter implements Telne
 
     private boolean commandEnabled(URL url, String command) {
         String supportCommands = url.getParameter(TELNET);
+        // clear,exit,help,status,log,ls,trace,count,invoke,select,shutdown,pwd,cd,ps 这是在配置文件中配置的
+        // ，比如 <dubbo:protocol telnet = "ls,count,..." name="dubbo">
+
         if (StringUtils.isEmpty(supportCommands)) {
             return true;
         }

@@ -1,7 +1,17 @@
+
+测试用例（samples-sd-transfer-provider）为在provider的xml添加如下
+<dubbo:protocol name="dubbo" telnet="clear,exit,help,status,log"/> 
+
+// ====================================================================
+	1 连接建立 
+// ====================================================================
 telnet 127.0.0.1 20880
 
-// CSBindAndConnect详情见flow，不赘述
+// ChannelActvie CSConnect详情见flow，不赘述
 
+// ====================================================================
+	2 TelnetHandlerAdapter   &  HelpTelnetHandler
+// ====================================================================
 dubbo>help
 
 InternalDecoder decode(ChannelHandlerContext ctx, ByteBuf input, List<Object> out)
@@ -41,7 +51,7 @@ InternalDecoder decode(ChannelHandlerContext ctx, ByteBuf input, List<Object> ou
 			// ...
 	// ....
 
-编码完成后走channelRead逻辑，在rpc模块看，这里不追溯，只描述telnet相关
+编码完成后走 NettyServerHandler channelRead逻辑，在rpc模块看，这里不追溯，只描述telnet相关
 
 HeaderExchangeHandler
 
@@ -57,7 +67,7 @@ HeaderExchangeHandler
             logger.error(e.getMessage(), e);
         } else {
             String echo = handler.telnet(channel, (String) message);
-            	// 另换行
+            	// 另换行 handler为RequestHandler，但是其间接继承了TelnetHandlerAdapter，会走到其telnet方法
             if (echo != null && echo.length() > 0) {
                 channel.send(echo);
                  // 另换行 走编码逻辑
@@ -116,4 +126,61 @@ Please input "help [command]" show detail.
  help [command] - Show help.
  status [-l]    - Show status.
  log level      - Change log level or show log
+
+
+// ====================================================================
+	3  StatusTelnetHandler
+// ====================================================================
+
+ dubbo>status -l
++----------+--------+----------------------------------------------------------+
+| resource | status | message                                                  |
++----------+--------+----------------------------------------------------------+
+| load     | OK     | load:3.234375,cpu:12                                     |
+| memory   | OK     | max:3641M,total:204M,used:50M,free:154M                  |
+| server   | OK     | /30.25.58.200:20881(clients:0),/30.25.58.200:20880(clients:1) |
+| registry | OK     | 127.0.0.1:2181(connected),127.0.0.1:2181(connected)      |
+| spring   | OK     | samples.sd.transfer/dubbo-provider.xml                   |
+| summary  | OK     |                                                          |
++----------+--------+----------------------------------------------------------+
+
+这段是走 StatusTelnetHandler 的逻辑 ，不截图代码了，会检查7个如下
+checkers = {ArrayList@6283}  size = 7
+ 0 = {ThreadPoolStatusChecker@4491}  -- 
+ 1 = {DataSourceStatusChecker@4492} 
+ 2 = {LoadStatusChecker@4493} 
+ 3 = {MemoryStatusChecker@4494} 
+ 4 = {ServerStatusChecker@4495} 
+ 5 = {RegistryStatusChecker@4496} 	
+ 6 = {SpringStatusChecker@4497} 
+
  // ====================================================================
+ 	log、clear、exit比较简单，不说了
+ // ====================================================================
+
+
+// ====================================================================
+
+新增这么几个，功能去看源码
+
+dubbo>help
+Please input "help [command]" show detail.
+ clear [lines]                    - Clear screen.
+ exit                             - Exit the telnet.
+ help [command]                   - Show help.
+ status [-l]                      - Show status.
+ log level                        - Change log level or show log 
+
+ ls [-l] [service]                - List services and methods.
+ trace [service] [method] [times] - Trace the service.
+ count [service] [method] [times] - Count the service.
+ invoke [service.]method(args)    - Invoke the service method.
+ select [index]                   - Select the index of the method you want to invoke.
+ shutdown [-t <milliseconds>]     - Shutdown Dubbo Application.
+ pwd                              - Print working default service.
+ cd [service]                     - Change default service.
+ ps [-l] [port]                   - Print server ports and connections.
+
+ls ~ ps这之间的，需要在<dubbo:protocol name="dubbo" telnet="clear,exit,help,status,log"/> 配置，同时注意能加载到qos包，因为这几个telnet在qos下，比如我在config-spring测试的，则需要加上qos的依赖
+
+

@@ -54,6 +54,7 @@ public class ServerStatusChecker implements StatusChecker {
             }
             buf.append(server.getLocalAddress());
             buf.append("(clients:");
+            // 这个server是HeaderExchangeServer
             buf.append(server.getChannels().size());
             buf.append(")");
         }

@@ -1,3 +1,7 @@
+
+// ====================================================================
+	server 接收到 client 的 连接请求
+// ====================================================================
 NettyServerHandler
 	 public void channelActive(ChannelHandlerContext ctx) throws Exception {
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
@@ -53,7 +57,6 @@ NettyServerHandler
 // ====================================================================
 
 
-
 ChannelEventRunnable run() {
 else {
     switch (state) {
@@ -102,14 +105,87 @@ else {
         }
         break;
 
+// ====================================================================
+	
+	server 接收到 client 的断联
 
+// ====================================================================
+NettyServerHandler 
 
+public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+    try {
+        channels.remove(NetUtils.toAddressString((InetSocketAddress) ctx.channel().remoteAddress()));
+        handler.disconnected(channel);
+        	AbstractServer disconnected
+	        	Collection<Channel> channels = getChannels();
+		        if (channels.isEmpty()) {
+		            logger.warn("All clients has disconnected from " + ch.getLocalAddress() + ". You can graceful shutdown now.");
+		        }
+		        super.disconnected(ch);
+		        	AbstractPeer disconnected
+		        		handler.disconnected(ch);、
+		        			AbstractChannelHandlerDelegate disconnected // this 为 Multi
+		        				HeartbeatHandler disconnected
+		        					clearReadTimestamp(channel);
+								        clearWriteTimestamp(channel);
+								        handler.disconnected(channel);
+								        	AllChannelHandler disconnected(Channel channel)
+								        		 ExecutorService executor = getExecutorService();
+            										executor.execute(new ChannelEventRunnable(channel, handler, ChannelState.DISCONNECTED));
+            											ChannelEventRunnable
+            												case DISCONNECTED:
+            													handler.disconnected(channel);
+            														AbstractChannelHandlerDelegate disconnected
+            															HeaderExchangeHandler disconnected
+            															// 另换行
+    } finally {
+        NettyChannel.removeChannel(ctx.channel());
+        	if (ch != null) {
+	            NettyChannel nettyChannel = CHANNEL_MAP.remove(ch);
+	            if (nettyChannel != null) {
+	                nettyChannel.markActive(false);
+	            }
+	        }
+    }
 
+    if (logger.isInfoEnabled()) {
+        logger.info("The connection of " + channel.getRemoteAddress() + " -> " + channel.getLocalAddress() + " is disconnected.");
+    }
+}
 
+HeaderExchangeHandler disconnected
+	ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
+    try {
+        handler.disconnected(exchangeChannel);
+        	requestHandler disconnected
+        		invoke(channel, ON_DISCONNECT_KEY);
+    } finally {
+        DefaultFuture.closeChannel(channel);
+        	for (Map.Entry<Long, Channel> entry : CHANNELS.entrySet()) {
+	            if (channel.equals(entry.getValue())) {
+	                DefaultFuture future = getFuture(entry.getKey());
+	                if (future != null && !future.isDone()) {
+	                    ExecutorService futureExecutor = future.getExecutor();
+	                    if (futureExecutor != null && !futureExecutor.isTerminated()) {
+	                        futureExecutor.shutdownNow();
+	                    }
 
-
-
-
+	                    Response disconnectResponse = new Response(future.getId());
+	                    disconnectResponse.setStatus(Response.CHANNEL_INACTIVE);
+	                    disconnectResponse.setErrorMessage("Channel " +
+	                            channel +
+	                            " is inactive. Directly return the unFinished request : " +
+	                            future.getRequest());
+	                    DefaultFuture.received(channel, disconnectResponse);
+	                }
+	            }
+	        }
+        HeaderExchangeChannel.removeChannel(channel);
+        	if (ch != null) {
+	            ch.removeAttribute(CHANNEL_KEY);
+	        }
+    }
 
 
 

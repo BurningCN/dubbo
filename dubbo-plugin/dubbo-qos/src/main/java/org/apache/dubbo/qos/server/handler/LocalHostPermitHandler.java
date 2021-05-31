@@ -35,6 +35,7 @@ public class LocalHostPermitHandler extends ChannelHandlerAdapter {
         this.acceptForeignIp = acceptForeignIp;
     }
 
+    // 注意重写的是 handlerAdded方法，前面一旦addLast后就会先走这里的逻辑，用以检测外来ip
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         if (!acceptForeignIp) {

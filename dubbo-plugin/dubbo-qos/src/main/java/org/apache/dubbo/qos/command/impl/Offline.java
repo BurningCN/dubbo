@@ -35,6 +35,7 @@ import java.util.List;
         "offline dubbo",
         "offline xx.xx.xxx.service"
 })
+// onLine和这个类似
 public class Offline implements BaseCommand {
     private Logger logger = LoggerFactory.getLogger(Offline.class);
     private static RegistryFactory registryFactory = ExtensionLoader.getExtensionLoader(RegistryFactory.class).getAdaptiveExtension();
@@ -62,12 +63,17 @@ public class Offline implements BaseCommand {
 
         Collection<ProviderModel> providerModelList = serviceRepository.getExportedServices();
         for (ProviderModel providerModel : providerModelList) {
+            //  getDisplayServiceKey 进去
             if (providerModel.getServiceMetadata().getDisplayServiceKey().matches(servicePattern)) {
                 hasService = true;
+                // 注意下getStatedUrl 的 add 处 // 进去
                 List<ProviderModel.RegisterStatedURL> statedUrls = providerModel.getStatedUrl();
                 for (ProviderModel.RegisterStatedURL statedURL : statedUrls) {
                     if (statedURL.isRegistered()) {
                         Registry registry = registryFactory.getRegistry(statedURL.getRegistryUrl());
+                        // ListenerRegistryWrapper unregister
+                        // failbackRegistry unregister
+                        // ZookeeperRegistry
                         registry.unregister(statedURL.getProviderUrl());
                         statedURL.setRegistered(false);
                     }

@@ -55,6 +55,7 @@ public class InvokeTelnetHandler implements TelnetHandler {
     @SuppressWarnings("unchecked")
     public String telnet(Channel channel, String message) {
         if (StringUtils.isEmpty(message)) {
+            // eg 一个可以通过的写法为invoke  org.apache.dubbo.metadata.MetadataService.getServiceDefinition("samples.sd.transfer.demo.DemoService")
             return "Please input method name, eg: \r\ninvoke xxxMethod(1234, \"abcd\", {\"prop\" : \"value\"})\r\n" +
                     "invoke XxxService.xxxMethod(1234, \"abcd\", {\"prop\" : \"value\"})\r\n" +
                     "invoke com.xxx.XxxService.xxxMethod(1234, \"abcd\", {\"prop\" : \"value\"})";
@@ -76,6 +77,7 @@ public class InvokeTelnetHandler implements TelnetHandler {
             method = method.substring(i + 1).trim();
         }
 
+        // telnet传给方法的参数如果是字符串注意加""
         List<Object> list;
         try {
             list = JSON.parseArray("[" + args + "]", Object.class);
@@ -85,11 +87,13 @@ public class InvokeTelnetHandler implements TelnetHandler {
         StringBuilder buf = new StringBuilder();
         Method invokeMethod = null;
         ProviderModel selectedProvider = null;
+        // 进去
         if (isInvokedSelectCommand(channel)) {
             selectedProvider = (ProviderModel) channel.getAttribute(INVOKE_METHOD_PROVIDER_KEY);
             invokeMethod = (Method) channel.getAttribute(SelectTelnetHandler.SELECT_METHOD_KEY);
         } else {
             for (ProviderModel provider : ApplicationModel.allProviderModels()) {
+                // 进去 匹配不一定要group+serviceKey+version，具体进去看
                 if (isServiceMatch(service, provider)) {
                     selectedProvider = provider;
                     List<Method> methodList = findSameSignatureMethod(provider.getAllMethods(), method, list);
@@ -97,6 +101,7 @@ public class InvokeTelnetHandler implements TelnetHandler {
                         if (methodList.size() == 1) {
                             invokeMethod = methodList.get(0);
                         } else {
+                            // 找到了多个方法名称和参数个数相同的方法，这里再次匹配，按照类型再次过滤
                             List<Method> matchMethods = findMatchMethods(methodList, list);
                             if (CollectionUtils.isNotEmpty(matchMethods)) {
                                 if (matchMethods.size() == 1) {
@@ -128,6 +133,7 @@ public class InvokeTelnetHandler implements TelnetHandler {
                     long start = System.currentTimeMillis();
                     AppResponse result = new AppResponse();
                     try {
+                        // selectedProvider.getServiceInstance() 就是 接口的实现类 ，可以看下其填充处
                         Object o = invokeMethod.invoke(selectedProvider.getServiceInstance(), array);
                         result.setValue(o);
                     } catch (Throwable t) {
@@ -163,6 +169,7 @@ public class InvokeTelnetHandler implements TelnetHandler {
         List<Method> sameSignatureMethods = new ArrayList<>();
         for (MethodDescriptor model : methods) {
             Method method = model.getMethod();
+            // 这里匹配比较简单， 值匹配参数长度，没有对类型做校验。类型校验在后头，这是第一层校验
             if (method.getName().equals(lookupMethodName) && method.getParameterTypes().length == args.size()) {
                 sameSignatureMethods.add(method);
             }

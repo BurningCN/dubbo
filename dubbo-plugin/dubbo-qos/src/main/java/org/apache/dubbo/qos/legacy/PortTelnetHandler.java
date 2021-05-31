@@ -40,6 +40,7 @@ public class PortTelnetHandler implements TelnetHandler {
         StringBuilder buf = new StringBuilder();
         String port = null;
         boolean detail = false;
+        // message 比如 -l 20880 或者 20880 -l
         if (message.length() > 0) {
             String[] parts = message.split("\\s+");
             for (String part : parts) {
@@ -67,6 +68,7 @@ public class PortTelnetHandler implements TelnetHandler {
         } else {
             int p = Integer.parseInt(port);
             ProtocolServer protocolServer = null;
+            // 进去
             for (ProtocolServer s : DubboProtocol.getDubboProtocol().getServers()) {
                 if (p == s.getUrl().getPort()) {
                     protocolServer = s;
@@ -74,13 +76,16 @@ public class PortTelnetHandler implements TelnetHandler {
                 }
             }
             if (protocolServer != null) {
+                // HeaderExchangeServer
                 ExchangeServer server = (ExchangeServer) protocolServer.getRemotingServer();
+                // 进去getExchangeChannels
                 Collection<ExchangeChannel> channels = server.getExchangeChannels();
                 for (ExchangeChannel c : channels) {
                     if (buf.length() > 0) {
                         buf.append("\r\n");
                     }
                     if (detail) {
+                        //    /127.0.0.1:51852 -> /127.0.0.1:20880
                         buf.append(c.getRemoteAddress()).append(" -> ").append(c.getLocalAddress());
                     } else {
                         buf.append(c.getRemoteAddress());

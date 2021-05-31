@@ -87,6 +87,7 @@ public class Server {
         }
         boss = new NioEventLoopGroup(1, new DefaultThreadFactory("qos-boss", true));
         worker = new NioEventLoopGroup(0, new DefaultThreadFactory("qos-worker", true));
+        // 没有worker线程，那么boss的线程也将用作处理连接
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(boss, worker);
         serverBootstrap.channel(NioServerSocketChannel.class);
@@ -96,6 +97,7 @@ public class Server {
 
             @Override
             protected void initChannel(Channel ch) throws Exception {
+                // 进去
                 ch.pipeline().addLast(new QosProcessHandler(welcome, acceptForeignIp));
             }
         });

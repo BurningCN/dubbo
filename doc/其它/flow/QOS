@@ -1,0 +1,271 @@
+QOS等在config添加pom依赖，在resources的dubbo.properties添加三个属性，也可以不添加，用默认的。
+
+qosEnable=true
+qosPort=22222
+qosAcceptForeignIp=false
+
+更多配置方式见官网 https://dubbo.apache.org/zh/docs/v2.7/user/references/qos/
+
+// ====================================================================
+
+
+public QosProtocolWrapper(Protocol protocol) {
+        if (protocol == null) {
+            throw new IllegalArgumentException("protocol == null");
+        }
+        this.protocol = protocol;
+    }
+
+
+public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
+        if (UrlUtils.isRegistry(invoker.getUrl())) {
+            startQosServer(invoker.getUrl());
+            return protocol.export(invoker);
+        }
+        return protocol.export(invoker);
+    }
+
+private void startQosServer(URL url) {
+    try {
+        if (!hasStarted.compareAndSet(false, true)) {
+            return;
+        }
+
+        boolean qosEnable = url.getParameter(QOS_ENABLE, true);
+        if (!qosEnable) {
+            logger.info("qos won't be started because it is disabled. " +
+                    "Please check dubbo.application.qos.enable is configured either in system property, " +
+                    "dubbo.properties or XML/spring-boot configuration.");
+            return;
+        }
+
+        String host = url.getParameter(QOS_HOST);
+        int port = url.getParameter(QOS_PORT, QosConstants.DEFAULT_PORT);
+        boolean acceptForeignIp = Boolean.parseBoolean(url.getParameter(ACCEPT_FOREIGN_IP, "false"));
+        Server server = Server.getInstance();
+        	return INSTANCE;
+        		INSTANCE = new Server();
+        			private Server() {
+				        this.welcome = DubboLogo.DUBBO;
+				    }
+        server.setHost(host);
+        server.setPort(port);
+        server.setAcceptForeignIp(acceptForeignIp);
+        server.start();
+        // 另换行
+
+    } catch (Throwable throwable) {
+        logger.warn("Fail to start qos server: ", throwable);
+    }
+}
+
+Server
+	public void start() throws Throwable {
+        if (!started.compareAndSet(false, true)) {
+            return;
+        }
+        boss = new NioEventLoopGroup(1, new DefaultThreadFactory("qos-boss", true));
+        worker = new NioEventLoopGroup(0, new DefaultThreadFactory("qos-worker", true));
+        ServerBootstrap serverBootstrap = new ServerBootstrap();
+        serverBootstrap.group(boss, worker);
+        serverBootstrap.channel(NioServerSocketChannel.class);
+        serverBootstrap.option(ChannelOption.SO_REUSEADDR, true);
+        serverBootstrap.childOption(ChannelOption.TCP_NODELAY, true);
+        serverBootstrap.childHandler(new ChannelInitializer<Channel>() {
+
+            @Override
+            protected void initChannel(Channel ch) throws Exception {
+                ch.pipeline().addLast(new QosProcessHandler(welcome, acceptForeignIp));
+            }
+        });
+        try {
+            if (StringUtils.isBlank(host)) {
+                serverBootstrap.bind(port).sync();
+            } else {
+                serverBootstrap.bind(host, port).sync();
+            }
+
+            logger.info("qos-server bind localhost:" + port);
+        } catch (Throwable throwable) {
+            logger.error("qos-server can not bind localhost:" + port, throwable);
+            throw throwable;
+        }
+    }
+// ====================================================================
+
+终端 telnet 127.0.0.1 33333  (默认是22222)  // telnet 127.0.0.1 20880连接的是NettyServerHandler，注意区分
+
+
+ch.pipeline().addLast(new QosProcessHandler(welcome, acceptForeignIp));
+
+QosProcessHandler(String welcome, boolean acceptForeignIp) {
+    this.welcome = welcome;
+    this.acceptForeignIp = acceptForeignIp;
+}	
+
+channelActive(final ChannelHandlerContext ctx) throws Exception {
+    welcomeFuture = ctx.executor().schedule(new Runnable() {
+
+        @Override
+        public void run() {
+            if (welcome != null) {
+                ctx.write(Unpooled.wrappedBuffer(welcome.getBytes()));
+                ctx.writeAndFlush(Unpooled.wrappedBuffer(PROMPT.getBytes()));
+            }
+        }
+
+    }, 500, TimeUnit.MILLISECONDS);
+}
+
+终端展示如下
+B-RHDTJG5H-2145:~ root# telnet 127.0.0.1 33333
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+   ___   __  __ ___   ___   ____     
+  / _ \ / / / // _ ) / _ ) / __ \  
+ / // // /_/ // _  |/ _  |/ /_/ /    
+/____/ \____//____//____/ \____/ 
+dubbo>
+
+// ====================================================================
+
+dubbo>help
+
+QosProcessHandler
+
+	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+	    if (in.readableBytes() < 1) {
+	        return;
+	    }
+
+	    // read one byte to guess protocol
+	    final int magic = in.getByte(in.readerIndex());
+
+	    ChannelPipeline p = ctx.pipeline();
+	    p.addLast(new LocalHostPermitHandler(acceptForeignIp));
+	    	LocalHostPermitHandler handlerAdded
+		    	public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+			        if (!acceptForeignIp) {
+			            if (!((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().isLoopbackAddress()) {
+			                ByteBuf cb = Unpooled.wrappedBuffer((QosConstants.BR_STR + "Foreign Ip Not Permitted."
+			                        + QosConstants.BR_STR).getBytes());
+			                ctx.writeAndFlush(cb).addListener(ChannelFutureListener.CLOSE);
+			            }
+			        }
+			    }
+	    if (isHttp(magic)) { 
+	        // no welcome output for http protocol
+	        if (welcomeFuture != null && welcomeFuture.isCancellable()) {
+	            welcomeFuture.cancel(false);
+	        }
+	        p.addLast(new HttpServerCodec());
+	        p.addLast(new HttpObjectAggregator(1048576));
+	        p.addLast(new HttpProcessHandler());
+	        p.remove(this);
+	    } else {
+	        p.addLast(new LineBasedFrameDecoder(2048));
+	        p.addLast(new StringDecoder(CharsetUtil.UTF_8));
+	        p.addLast(new StringEncoder(CharsetUtil.UTF_8));
+	        p.addLast(new IdleStateHandler(0, 0, 5 * 60));
+	        p.addLast(new TelnetIdleEventHandler());
+	        	// 另换行
+	        p.addLast(new TelnetProcessHandler());
+	        	// 另换行
+	        p.remove(this);
+	    }
+	}
+
+只有第一次会触发上面decode，并添加了合适的编解码器，这个QosProcessHandler的所有方法再也不会触发了
+
+
+TelnetProcessHandler extends SimpleChannelInboundHandler<String> {
+
+	protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+		// ....
+        CommandContext commandContext = TelnetCommandDecoder.decode(msg);
+        commandContext.setRemote(ctx.channel());
+        String result = commandExecutor.execute(commandContext);
+         // 另换行
+        if (StringUtils.isEquals(QosConstants.CLOSE, result)) {
+            ctx.writeAndFlush(getByeLabel()).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            ctx.writeAndFlush(result + QosConstants.BR_STR + QosProcessHandler.PROMPT);
+        }
+
+ DefaultCommandExecutor implements CommandExecutor {
+    @Override
+    public String execute(CommandContext commandContext) throws NoSuchCommandException {
+        BaseCommand command = null;
+        try {
+            String extName = StringUtils.camelToSplitName(commandContext.getCommandName(), PROPERTIES_CHAR_SEPARATOR);
+            command = ExtensionLoader.getExtensionLoader(BaseCommand.class).getExtension(extName);
+        } catch (Throwable throwable) {
+            //can't find command
+        }
+        if (command == null) {
+            throw new NoSuchCommandException(commandContext.getCommandName());
+        }
+        return command.execute(commandContext, commandContext.getArgs());
+    }
+}
+
+Help 不粘贴了，直接去看源码 
+
+
+dubbo>help
++-----------------+----------------------------------------------------------------------------------+
+|            help | help command                                                                     |
++-----------------+----------------------------------------------------------------------------------+
+|              ls | ls service                                                                       |
++-----------------+----------------------------------------------------------------------------------+
+|         offline | offline dubbo                                                                    |
++-----------------+----------------------------------------------------------------------------------+
+|          online | online dubbo                                                                     |
++-----------------+----------------------------------------------------------------------------------+
+| publishMetadata | update service metadata and service instance                                     |
++-----------------+----------------------------------------------------------------------------------+
+|            quit | quit telnet console                                                              |
++-----------------+----------------------------------------------------------------------------------+
+|           ready | Judge if application or service has started?                                     |
++-----------------+----------------------------------------------------------------------------------+
+|         version | version command(show dubbo version)                                              |
++-----------------+----------------------------------------------------------------------------------+
+
+
+这些命令自己看源码
+
+
+// ====================================================================
+TelnetIdleEventHandler extends ChannelDuplexHandler {
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            Channel channel = ctx.channel();
+            channel.close();
+        } else {
+            super.userEventTriggered(ctx, evt);
+        }
+    }
+// ====================================================================
+
+退出telnet，玩一次curl
+
+终端输入 curl "127.0.0.1:33333/help"
+
+QosProcessHandler
+	if (isHttp(magic)) {
+        // no welcome output for http protocol
+        if (welcomeFuture != null && welcomeFuture.isCancellable()) {
+            welcomeFuture.cancel(false);
+        }
+        p.addLast(new HttpServerCodec());
+        p.addLast(new HttpObjectAggregator(1048576));
+        p.addLast(new HttpProcessHandler());
+        p.remove(this);
+
+public class HttpProcessHandler extends SimpleChannelInboundHandler<HttpRequest> {
+
+/// ......
+
+

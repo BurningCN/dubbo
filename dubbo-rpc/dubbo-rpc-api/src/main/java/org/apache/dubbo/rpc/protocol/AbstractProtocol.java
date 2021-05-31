@@ -71,6 +71,9 @@ public abstract class AbstractProtocol implements Protocol {
     }
 
     public List<ProtocolServer> getServers() {
+        // serverMap = {ConcurrentHashMap@12996}  size = 2
+        // "192.168.1.5:20881" -> HeaderExchangeServer
+        // "192.168.1.5:20880" -> HeaderExchangeServer
         return Collections.unmodifiableList(new ArrayList<>(serverMap.values()));
     }
 

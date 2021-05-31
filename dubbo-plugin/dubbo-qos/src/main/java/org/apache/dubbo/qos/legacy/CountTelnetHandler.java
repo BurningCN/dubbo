@@ -36,12 +36,14 @@ import java.util.List;
 /**
  * CountTelnetHandler
  */
+// 该类主要是获取方法调用次数的
 @Activate
 @Help(parameter = "[service] [method] [times]", summary = "Count the service.", detail = "Count the service.")
 public class CountTelnetHandler implements TelnetHandler {
 
     @Override
     public String telnet(final Channel channel, String message) {
+        // 下面获取service、method、times的过程和TraceTelnetHandler基本一致
         String service = (String) channel.getAttribute(ChangeTelnetHandler.SERVICE_KEY);
         if ((service == null || service.length() == 0)
                 && (message == null || message.length() == 0)) {
@@ -128,6 +130,7 @@ public class CountTelnetHandler implements TelnetHandler {
         header.add("average");
         header.add("max");
         if (method == null || method.length() == 0) {
+            // 获取所有方法的调用次数
             for (Method m : invoker.getInterface().getMethods()) {
                 RpcStatus count = RpcStatus.getStatus(url, m.getName());
                 table.add(createRow(m.getName(),count));

@@ -35,6 +35,28 @@ import java.util.List;
 /**
  * ListTelnetHandler handler list services and its methods details.
  */
+/*
+    dubbo>ls
+    PROVIDER:
+    servicediscovery-transfer-provider/org.apache.dubbo.metadata.MetadataService:1.0.0
+    samples.sd.transfer.demo.DemoService
+    samples.sd.transfer.demo.GreetingService
+
+    dubbo>ls -l
+    servicediscovery-transfer-provider/org.apache.dubbo.metadata.MetadataService:1.0.0 ->  published: Y
+    samples.sd.transfer.demo.DemoService ->  published: Y
+    samples.sd.transfer.demo.GreetingService ->  published: Y
+
+    // ====================================================================
+
+    dubbo>ls -l samples.sd.transfer.demo.DemoService
+    samples.sd.transfer.demo.DemoService (as provider):
+        java.lang.String sayHello(java.lang.String)
+
+    dubbo>ls samples.sd.transfer.demo.DemoService -l  （-l的位置随意）
+    samples.sd.transfer.demo.DemoService (as provider):
+        java.lang.String sayHello(java.lang.String)
+* */
 @Activate
 @Help(parameter = "[-l] [service]", summary = "List services and methods.", detail = "List services and methods.")
 public class ListTelnetHandler implements TelnetHandler {
@@ -46,6 +68,7 @@ public class ListTelnetHandler implements TelnetHandler {
         StringBuilder buf = new StringBuilder();
         String service = null;
         boolean detail = false;
+        // 如果客户端直接输入ls，这里的message就是""，走下面的分支
         if (message.length() > 0) {
             String[] parts = message.split("\\s+");
             for (String part : parts) {
@@ -59,6 +82,7 @@ public class ListTelnetHandler implements TelnetHandler {
                 }
             }
         } else {
+            // 看看先前是否设置过这个默认的service（changeTelnet）
             service = (String) channel.getAttribute(ChangeTelnetHandler.SERVICE_KEY);
             if (StringUtils.isNotEmpty(service)) {
                 buf.append("Use default service ").append(service).append(".\r\n");
@@ -66,7 +90,9 @@ public class ListTelnetHandler implements TelnetHandler {
         }
 
         if (StringUtils.isEmpty(service)) {
+            // 打印所有的 ，detail表示如果输入的ls -l，那么detail就是true，打印详细信息
             printAllServices(buf, detail);
+
         } else {
             printSpecifiedService(service, buf, detail);
 
@@ -93,6 +119,7 @@ public class ListTelnetHandler implements TelnetHandler {
             if (detail) {
                 buf.append(" -> ");
                 buf.append(" published: ");
+                // 进去，是否注册
                 buf.append(ServiceCheckUtils.isRegistered(provider) ? "Y" : "N");
             }
             buf.append("\r\n");

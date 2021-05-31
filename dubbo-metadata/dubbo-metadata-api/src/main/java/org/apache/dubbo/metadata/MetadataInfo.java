@@ -203,6 +203,7 @@ public class MetadataInfo implements Serializable {
         }
 
         public ServiceInfo(URL url) {
+            // 进去
             this(url.getServiceInterface(), url.getParameter(GROUP_KEY), url.getParameter(VERSION_KEY), url.getProtocol(), url.getPath(), null);
 
             this.url = url;
@@ -230,6 +231,9 @@ public class MetadataInfo implements Serializable {
                     }
                 }
             }
+//            params = {HashMap@5163}  size = 2
+//            "deprecated" -> "false"
+//            "dubbo" -> "2.0.2"
             this.params = params;
         }
 

@@ -34,7 +34,9 @@ public class HttpCommandDecoder {
     public static CommandContext decode(HttpRequest request) {
         CommandContext commandContext = null;
         if (request != null) {
+            // curl "127.0.0.1:33333/help"
             QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.getUri());
+            // /help
             String path = queryStringDecoder.path();
             String[] array = path.split("/");
             if (array.length == 2) {
@@ -43,6 +45,7 @@ public class HttpCommandDecoder {
                 // process GET request and POST request separately. Check url for GET, and check body for POST
                 if (request.getMethod() == HttpMethod.GET) {
                     if (queryStringDecoder.parameters().isEmpty()) {
+                        // 进去。工厂模式
                         commandContext = CommandContextFactory.newInstance(name);
                         commandContext.setHttp(true);
                     } else {

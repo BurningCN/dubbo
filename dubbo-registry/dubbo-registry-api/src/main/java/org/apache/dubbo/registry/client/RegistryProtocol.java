@@ -192,6 +192,7 @@ public class RegistryProtocol implements Protocol {
         // 进去
         ProviderModel model = ApplicationModel.getProviderModel(registeredProviderUrl.getServiceKey());
         // 构建RegisterStatedURL，添加到model的urls容器（三个参数表示registeredProviderUrl注册到了registryUrl，registered表示是否注册成功）
+        // 进去
         model.addStatedUrl(new ProviderModel.RegisterStatedURL(
                 registeredProviderUrl,
                 registryUrl,
@@ -237,7 +238,7 @@ public class RegistryProtocol implements Protocol {
             register(registryUrl, registeredProviderUrl); // < ------核心2：服务注册
         }
 
-        // register stated url on provider model 进去
+        // register stated url on provider model 进去 这里很重要，给telnet和qos用的（主要是给online和offline命令使用）
         registerStatedUrl(registryUrl, registeredProviderUrl, register);
 
 
@@ -247,6 +248,7 @@ public class RegistryProtocol implements Protocol {
 
         // Deprecated! Subscribe to override rules in 2.6.x or before. 弃用!订阅以覆盖2.6中的规则。x或之前。
         // 向注册中心进行订阅 override 数据 进去 ，这里的registry为ListenerRegistryWrapper
+        // 这里主要是订阅 覆盖提供者的节点信息，比如在admin配置覆盖规则，就会动态触发相关notify方法
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
 
         // "暴露"事件完毕，通知"RegistryProtocolListener"监听器，
@@ -281,6 +283,10 @@ public class RegistryProtocol implements Protocol {
         serviceConfigurationListeners.put(providerUrl.getServiceKey(), serviceConfigurationListener);
         // 再次覆盖，进去
         return serviceConfigurationListener.overrideUrl(providerUrl);
+
+        // 一个是provider级别(app)，一个是service级别，建立的path如下
+        //"/dubbo/config/dubbo/servicediscovery-transfer-provider.configurators" -> {CopyOnWriteArraySet@4619}  size = 1
+        //"/dubbo/config/dubbo/samples.sd.transfer.demo.DemoService::.configurators" -> {CopyOnWriteArraySet@4627}  size = 1
 
     }
 
@@ -406,8 +412,11 @@ public class RegistryProtocol implements Protocol {
         return registryFactory.getRegistry(registryUrl);
     }
 
-    // 这个是服务端提供者专用的（export方法），注意看子类重写的
+    // 这个是服务端提供者专用的（export方法），注意看子类重写的 。这个是给sd用的，子类重写的方法是给registry://
     protected URL getRegistryUrl(Invoker<?> originInvoker) {
+        //originInvoker = {DelegateProviderMetaDataInvoker@3874}
+        // invoker = {JavassistProxyFactory$1@3893} "interface samples.sd.transfer.demo.GreetingService -> service-discovery-registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=servicediscovery-transfer-provider&dubbo=2.0.2&export=dubbo%3A%2F%2F30.25.58.121%3A20880%2Fsamples.sd.transfer.demo.GreetingService%3Fanyhost%3Dtrue%26application%3Dservicediscovery-transfer-provider%26bind.ip%3D30.25.58.121%26bind.port%3D20880%26deprecated%3Dfalse%26dubbo%3D2.0.2%26dynamic%3Dtrue%26generic%3Dfalse%26interface%3Dsamples.sd.transfer.demo.GreetingService%26metadata-type%3Dremote%26methods%3Dhello%26pid%3D11013%26qos.port%3D33333%26release%3D%26side%3Dprovider%26telnet%3Dclear%2Cexit%2Chelp%2Cstatus%2Clog%2Cls%2Ctrace%2Ccount%2Cinvoke%2Cselect%2Cshutdown%2Cpwd%2Ccd%2Cps%26timestamp%3D1622431582271&id=service-discovery&pid=11013&qos.port=33333&registry=zookeeper&registry-type=service&timestamp=1622431582270"
+        // metadata = {ServiceBean@3894} "<dubbo:service beanName="samples.sd.transfer.demo.GreetingService" />"
         return originInvoker.getUrl();
     }
 
@@ -706,9 +715,11 @@ public class RegistryProtocol implements Protocol {
                 return;
             }
 
+            // 三个方法都进去
             this.configurators = Configurator.toConfigurators(classifyUrls(matchedUrls, UrlUtils::isConfigurator))
                     .orElse(configurators);
 
+            // 进去
             doOverrideIfNecessary();
         }
 
@@ -730,6 +741,7 @@ public class RegistryProtocol implements Protocol {
             //The current, may have been merged many times
             URL currentUrl = exporter.getInvoker().getUrl();
             //Merged with this configuration
+            // 三级覆盖。第一个是基于Registry的（ChildListener），二三是基于config/ZookeeperDynamicConfiguration的
             URL newUrl = getConfigedInvokerUrl(configurators, currentUrl);
             newUrl = getConfigedInvokerUrl(providerConfigurationListener.getConfigurators(), newUrl);
             newUrl = getConfigedInvokerUrl(serviceConfigurationListeners.get(originUrl.getServiceKey())
@@ -921,7 +933,7 @@ public class RegistryProtocol implements Protocol {
          */
         // 看上面注释
         private <T> URL overrideUrl(URL providerUrl) {
-            // 进去
+            // 进去 configurators 的赋值注意下
             return RegistryProtocol.getConfigedInvokerUrl(configurators, providerUrl);
         }
 

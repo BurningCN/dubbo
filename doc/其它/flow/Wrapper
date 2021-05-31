@@ -1,0 +1,18 @@
+JavassistProxyFactory
+	Wrapper wrapper = Wrapper.getWrapper(proxy.getClass().getName().indexOf('$') < 0 ? proxy.getClass() : type);
+
+	public static Wrapper getWrapper(Class<?> c) {
+        while (ClassGenerator.isDynamicClass(c)) // can not wrapper on dynamic class.
+        	ClassGenerator.DC.class.isAssignableFrom(cl);
+        {
+            c = c.getSuperclass();
+        }
+
+        if (c == Object.class) {
+            return OBJECT_WRAPPER;
+        }
+
+        return WRAPPER_MAP.computeIfAbsent(c, Wrapper::makeWrapper);
+    }
+
+    todo

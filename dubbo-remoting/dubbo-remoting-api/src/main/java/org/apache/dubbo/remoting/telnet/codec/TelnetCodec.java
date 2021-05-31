@@ -179,6 +179,7 @@ public class TelnetCodec extends TransportCodec {
     }
 
     // buffer参数没有用到
+    // 奇怪的是win每次输入字符不需要enter就会触发decode，而mac是必须输入字符后按下enter才行
     @SuppressWarnings("unchecked")
     protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byte[] message) throws IOException {
         // 进去
@@ -192,13 +193,13 @@ public class TelnetCodec extends TransportCodec {
             return DecodeResult.NEED_MORE_INPUT;
         }
 
-        // 最后一个字节是'\b'
+        // 最后一个字节是'\b' wind的回退删除键
         if (message[message.length - 1] == '\b') { // Windows backspace echo
             try {
-                // double byte char 意思就是说Windows最后必须两个\b
+                // double byte char 一般是false
                 boolean doublechar = message.length >= 3 && message[message.length - 3] < 0;
                 // new String(new byte[]{32, 32, 8, 8})是"\b\b"，new byte[]{32, 8}是 "\b"
-                // 可以看下AbstractMockChannel的send方法和getReceivedMessage
+                // 这样在win的终端就会去除一个字符，mac不是这样
                 channel.send(new String(doublechar ? new byte[]{32, 32, 8, 8} : new byte[]{32, 8}, getCharset(channel).name()));
             } catch (RemotingException e) {
                 throw new IOException(StringUtils.toString(e));
@@ -208,6 +209,7 @@ public class TelnetCodec extends TransportCodec {
 
         for (Object command : EXIT) {
             // 传入Telnet的decode方法的msg消息字节数组比如位new byte[]{3}，和EXIT的其一是匹配的，表示要关闭channel，进去
+            // 按ctrl-c
             if (isEquals(message, (byte[]) command)) {
                 if (logger.isInfoEnabled()) {
                     // 日志

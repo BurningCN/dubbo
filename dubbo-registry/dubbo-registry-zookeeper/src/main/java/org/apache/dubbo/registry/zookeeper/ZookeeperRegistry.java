@@ -139,7 +139,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
         try {
             // 通过 Zookeeper 客户端创建节点，节点路径由 toUrlPath 方法生成，路径格式如下:（注意这个结构非常重要，牢牢记住）
             //      /${group}/${serviceInterface}/providers/${url} 比如 /dubbo/org.apache.dubbo.DemoService/providers/dubbo%3A%2F%2F127.0.0.1......
-            // toUrlPath 、create都进去，第二个参数根据url的dynamic参数值判定节点是否是临时节点（dynamic=true就是临时节点）
+            // toUrlPath 、create都进去，第二个参数根据url的dynamic参数值判定节点是否是临时节点（dynamic=true就是临时节点）这个节点类型也很重要
+            // 之所以是临时节点，就是为了保证消费端能动态感知服务端的上下线，服务端挂了，消费端先前订阅过，能立马收到监听，并更新最新的provider列表信息（具体在Directory）
             zkClient.create(toUrlPath(url), url.getParameter(DYNAMIC_KEY, true));
             // 到这里仅仅是provider对应的节点创建好了 ，没有内容（但是节点path含有完整的url，相当于provider的信息都在path上）
         } catch (Throwable e) {

@@ -40,13 +40,14 @@ public class RegistryStatusChecker implements StatusChecker {
         }
         Status.Level level = Status.Level.OK;
         StringBuilder buf = new StringBuilder();
-        // 遍历
+        //  registry为ZookeeperRegistry/ServiceDiscoveryRegistry
         for (Registry registry : registries) {
             if (buf.length() > 0) {
                 buf.append(",");
             }
             buf.append(registry.getUrl().getAddress());
             // 是否可用，进去
+            //  sd !serviceDiscovery.getServices().isEmpty();
             if (!registry.isAvailable()) {
                 level = Status.Level.ERROR;
                 buf.append("(disconnected)");

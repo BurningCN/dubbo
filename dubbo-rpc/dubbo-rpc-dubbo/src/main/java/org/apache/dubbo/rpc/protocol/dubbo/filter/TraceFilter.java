@@ -54,9 +54,12 @@ public class TraceFilter implements Filter {
     private static final ConcurrentMap<String, Set<Channel>> TRACERS = new ConcurrentHashMap<>();
 
     public static void addTracer(Class<?> type, String method, Channel channel, int max) {
+        // 给该channel设置最大跟踪次数
         channel.setAttribute(TRACE_MAX, max);
+        // 初始addTracer的时候，一次也没调用，所以初始为0
         channel.setAttribute(TRACE_COUNT, new AtomicInteger());
         String key = method != null && method.length() > 0 ? type.getName() + "." + method : type.getName();
+        // TRACES的结构为 <service.method,set<channel>>
         Set<Channel> channels = TRACERS.computeIfAbsent(key, k -> new ConcurrentHashSet<>());
         channels.add(channel);
     }
@@ -77,14 +80,18 @@ public class TraceFilter implements Filter {
         Result result = invoker.invoke(invocation);
         long end = System.currentTimeMillis();
         if (TRACERS.size() > 0) {
+            // 找到满足的channel集合，集合是因为可能多个telnet客户端都对这个service（method）进行跟踪
             String key = invoker.getInterface().getName() + "." + invocation.getMethodName();
             Set<Channel> channels = TRACERS.get(key);
             if (channels == null || channels.isEmpty()) {
                 key = invoker.getInterface().getName();
                 channels = TRACERS.get(key);
             }
+
+            // 遍历channels
             if (CollectionUtils.isNotEmpty(channels)) {
                 for (Channel channel : new ArrayList<>(channels)) {
+                    // 如果可用。不可用的分支是直接移除该channel
                     if (channel.isConnected()) {
                         try {
                             int max = 1;
@@ -98,9 +105,11 @@ public class TraceFilter implements Filter {
                                 c = new AtomicInteger();
                                 channel.setAttribute(TRACE_COUNT, c);
                             }
+                            // 累计一次
                             count = c.getAndIncrement();
                             if (count < max) {
                                 String prompt = channel.getUrl().getParameter(Constants.PROMPT_KEY, Constants.DEFAULT_PROMPT);
+                                // 打印流逝的时间
                                 channel.send("\r\n" + RpcContext.getContext().getRemoteAddress() + " -> "
                                         + invoker.getInterface().getName()
                                         + "." + invocation.getMethodName()
@@ -108,6 +117,7 @@ public class TraceFilter implements Filter {
                                         + "\r\nelapsed: " + (end - start) + " ms."
                                         + "\r\n\r\n" + prompt);
                             }
+                            // 达到了最大跟踪次数，移除这些channel
                             if (count >= max - 1) {
                                 channels.remove(channel);
                             }

@@ -144,6 +144,7 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
             metadataInfo.addService(new ServiceInfo(url));
         }
         // 注意这里，该变量默认许可证为1，如果别处没有acquire过，这里再次调用，则许可证+1 为2
+        // 注意metadataSemaphore.acquire的地方，同时也注意getMetadataInfos方法的调用点（这个会被RemoteMetadataServiceImpl#publishMetadata调用，用于将这个保存到内存容器的值发布到zk）
         metadataSemaphore.release();
         // 将后者url添加到前者这个容器中
         return addURL(exportedServiceURLs, url);

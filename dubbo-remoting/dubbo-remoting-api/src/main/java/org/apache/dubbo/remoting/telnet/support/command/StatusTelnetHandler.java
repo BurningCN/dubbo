@@ -52,6 +52,14 @@ public class StatusTelnetHandler implements TelnetHandler {
             Map<String, Status> statuses = new HashMap<String, Status>();
             if (CollectionUtils.isNotEmpty(checkers)) {
                 for (StatusChecker checker : checkers) {
+                    //checkers = {ArrayList@6283}  size = 7
+                    // 0 = {ThreadPoolStatusChecker@4491}
+                    // 1 = {DataSourceStatusChecker@4492}
+                    // 2 = {LoadStatusChecker@4493}
+                    // 3 = {MemoryStatusChecker@4494}
+                    // 4 = {ServerStatusChecker@4495}
+                    // 5 = {RegistryStatusChecker@4496}
+                    // 6 = {SpringStatusChecker@4497}
                     String name = extensionLoader.getExtensionName(checker);
                     Status stat;
                     try {
@@ -69,6 +77,7 @@ public class StatusTelnetHandler implements TelnetHandler {
                     }
                 }
             }
+            // summmary一般为的message一般为空
             Status stat = StatusUtils.getSummaryStatus(statuses);
             List<String> row = new ArrayList<String>();
             row.add("summary");
@@ -76,9 +85,22 @@ public class StatusTelnetHandler implements TelnetHandler {
             row.add(stat.getMessage());
             table.add(row);
             return TelnetUtils.toTable(header, table);
+            // dubbo>status -l
+            //+----------+--------+----------------------------------------------------------+
+            //| resource | status | message                                                  |
+            //+----------+--------+----------------------------------------------------------+
+            //| load     | OK     | load:3.234375,cpu:12                                     |
+            //| memory   | OK     | max:3641M,total:204M,used:50M,free:154M                  |
+            //| server   | OK     | /30.25.58.200:20881(clients:0),/30.25.58.200:20880(clients:1) |
+            //| registry | OK     | 127.0.0.1:2181(connected),127.0.0.1:2181(connected)      |
+            //| spring   | OK     | samples.sd.transfer/dubbo-provider.xml                   |
+            //| summary  | OK     |                                                          |
+            //+----------+--------+----------------------------------------------------------+
         } else if (message.length() > 0) {
             return "Unsupported parameter " + message + " for status.";
         }
+        // 如下分支是客户端只输入了status，没有message值
+        // 这个status参数是配置在protocol的，比如    <dubbo:protocol name="dubbo" port="12345" status="load"/> status 为 StatusCheck的扩展名
         String status = channel.getUrl().getParameter("status");
         Map<String, Status> statuses = new HashMap<String, Status>();
         if (CollectionUtils.isNotEmptyMap(statuses)) {

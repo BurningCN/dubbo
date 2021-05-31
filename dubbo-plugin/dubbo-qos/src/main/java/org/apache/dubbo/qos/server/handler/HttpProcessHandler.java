@@ -44,16 +44,19 @@ import io.netty.handler.codec.http.HttpVersion;
  * <li>if succeed, return 200</li>
  * </ul>
  * <p>
- * will disconnect after execution finishes
+ * will disconnect after execution finishes 注意这里，http和telnet不同，后者会持续连接，知道超过最大心跳才会断链
  */
+// 参考telnet，这里也指定了泛型
 public class HttpProcessHandler extends SimpleChannelInboundHandler<HttpRequest> {
 
     private static final Logger log = LoggerFactory.getLogger(HttpProcessHandler.class);
     private static CommandExecutor commandExecutor = new DefaultCommandExecutor();
 
 
+    // 注意消息的类型
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg) throws Exception {
+        // // 进去
         CommandContext commandContext = HttpCommandDecoder.decode(msg);
         // return 404 when fail to construct command context
         if (commandContext == null) {
@@ -63,8 +66,11 @@ public class HttpProcessHandler extends SimpleChannelInboundHandler<HttpRequest>
         } else {
             commandContext.setRemote(ctx.channel());
             try {
+                // 这个逻辑和telnet一致
                 String result = commandExecutor.execute(commandContext);
+                // 进去
                 FullHttpResponse response = http200(result);
+                // 写完之后关闭客户端
                 ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
             } catch (NoSuchCommandException ex) {
                 log.error("can not find commandContext: " + commandContext, ex);

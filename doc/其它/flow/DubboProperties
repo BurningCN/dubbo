@@ -1,0 +1,54 @@
+https://dubbo.apache.org/zh/docs/v2.7/user/references/qos/ 文章最后介绍了这三种方式的区别
+dubbo.propeteis
+application.properties
+provider.xml 
+// ====================================================================
+看 dubbo.propeteis 的处理过程，我们要把这个文件默认放在resources目录下 。（或者配置 系统属性 指定 dubbo.properties.file 参数值）
+
+
+AbstractConfig refresh()
+	String value = StringUtils.trim(compositeConfiguration.getString(extractPropertyName(getClass(), method)));
+
+
+PropertiesConfiguration implements Configuration {
+
+	public Object getInternalProperty(String key) {
+        return ConfigUtils.getProperty(key);
+    }
+
+
+ConfigUtils
+
+public static String getProperty(String key) {
+    return getProperty(key, null); // 2
+}
+
+@SuppressWarnings({"unchecked", "rawtypes"})
+public static String getProperty(String key, String defaultValue) {
+    String value = System.getProperty(key);
+    if (value != null && value.length() > 0) {
+        return value;
+    }
+    Properties properties = getProperties(); // 3
+    return replaceProperty(properties.getProperty(key, defaultValue), (Map) properties);
+}
+
+
+public static Properties getProperties() {
+    if (PROPERTIES == null) {
+        synchronized (ConfigUtils.class) {
+            if (PROPERTIES == null) {
+                String path = System.getProperty(CommonConstants.DUBBO_PROPERTIES_KEY);
+                if (path == null || path.length() == 0) {
+                    path = System.getenv(CommonConstants.DUBBO_PROPERTIES_KEY);
+                    if (path == null || path.length() == 0) {
+                        path = CommonConstants.DEFAULT_DUBBO_PROPERTIES;
+                    }
+                }
+                PROPERTIES = ConfigUtils.loadProperties(path, false, true);
+                	// 代码较多 不粘贴来了
+            }
+        }
+    }
+    return PROPERTIES;
+}

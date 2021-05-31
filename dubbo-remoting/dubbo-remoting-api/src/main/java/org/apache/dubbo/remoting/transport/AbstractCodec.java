@@ -65,7 +65,8 @@ public abstract class AbstractCodec implements Codec2 {
     }
 
     protected boolean isClientSide(Channel channel) {
-        String side = (String)channel.getAttribute(SIDE_KEY); // 从属性表获取
+        // 从属性表获取 channel为NettyChannel，取出来的为null第一次
+        String side = (String)channel.getAttribute(SIDE_KEY);
         if (CLIENT_SIDE.equals(side)) {
             return true;
         } else if (SERVER_SIDE.equals(side)) {
