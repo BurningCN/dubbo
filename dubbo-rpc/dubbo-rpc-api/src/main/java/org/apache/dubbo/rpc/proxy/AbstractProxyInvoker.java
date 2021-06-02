@@ -29,6 +29,8 @@ import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcException;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -76,6 +78,11 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
 
     @Override
     public void destroy() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_MONTH,1);
+        calendar.set(Calendar.HOUR_OF_DAY,0);
+        Date time = calendar.getTime();
+        long timeInMillis = calendar.getTimeInMillis();
     }
 
     @Override
