@@ -25,7 +25,7 @@ import samples.multiprotocol.api.DemoService;
 public class BasicConsumer {
 
     public static void main(String[] args) {
-        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring/configcenter-consumer.xml");
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("samples.multiprotocol/configcenter-consumer.xml");
         context.start();
 
         DemoService demoService = (DemoService) context.getBean("demoService");

@@ -29,7 +29,7 @@
 
     <bean id="demoService" class="samples.multiprotocol.impl.DemoServiceImpl"/>
 
-    <dubbo:service protocol="dubbo1,dubbo2"
+    <dubbo:service protocol="dubbo1"
                    interface="samples.multiprotocol.api.DemoService"
                    ref="demoService"/>
 
