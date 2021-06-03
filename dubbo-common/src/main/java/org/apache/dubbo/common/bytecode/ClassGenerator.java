@@ -31,6 +31,7 @@ import javassist.CtNewConstructor;
 import javassist.CtNewMethod;
 import javassist.NotFoundException;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -135,6 +136,9 @@ public final class ClassGenerator {
     }
 
     public ClassGenerator addInterface(Class<?> cl) {
+        if (!cl.isInterface()) {
+            throw new RuntimeException(cl + " is not a interface.");
+        }
         return addInterface(cl.getName());
     }
 
@@ -338,11 +342,25 @@ public final class ClassGenerator {
                     }
                 }
             }
-            return mCtc.toClass(loader, pd);
+            Class toClass = mCtc.toClass(loader, pd);
+            testWriteFile(mCtc);
+            return toClass;
         } catch (RuntimeException e) {
             throw e;
         } catch (NotFoundException | CannotCompileException e) {
             throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public static void testWriteFile(CtClass mCtc) {
+        String path = "target/javassist-classGenerator/";
+        try {
+            File dir = new File(path);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            mCtc.writeFile(path);
+        } catch (Exception e) {
         }
     }
 
@@ -383,7 +401,7 @@ public final class ClassGenerator {
         return getCtClass(c.getDeclaringClass()).getConstructor(ReflectUtils.getDesc(c));
     }
 
-    public static interface DC {
+    public interface DC {
 
     } // dynamic class tag interface.
 }

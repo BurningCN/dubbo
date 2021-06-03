@@ -221,8 +221,8 @@ public abstract class Proxy {
             Class<?> clazz = ccp.toClass();
             clazz.getField("methods").set(null, methods.toArray(new Method[0]));
 
-            // create Proxy class.
-            String fcn = Proxy.class.getName() + id;
+            // create Proxy class. 原版本没有zxy。是因为我加了写文件，导致大写的Proxy0/1把小写开头的proxy0/1给覆盖了（0和1是类最后后缀）
+            String fcn = Proxy.class.getName() + id + "zxy";
             ccm = ClassGenerator.newInstance(cl);
             ccm.setClassName(fcn);
             ccm.addDefaultConstructor();

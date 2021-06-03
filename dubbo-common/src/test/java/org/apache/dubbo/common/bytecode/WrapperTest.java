@@ -16,8 +16,12 @@
  */
 package org.apache.dubbo.common.bytecode;
 
+import com.sun.istack.internal.Pool;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -145,6 +149,16 @@ public class WrapperTest {
     public void test_getMethodNames_ContainExtendsParentMethods() throws Exception {
         assertArrayEquals(new String[]{"hello", "world"}, Wrapper.getWrapper(Son.class).getMethodNames());
     }
+
+    @Test
+    public void test_Fields(){
+        Wrapper wrapper = Wrapper.getWrapper(Impl0.class);
+        wrapper.getPropertyType("a");
+        wrapper.getPropertyType("b");
+        wrapper.getPropertyType("c");
+
+    }
+
 
     public interface I0 {
         String getName();
