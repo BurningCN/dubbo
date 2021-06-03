@@ -51,6 +51,8 @@ public class ClassGeneratorTest {
         cg.addMethod("public Object getName(" + Bean.class.getName() + " o){ boolean[][][] bs = new boolean[0][][]; return (String)FNAME.get($1); }");
         cg.addMethod("public void setName(" + Bean.class.getName() + " o, Object name){ FNAME.set($1, $2); }");
 
+        cg.addMethod("hahah",Modifier.PUBLIC,String.class,new Class[]{String.class},null,"1234");
+
         cg.addDefaultConstructor();
         Class<?> cl = cg.toClass();
         cl.getField("FNAME").set(null, fname);

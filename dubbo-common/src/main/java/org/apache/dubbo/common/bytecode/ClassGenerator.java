@@ -186,17 +186,18 @@ public final class ClassGenerator {
 
     public ClassGenerator addMethod(String name, int mod, Class<?> rt, Class<?>[] pts, Class<?>[] ets,
                                     String body) {
-        StringBuilder sb = new StringBuilder();
+        // eg cg.addMethod("hahah",Modifier.PUBLIC,String.class,new Class[]{String.class},null,"1234");
+        StringBuilder sb = new StringBuilder();// public java.lang.String hahah
         sb.append(modifier(mod)).append(' ').append(ReflectUtils.getName(rt)).append(' ').append(name);
-        sb.append('(');
+        sb.append('(');// public java.lang.String hahah(
         for (int i = 0; i < pts.length; i++) {
             if (i > 0) {
                 sb.append(',');
             }
-            sb.append(ReflectUtils.getName(pts[i]));
-            sb.append(" arg").append(i);
+            sb.append(ReflectUtils.getName(pts[i]));// public java.lang.String hahah(java.lang.String
+            sb.append(" arg").append(i);// public java.lang.String hahah(java.lang.String arg0
         }
-        sb.append(')');
+        sb.append(')');// public java.lang.String hahah(java.lang.String arg0)
         if (ArrayUtils.isNotEmpty(ets)) {
             sb.append(" throws ");
             for (int i = 0; i < ets.length; i++) {
@@ -206,7 +207,7 @@ public final class ClassGenerator {
                 sb.append(ReflectUtils.getName(ets[i]));
             }
         }
-        sb.append('{').append(body).append('}');
+        sb.append('{').append(body).append('}');// public java.lang.String hahah(java.lang.String arg0){1234}
         return addMethod(sb.toString());
     }
 
