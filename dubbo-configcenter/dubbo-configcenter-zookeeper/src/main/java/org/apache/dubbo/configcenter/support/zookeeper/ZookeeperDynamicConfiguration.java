@@ -36,18 +36,13 @@ public class ZookeeperDynamicConfiguration extends TreePathDynamicConfiguration 
 
     private Executor executor;
     // The final root path would be: /configRootPath/"config"
-    private String rootPath;
     private final ZookeeperClient zkClient;
 
     private CacheListener cacheListener;
-    private URL url;
 
 
     ZookeeperDynamicConfiguration(URL url, ZookeeperTransporter zookeeperTransporter) {
         super(url);
-        this.url = url;
-        rootPath = getRootPath(url);
-
         this.cacheListener = new CacheListener(rootPath);
         this.executor = Executors.newFixedThreadPool(1, new NamedThreadFactory(this.getClass().getSimpleName(), true));
         zkClient = zookeeperTransporter.connect(url);
