@@ -18,6 +18,7 @@ package org.apache.dubbo.common.function;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,8 +27,11 @@ import java.util.stream.Stream;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.dubbo.common.function.Streams.filterList;
-import static org.apache.dubbo.common.function.Streams.filterSet;
 import static org.apache.dubbo.common.function.Streams.filterStream;
+import static org.apache.dubbo.common.function.Streams.filterAny;
+import static org.apache.dubbo.common.function.Streams.filterAll;
+import static org.apache.dubbo.common.function.Streams.filterFirst;
+import static org.apache.dubbo.common.function.Streams.filter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -50,8 +54,33 @@ public class StreamsTest {
     }
 
     @Test
-    public void testFilterSet() {
-        Set<Integer> set = filterSet(asList(1, 2, 3, 4, 5), i -> i % 2 == 0);
-        assertEquals(new LinkedHashSet<>(asList(2, 4)), set);
+    public void testFilter() {
+        List<Integer> list = filter(asList(1, 2, 3, 4, 5), i -> i % 2 == 0);
+        assertEquals(asList(2, 4), list);
+
+        HashSet<Integer> set = new HashSet<>();
+        set.addAll(asList(1, 2, 3, 4, 5));
+        Set<Integer> sets = filter(set, i -> i % 2 == 0);
+        assertEquals(new LinkedHashSet<>(asList(2, 4)), sets);
     }
+
+    @Test
+    public void testFilterAll() {
+        List<Integer> list = filterAll(asList(1, 2, 3, 4, 5), i -> i % 2 == 0, i -> i != 2);
+        assertEquals(asList(4), list);
+    }
+
+    @Test
+    public void testFilterAny() {
+        HashSet<Integer> set = new HashSet<>();
+        set.addAll(asList(1, 2, 3, 4, 5));
+        HashSet<Integer> hashSet = filterAny(set, i -> i % 2 == 0, i -> i != 2);
+        assertEquals(new LinkedHashSet<>(asList(1, 2, 3, 4, 5)), hashSet);
+    }
+
+    @Test
+    public void testFindFirst() {
+        assertEquals(4, filterFirst(asList(1, 2, 3, 4, 5), i -> i % 2 == 0, i -> i != 2));
+    }
+
 }
