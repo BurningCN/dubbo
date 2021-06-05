@@ -226,7 +226,7 @@ public abstract class AbstractDynamicConfiguration implements DynamicConfigurati
         try {
 
             if (timeout < 1) {
-                // 如果超时时间<=0，那么就表示调用放不需要设置超时，直接call即可，一直阻塞
+                // 如果超时时间<=0，那么就表示调用放不需要设置超时，直接使用当前调用者线程执行call即可，一直阻塞
                 value = task.call();
             } else {
                 Future<V> future = workersThreadPool.submit(task);

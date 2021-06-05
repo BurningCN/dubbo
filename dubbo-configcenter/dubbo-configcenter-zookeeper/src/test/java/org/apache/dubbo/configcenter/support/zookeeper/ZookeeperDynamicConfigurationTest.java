@@ -178,6 +178,7 @@ public class ZookeeperDynamicConfigurationTest {
         // 获取同一个组的配置信息，进去（内部client.getChildren().forPath(path);）
         Set<String> configKeys = configuration.getConfigKeys(group);
 
+        // 返回的是set 注意
         assertEquals(new TreeSet(asList(key, key2)), configKeys);
     }
 

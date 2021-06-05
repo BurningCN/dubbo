@@ -188,9 +188,23 @@ HeaderExchangeHandler disconnected
     }
 
 
+// ====================================================================
+   client 接受 到服务端的连接
+// ====================================================================
 
-
-
+	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        NettyChannel channel = NettyChannel.getOrAddChannel(ctx.channel(), url, handler);
+        handler.connected(channel);
+        	AbstractPeer connected
+        		if (closed) {
+		            return;
+		        }
+		        handler.connected(ch);
+		        	// 后续流程和server一模一样，最终也是到requestHandler ，因为在DubboProtocol在connect的时候也指定了requestHandler（不光是在export指定的）
+        if (logger.isInfoEnabled()) {
+            logger.info("The connection of " + channel.getLocalAddress() + " -> " + channel.getRemoteAddress() + " is established.");
+        }
+    }
 
 
 

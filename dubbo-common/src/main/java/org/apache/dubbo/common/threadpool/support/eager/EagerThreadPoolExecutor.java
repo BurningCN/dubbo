@@ -66,7 +66,7 @@ public class EagerThreadPoolExecutor extends ThreadPoolExecutor {
         if (command == null) {
             throw new NullPointerException();
         }
-        // do not increment in method beforeExecute! todo 疑问
+        // do not increment in method beforeExecute! 可能是考虑到beforeXX会抛异常
         // 前置处理，执行前submittedTaskCount++
         submittedTaskCount.incrementAndGet();
         try {

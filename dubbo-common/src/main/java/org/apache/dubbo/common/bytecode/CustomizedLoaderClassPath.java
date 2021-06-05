@@ -34,22 +34,26 @@ import java.net.URL;
  * <p>The given class loader must have both <code>getResourceAsStream()</code>
  * and <code>getResource()</code>.
  *
+ * 表示类加载器的类搜索路径。<p>它用于通过 <code>getResourceAsStream()</code> 从给定的类加载器获取类文件。
+ * <code>LoaderClassPath</code> 通过<code>WeakReference</code> 引用类加载器。 如果类加载器被垃圾收集，则检查其他搜索路径。
  * @author <a href="mailto:bill@jboss.org">Bill Burke</a>
  * @author Shigeru Chiba
  */
 public class CustomizedLoaderClassPath implements ClassPath {
-    private WeakReference clref;
+    private WeakReference<ClassLoader> clref;
 
     /**
      * Creates a search path representing a class loader.
      */
     public CustomizedLoaderClassPath(ClassLoader cl) {
-        clref = new WeakReference(cl);
+        // 弱引用
+        clref = new WeakReference<>(cl);
     }
 
     public String toString() {
-        Object cl = null;
+        ClassLoader cl = null;
         if (clref != null)
+            // 获取对象
             cl = clref.get();
 
         return cl == null ? "<null>" : cl.toString();
@@ -62,7 +66,7 @@ public class CustomizedLoaderClassPath implements ClassPath {
      */
     public InputStream openClassfile(String classname) {
         String cname = classname.replace('.', '/') + ".class";
-        ClassLoader cl = (ClassLoader) clref.get();
+        ClassLoader cl = clref.get();
         if (cl == null) {
             return null;        // not found
         } else {
@@ -83,7 +87,7 @@ public class CustomizedLoaderClassPath implements ClassPath {
      */
     public URL find(String classname) {
         String cname = classname.replace('.', '/') + ".class";
-        ClassLoader cl = (ClassLoader) clref.get();
+        ClassLoader cl = clref.get();
         if (cl == null) {
             return null;        // not found
         } else {

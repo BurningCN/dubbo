@@ -107,7 +107,7 @@ public class MetadataUtils {
             // Simply rely on the first metadata url, as stated in MetadataServiceURLBuilder.
             // 只需依赖第一个元数据url，如MetadataServiceURLBuilder中所述。
             Invoker<MetadataService> invoker = protocol.refer(MetadataService.class, urls.get(0));
-            // 和远端的MetadataService提供者建立了连接
+            // 和远端的MetadataService提供者建立了连接，其实一会要想远端的 InMemoryWritableMetadataService 发起调用，调用其getMetadataInfo方法
             return proxyFactory.getProxy(invoker);
         });
     }

@@ -259,15 +259,20 @@ public final class ClassGenerator {
 
     public ClassGenerator addConstructor(int mod, Class<?>[] pts, Class<?>[] ets, String body) {
         StringBuilder sb = new StringBuilder();
+        // 注意这里常量为"<init>";
+        // eg  public <init>
         sb.append(modifier(mod)).append(' ').append(SIMPLE_NAME_TAG);
+        // eg  public <init>(
         sb.append('(');
         for (int i = 0; i < pts.length; i++) {
             if (i > 0) {
                 sb.append(',');
             }
+            // eg  public <init>(java.lang.String arg0
             sb.append(ReflectUtils.getName(pts[i]));
             sb.append(" arg").append(i);
         }
+        // eg  public <init>(java.lang.String arg0,java.lang.String arg1)
         sb.append(')');
         if (ArrayUtils.isNotEmpty(ets)) {
             sb.append(" throws ");
@@ -278,6 +283,9 @@ public final class ClassGenerator {
                 sb.append(ReflectUtils.getName(ets[i]));
             }
         }
+        // eg  public <init>(java.lang.String arg0,java.lang.String arg1){
+        //  body
+        // }
         sb.append('{').append(body).append('}');
         return addConstructor(sb.toString());
     }
@@ -321,6 +329,7 @@ public final class ClassGenerator {
         }
         long id = CLASS_NAME_COUNTER.getAndIncrement();
         try {
+            // 这里调用get方法的时候（参数是字符串），他回到指定路径下寻找相应的类资源（可以看下CustomizedLoaderClassPath）
             CtClass ctcs = mSuperClass == null ? null : mPool.get(mSuperClass);
             if (mClassName == null) {
                 mClassName = (mSuperClass == null || javassist.Modifier.isPublic(ctcs.getModifiers())
@@ -373,6 +382,16 @@ public final class ClassGenerator {
                     }
                 }
             }
+            /*
+            CtClass mCtc = mPool.makeClass(mClassName);
+            mCtc.setSuperclass(ctcs)
+            mCtc.addInterface(mPool.get(DC.class.getName()))
+            mCtc.addField(CtField.make(code, mCtc));
+            mCtc.addMethod(CtNewMethod.make(code, mCtc));
+            mCtc.addConstructor(CtNewConstructor.defaultConstructor(mCtc));
+            Class toClass = mCtc.toClass(loader, pd);
+            */
+
             // 生成代理类
             Class toClass = mCtc.toClass(loader, pd);
             // 下面是我自己加的程序，写到文件，进去

@@ -187,6 +187,7 @@ public interface Configuration {
             } else if (Double.class.equals(cls) || Double.TYPE.equals(cls)) {
                 obj = Double.valueOf(value);
             }
+            // 注意这里
         } else if (cls.isEnum()) {
             obj = Enum.valueOf(cls.asSubclass(Enum.class), value);
         }

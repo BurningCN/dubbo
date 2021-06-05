@@ -106,7 +106,7 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
         return appExternalConfigurationMap;
     }
 
-    // gx
+    // gx 一般在加载Config-center会先触发下面这个方法，让后在调用前面的 getExternalConfigurationMap 方法。这个externalXX表示是外界的，即zk等远端配置中心的数据
     public void updateExternalConfigurationMap(Map<String, String> externalMap) {
         this.externalConfigurationMap.putAll(externalMap);
     }
@@ -138,7 +138,7 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
         CompositeConfiguration prefixedConfiguration = new CompositeConfiguration(config.getPrefix(), config.getId());
         // 将config的一些属性信息填充到ConfigConfigurationAdapter，进去
         Configuration configuration = new ConfigConfigurationAdapter(config);
-        // 默认true
+        // 默认true（前提是自己在xml中配置了config-center，才默认为true，而因为useRegistryAsConfigCenterIfNecessary();生成config-center会手动设置isHighest为false）
         if (this.isConfigCenterFirst()) {
             // The sequence would be: SystemConfiguration -> [[ AppExternalConfiguration -> ExternalConfiguration -> AbstractConfig ]] -> PropertiesConfiguration
             // Config center has the highest priority

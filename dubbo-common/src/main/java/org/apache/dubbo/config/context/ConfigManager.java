@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -377,10 +378,15 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
 
     protected static Set<String> getSubProperties(Map<String, String> properties, String prefix) {
         return properties.keySet().stream().filter(k -> k.contains(prefix)).map(k -> {
+            // 比如"dubbo.protocols.dubbo1.port" -> "20991"
+            // k = dubbo1.port
             k = k.substring(prefix.length());
+            // return dubbo1
             return k.substring(0, k.indexOf("."));
         }).collect(Collectors.toSet());
     }
+
+
 
     public void refreshAll() {
         write(() -> {

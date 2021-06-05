@@ -45,11 +45,13 @@ import java.lang.annotation.Target;
  * fail to initialize if the third party library doesn't exist. In this case, dubbo cannot figure out extension's id
  * therefore cannot be able to map the exception information with the extension, if the previous format is used.
  * <p/>
+ * 如果在扩展实现中有静态字段或方法引用的第三方库，如果第三方库不存在，其类将无法初始化。 在这种情况下，dubbo 无法找出扩展的 id，因此如果使用以前的格式，则无法将异常信息与扩展映射。
  * For example:
  * <p>
  * Fails to load Extension("mina"). When user configure to use mina, dubbo will complain the extension cannot be loaded,
  * instead of reporting which extract extension implementation fails and the extract reason.
  * </p>
+ * 无法加载扩展（“mina”）。 当用户配置使用mina时，dubbo会报错无法加载扩展，而不是报告哪个extract扩展执行失败以及extract原因。
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

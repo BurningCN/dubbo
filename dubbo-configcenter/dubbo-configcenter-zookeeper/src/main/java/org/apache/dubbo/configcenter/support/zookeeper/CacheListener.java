@@ -131,7 +131,10 @@ public class CacheListener implements DataListener {
         if (StringUtils.isEmpty(path)) {
             return path;
         }
+        // /dubbo/config/dubbo/AAA
+        // 经过下面变成 duubo.AAA
         String groupKey = path.replace(rootPath + PATH_SEPARATOR, "").replaceAll(PATH_SEPARATOR, DOT_SEPARATOR);
+        // 变成AAA
         return groupKey.substring(groupKey.indexOf(DOT_SEPARATOR) + 1);
     }
 

@@ -77,8 +77,10 @@ public class StandardMetadataServiceURLBuilder implements MetadataServiceURLBuil
         String host = serviceInstance.getHost();
 
         for (Map.Entry<String, Map<String, String>> entry : paramsMap.entrySet()) {
+            // dubbo
             String protocol = entry.getKey();
             Map<String, String> params = entry.getValue();
+            // 20881
             int port = Integer.parseInt(params.get(PORT_KEY));
             URLBuilder urlBuilder = new URLBuilder()
                     .setHost(host)

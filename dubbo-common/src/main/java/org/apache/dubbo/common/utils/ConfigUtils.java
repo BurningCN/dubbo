@@ -252,7 +252,7 @@ public class ConfigUtils {
     public static Properties loadProperties(String fileName, boolean allowMultiFile, boolean optional) {
         Properties properties = new Properties();
         // add scene judgement in windows environment Fix 2557
-        // 检查文件是否存在，进去
+        // 检查文件是否存在，进去 , 其实如果这个文件时resource下的，下面的检查会返回false的，因为当前app加载器是访问不到的
         if (checkFileNameExist(fileName)) {
             try {
                 FileInputStream input = new FileInputStream(fileName);

@@ -41,16 +41,47 @@ public class ClassGeneratorTest {
         }
 
         ClassGenerator cg = ClassGenerator.newInstance();
+        //org.apache.dubbo.common.bytecode.Bean$Builder
         cg.setClassName(Bean.class.getName() + "$Builder");
         cg.addInterface(Builder.class);
 
+        // 注意添加的字段的类型就是Field，当然一般我们可以以String类型 什么的
         cg.addField("public static java.lang.reflect.Field FNAME;");
 
+        /*
+            public Object getName (org.apache.dubbo.common.bytecode.Bean o){
+                boolean[][][] bs = new boolean[0][][];
+                return (String) FNAME.get($1);
+            }
+        */
         cg.addMethod("public Object getName(" + Bean.class.getName() + " o){ boolean[][][] bs = new boolean[0][][]; return (String)FNAME.get($1); }");
+        /**
+             public void setName (org.apache.dubbo.common.bytecode.Bean o, Object name){
+                FNAME.set($1, $2);
+             }
+         */
         cg.addMethod("public void setName(" + Bean.class.getName() + " o, Object name){ FNAME.set($1, $2); }");
 
         cg.addDefaultConstructor();
+        // 核心 进去
         Class<?> cl = cg.toClass();
+        /*
+        public class Bean$Builder implements DC, Builder {
+            public static Field FNAME;
+
+            public Object getName(Bean var1) {
+                boolean[][][] var2 = new boolean[0][][];
+                return (String)FNAME.get(var1);
+            }
+
+            public void setName(Bean var1, Object var2) {
+                FNAME.set(var1, var2);
+            }
+
+            public Bean$Builder() {
+            }
+        }
+        */
         cl.getField("FNAME").set(null, fname);
 
         System.out.println(cl.getName());
@@ -74,6 +105,7 @@ public class ClassGeneratorTest {
         cg.setClassName(Bean.class.getName() + "$Builder2");
         cg.addInterface(Builder.class);
 
+        // 注意这里，进去
         cg.addField("FNAME", Modifier.PUBLIC | Modifier.STATIC, java.lang.reflect.Field.class);
 
         cg.addMethod("public Object getName(" + Bean.class.getName() + " o){ boolean[][][] bs = new boolean[0][][]; return (String)FNAME.get($1); }");

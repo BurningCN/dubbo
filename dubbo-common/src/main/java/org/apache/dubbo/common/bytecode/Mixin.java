@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Mixin
+ * Mixin 混合类型; 混进; 糅合; 米心;
  */
 public abstract class Mixin {
     private static final String PACKAGE_NAME = Mixin.class.getPackage().getName();

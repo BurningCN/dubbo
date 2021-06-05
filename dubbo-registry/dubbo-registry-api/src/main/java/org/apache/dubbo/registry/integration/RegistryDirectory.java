@@ -99,7 +99,9 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
     public void subscribe(URL url) {
         setConsumerUrl(url);
 //        overrideConsumerUrl();
+        // app级别的覆盖
         CONSUMER_CONFIGURATION_LISTENER.addNotifyListener(this);
+        // service级别的覆盖，用于在admin配置覆盖信息，覆盖consumerUrl 的信息
         referenceConfigurationListener = new ReferenceConfigurationListener(this, url);
         registry.subscribe(url, this);
     }
@@ -416,6 +418,12 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
                     }
                     if (enabled) {
                         // 调用 refer 获取 Invoker 这里是核心，内部会client和服务端建立连接
+                        //invoker = {RegistryDirectory$InvokerDelegate@6273}
+                        // providerUrl = {URL@6202}
+                        // invoker = {FilterNode@6276}
+                        //  invoker = {ListenerInvokerWrapper@6278}
+                        //   invoker = {AsyncToSyncInvoker@6283}
+                        //    invoker = {DubboInvoker@6285}
                         invoker = new InvokerDelegate<>(protocol.refer(serviceType, url), url, providerUrl);
                     }
                 } catch (Throwable t) {

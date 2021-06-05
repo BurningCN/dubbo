@@ -63,6 +63,7 @@ public abstract class Proxy {
      * @param ics interface class array.
      * @return Proxy instance.
      */
+    // gx
     public static Proxy getProxy(Class<?>... ics) {
         return getProxy(ClassUtils.getClassLoader(Proxy.class), ics);
     }
@@ -91,13 +92,14 @@ public abstract class Proxy {
 
             Class<?> tmp = null;
             try {
-                // 重新加载接口类
+                // 加载接口类 ，表示客户提供的class能否被加载器加载到，是不是合法的类。第二个参数表示不走初始化流程，
                 tmp = Class.forName(itf, false, cl);
             } catch (ClassNotFoundException e) {
             }
 
-            // 检测接口是否相同，这里 tmp 有可能为空
+            // 检测接口是否相同，这里 tmp 有可能为空。正常应该相同，表示ClassLoader能拿到这个class
             if (tmp != ics[i]) {
+                // 注意这里日志
                 throw new IllegalArgumentException(ics[i] + " is not visible from class loader");
             }
 
@@ -180,8 +182,8 @@ public abstract class Proxy {
                     // DemoService.sayHello 返回的desc = sayHello(Ljava/lang/String;)V
                     // DemoService.$invoke  返回的desc = $invoke(Ljava/lang/String;Ljava/lang/String;)V
                     String desc = ReflectUtils.getDesc(method);
-                    // 如果方法描述字符串已在 worked 中，则忽略。考虑这种情况，
-                    // A 接口和 B 接口中包含一个完全相同的方法，但是在代理类里面只会生成一个方法
+                    // 如果方法描述字符串已在 worked 中，考虑这种情况，
+                    // A 接口和 B 接口中包含一个完全相同的方法，但是在代理类里面只会生成一个方法 ，或者是静态的也忽略（说明不代理静态的方法）则忽略。
                     if (worked.contains(desc) || Modifier.isStatic(method.getModifiers())) {
                         continue;
                     }
@@ -199,7 +201,7 @@ public abstract class Proxy {
                     // 获取参数列表
                     Class<?>[] pts = method.getParameterTypes();
 
-                    // 生成 Object[] args = new Object[1...N]
+                    // 生成 Object[] args = new Object[pts.length]
                     StringBuilder code = new StringBuilder("Object[] args = new Object[").append(pts.length).append("];");
                     for (int j = 0; j < pts.length; j++) {
                         // 生成 args[1...N] = ($w)$1...N;
@@ -212,15 +214,32 @@ public abstract class Proxy {
                         code.append(" return ").append(asArgument(rt, "ret")).append(";");
                     }
                     methods.add(method);
-                    // org.apache.dubbo.rpc.support.DemoService的$invoke方法此时对应的code如下:
-                    // Object[] args = new Object[2]; args[0] = ($w)$1; args[1] = ($w)$2; Object ret = handler.invoke(this, methods[1], args);
-                    // 格式化一下如下({}里面的是code,{}外层的还没生成-->这部分在下面的addMethod内部会构建)
-                    // void $invoke(String s1, String s2){
-                    //  Object[] args = new Object[2];
-                    //  args[0] = ($w)$1;
-                    //  args[1] = ($w)$2;
-                    //  Object ret = handler.invoke(this, methods[1], args);
-                    // }
+                    /*
+                     org.apache.dubbo.rpc.support.DemoService的$invoke方法此时对应的code如下:
+                     Object[] args = new Object[2]; args[0] = ($w)$1; args[1] = ($w)$2; Object ret = handler.invoke(this, methods[1], args);
+                     格式化一下如下({}里面的是code,{}外层的还没生成-->这部分在下面的addMethod内部会构建)
+                     void $invoke(String s1, String s2){
+                      Object[] args = new Object[2];
+                      args[0] = ($w)$1;
+                      args[1] = ($w)$2;
+                      Object ret = handler.invoke(this, methods[1], args);
+                     }
+
+                    // 又或者
+
+                    public java.lang.String getName () {
+                        Object[] args = new Object[0];
+                        Object ret = handler.invoke(this, methods[0], args);
+                        return (java.lang.String) ret;
+                    }
+
+                    public void setName (java.lang.String arg0, java.lang.String arg1){
+                        Object[] args = new Object[2];
+                        args[0] = ($w) $1;
+                        args[1] = ($w) $2;
+                        Object ret = handler.invoke(this, methods[1], args);
+                    }
+                     */
 
                     // 添加方法名、访问控制符、参数列表、方法代码等信息到 ClassGenerator 中，进去
                     ccp.addMethod(method.getName(), method.getModifiers(), rt, pts, method.getExceptionTypes(), code.toString());
@@ -339,7 +358,59 @@ public abstract class Proxy {
                 Object var3 = this.handler.invoke(this, methods[1], var2);
                 return (Object)var3;
             }
-        }*/
+        }
+
+        // ====================================================================
+        这里是返回给业务方的Proxy0，可以调用其newInstance方法，比如
+        Proxy proxy = Proxy.getProxy(ITest.class, ITest.class)
+        proxy.newInstance((proxy1, method, args) -> {}) // 参数是InvocationHandler，InvocationHandler里面存放我们的实际代理逻辑(即最关键的业务部分)
+
+        package org.apache.dubbo.common.bytecode;
+
+        import java.lang.reflect.InvocationHandler;
+        import org.apache.dubbo.common.bytecode.ClassGenerator.DC;
+
+        public class Proxy0 extends Proxy implements DC {
+            public Object newInstance(InvocationHandler var1) {
+                return new proxy0(var1);
+            }
+
+            public Proxy0() {
+            }
+        }
+
+        // ====================================================================
+
+        外界不传入接口，如下
+        Proxy proxy1 = Proxy.getProxy();
+        proxy1.newInstance((proxy2, method, args)-> null);
+
+        那么生成的反编译代码如下
+
+        proxy1 (小写)
+        public class proxy1 implements DC {
+            public static Method[] methods;
+            private InvocationHandler handler;
+
+            public proxy1() {
+            }
+
+            public proxy1(InvocationHandler var1) {
+                this.handler = var1;
+            }
+        }
+
+        Proxy1 (大写)
+        public class Proxy1 extends Proxy implements DC {
+            public Object newInstance(InvocationHandler var1) {
+                // 调用上面的类
+                return new proxy1(var1);
+            }
+
+            public Proxy1() {
+            }
+        }
+        */
     }
 
     private static String asArgument(Class<?> cl, String name) {

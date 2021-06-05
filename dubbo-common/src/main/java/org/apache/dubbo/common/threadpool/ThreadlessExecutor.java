@@ -71,10 +71,12 @@ public class ThreadlessExecutor extends AbstractExecutorService {
         return waitingFuture;
     }
 
+    // waitingFuture参数类型为DefaultFuture
     public void setWaitingFuture(CompletableFuture<?> waitingFuture) {
         this.waitingFuture = waitingFuture;
     }
 
+    // gx
     public boolean isWaiting() {
         return waiting;
     }
@@ -107,7 +109,7 @@ public class ThreadlessExecutor extends AbstractExecutorService {
             return;
         }
 
-        // 阻塞式获取
+        // 阻塞式获取 这个任务是 ChannelEventRunnable
         Runnable runnable = queue.take();
 
         synchronized (lock) {

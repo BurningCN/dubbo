@@ -1161,6 +1161,13 @@ public class DubboBootstrap extends GenericEventListener {
             DynamicConfiguration dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl());
             // 如果上面的dynamicConfiguration是zkDynamicConfiguration，其getProperties最终是Curator进行ZNode节点的读取
             // 根据key、group获取配置内容
+            // 默认会获取/dubbo/config/dubbo/dubbo.properties的节点值（等价于直接配置在resource/dubbo.properties下），可以看下dubbo-samples-configcenter-multiprotocol案例工程
+            //externalMap = {HashMap@4819}  size = 5
+            // "dubbo.registry.address" -> "zookeeper://127.0.0.1:2181"
+            // "dubbo.protocols.dubbo1.port" -> "20991"
+            // "dubbo.protocols.dubbo2.port" -> "20992"
+            // "dubbo.protocols.dubbo1.name" -> "dubbo"
+            // "dubbo.protocols.dubbo2.name" -> "dubbo"
             String configContent = dynamicConfiguration.getProperties(configCenter.getConfigFile(), configCenter.getGroup());
 
             // 下面类似前面一行代码作用，获取appXX的配置内容

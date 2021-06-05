@@ -7,6 +7,7 @@ todo admin 覆盖provider的逻辑
 todo RegistryProtocol # export的覆盖逻辑
 todo spi getActivateExtension
 todo spi threadPool
+todo 心跳
 // ====================================================================
 sd-transfer - provider 测试程序
 
@@ -17,4 +18,12 @@ todo 多注册中心 -MultiRegistry -- done
 // ====================================================================
 
 // ====================================================================
+
+// ====================================================================
+
+pr - todo 
+
+todo 修复ReadyTest、InternalThreadLocalMap
+todo 修复setRegistry method
+todo CacheListenerTest 继续添加
 

@@ -529,12 +529,324 @@ ServiceDiscoveryRegistry(URL registryURL) {
     this.writableMetadataService = WritableMetadataService.getDefaultExtension();
 
 // ====================================================================
-	todo refer registry://
+	refer registry://
 // ==================================================================== 
+ReferenceConfig
+	createProxy(map);
+		// ...
+		if (urls.size() == 1) {
+            invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
+
+            	QosProtocolWrapper refer
+	            	Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+				        if (UrlUtils.isRegistry(url)) {
+				            startQosServer(url);
+				            return protocol.refer(type, url);
+				            	ProtocolFilterWrapper refer
+				            		if (UrlUtils.isRegistry(url)) {
+							            return protocol.refer(type, url);
+							            	ProtocolListenerWrapper refer
+							            		if (UrlUtils.isRegistry(url)) {
+										            return protocol.refer(type, url);
+										            	// 另换行
+										        }
+										        // ...
+							        }
+							        // ...
+				        }
+				        return protocol.refer(type, url);
+				    }
+		// ...		    
+
+RegistryProtocol refer	
+	url = getRegistryUrl(url);
+			
+		RegistryProtocol getRegistryUrl // sd这个方法，registry://是子类的方法
+    
+    Registry registry = getRegistry(url);
+    	return registryFactory.getRegistry(url);
+    		RegistryFactoryWrapper getRegistry
+    			return new ListenerRegistryWrapper(registryFactory.getRegistry(url),. ....
+    				AbstractRegistryFactory getRegistry
+    					// ...
+    					registry = createRegistry(url);
+    						ZookeeperRegistryFactory createRegistry(URL url)// 和sd差距为，sd使用的是SDRegistryFactory
+    							return new ZookeeperRegistry(url, zookeeperTransporter);
+    								// ...
+    					// ...
+
+    if (RegistryService.class.equals(type)) {
+        return proxyFactory.getInvoker((T) registry, type, url);
+    }
+
+    Map<String, String> qs = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
+    String group = qs.get(GROUP_KEY);
+    if (group != null && group.length() > 0) {
+        if ((COMMA_SPLIT_PATTERN.split(group)).length > 1 || "*".equals(group)) {
+            return doRefer(Cluster.getCluster(MergeableCluster.NAME), registry, type, url, qs);
+        }
+    }
+
+    
+    Cluster cluster = Cluster.getCluster(qs.get(CLUSTER_KEY));
+    	getCluster(name, true);
+    		if (StringUtils.isEmpty(name)) {
+	            name = Cluster.DEFAULT;
+	        }
+	        return ExtensionLoader.getExtensionLoader(Cluster.class).getExtension(name, wrap);
+    
+    return doRefer(cluster, registry, type, url, qs);		
+    	
+    	URL consumerUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
+        
+        ClusterInvoker<T> migrationInvoker = getMigrationInvoker(this, cluster, registry, type, url, consumerUrl);
+        	
+        	InterfaceCompatibleRegistryProtocol getMigrationInvoker // 和sd差距为，sd使用的是父类RegistryProtocol的方法
+        		
+        		return new MigrationInvoker<T>(registryProtocol, cluster, registry, type, url, consumerUrl);
+        			// ...
+        
+        return interceptInvoker(migrationInvoker, url, consumerUrl);	
+        	
+        	List<RegistryProtocolListener> listeners = findRegistryProtocolListeners(url);
+	        if (CollectionUtils.isEmpty(listeners)) {
+	            return invoker;
+	        }
+
+	        for (RegistryProtocolListener listener : listeners) {
+	            listener.onRefer(this, invoker, consumerUrl);
+	            	MigrationRuleListener onRefer
+		            	MigrationInvoker<?> migrationInvoker = (MigrationInvoker<?>) invoker;
+
+				        MigrationRuleHandler<?> migrationListener = new MigrationRuleHandler<>(migrationInvoker);
+				        listeners.add(migrationListener);
+
+				        migrationListener.doMigrate(rawRule);
+				        	// .... 
+				        		MigrationInvoker migrateToServiceDiscoveryInvoker // 和sd差距为，sd使用的是子类的方法
+					        		if (!forceMigrate) { // 走这里
+							           
+							            refreshServiceDiscoveryInvoker();
+							            	
+							            	clearListener(serviceDiscoveryInvoker);
+									        
+									        if (needRefresh(serviceDiscoveryInvoker)) {
+									            
+									            serviceDiscoveryInvoker = registryProtocol.getServiceDiscoveryInvoker(cluster, registry, type, url);
+									             	
+									             	// sd用的父类RegistryProtocol
+									            	InterfaceCompatibleRegistryProtocol getServiceDiscoveryInvoker
+									            		// sd相关逻辑，在后面介绍sd模式的时候详细说明了
+									            // ...
+									        }
+							            
+							            refreshInterfaceInvoker();
+							            	
+							            	// 关键是这个逻辑（其实registry://模式除了通过这种查找invoker，还通过前面sd查找了相关invoker）
+							            	clearListener(invoker);
+									        
+									        if (needRefresh(invoker)) { // registryProtocol 为 InterfaceCom...Protocol
+									            invoker = registryProtocol.getInvoker(cluster, registry, type, url);
+									            	InterfaceCompatibleRegistryProtocol getInvoker
+									            		DynamicDirectory<T> directory = new RegistryDirectory<>(type, url);
+									            			// ...
+        												return doCreateInvoker(directory, cluster, registry, type);
+        													// 另换行
+	
+							            
+							            setListener(invoker, () -> {
+							                this.compareAddresses(serviceDiscoveryInvoker, invoker);
+							            });
+							            
+							            setListener(serviceDiscoveryInvoker, () -> {
+							                this.compareAddresses(serviceDiscoveryInvoker, invoker);
+							            });
+							        } else {
+							            refreshServiceDiscoveryInvoker();
+							            setListener(serviceDiscoveryInvoker, () -> {
+							                this.destroyInterfaceInvoker(this.invoker);
+							            });
+							        }
+	        }
+	        return invoker;		
+
+// ====================================================================
+return doCreateInvoker(directory, cluster, registry, type);
+	
+	directory.setRegistry(registry);
+    
+    directory.setProtocol(protocol);
+    
+    Map<String, String> parameters = new HashMap<String, String>(directory.getConsumerUrl().getParameters());
+    
+    URL urlToRegistry = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
+    
+    if (directory.isShouldRegister()) {
+        directory.setRegisteredConsumerUrl(urlToRegistry);
+        registry.register(directory.getRegisteredConsumerUrl());
+        	ListenerRegistryWrapper register
+        		registry.register(url);
+        			FailbackRegistry register
+        				if (!acceptable(url)) {
+				            return;
+				        }
+				        super.register(url);
+				        removeFailedRegistered(url);
+				        removeFailedUnregistered(url);
+				        try {
+				            doRegister(url);
+				            	ZookeeperRegistry doRegister
+				            		zkClient.create(toUrlPath(url), url.getParameter(DYNAMIC_KEY, true));
+    }
+    
+    directory.buildRouterChain(urlToRegistry);
+    	// ....
+    
+    directory.subscribe(toSubscribeUrl(urlToRegistry));
+    	
+    	toSubscribeUrl
+    		url.addParameter(CATEGORY_KEY, PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY);
+    	
+    	subscribe
+    		
+    		RegistryDirectory subscribe
+    			
+    			setConsumerUrl(url);
+    				AbstractDirectory setConsumerUrl
+    					this.consumerUrl = consumerUrl;
+		        
+		        CONSUMER_CONFIGURATION_LISTENER.addNotifyListener(this);
+		        	this.initWith(ApplicationModel.getApplication() + CONFIGURATORS_SUFFIX);
+		        
+		        referenceConfigurationListener = new ReferenceConfigurationListener(this, url);
+		        	this.initWith(DynamicConfiguration.getRuleKey(url) + CONFIGURATORS_SUFFIX);
+		        
+		        registry.subscribe(url, this);
+		        	ListenerRegistryWrapper 、FailbackRegistry、AbstractRegistry
+		        		ZookeeperRegistry doSubscribe
+		        			// ...
+		        			CountDownLatch latch = new CountDownLatch(1);
+			                List<URL> urls = new ArrayList<>();
+			                for (String path : toCategoriesPath(url)) {
+			                    ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
+			                    ChildListener zkListener = listeners.computeIfAbsent(listener, k -> new RegistryChildListenerImpl(url, k, latch));
+			                    if (zkListener instanceof RegistryChildListenerImpl) {
+			                        ((RegistryChildListenerImpl) zkListener).setLatch(latch);
+			                    }
+			                    zkClient.create(path, false);
+			                    List<String> children = zkClient.addChildListener(path, zkListener);
+			                    if (children != null) {
+			                        urls.addAll(toUrlsWithEmpty(url, path, children));
+			                    }
+			                }
+			                notify(url, listener, urls);
+			                	FailbackRegistry notify 
+			                		doNotify(url, listener, urls);
+			                			super.notify(url, listener, urls);
+			                				AbstractRegistry notify
+			                					Map<String, List<URL>> result = new HashMap<>();
+										        for (URL u : urls) {
+										            if (UrlUtils.isMatch(url, u)) {
+										                String category = u.getParameter(CATEGORY_KEY, DEFAULT_CATEGORY);
+										                List<URL> categoryList = result.computeIfAbsent(category, k -> new ArrayList<>());
+										                categoryList.add(u);
+										            }
+										        }
+										        if (result.size() == 0) {
+										            return;
+										        }
+										        Map<String, List<URL>> categoryNotified = notified.computeIfAbsent(url, u -> new ConcurrentHashMap<>());
+										        for (Map.Entry<String, List<URL>> entry : result.entrySet()) {
+										            String category = entry.getKey();
+										            List<URL> categoryList = entry.getValue();
+										            categoryNotified.put(category, categoryList);
+										            listener.notify(categoryList);
+										            	// 另换行
+										            saveProperties(url);
+										        }
+			                latch.countDown();
+
+    
+    return (ClusterInvoker<T>) cluster.join(directory);
+    	MockClusterWrapper join
+    		return new MockClusterInvoker<T>(directory,this.cluster.join(directory));
+    			AbstractCluster join // failoverCluster
+    				return buildClusterInterceptors(doJoin(directory), directory.getUrl().getParameter(REFERENCE_INTERCEPTOR_KEY));
+
+    					doJoin
+    						return new FailoverClusterInvoker<>(directory);
+    							super(directory);
+    								AbstractClusterInvoker
+    									this(directory, directory.getUrl());
+    										this.directory = directory;
+									        this.availablecheck = url.getParameter(CLUSTER_AVAILABLE_CHECK_KEY,);
+						buildClusterInterceptors
+							AbstractClusterInvoker<T> last = clusterInvoker;
+						        List<ClusterInterceptor> interceptors = ExtensionLoader.getExtensionLoader(ClusterInterceptor.class).getActivateExtension(clusterInvoker.getUrl(), key);
+
+						        if (!interceptors.isEmpty()) {
+						            for (int i = interceptors.size() - 1; i >= 0; i--) {
+						                final ClusterInterceptor interceptor = interceptors.get(i);
+						                final AbstractClusterInvoker<T> next = last;
+						                last = new InterceptorInvokerNode<>(clusterInvoker, interceptor, next);
+						            }
+						        }
+						        return last;
+
+				MockClusterInvoker(Directory<T> directory, Invoker<T> invoker) {
+			        this.directory = directory;
+			        this.invoker = invoker;
+// ====================================================================
+listener.notify(categoryList);
+
+	RegistryDirectory notify
+		Map<String, List<URL>> categoryUrls = urls.stream()
+                .filter(Objects::nonNull)
+                .filter(this::isValidCategory)
+                .filter(this::isNotCompatibleFor26x)
+                .collect(Collectors.groupingBy(this::judgeCategory));
+
+        List<URL> configuratorURLs = categoryUrls.getOrDefault(CONFIGURATORS_CATEGORY, Collections.emptyList());
+        this.configurators = Configurator.toConfigurators(configuratorURLs).orElse(this.configurators);
+
+        List<URL> routerURLs = categoryUrls.getOrDefault(ROUTERS_CATEGORY, Collections.emptyList());
+        toRouters(routerURLs).ifPresent(this::addRouters);
+
+        // providers
+        List<URL> providerURLs = categoryUrls.getOrDefault(PROVIDERS_CATEGORY, Collections.emptyList());
+        /**
+         * 3.x added for extend URL address
+         */
+        ExtensionLoader<AddressListener> addressListenerExtensionLoader = ExtensionLoader.getExtensionLoader(AddressListener.class);
+        List<AddressListener> supportedListeners = addressListenerExtensionLoader.getActivateExtension(getUrl(), (String[]) null);
+        if (supportedListeners != null && !supportedListeners.isEmpty()) {
+            for (AddressListener addressListener : supportedListeners) {
+                providerURLs = addressListener.notify(providerURLs, getConsumerUrl(),this);
+            }
+        }
+        refreshOverrideAndInvoker(providerURLs);
+
+        	overrideDirectoryUrl();
+        		this.overrideDirectoryUrl = directoryUrl;
+		        List<Configurator> localConfigurators = this.configurators; // local reference
+		        doOverrideUrl(localConfigurators);
+		        List<Configurator> localAppDynamicConfigurators = CONSUMER_CONFIGURATION_LISTENER.getConfigurators(); // local reference
+		        doOverrideUrl(localAppDynamicConfigurators);
+		        if (referenceConfigurationListener != null) {
+		            List<Configurator> localDynamicConfigurators = referenceConfigurationListener.getConfigurators(); // local reference
+		            doOverrideUrl(localDynamicConfigurators);
+		        }
+       		refreshInvoker(urls);
+       			// ....
+
+
+
+
 
 
 // ====================================================================
 	refer sd://
+	<dubbo:registry address="zookeeper://127.0.0.1:2181?registry-type=service"/>
 // ====================================================================
 
 ReferenceConfig
@@ -664,9 +976,10 @@ RegistryProtocol refer
         												return doCreateInvoker(directory, cluster, registry, type);
         													// 另换行
 		        }
+		        // 这里返回的是ServiceDiscoveryMigrationInvoker
 		        return invoker;
 
-
+// ====================================================================
 ClusterInvoker<T> doCreateInvoker(DynamicDirectory<T> directory, Cluster cluster, Registry registry, Class<T> type)
 
 	
@@ -736,8 +1049,35 @@ ClusterInvoker<T> doCreateInvoker(DynamicDirectory<T> directory, Cluster cluster
 							        	// 另换行
 
     return (ClusterInvoker<T>) cluster.join(directory);
+    	MockClusterWrapper join
+    		return new MockClusterInvoker<T>(directory,this.cluster.join(directory));
+    			AbstractCluster join // failoverCluster
+    				return buildClusterInterceptors(doJoin(directory), directory.getUrl().getParameter(REFERENCE_INTERCEPTOR_KEY));
 
+    					doJoin
+    						return new FailoverClusterInvoker<>(directory);
+    							super(directory);
+    								AbstractClusterInvoker
+    									this(directory, directory.getUrl());
+    										this.directory = directory;
+									        this.availablecheck = url.getParameter(CLUSTER_AVAILABLE_CHECK_KEY,);
+						buildClusterInterceptors
+							AbstractClusterInvoker<T> last = clusterInvoker;
+						        List<ClusterInterceptor> interceptors = ExtensionLoader.getExtensionLoader(ClusterInterceptor.class).getActivateExtension(clusterInvoker.getUrl(), key);
 
+						        if (!interceptors.isEmpty()) {
+						            for (int i = interceptors.size() - 1; i >= 0; i--) {
+						                final ClusterInterceptor interceptor = interceptors.get(i);
+						                final AbstractClusterInvoker<T> next = last;
+						                last = new InterceptorInvokerNode<>(clusterInvoker, interceptor, next);
+						            }
+						        }
+						        return last;
+
+				MockClusterInvoker(Directory<T> directory, Invoker<T> invoker) {
+			        this.directory = directory;
+			        this.invoker = invoker;
+// ====================================================================
 ServiceDiscoveryRegistry
 	subscribeURLs(URL url, NotifyListener listener, Set<String> serviceNames) 
 		String serviceNamesKey = serviceNames.toString();
@@ -776,10 +1116,542 @@ ServiceDiscoveryRegistry
             
             if (CollectionUtils.isNotEmpty(serviceInstances)) {
                 serviceListener.onEvent(new ServiceInstancesChangedEvent(serviceName, serviceInstances));
-                // todo
+                // 另换行
             } else {
                 logger.info("getInstances by serviceName=" + serviceName + " is empty, waiting for serviceListener callback. url=" + url);
             }
         });
 
         listener.notify(serviceListener.getUrls(protocolServiceKey));
+        	// 不赘述 和前面逻辑重复
+
+// ====================================================================
+serviceListener.onEvent(new ServiceInstancesChangedEvent(serviceName, serviceInstances));
+		logger.info("Received instance notification, serviceName: " + event.getServiceName() + ", instances: " + event.getServiceInstances().size());
+        String appName = event.getServiceName();
+        allInstances.put(appName, event.getServiceInstances());
+        if (logger.isDebugEnabled()) {
+            logger.debug(event.getServiceInstances().toString());
+        }
+
+        Map<String, List<ServiceInstance>> revisionToInstances = new HashMap<>();
+        Map<String, Set<String>> localServiceToRevisions = new HashMap<>();
+        Map<Set<String>, List<URL>> revisionsToUrls = new HashMap();
+        Map<String, List<URL>> tmpServiceUrls = new HashMap<>();
+
+        for (Map.Entry<String, List<ServiceInstance>> entry : allInstances.entrySet()) {
+            List<ServiceInstance> instances = entry.getValue();
+            for (ServiceInstance instance : instances) {
+                String revision = getExportedServicesRevision(instance);
+                if (DEFAULT_REVISION.equals(revision)) {
+                    logger.info("Find instance without valid service metadata: " + instance.getAddress());
+                    continue;
+                }
+                List<ServiceInstance> subInstances = revisionToInstances.computeIfAbsent(revision, r -> new LinkedList<>());
+                subInstances.add(instance);
+
+                MetadataInfo metadata = revisionToMetadata.get(revision);
+                if (metadata == null) {
+                    metadata = getMetadataInfo(instance);
+                    	// ... 
+                    	MetadataService metadataServiceProxy = MetadataUtils.getMetadataServiceProxy(instance);
+                    		
+                    		// ...
+                    		Invoker<MetadataService> invoker = protocol.refer(MetadataService.class, urls.get(0));
+                    			
+                    			// refer流程这里简单讲述，后面会详细描述
+                    			Protocol$Adaptive->QosProtocolWrapper->ProtocolFilterWrapper->ProtocolListenerWrapper->
+                    				AbstractProtocol
+                    					return new AsyncToSyncInvoker<>(protocolBindingRefer(type, url));
+                    						DubboProtocol protocolBindingRefer
+                    							connect
+            				
+            				return proxyFactory.getProxy(invoker);
+            					StubProxyFactoryWrapper getProxy(Invoker<T> invoker)
+            						return getProxy(invoker, false);
+            							StubProxyFactoryWrapper getProxy
+            								T proxy = proxyFactory.getProxy(invoker, generic);
+            									AbstractProxyFactory getProxy
+            										// ...
+            										return getProxy(invoker, interfaces.toArray(new Class<?>[0]));
+            											JavassistProxyFactory
+            												return (T) Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));
+            								// ...
+
+                		metadataInfo = metadataServiceProxy.getMetadataInfo(ServiceInstanceMetadataUtils.getExportedServicesRevision(instance));	
+                			
+                			InvokerInvocationHandler invoke
+                				
+                				rpc流程不赘述 这里描述server的requestHandler处理过程，拿到invoker后，经过各种filter
+                				最终来到AbstractProxyInvoker invoke
+                				
+                				InMemoryWritableMetadataService getMetadataInfo
+                					MetadataInfo getMetadataInfo(String revision) 
+								        if (StringUtils.isEmpty(revision)) {
+								            return null;
+								        }
+								        for (Map.Entry<String, MetadataInfo> entry : metadataInfos.entrySet()) {
+								            MetadataInfo metadataInfo = entry.getValue();
+								            if (revision.equals(metadataInfo.calAndGetRevision())) {
+								                return metadataInfo;
+								            }
+								        }
+								        return null;
+
+
+                    if (metadata != null) {
+                        revisionToMetadata.put(revision, metadata);
+                    }
+                }
+
+                if (metadata != null) {
+                    parseMetadata(revision, metadata, localServiceToRevisions);
+                    ((DefaultServiceInstance) instance).setServiceMetadata(metadata);
+                }
+            }
+
+            localServiceToRevisions.forEach((serviceKey, revisions) -> {
+                List<URL> urls = revisionsToUrls.get(revisions);
+                if (urls != null) {
+                    tmpServiceUrls.put(serviceKey, urls);
+                } else {
+                    urls = new ArrayList<>();
+                    for (String r : revisions) {
+                        for (ServiceInstance i : revisionToInstances.get(r)) {
+                            urls.add(i.toURL());
+                        }
+                    }
+                    revisionsToUrls.put(revisions, urls);
+                    tmpServiceUrls.put(serviceKey, urls);
+                }
+            });
+        }
+
+        this.serviceUrls = tmpServiceUrls;
+        this.notifyAddressChanged();
+        	listeners.forEach((protocolServiceKey, notifyListeners) -> {
+	            notifyListeners.forEach(notifyListener -> {
+	                notifyListener.notify(toUrlsWithEmpty(serviceUrls.get(protocolServiceKey)));
+	                	// 另换行
+	            });
+	        });
+// ====================================================================
+ServiceDiscoveryRegistryDirectory notify
+	RpcContext.setRpcContext(getConsumerUrl());
+		DynamicDirectory getConsumerUrl
+			return this.overrideDirectoryUrl;
+
+    ExtensionLoader<AddressListener> addressListenerExtensionLoader = ExtensionLoader.getExtensionLoader(AddressListener.class);
+    List<AddressListener> supportedListeners = addressListenerExtensionLoader.getActivateExtension(getUrl(), (String[]) null);
+    if (supportedListeners != null && !supportedListeners.isEmpty()) {
+        for (AddressListener addressListener : supportedListeners) {
+            instanceUrls = addressListener.notify(instanceUrls, getConsumerUrl(), this);
+        }
+    }
+
+    refreshInvoker(instanceUrls);
+    	Assert.notNull(invokerUrls, "invokerUrls should not be null, use empty url list to clear address.");
+
+        if (invokerUrls.size() == 0) {
+            this.forbidden = true; // Forbid to access
+            this.invokers = Collections.emptyList();
+            routerChain.setInvokers(this.invokers);
+            destroyAllInvokers(); // Close all invokers
+            return;
+        }
+
+        
+        this.forbidden = false; // Allow to access
+        
+        Map<String, Invoker<T>> oldUrlInvokerMap = this.urlInvokerMap; // local reference
+        
+        if (CollectionUtils.isEmpty(invokerUrls)) {
+            return;
+        }
+
+        Map<String, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map
+        	Map<String, Invoker<T>> newUrlInvokerMap = new HashMap<>();
+	        if (CollectionUtils.isEmpty(urls)) {
+	            return newUrlInvokerMap;
+	        }
+	        for (URL url : urls) {
+	            InstanceAddressURL instanceAddressURL = (InstanceAddressURL) url;
+	            if (EMPTY_PROTOCOL.equals(instanceAddressURL.getProtocol())) {
+	                continue;
+	            }
+	            if (!ExtensionLoader.getExtensionLoader(Protocol.class).hasExtension(instanceAddressURL.getProtocol())) {
+	                logger.error(new IllegalStateException("Unsupported protocol " + instanceAddressURL.getProtocol() +
+	                        " in notified url: " + instanceAddressURL + " from registry " + getUrl().getAddress() +
+	                        " to consumer " + NetUtils.getLocalHost() + ", supported protocol: " +
+	                        ExtensionLoader.getExtensionLoader(Protocol.class).getSupportedExtensions()));
+	                continue;
+	            }
+
+	            // FIXME, some keys may need to be removed.
+	            instanceAddressURL.addConsumerParams(getConsumerUrl().getProtocolServiceKey(), queryMap);
+
+	            Invoker<T> invoker = urlInvokerMap == null ? null : urlInvokerMap.get(instanceAddressURL.getAddress());
+	            if (invoker == null || urlChanged(invoker, instanceAddressURL)) { // Not in the cache, refer again
+	                try {
+	                    boolean enabled;
+	                    if (instanceAddressURL.hasParameter(DISABLED_KEY)) {
+	                        enabled = !instanceAddressURL.getParameter(DISABLED_KEY, false);
+	                    } else {
+	                        enabled = instanceAddressURL.getParameter(ENABLED_KEY, true);
+	                    }
+	                    if (enabled) {
+	                        invoker = protocol.refer(serviceType, instanceAddressURL);
+	                        	// 核心 另换行
+	                    }
+	                } catch (Throwable t) {
+	                    logger.error("Failed to refer );
+	                }
+	                if (invoker != null) { // Put new invoker in cache
+	                    newUrlInvokerMap.put(instanceAddressURL.getAddress(), invoker);
+	                }
+	            } else {
+	                newUrlInvokerMap.put(instanceAddressURL.getAddress(), invoker);
+	            }
+	        }
+	        return newUrlInvokerMap;
+
+        if (CollectionUtils.isEmptyMap(newUrlInvokerMap)) {
+            return;
+        }
+
+        
+        List<Invoker<T>> newInvokers = Collections.unmodifiableList(new ArrayList<>(newUrlInvokerMap.values()));
+        
+
+        routerChain.setInvokers(newInvokers);
+        	this.invokers = (invokers == null ? Collections.emptyList() : invokers);
+        	routers.forEach(router -> router.notify(this.invokers));
+        		TagRouter notify
+        			// ..
+        
+        this.invokers = multiGroup ? toMergeInvokerList(newInvokers) : newInvokers;
+        
+        this.urlInvokerMap = newUrlInvokerMap;
+
+        if (oldUrlInvokerMap != null) {
+            try {
+                destroyUnusedInvokers(oldUrlInvokerMap, newUrlInvokerMap); // Close the unused Invoker
+            } catch (Exception e) {
+                logger.warn("destroyUnusedInvokers error. ", e);
+            }
+        }
+
+        // notify invokers refreshed
+        this.invokersChanged();
+        	if (invokersChangedListener != null) {
+	            invokersChangedListener.onChange();
+	            this.addressChanged = false;
+	        } else {
+	        	// 走这个
+	            this.addressChanged = true;
+	        }
+// ====================================================================
+
+invoker = protocol.refer(serviceType, instanceAddressURL);
+
+Protocol$Adaptive->QosProtocolWrapper->ProtocolFilterWrapper->ProtocolListenerWrapper->AbstractProtocol
+	return new AsyncToSyncInvoker<>(protocolBindingRefer(type, url));
+		DubboProtocol protocolBindingRefer
+			optimizeSerialization(url);
+
+	        // create rpc invoker.
+	        DubboInvoker<T> invoker = new DubboInvoker<T>(serviceType, url, getClients(url), invokers);
+	        	boolean useShareConnect = false;
+		        int connections = url.getParameter(CONNECTIONS_KEY, 0);
+		        List<ReferenceCountExchangeClient> shareClients = null;
+		        if (connections == 0) {
+		            useShareConnect = true;
+		            String shareConnectionsStr = url.getParameter(SHARE_CONNECTIONS_KEY, (String) null);
+		            connections = Integer.parseInt(StringUtils.isBlank(shareConnectionsStr) ? ConfigUtils.getProperty(SHARE_CONNECTIONS_KEY,
+		                    DEFAULT_SHARE_CONNECTIONS) : shareConnectionsStr);
+		            shareClients = getSharedClient(url, connections);
+		            	// 另换行
+		        }
+
+		        ExchangeClient[] clients = new ExchangeClient[connections];
+		        for (int i = 0; i < clients.length; i++) {
+		            if (useShareConnect) {
+		                clients[i] = shareClients.get(i);
+
+		            } else {
+		                clients[i] = initClient(url);
+		            }
+		        }
+
+		        return clients;
+	        invokers.add(invoker);
+
+	        return invoker;
+// ====================================================================
+shareClients = getSharedClient(url, connections);
+	String key = url.getAddress();
+
+    Object clients = referenceClientMap.get(key);
+    if (clients instanceof List) {
+        List<ReferenceCountExchangeClient> typedClients = (List<ReferenceCountExchangeClient>) clients;
+        if (checkClientCanUse(typedClients)) {
+            batchClientRefIncr(typedClients);
+            return typedClients;
+        }
+    }
+
+    List<ReferenceCountExchangeClient> typedClients = null;
+
+    synchronized (referenceClientMap) {
+        for (; ; ) {
+            clients = referenceClientMap.get(key);
+
+            if (clients instanceof List) {
+                typedClients = (List<ReferenceCountExchangeClient>) clients;
+                if (checkClientCanUse(typedClients)) {
+                    batchClientRefIncr(typedClients);
+                    return typedClients;
+                } else {
+                    referenceClientMap.put(key, PENDING_OBJECT);
+                    break;
+                }
+            } else if (clients == PENDING_OBJECT) {
+                try {
+                    referenceClientMap.wait();
+                } catch (InterruptedException ignored) {
+                }
+            } else {
+                referenceClientMap.put(key, PENDING_OBJECT);
+                break;
+            }
+        }
+    }
+
+    try {
+        // connectNum must be greater than or equal to 1
+        connectNum = Math.max(connectNum, 1);
+
+        if (CollectionUtils.isEmpty(typedClients)) {
+            typedClients = buildReferenceCountExchangeClientList(url, connectNum);
+            	List<ReferenceCountExchangeClient> clients = new ArrayList<>();
+
+		        for (int i = 0; i < connectNum; i++) {
+		            clients.add(buildReferenceCountExchangeClient(url));
+		        		ExchangeClient exchangeClient = initClient(url);
+		        			String str = url.getParameter(CLIENT_KEY, url.getParameter(SERVER_KEY, DEFAULT_REMOTING_CLIENT));
+
+					        url = url.addParameter(CODEC_KEY, DubboCodec.NAME);
+					        url = url.addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT));
+
+					        if (str != null && str.length() > 0 && !ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str)) {
+					            throw new RpcException("Unsu));
+					        }
+
+					        ExchangeClient client;
+					        try {
+					            if (url.getParameter(LAZY_CONNECT_KEY, false)) {
+					                client = new LazyConnectExchangeClient(url, requestHandler);
+
+					            } else {
+					                client = Exchangers.connect(url, requestHandler);
+					                	// 另换行
+
+					            }
+
+					        } catch (RemotingException e) {
+					            throw new RpcException("Fail to create remoting client for service(" + url + "): " + e.getMessage(), e);
+					        }
+
+					        return client;
+
+        				return new ReferenceCountExchangeClient(exchangeClient);
+        					this.client = client;
+					        referenceCount.incrementAndGet();
+					        this.url = client.getUrl();
+		        }
+
+		        return clients;
+        } else {
+            for (int i = 0; i < typedClients.size(); i++) {
+                ReferenceCountExchangeClient referenceCountExchangeClient = typedClients.get(i);
+                if (referenceCountExchangeClient == null || referenceCountExchangeClient.isClosed()) {
+                    typedClients.set(i, buildReferenceCountExchangeClient(url));
+                    continue;
+                }
+                referenceCountExchangeClient.incrementAndGetCount();
+            }
+        }
+    } finally {
+        synchronized (referenceClientMap) {
+            if (typedClients == null) {
+                referenceClientMap.remove(key);
+            } else {
+                referenceClientMap.put(key, typedClients);
+            }
+            referenceClientMap.notifyAll();
+        }
+    }
+    return typedClients;
+
+
+// ====================================================================
+client = Exchangers.connect(url, requestHandler);
+	return getExchanger(url).connect(url, handler);
+		HeaderExchanger connect
+			return new HeaderExchangeClient(Transporters.connect(url, new DecodeHandler(new HeaderExchangeHandler(handler))), true);
+
+				Transporters.connect
+					ChannelHandler handler;
+			        if (handlers == null || handlers.length == 0) {
+			            handler = new ChannelHandlerAdapter();
+			        } else if (handlers.length == 1) {
+			            handler = handlers[0];
+			        } else {
+			            handler = new ChannelHandlerDispatcher(handlers);
+			        }
+			        return getTransporter().connect(url, handler);	
+			        	NettyTransporter connect
+			        		return new NettyClient(url, handler);
+			        			super(url, wrapChannelHandler(url, handler));
+			        				AbstractClient(URL url, ChannelHandler handler)
+			        					super(url, handler);
+			        						// AbstractEndpoint 、 AbstractPeer不追溯，和export一致
+								        needReconnect = url.getParameter(Constants.SEND_RECONNECT_KEY, true);
+
+								        initExecutor(url);
+								        	url = url.addParameter(THREAD_NAME_KEY, CLIENT_THREAD_POOL_NAME);
+									        url = url.addParameterIfAbsent(THREADPOOL_KEY, DEFAULT_CLIENT_THREADPOOL);
+									        executor = executorRepository.createExecutorIfAbsent(url);
+									        	//... 
+									        	用的是CachedThreadPool
+
+								        doOpen();
+								          // 另换行
+
+								        connect();
+								        	connectLock.lock();
+								            if (isConnected()) {
+								                return;
+								            }
+
+								            if (isClosed() || isClosing()) {
+								                return;
+								            }
+
+								            doConnect();
+								             // 另换行
+
+				HeaderExchangeClient
+					this.client = client;
+			        this.channel = new HeaderExchangeChannel(client);
+
+			        if (startTimer) {
+			            URL url = client.getUrl();
+			            startReconnectTask(url);
+			            	if (shouldReconnect(url)) {
+					            AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
+					            int idleTimeout = getIdleTimeout(url);
+					            long heartbeatTimeoutTick = calculateLeastDuration(idleTimeout);
+					            this.reconnectTimerTask = new ReconnectTimerTask(cp, heartbeatTimeoutTick, idleTimeout);
+					            IDLE_CHECK_TIMER.newTimeout(reconnectTimerTask, heartbeatTimeoutTick, TimeUnit.MILLISECONDS);
+					        }
+			            startHeartBeatTask(url);
+			            	if (!client.canHandleIdle()) {
+					            AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
+					            int heartbeat = getHeartbeat(url);
+					            long heartbeatTick = calculateLeastDuration(heartbeat);
+					            this.heartBeatTimerTask = new HeartbeatTimerTask(cp, heartbeatTick, heartbeat);
+					            IDLE_CHECK_TIMER.newTimeout(heartBeatTimerTask, heartbeatTick, TimeUnit.MILLISECONDS);
+					        }
+			        }
+
+
+doOpen();
+	final NettyClientHandler nettyClientHandler = new NettyClientHandler(getUrl(), this);
+    bootstrap = new Bootstrap();
+    bootstrap.group(EVENT_LOOP_GROUP)
+            .option(ChannelOption.SO_KEEPALIVE, true)
+            .option(ChannelOption.TCP_NODELAY, true)
+            .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+            //.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getTimeout())
+            .channel(socketChannelClass());
+
+    bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.max(3000, getConnectTimeout()));
+    bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+
+        @Override
+        protected void initChannel(SocketChannel ch) throws Exception {
+            int heartbeatInterval = UrlUtils.getHeartbeat(getUrl());
+
+            heartbeatInterval = heartbeatInterval * 100;
+            if (getUrl().getParameter(SSL_ENABLED_KEY, false)) {
+                ch.pipeline().addLast("negotiation", SslHandlerInitializer.sslClientHandler(getUrl(), nettyClientHandler));
+            }
+
+            NettyCodecAdapter adapter = new NettyCodecAdapter(getCodec(), getUrl(), NettyClient.this);
+            ch.pipeline()//.addLast("logging",new LoggingHandler(LogLevel.INFO))//for debug
+                    .addLast("decoder", adapter.getDecoder())
+                    .addLast("encoder", adapter.getEncoder())
+                    .addLast("client-idle-handler", new IdleStateHandler(heartbeatInterval, 0, 0, MILLISECONDS))
+                    .addLast("handler", nettyClientHandler);
+
+            String socksProxyHost = ConfigUtils.getProperty(SOCKS_PROXY_HOST);
+            if(socksProxyHost != null) {
+                int socksProxyPort = Integer.parseInt(ConfigUtils.getProperty(SOCKS_PROXY_PORT, DEFAULT_SOCKS_PROXY_PORT));
+                Socks5ProxyHandler socks5ProxyHandler = new Socks5ProxyHandler(new InetSocketAddress(socksProxyHost, socksProxyPort));
+                ch.pipeline().addFirst(socks5ProxyHandler);
+            }
+        }
+    });
+doConnect();
+	long start = System.currentTimeMillis();
+    ChannelFuture future = bootstrap.connect(getConnectAddress());
+    try {
+        boolean ret = future.awaitUninterruptibly(getConnectTimeout(), MILLISECONDS);
+
+        if (ret && future.isSuccess()) {
+            Channel newChannel = future.channel();
+            try {
+                // Close old channel
+                // copy reference
+                Channel oldChannel = NettyClient.this.channel;
+                if (oldChannel != null) {
+                    try {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Close old netty channel " + oldChannel + " on create new netty channel " + newChannel);
+                        }
+                        oldChannel.close();
+                    } finally {
+                        NettyChannel.removeChannelIfDisconnected(oldChannel);
+                    }
+                }
+            } finally {
+                if (NettyClient.this.isClosed()) {
+                    try {
+                        if (logger.isInfoEnabled()) {
+                            logger.info("Close new netty channel " + newChannel + ", because the client closed.");
+                        }
+                        newChannel.close();
+                    } finally {
+                        NettyClient.this.channel = null;
+                        NettyChannel.removeChannelIfDisconnected(newChannel);
+                    }
+                } else {
+                    NettyClient.this.channel = newChannel;
+                }
+            }
+        } else if (future.cause() != null) {
+            throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
+                    + getRemoteAddress() + ", error message is:" + future.cause().getMessage(), future.cause());
+        } else {
+            throw new RemotingException(this, "client(url: " + getUrl() + ") failed to connect to server "
+                    + getRemoteAddress() + " client-side timeout "
+                    + getConnectTimeout() + "ms (elapsed: " + (System.currentTimeMillis() - start) + "ms) from netty client "
+                    + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion());
+        }
+    } finally {
+        // just add new valid channel to NettyChannel's cache
+        if (!isConnected()) {
+            //future.cancel(true);
+        }
+    }

@@ -27,6 +27,16 @@ import java.lang.management.ThreadMXBean;
 public class JVMUtil {
     public static void jstack(OutputStream stream) throws Exception {
         ThreadMXBean threadMxBean = ManagementFactory.getThreadMXBean();
+        //threadMxBean.dumpAllThreads(true, true)的结果如下
+        //result = {ThreadInfo[8]@2116}
+        // 0 = {ThreadInfo@2118} ""pool-2-thread-1" Id=14 RUNNABLE\n\tat sun.management.ThreadImpl.dumpThreads0(Native Method)\n\tat sun.management.ThreadImpl.dumpAllThreads(ThreadImpl.java:454)\n\tat org.apache.dubbo.common.utils.JVMUtil.jstack(JVMUtil.java:29)\n\tat org.apache.dubbo.common.threadpool.support.AbortPolicyWithReport.lambda$dumpJStack$0(AbortPolicyWithReport.java:128)\n\tat org.apache.dubbo.common.threadpool.support.AbortPolicyWithReport$$Lambda$271/1740846921.run(Unknown Source)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n\n\tNumber of locked synchronizers = 1\n\t- java.util.concurrent.ThreadPoolExecutor$Worker@662b4c69\n\n"
+        // 1 = {ThreadInfo@2119} ""JDWP Command Reader" Id=7 RUNNABLE\n\n"
+        // 2 = {ThreadInfo@2120} ""JDWP Event Helper Thread" Id=6 RUNNABLE\n\n"
+        // 3 = {ThreadInfo@2121} ""JDWP Transport Listener: dt_socket" Id=5 RUNNABLE\n\n"
+        // 4 = {ThreadInfo@2122} ""Signal Dispatcher" Id=4 RUNNABLE\n\n"
+        // 5 = {ThreadInfo@2123} ""Finalizer" Id=3 WAITING on java.lang.ref.ReferenceQueue$Lock@6d2c1a80\n\tat java.lang.Object.wait(Native Method)\n\t-  waiting on java.lang.ref.ReferenceQueue$Lock@6d2c1a80\n\tat java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:143)\n\tat java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:164)\n\tat java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:209)\n\n"
+        // 6 = {ThreadInfo@2124} ""Reference Handler" Id=2 WAITING on java.lang.ref.Reference$Lock@643fc1a1\n\tat java.lang.Object.wait(Native Method)\n\t-  waiting on java.lang.ref.Reference$Lock@643fc1a1\n\tat java.lang.Object.wait(Object.java:502)\n\tat java.lang.ref.Reference.tryHandlePending(Reference.java:191)\n\tat java.lang.ref.Reference$ReferenceHandler.run(Reference.java:153)\n\n"
+        // 7 = {ThreadInfo@2125} ""main" Id=1 RUNNABLE (suspended)\n\tat org.apache.dubbo.common.threadpool.support.AbortPolicyWithReport.dumpJStack(AbortPolicyWithReport.java:137)\n\tat org.apache.dubbo.common.threadpool.support.AbortPolicyWithReport.rejectedExecution(AbortPolicyWithReport.java:84)\n\tat org.apache.dubbo.common.threadpool.support.AbortPolicyWithReportTest.jStackDumpTest_dumpDirectoryNotExists_canBeCreated(AbortPolicyWithReportTest.java:86)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:688)\n\t...\n\n"
         for (ThreadInfo threadInfo : threadMxBean.dumpAllThreads(true, true)) {
             // getThreadDumpString进去
             stream.write(getThreadDumpString(threadInfo).getBytes());

@@ -27,6 +27,135 @@ public class WrapperTest {
     @Test
     public void testMain() throws Exception {
         Wrapper w = Wrapper.getWrapper(I1.class);
+        // 反编译的w如下
+        /**
+
+         package org.apache.dubbo.common.bytecode;
+
+         import java.lang.reflect.InvocationTargetException;
+         import java.util.Map;
+         import org.apache.dubbo.common.bytecode.ClassGenerator.DC;
+         import org.apache.dubbo.common.bytecode.WrapperTest.I1;
+
+         public class Wrapper0 extends Wrapper implements DC {
+         public static String[] pns;
+         public static Map pts;
+         public static String[] mns;
+         public static String[] dmns;
+         public static Class[] mts0;
+         public static Class[] mts1;
+         public static Class[] mts2;
+         public static Class[] mts3;
+         public static Class[] mts4;
+         public static Class[] mts5;
+
+         public String[] getPropertyNames() {
+            return pns;
+         }
+
+         public boolean hasProperty(String var1) {
+            return pts.containsKey(var1);
+         }
+
+         public Class getPropertyType(String var1) {
+            return (Class)pts.get(var1);
+         }
+
+         public String[] getMethodNames() {
+            return mns;
+         }
+
+         public String[] getDeclaredMethodNames() {
+            return dmns;
+         }
+
+         public void setPropertyValue(Object var1, String var2, Object var3) {
+             I1 var4;
+             try {
+                var4 = (I1)var1;
+             } catch (Throwable var6) {
+                throw new IllegalArgumentException(var6);
+             }
+
+             if (var2.equals("name")) {
+                var4.setName((String)var3);
+             } else if (var2.equals("float")) {
+                var4.setFloat(((Number)var3).floatValue());
+             } else {
+                throw new NoSuchPropertyException("Not found property \"" + var2 + "\" field or setter method in class org.apache.dubbo.common.bytecode.WrapperTest$I1.");
+             }
+         }
+
+         public Object getPropertyValue(Object var1, String var2) {
+             I1 var3;
+             try {
+                var3 = (I1)var1;
+             } catch (Throwable var5) {
+                throw new IllegalArgumentException(var5);
+             }
+
+             if (var2.equals("float")) {
+                return new Float(var3.getFloat());
+             } else if (var2.equals("name")) {
+                return var3.getName();
+             } else {
+                throw new NoSuchPropertyException("Not found property \"" + var2 + "\" field or getter method in class org.apache.dubbo.common.bytecode.WrapperTest$I1.");
+             }
+         }
+
+         public Object invokeMethod(Object var1, String var2, Class[] var3, Object[] var4) throws InvocationTargetException {
+             I1 var5;
+             try {
+                var5 = (I1)var1;
+             } catch (Throwable var8) {
+                throw new IllegalArgumentException(var8);
+             }
+
+             try {
+                if ("hello".equals(var2) && var3.length == 1) {
+                     var5.hello((String)var4[0]);
+                     return null;
+                }
+
+                if ("showInt".equals(var2) && var3.length == 1) {
+                    return new Integer(var5.showInt(((Number)var4[0]).intValue()));
+                }
+
+                 if ("getFloat".equals(var2) && var3.length == 0) {
+                 return new Float(var5.getFloat());
+                 }
+
+                 if ("setName".equals(var2) && var3.length == 1) {
+                 var5.setName((String)var4[0]);
+                 return null;
+                 }
+
+                 if ("setFloat".equals(var2) && var3.length == 1) {
+                     var5.setFloat(((Number)var4[0]).floatValue());
+                     return null;
+                 }
+
+                 if ("getName".equals(var2) && var3.length == 0) {
+                    return var5.getName();
+                 }
+             } catch (Throwable var9) {
+                throw new InvocationTargetException(var9);
+             }
+             throw new NoSuchMethodException("Not found method \"" + var2 + "\" in class org.apache.dubbo.common.bytecode.WrapperTest$I1.");
+         }
+
+             public Wrapper0() {
+             }
+         }
+         */
+
+        /*
+          getDeclaredMethods()
+          返回 Method 对象的一个数组，这些对象反映此 Class 对象表示的类或接口声明的所有方法，包括公共、保护、默认（包）访问和私有方法，但不包括继承的方法。
+
+          getMethods()
+          返回一个包含某些 Method 对象的数组，这些对象反映此 Class 对象所表示的类或接口（包括那些由该类或接口声明的以及从超类和超接口继承的那些的类或接口）的公共 member 方法。
+        */
         String[] ns = w.getDeclaredMethodNames();
         assertEquals(ns.length, 5);
         ns = w.getMethodNames();

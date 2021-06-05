@@ -95,7 +95,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     private void initExecutor(URL url) {
         // 注意新版本消费者的线程模型变了，不是一个port一个线程池了，而是全局的，可以看master-cp
         url = ExecutorUtil.setThreadName(url, CLIENT_THREAD_POOL_NAME);
-        // threadpool控制使用什么线程池，这里使用cached
+        // threadpool控制使用什么线程池，这里使用cached。提供者用的是fixed
         url = url.addParameterIfAbsent(THREADPOOL_KEY, DEFAULT_CLIENT_THREADPOOL);
         // 进去
         executor = executorRepository.createExecutorIfAbsent(url);

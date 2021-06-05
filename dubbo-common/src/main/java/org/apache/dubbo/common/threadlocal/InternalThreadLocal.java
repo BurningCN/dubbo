@@ -18,7 +18,9 @@ package org.apache.dubbo.common.threadlocal;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * InternalThreadLocal

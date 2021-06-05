@@ -36,6 +36,7 @@ public class PropertiesConfiguration implements Configuration {
                 ExtensionLoader.getExtensionLoader(OrderedPropertiesProvider.class);
         // 获取所有的扩展名
         Set<String> propertiesProviderNames = propertiesProviderExtensionLoader.getSupportedExtensions();
+        // 其实目前没有实现类，会直接进入下面分支并return
         if (propertiesProviderNames == null || propertiesProviderNames.isEmpty()) {
             return;
         }
@@ -69,8 +70,10 @@ public class PropertiesConfiguration implements Configuration {
         ConfigUtils.setProperties(properties);
     }
 
+    // 虽然上面方法会直接在较早前面return，但是下面的方法还是会调用的
     @Override
     public Object getInternalProperty(String key) {
+        // 进去 ，内部会涉及到dubbo.properties的初始化
         return ConfigUtils.getProperty(key);
     }
 }

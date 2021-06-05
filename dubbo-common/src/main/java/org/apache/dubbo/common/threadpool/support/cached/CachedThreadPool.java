@@ -48,6 +48,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
 // 少部分注释，更多解释看LimitedThreadPool（页推荐优先看Limited再回来）
 public class CachedThreadPool implements ThreadPool {
 
+    // 这个和limited差不多。只是limited的最大值和这个不一样，并且limited是不会死亡的，不会缩容
+
     @Override
     public Executor getExecutor(URL url) {
         String name = url.getParameter(THREAD_NAME_KEY, DEFAULT_THREAD_NAME);

@@ -146,12 +146,13 @@ public abstract class Wrapper {
 
         /*
         public void setPropertyValue(Object o, String n, Object v) {
-        samples.sd.transfer.demo.DemoService w;
-        try {
-            w = ((samples.sd.transfer.demo.DemoService) $1);
-        } catch (Throwable e) {
-            throw new IllegalArgumentException(e);
-        }
+            samples.sd.transfer.demo.DemoService w;
+            try {
+                w = ((samples.sd.transfer.demo.DemoService) $1);
+            } catch (Throwable e) {
+                throw new IllegalArgumentException(e);
+            }
+
         public Object getPropertyValue (Object o, String n){
             samples.sd.transfer.demo.DemoService w;
             try {
@@ -190,17 +191,34 @@ public abstract class Wrapper {
                 continue;
             }
             // 生成条件判断及赋值语句，比如：
-            // if( $2.equals("name") ) { w.name = (java.lang.String) $3; return;}
-            // if( $2.equals("age") ) { w.age = ((Number) $3).intValue(); return;}
+            /**
+                 if ($2.equals("name")) {
+                     w.name = (java.lang.String) $3;
+                     return;
+                 }
+                 if ($2.equals("age")) {
+                     w.age = ((Number) $3).intValue();
+                     return;
+                 }
+                 if ($2.equals("b")) {
+                     w.b = ((Number) $3).floatValue();
+                     return;
+                 }
+
+             */
             c1.append(" if( $2.equals(\"").append(fn).append("\") ){ w.").append(fn).append("=").append(arg(ft, "$3")).append("; return; }");
             // 生成条件判断及返回语句，比如：
-            // if( $2.equals("name") ) { return ($w)w.name; }
+            /*
+                if ($2.equals("name")) {
+                    return ($w) w.name;
+                }
+           */
             c2.append(" if( $2.equals(\"").append(fn).append("\") ){ return ($w)w.").append(fn).append("; }");
             // 存储 <字段名, 字段类型> 键值对到 pts 中
             pts.put(fn, ft);
         }
-        // --------------------------------✨ 分割线2 ✨-------------------------------------
 
+        // --------------------------------✨ 分割线2 ✨-------------------------------------
         Method[] methods = c.getMethods();
         // 检测 c 中是否包含不是Object类的方法，进去
         boolean hasMethod = hasMethods(methods);
@@ -260,6 +278,8 @@ public abstract class Wrapper {
                     // return w.sayHello((java.lang.Integer)$4[0], (java.lang.String)$4[1]);
                     c3.append(" return ($w)w.").append(mn).append('(').append(args(m.getParameterTypes(), "$4")).append(");");
                 }
+
+
                 // 添加 }, 生成的代码形如（已格式化）：
                 // if ("sayHello".equals($2)
                 //     && $3.length == 2
@@ -289,10 +309,59 @@ public abstract class Wrapper {
         // 添加 NoSuchMethodException 异常抛出代码
         c3.append(" throw new " + NoSuchMethodException.class.getName() + "(\"Not found method \\\"\"+$2+\"\\\" in class " + c.getName() + ".\"); }");
 
+        // c3案例如下
+        /**
+         public Object invokeMethod (Object o, String n, Class[]p, Object[]v) throws java.lang.reflect.InvocationTargetException{
+             org.apache.dubbo.common.bytecode.WrapperTest$I1 w;
+             try {
+                w = ((org.apache.dubbo.common.bytecode.WrapperTest$I1) $1);
+             } catch (Throwable e) {
+                throw new IllegalArgumentException(e);
+             }
+             try {
+                 if ("hello".equals($2) && $3.length == 1) {
+                    w.hello((java.lang.String) $4[0]);
+                    return null;
+                 }
+                 if ("showInt".equals($2) && $3.length == 1) {
+                    return ($w) w.showInt(((Number) $4[0]).intValue());
+                 }
+                 if ("getFloat".equals($2) && $3.length == 0) {
+                    return ($w) w.getFloat();
+                 }
+                 if ("setName".equals($2) && $3.length == 1) {
+                    w.setName((java.lang.String) $4[0]);
+                    return null;
+                 }
+                 if ("setFloat".equals($2) && $3.length == 1) {
+                    w.setFloat(((Number) $4[0]).floatValue());
+                    return null;
+                 }
+                 if ("getName".equals($2) && $3.length == 0) {
+                    return ($w) w.getName();
+                 }
+             } catch (Throwable e) {
+                throw new java.lang.reflect.InvocationTargetException(e);
+             }
+             throw new org.apache.dubbo.common.bytecode.NoSuchMethodException("Not found method \"" + $2 + "\" in class org.apache.dubbo.common.bytecode.WrapperTest$I1.");
+         }
+
+         */
+
         // --------------------------------✨ 分割线3 ✨-------------------------------------
 
         // 处理 get/set 方法
         Matcher matcher;
+        /*
+        ms 案例 如下 看 WrapperTest 程序
+        ms = {LinkedHashMap@1643}  size = 6
+         "hello(Ljava/lang/String;)V" -> {Method@1678} "public abstract void org.apache.dubbo.common.bytecode.WrapperTest$I1.hello(java.lang.String)"
+         "showInt(I)I" -> {Method@1935} "public abstract int org.apache.dubbo.common.bytecode.WrapperTest$I1.showInt(int)"
+         "getFloat()F" -> {Method@1937} "public abstract float org.apache.dubbo.common.bytecode.WrapperTest$I1.getFloat()"
+         "setName(Ljava/lang/String;)V" -> {Method@1939} "public abstract void org.apache.dubbo.common.bytecode.WrapperTest$I1.setName(java.lang.String)"
+         "setFloat(F)V" -> {Method@1941} "public abstract void org.apache.dubbo.common.bytecode.WrapperTest$I1.setFloat(float)"
+         "getName()Ljava/lang/String;" -> {Method@1943} "public abstract java.lang.String org.apache.dubbo.common.bytecode.WrapperTest$I0.getName()"
+        */
         for (Map.Entry<String, Method> entry : ms.entrySet()) {
             String md = entry.getKey();
             Method method = entry.getValue();
@@ -325,11 +394,48 @@ public abstract class Wrapper {
         c1.append(" throw new " + NoSuchPropertyException.class.getName() + "(\"Not found property \\\"\"+$2+\"\\\" field or setter method in class " + c.getName() + ".\"); }");
         c2.append(" throw new " + NoSuchPropertyException.class.getName() + "(\"Not found property \\\"\"+$2+\"\\\" field or getter method in class " + c.getName() + ".\"); }");
 
+        /*
+          // c1 案例如下
+         public void setPropertyValue (Object o, String n, Object v){
+            org.apache.dubbo.common.bytecode.WrapperTest$I1 w;
+            try {
+                w = ((org.apache.dubbo.common.bytecode.WrapperTest$I1) $1);
+            } catch (Throwable e) {
+                throw new IllegalArgumentException(e);
+            }
+            if ($2.equals("name")) {
+                w.setName((java.lang.String) $3);
+                return;
+            }
+            if ($2.equals("float")) {
+                w.setFloat(((Number) $3).floatValue());
+                return;
+            }
+            throw new org.apache.dubbo.common.bytecode.NoSuchPropertyException("Not found property \"" + $2 + "\" field or setter method in class org.apache.dubbo.common.bytecode.WrapperTest$I1.");
+        }
+
+        // c2 案例如下
+        public Object getPropertyValue (Object o, String n){
+            org.apache.dubbo.common.bytecode.WrapperTest$I1 w;
+            try {
+                w = ((org.apache.dubbo.common.bytecode.WrapperTest$I1) $1);
+            } catch (Throwable e) {
+                throw new IllegalArgumentException(e);
+            }
+            if ($2.equals("float")) {
+                return ($w) w.getFloat();
+            }
+            if ($2.equals("name")) {
+                return ($w) w.getName();
+            }
+            throw new org.apache.dubbo.common.bytecode.NoSuchPropertyException("Not found property \"" + $2 + "\" field or getter method in class org.apache.dubbo.common.bytecode.WrapperTest$I1.");
+        }
+        */
         // make class
         long id = WRAPPER_CLASS_COUNTER.getAndIncrement();
         // 创建类生成器 利用工具类ClassGenerator生成对应的字节码
         ClassGenerator cc = ClassGenerator.newInstance(cl);
-        // 设置类名及超类 Wrapper+id拼接
+        // 设置类名及超类 Wrapper+id拼接 org.apache.dubbo.common.bytecode.Wrapper0
         cc.setClassName((Modifier.isPublic(c.getModifiers()) ? Wrapper.class.getName() : c.getName() + "$sw") + id);
         cc.setSuperClass(Wrapper.class);
 

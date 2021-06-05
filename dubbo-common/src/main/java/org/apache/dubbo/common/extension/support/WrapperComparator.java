@@ -25,7 +25,7 @@ import java.util.Comparator;
  * OrderComparator
  */
 // OK
-// 用的Comparator，而不是Comparable，注意下
+// 用的Comparator，而不是 Comparable，注意下
 public class WrapperComparator implements Comparator<Object> {
 
     public static final Comparator<Object> COMPARATOR = new WrapperComparator();
