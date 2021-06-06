@@ -59,7 +59,17 @@ public @interface Adaptive {
      * class name with the rule: divide classname from capital char into several parts, and separate the parts with
      * dot '.', for example, for {@code org.apache.dubbo.xxx.YyyInvokerWrapper}, the generated name is
      * <code>String[] {"yyy.invoker.wrapper"}</code>.
-     *
+     ** 决定要注入的目标扩展。目标扩展名由URL中传入的参数决定，参数名由该方法给出。* <p>
+     *      * 如果从 {@link URL} 中找不到指定的参数，那么默认扩展将用于依赖注入（在其接口的 {@link SPI} 中指定）。
+     *      * <p>
+     *      * 例如，给定 <code>String[] {"key1", "key2"}</code>：
+     *      * <ol>
+     *      * <li>在URL中找到参数'key1'，使用它的值作为扩展名</li>
+     *      * <li>如果在 URL 中未找到“key1”（或其值为空），则尝试使用“key2”作为扩展名</li>
+     *      * <li>如果'key2'也不存在，则使用默认扩展名</li>
+     *      * <li>否则，抛出 {@link IllegalStateException}</li>
+     *      * </ol>
+     *      * 如果参数名为空，则根据接口的类名生成一个默认的参数名，规则为：classname 和大写的char 分成几部分，用点'.'隔开，例如，对于{@code org .apache.dubbo.xxx.YyyInvokerWrapper}，生成的名字是<code>String[] {"yyy.invoker.wrapper"}</code>。
      * @return parameter names in URL
      */
     String[] value() default {};

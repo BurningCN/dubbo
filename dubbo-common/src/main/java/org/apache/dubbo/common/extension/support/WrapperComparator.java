@@ -58,6 +58,7 @@ public class WrapperComparator implements Comparator<Object> {
         int n1 = a1 == null ? 0 : a1.order;
         int n2 = a2 == null ? 0 : a2.order;
         // never return 0 even if n1 equals n2, otherwise, o1 and o2 will override each other in collection like HashSet
+        // 即使 n1 等于 n2，也永远不会返回 0，否则，o1 和 o2 将像 HashSet 一样在集合中相互覆盖
         return n1 > n2 ? 1 : -1;
     }
 

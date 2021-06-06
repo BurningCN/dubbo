@@ -263,6 +263,7 @@ public class ExtensionLoaderTest {
     // √
     @Test
     public void test_getSupportedExtensions_wrapperIsNotExt() throws Exception {
+        // 这个测试类表示getSupportedExtensions不会返回Wrapper
         Set<String> exts = getExtensionLoader(WrappedExt.class).getSupportedExtensions();
 
         Set<String> expected = new HashSet<String>();
@@ -383,6 +384,19 @@ public class ExtensionLoaderTest {
     }
 
     // √ 替换自适应扩展类
+ /*
+    package org.apache.dubbo.common.extension.ext8_add;
+    import org.apache.dubbo.common.extension.ExtensionLoader;
+    public class AddExt3$Adaptive implements org.apache.dubbo.common.extension.ext8_add.AddExt3 {
+        public java.lang.String echo(org.apache.dubbo.common.URL arg0, java.lang.String arg1)  {
+            if (arg0 == null) throw new IllegalArgumentException("url == null");
+            org.apache.dubbo.common.URL url = arg0;
+            String extName = url.getParameter("add.ext3", "impl1");
+            if(extName == null) throw new IllegalStateException("Failed to get extension (org.apache.dubbo.common.extension.ext8_add.AddExt3) name from url (" + url.toString() + ") use keys([add.ext3])");
+            org.apache.dubbo.common.extension.ext8_add.AddExt3 extension = (org.apache.dubbo.common.extension.ext8_add.AddExt3)ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.extension.ext8_add.AddExt3.class).getExtension(extName);
+            return extension.echo(arg0, arg1);
+        }
+    }*/
     @Test
     public void test_replaceExtension_Adaptive() throws Exception {
         ExtensionLoader<AddExt3> loader = getExtensionLoader(AddExt3.class);
@@ -443,7 +457,7 @@ public class ExtensionLoaderTest {
             // 往里面跟下在哪个点触发的（即调用static块），首先static块属于类的，肯定是在类的"初始化"阶段进行的，
             // 联想到loadResource方法（调用loadClass的）里面的class.forName(..true)传入了true表示加载的同时初始化，就是这处导致的
             // 且注意前面getExtension("ok");（第一次调用getExtension）就会加载所有的类了（异常也是在里面抛的）
-
+            // 并填充到exceptions容器中，
             loader.getExtension("error");
             fail();
         } catch (IllegalStateException expected) {
@@ -472,6 +486,7 @@ public class ExtensionLoaderTest {
 
         //===========================================================================
         // test group
+        // 这里大可不必添加该参数
         url = url.addParameter(GROUP_KEY, "group1");// url变成test://localhost/test?group=group1
         list = getExtensionLoader(ActivateExt1.class)
                 .getActivateExtension(url, new String[]{}, "group1");

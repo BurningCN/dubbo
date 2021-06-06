@@ -106,6 +106,12 @@ public class AdaptiveClassCodeGenerator {
         // 生成类代码：public class + type简单名称 + $Adaptive + implements + type全限定名 + { ，进去
         code.append(generateClassDeclaration());
 
+//        package org.apache.dubbo.common.extension.adaptive;
+//        import org.apache.dubbo.common.extension.ExtensionLoader;
+//        public class HasAdaptiveExt$Adaptive implements org.apache.dubbo.common.extension.adaptive.HasAdaptiveExt {
+
+
+
         // 生成方法的实现体，一个方法可以被 Adaptive 注解修饰，也可以不被修饰。以 Protocol 接口为例，该接口的 destroy 和 getDefaultPort
         // 未标注 Adaptive 注解，其他方法均标注了 Adaptive 注解
 
@@ -251,6 +257,15 @@ public class AdaptiveClassCodeGenerator {
         String methodThrows = generateMethodThrows(method);
         // 上面几部分填充到CODE_METHOD_DECLARATION
         return String.format(CODE_METHOD_DECLARATION, methodReturnType, methodName, methodArgs, methodThrows, methodContent);
+//        public java.lang.String echo(org.apache.dubbo.common.URL arg0, java.lang.String arg1)  {
+//            if (arg0 == null) throw new IllegalArgumentException("url == null");
+//            org.apache.dubbo.common.URL url = arg0;
+//            String extName = url.getParameter("has.adaptive.ext", "adaptive");
+//            if(extName == null) throw new IllegalStateException("Failed to get extension (org.apache.dubbo.common.extension.adaptive.HasAdaptiveExt) name from url (" + url.toString() + ") use keys([has.adaptive.ext])");
+//            org.apache.dubbo.common.extension.adaptive.HasAdaptiveExt extension = (org.apache.dubbo.common.extension.adaptive.HasAdaptiveExt)ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.extension.adaptive.HasAdaptiveExt.class).getExtension(extName);
+//            return extension.echo(arg0, arg1);
+//        }
+
     }
 
     /**
@@ -364,6 +379,7 @@ public class AdaptiveClassCodeGenerator {
         // 遍历 value，这里的 value 是 Adaptive 的注解值，2.2.3.3 节分析过 value 变量的获取过程。
         // 此处循环目的是生成从 URL 中获取拓展名的代码，生成的代码会赋值给 getNameCode 变量。注意这
         // 个循环的遍历顺序是由后向前遍历的。
+        // eg value = {"key1","protocol"}
         for (int i = value.length - 1; i >= 0; --i) {
             // 当 i 为最后一个元素的坐标时
             if (i == value.length - 1) {

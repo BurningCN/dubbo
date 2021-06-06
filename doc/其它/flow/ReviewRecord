@@ -9,6 +9,7 @@ common
 	io 2021.06.04(需要再次看看)
 	lang 2021.06.04
 	function 2021.06.04
+	extension 2021.06.06
 	util 
 		ConfigUtils 2021.06.04
 		todo 
@@ -26,6 +27,7 @@ common
 	bytecode
 	threadlocal
 	threadpool
+	extension
 	util
 		ConfigUtilsTest 
 		todo..
@@ -34,4 +36,5 @@ common
 // ====================================================================
 todo CompositeConfigurationTest 补充测试用例
 todo 时间轮
+todo ActivateComparator的before、after比较逻辑
 // ====================================================================
