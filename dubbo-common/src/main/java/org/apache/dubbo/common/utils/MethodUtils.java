@@ -45,7 +45,6 @@ import static org.apache.dubbo.common.utils.StringUtils.isNotEmpty;
 // OK
 public interface MethodUtils {
 
-    // todo need pr-pr 下面的public不需要
     /**
      * Return {@code true} if the provided method is a set method.
      * Otherwise, return {@code false}.
@@ -377,7 +376,7 @@ public interface MethodUtils {
         }
 
         // Throwable comparison: "throws" Throwable list will be ignored, trust the compiler verify
-
+        // Throwable 比较："throws" Throwable 列表将被忽略，信任编译器验证
         return true;
     }
 

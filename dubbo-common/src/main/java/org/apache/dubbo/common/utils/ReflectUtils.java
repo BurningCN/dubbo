@@ -1318,6 +1318,7 @@ public final class ReflectUtils {
                     .filter(type -> type instanceof Class)
                     .map(type -> Class.class.cast(type))
                     .forEach(superClass -> {
+                        // 对父类继续递归
                         parameterizedTypes.addAll(findParameterizedTypes(superClass));
                     });
         }

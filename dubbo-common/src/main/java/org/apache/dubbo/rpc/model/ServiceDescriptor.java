@@ -48,6 +48,22 @@ public class ServiceDescriptor {
         this.serviceName = interfaceClass.getName();
         // 进去
         initMethods();
+        /*
+
+        serviceDescriptor = {ServiceDescriptor@1639}
+            serviceName = "org.apache.dubbo.rpc.model.ServiceDescriptorTest$Demo"
+            serviceInterfaceClass = {Class@1595} "interface org.apache.dubbo.rpc.model.ServiceDescriptorTest$Demo"
+            methods = {HashMap@1642}  size = 2
+                "methodA" -> {ArrayList@1658}  size = 1
+                "methodB" -> {ArrayList@1659}  size = 2
+                    0 = {MethodDescriptor@1661}
+                    1 = {MethodDescriptor@1662}
+            descToMethods = {HashMap@1643}  size = 2
+                "methodA" -> {HashMap@1650}  size = 1
+                "methodB" -> {HashMap@1652}  size = 2
+                    "Ljava/lang/String;" -> {MethodDescriptor@1661}
+                    "Ljava/lang/Integer;" -> {MethodDescriptor@1662}
+        */
     }
 
     private void initMethods() {
@@ -83,10 +99,12 @@ public class ServiceDescriptor {
         //    generic = false
     }
 
+
     public String getServiceName() {
         return serviceName;
     }
 
+    // gx
     public Class<?> getServiceInterfaceClass() {
         return serviceInterfaceClass;
     }
@@ -122,6 +140,7 @@ public class ServiceDescriptor {
      * @param paramTypes
      * @return
      */
+    // gx
     public MethodDescriptor getMethod(String methodName, Class<?>[] paramTypes) {
         List<MethodDescriptor> methodModels = methods.get(methodName);
         if (CollectionUtils.isNotEmpty(methodModels)) {
@@ -137,6 +156,7 @@ public class ServiceDescriptor {
         return null;
     }
 
+    // gx
     public List<MethodDescriptor> getMethods(String methodName) {
         return methods.get(methodName);
     }

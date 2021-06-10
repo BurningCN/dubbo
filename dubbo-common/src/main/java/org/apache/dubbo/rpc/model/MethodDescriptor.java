@@ -51,6 +51,22 @@ public class MethodDescriptor {
                 .toArray(String[]::new);
         this.methodName = method.getName();
         this.generic = (methodName.equals($INVOKE) || methodName.equals($INVOKE_ASYNC)) && parameterClasses.length == 3;
+        //interface Demo {
+        //        CompletableFuture<String> hello(List<String> list);
+        //    }
+        //this = {MethodDescriptor@1993}
+        // method = {Method@1970} "public abstract java.util.concurrent.CompletableFuture org.apache.dubbo.rpc.model.MethodDescriptorTest$Demo.hello(java.util.List)"
+        // paramDesc = "Ljava/util/List;"
+        // compatibleParamSignatures = {String[1]@1998}
+        //  0 = "java.util.List"
+        // parameterClasses = {Class[1]@1994}
+        //  0 = {Class@222} "interface java.util.List"
+        // returnClass = {Class@1995} "class java.util.concurrent.CompletableFuture"
+        // returnTypes = {Type[2]@1996}
+        //  0 = {Class@324} "class java.lang.String"
+        //  1 = {Class@324} "class java.lang.String"
+        // methodName = "hello"
+        // generic = false
     }
 
     public boolean matchParams (String params) {

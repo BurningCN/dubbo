@@ -63,9 +63,6 @@ public class ServiceRepository extends LifecycleAdapter implements FrameworkExt 
         }
     }
 
-    public static void main(String[] args) {
-        ServiceRepository serviceRepository = (ServiceRepository)ExtensionLoader.getExtensionLoader(FrameworkExt.class).getExtension("repository");
-    }
 
     // gx 除了上面的，重点关注ServiceConfig的调用处
     public ServiceDescriptor registerService(Class<?> interfaceClazz) {

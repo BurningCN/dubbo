@@ -41,7 +41,14 @@ import static org.apache.dubbo.common.function.ThrowableFunction.execute;
  * <li>no {@link Exception exception} declaration</li>
  * <li>only one {@link Event} type argument</li>
  * </ul>
- *
+ * 泛型事件的{@link EventListener}抽象类，子类可以添加更多的{@link Event event}处理方法，而不是只绑定声明为的{@link EventListener#onEvent(Event)}方法 <code>final</code> 实现无法覆盖。 值得注意的是，所有 {@link Event event} 句柄方法都必须满足以下条件：
+ * <ul>
+ * <li>不是 {@link #onEvent(Event)} 方法</li>
+ * <li><code>public</code> 可访问性</li>
+ * <li><code>void</code> 返回类型</li>
+ * <li>没有{@link Exception exception}声明</li>
+ * <li>只有一个 {@link Event} 类型参数</li>
+ * </ul>
  * @see Event
  * @see EventListener
  * @since 2.7.5
@@ -73,6 +80,11 @@ public abstract class GenericEventListener implements EventListener<Event> {
                     Set<Method> methods = eventMethods.computeIfAbsent(paramType, key -> new LinkedHashSet<>());
                     methods.add(method);
                 });
+        /*key = {Class@1625} "class org.apache.dubbo.event.EchoEvent"
+            value = {LinkedHashSet@1626}  size = 2
+                0 = {Method@1631} "public void org.apache.dubbo.event.GenericEventListenerTest$MyGenericEventListener.onEvent(org.apache.dubbo.event.EchoEvent)"
+                1 = {Method@1632} "public void org.apache.dubbo.event.GenericEventListenerTest$MyGenericEventListener.event(org.apache.dubbo.event.EchoEvent)"
+        */
         return eventMethods;
     }
 

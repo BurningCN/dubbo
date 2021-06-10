@@ -63,7 +63,9 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         }
 
         if (generic) {
+            // 一般是满足的，一般接口不会去实现GenericService接口
             if (!GenericService.class.isAssignableFrom(invoker.getInterface())) {
+                // 添加阿里巴巴的
                 interfaces.add(com.alibaba.dubbo.rpc.service.GenericService.class);
             }
 
@@ -80,6 +82,11 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         interfaces.addAll(Arrays.asList(INTERNAL_INTERFACES));
 
         // 抽象方法被两个子类重写
+        //interfaces = {HashSet@2709}  size = 4
+        // 0 = {Class@2733} "interface org.apache.dubbo.rpc.service.Destroyable"
+        // 1 = {Class@2734} "interface org.apache.dubbo.rpc.service.EchoService"
+        // 2 = {Class@1596} "interface org.apache.dubbo.service.DemoService"
+        // 3 = {Class@2735} "interface com.alibaba.dubbo.rpc.service.GenericService" --- 这个可选。，上三个必须有
         return getProxy(invoker, interfaces.toArray(new Class<?>[0]));
     }
 

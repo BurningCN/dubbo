@@ -36,6 +36,7 @@ public class MemoryStatusCheckerTest {
         MemoryStatusChecker statusChecker = new MemoryStatusChecker();
         Status status = statusChecker.check();
         assertThat(status.getLevel(), anyOf(is(OK), is(WARN)));
+        // max:3641M,total:245M,used:41M,free:204M
         logger.info("memory status level: " + status.getLevel());
         logger.info("memory status message: " + status.getMessage());
     }

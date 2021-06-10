@@ -206,7 +206,7 @@ class URL implements Serializable {
         this.port = Math.max(port, 0);
         this.address = getAddress(this.host, this.port);
 
-        // trim the beginning "/"
+        // trim the beginning "/" 就是比如 //////a/v/c那么就是变成 /a/v/c
         while (path != null && path.startsWith("/")) {
             path = path.substring(1);
         }
@@ -269,6 +269,7 @@ class URL implements Serializable {
                             parameters.putIfAbsent(key.substring(DEFAULT_KEY_PREFIX.length()), value);
                         }
                     } else {
+                        // 如果没有=部分，直接key作为val
                         parameters.put(part, part);
                     }
                 }
@@ -301,8 +302,8 @@ class URL implements Serializable {
         // 按照 / 分割
         i = url.indexOf('/');
         if (i >= 0) {
-            path = url.substring(i + 1);
-            url = url.substring(0, i);// ip:port
+            path = url.substring(i + 1); // path
+            url = url.substring(0, i);// uname:pwd@ip:port
         }
         i = url.lastIndexOf('@');
         if (i >= 0) {
@@ -339,6 +340,7 @@ class URL implements Serializable {
             return methodParameters;
         }
 
+        // methods = "sayHello,sayBye"
         String methodsString = parameters.get(METHODS_KEY);
         if (StringUtils.isNotEmpty(methodsString)) {
             List<String> methods = StringUtils.splitToList(methodsString, ',');
@@ -347,6 +349,7 @@ class URL implements Serializable {
                 for (int i = 0; i < methods.size(); i++) {
                     String method = methods.get(i);
                     int methodLen = method.length();
+                    // eg key = sayHello.async
                     if (key.length() > methodLen
                             && key.startsWith(method)
                             && key.charAt(methodLen) == '.') {//equals to: key.startsWith(method + '.')

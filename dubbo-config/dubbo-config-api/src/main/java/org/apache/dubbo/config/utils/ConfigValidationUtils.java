@@ -578,7 +578,9 @@ public class ConfigValidationUtils {
         return isServiceDiscoveryRegistryType(url) ? SERVICE_REGISTRY_PROTOCOL : REGISTRY_PROTOCOL;
     }
 
+    // property是key，value是val
     public static void checkExtension(Class<?> type, String property, String value) {
+        // 检查kv的长度
         checkName(property, value);
         if (StringUtils.isNotEmpty(value)
                 && !ExtensionLoader.getExtensionLoader(type).hasExtension(value)) {

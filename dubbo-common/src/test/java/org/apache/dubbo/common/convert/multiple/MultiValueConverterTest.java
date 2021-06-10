@@ -44,6 +44,7 @@ public class MultiValueConverterTest {
         MultiValueConverter converter = MultiValueConverter.find(String.class, String[].class);
         assertEquals(StringToArrayConverter.class, converter.getClass());
 
+        // 其实find的第一个参数没有卵用
         converter = MultiValueConverter.find(String.class, BlockingDeque.class);
         assertEquals(StringToBlockingDequeConverter.class, converter.getClass());
 

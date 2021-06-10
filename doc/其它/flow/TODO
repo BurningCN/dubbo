@@ -27,3 +27,15 @@ todo 修复ReadyTest、InternalThreadLocalMap
 todo 修复setRegistry method
 todo CacheListenerTest 继续添加
 
+// ====================================================================
+// ====================================================================
+针对 GenericInvoke-flow 
+1 泛化async的调用
+2 GenericImplFilter#invoke的if分支大逻辑 , 两个filter的onReponse逻辑
+3 GenericServiceImpl实现类
+4 GenericServiceTest 如下的 test
+Invoker<DemoService> invoker2 = protocol.refer(DemoService.class, url);
+        GenericService client2 = (GenericService) proxyFactory.getProxy(invoker2, true);
+        Object result2 = client2.$invoke("sayHello", new String[]{"java.lang.String"}, new Object[]{"haha"});
+        这里是DemoService，不是GenericService，看和GenericInvoke-flow 里的有何区别
+5 testGenericComplexCompute4FullServiceMetadata 复杂对象程序

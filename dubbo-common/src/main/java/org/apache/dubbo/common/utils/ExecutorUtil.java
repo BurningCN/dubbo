@@ -32,7 +32,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREAD_NAME_KEY;
 // OK
 public class ExecutorUtil {
     private static final Logger logger = LoggerFactory.getLogger(ExecutorUtil.class);
-    // 这个线程池很特殊，名字叫做关闭线程池，核心线程数是0
+    // 这个线程池很特殊，名字叫做关闭线程池，核心线程数是0,最大为1，死亡时间为0表示用完就销毁
     private static final ThreadPoolExecutor SHUTDOWN_EXECUTOR = new ThreadPoolExecutor(0, 1,
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<Runnable>(100),

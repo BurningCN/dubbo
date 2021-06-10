@@ -115,6 +115,7 @@ public class ClassUtilsTest {
         assertThat(ClassUtils.resolvePrimitiveClassName("short") == short.class, is(true));
 
         // boolean[].class的输出就是Class [Z
+        // long[].class的输出就是Class [J
         assertThat(ClassUtils.resolvePrimitiveClassName("[Z") == boolean[].class, is(true));
         assertThat(ClassUtils.resolvePrimitiveClassName("[B") == byte[].class, is(true));
         assertThat(ClassUtils.resolvePrimitiveClassName("[C") == char[].class, is(true));
@@ -129,6 +130,7 @@ public class ClassUtilsTest {
     public void testToShortString() throws Exception {
         assertThat(ClassUtils.toShortString(null), equalTo("null"));
         // 进去
+        //ClassUtilsTest@403147759
         assertThat(ClassUtils.toShortString(new ClassUtilsTest()), startsWith("ClassUtilsTest@"));
     }
 

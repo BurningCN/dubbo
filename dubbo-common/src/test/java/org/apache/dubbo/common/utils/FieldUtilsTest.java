@@ -39,6 +39,7 @@ public class FieldUtilsTest {
         assertEquals("a", getDeclaredField(A.class, "a").getName());
         assertEquals("b", getDeclaredField(B.class, "b").getName());
         assertEquals("c", getDeclaredField(C.class, "c").getName());
+        // getDeclaredField不会返回父类的
         assertNull(getDeclaredField(B.class, "a"));
         assertNull(getDeclaredField(C.class, "a"));
     }

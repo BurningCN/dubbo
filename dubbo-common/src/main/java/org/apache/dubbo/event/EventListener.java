@@ -59,6 +59,9 @@ public interface EventListener<E extends Event> extends java.util.EventListener,
      * @return the value is more greater, the priority is more lower.
      * {@link Integer#MIN_VALUE} indicates the highest priority. The default value is {@link Integer#MAX_VALUE}.
      * The comparison rule , refer to {@link #compareTo}.
+     * @return 值越大，优先级越低。
+     * {@link Integer#MIN_VALUE} 表示最高优先级。 默认值为 {@link Integer#MAX_VALUE}。
+     * 比较规则，参考{@link #compareTo}。
      */
     default int getPriority() {
         return NORMAL_PRIORITY;
@@ -83,9 +86,11 @@ public interface EventListener<E extends Event> extends java.util.EventListener,
      */
     // 目的就是找到具体的泛型，比如 FileSystemServiceDiscovery implements ServiceDiscovery, EventListener<ServiceInstancesChangedEvent>
     // 就是拿到<>里的ServiceInstancesChangedEvent
+    // 去看下测试程序 EventListenerTest
     static Class<? extends Event> findEventType(Class<?> listenerClass) {
         Class<? extends Event> eventType = null;
 
+        // 首先当前类必须是EventListener的子类
         if (listenerClass != null && EventListener.class.isAssignableFrom(listenerClass)) {
             eventType = findParameterizedTypes(listenerClass)// 进去
                     .stream()
@@ -112,8 +117,10 @@ public interface EventListener<E extends Event> extends java.util.EventListener,
         if ((rawType instanceof Class) && EventListener.class.isAssignableFrom((Class) rawType)) {
             Type[] typeArguments = parameterizedType.getActualTypeArguments();
             for (Type typeArgument : typeArguments) {
+                // 这里判断是否是Class，因为比如一个类 extends A<String,T>，那么上面的typeArguments返回的就是这两个，但是只有第一个满足instanceof Class
                 if (typeArgument instanceof Class) {
                     Class argumentClass = (Class) typeArgument;
+                    // 拿到具体的类型还要判断是否是Event子类
                     if (Event.class.isAssignableFrom(argumentClass)) {
                         eventType = argumentClass;
                         break;

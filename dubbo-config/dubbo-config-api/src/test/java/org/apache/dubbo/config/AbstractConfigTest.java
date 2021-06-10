@@ -165,7 +165,8 @@ public class AbstractConfigTest {
     @Test
     public void testAppendAttributes1() throws Exception {
         Map<String, Object> parameters = new HashMap<String, Object>();
-        //  这个仅处理带有@Parameter注解的、map的value不限于String类型，进去
+        //  这个仅处理带有@Parameter注解的，并且注解的attribute属性值必须为true（默认是false的）、
+        //  map的value不限于String类型，进去
         AbstractConfig.appendAttributes(parameters, new AttributeConfig('l', true, (byte) 0x01), "prefix");
         Assertions.assertEquals('l', parameters.get("prefix.let"));
         Assertions.assertEquals(true, parameters.get("prefix.activate"));
@@ -365,6 +366,17 @@ public class AbstractConfigTest {
             // refresh内部属性获取的顺序在上面用数字写出来了，以及是从哪个Configuration取出来的
             // Load configuration from  system properties -> externalConfiguration -> RegistryConfig -> dubbo.properties
             overrideConfig.refresh();
+
+            /*overrideConfig = {AbstractConfigTest$OverrideConfig@1983}
+            "<dubbo:override escape="override-config://" useKeyAsProperty="system" exclude="external" address="system://127.0.0.1:2181" key="external" protocol="system" />"
+            address = "system://127.0.0.1:2181"
+            protocol = "system"
+            exclude = "external"
+            key = "external"
+            useKeyAsProperty = "system"
+            escape = "override-config://"
+            prefix = "dubbo.override"
+            refreshed = {AtomicBoolean@2273} "false"*/
 
             // 前面refresh内部触发了对应的setXx方法，将属性赋了值，但是注意Configuration的优先级，先前声明的key被后面声明（但是优先级更高的）同名key覆盖掉
             // 就比如代码最开始先声明overrideConfig.address属性的值肯定是"override-config://127.0.0.1:2181"，但是SystemConfiguration的优先级比

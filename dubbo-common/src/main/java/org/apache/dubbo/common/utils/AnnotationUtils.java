@@ -84,7 +84,7 @@ public interface AnnotationUtils {
      */
     // AnnotatedElement可以接Class和Method类型（当然本身可以用原类型接，比如Class接A.class），用这个类型接表示类或者方法是带注解
     // 下面方法体的判断表示这个具体类型是不是Class的，因为该工具类其他方法会处理"类"上的注解，所以会调用下面的isType来预先判断下是不是Class
-    // 传入的值比如说A.class
+    // 传入的值比如说A.class，那么返回 就是true，如果是Method（前提有注解在方法上面）那么下面返回的就是false
     static boolean isType(AnnotatedElement annotatedElement) {
         return annotatedElement instanceof Class;
     }

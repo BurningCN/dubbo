@@ -106,6 +106,23 @@ public class ClassUtils {
         for (Class<?> primitiveTypeName : primitiveTypeNames) {
             PRIMITIVE_TYPE_NAME_MAP.put(primitiveTypeName.getName(), primitiveTypeName);
         }
+        //PRIMITIVE_TYPE_NAME_MAP = {HashMap@1601}  size = 16
+        // "byte" -> {Class@1621} "byte"
+        // "double" -> {Class@1623} "double"
+        // "[B" -> {Class@332} "class [B"
+        // "[C" -> {Class@335} "class [C"
+        // "[D" -> {Class@333} "class [D"
+        // "[F" -> {Class@334} "class [F"
+        // "float" -> {Class@1629} "float"
+        // "[I" -> {Class@330} "class [I"
+        // "long" -> {Class@1632} "long"
+        // "int" -> {Class@1634} "int"
+        // "[J" -> {Class@329} "class [J"
+        // "boolean" -> {Class@1636} "boolean"
+        // "char" -> {Class@1638} "char"
+        // "[S" -> {Class@331} "class [S"
+        // "short" -> {Class@1641} "short"
+        // "[Z" -> {Class@336} "class [Z"
     }
 
     public static Class<?> forNameWithThreadContextClassLoader(String name)
@@ -421,6 +438,7 @@ public class ClassUtils {
             if (isNotEmpty(interfaces)) {
                 // add current interfaces
                 Arrays.stream(interfaces)
+                        // resolved::add返回true表示添加成功，false表示已有了
                         .filter(resolved::add)
                         .forEach(cls -> {
                             allInterfaces.add(cls);

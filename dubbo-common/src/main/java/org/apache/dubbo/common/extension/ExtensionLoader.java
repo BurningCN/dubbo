@@ -73,7 +73,15 @@ import static org.apache.dubbo.common.constants.CommonConstants.REMOVE_VALUE_PRE
  * <li>auto wrap extension in wrapper </li>
  * <li>default extension is an adaptive instance</li>
  * </ul>
- *
+ *{@link org.apache.dubbo.rpc.model.ApplicationModel}、{@code DubboBootstrap} 和这个类目前被设计为单例或静态（本身完全静态或使用一些静态字段）。
+ *   * 所以从它们返回的实例是进程或类加载器范围的。 如果你想在一个进程中支持多个dubbo服务器，你可能需要重构这三个类。
+ *   * <p>
+ *   * 加载dubbo扩展
+ *   * <ul>
+ *   * <li>自动注入依赖扩展</li>
+ *   * <li>在包装器中自动包装扩展</li>
+ *   * <li>默认扩展是一个自适应实例</li>
+ *   * </ul>
  * @see <a href="http://java.sun.com/j2se/1.5.0/docs/guide/jar/jar.html#Service%20Provider">Service Provider in Java 5</a>
  * @see org.apache.dubbo.common.extension.SPI
  * @see org.apache.dubbo.common.extension.Adaptive
@@ -166,6 +174,7 @@ public class ExtensionLoader<T> {
         return asList(strategies);
     }
 
+    // 私有的
     private ExtensionLoader(Class<?> type) {
         this.type = type;
         // ExtensionFactory接口看下。然后再次调用getExtensionLoader，为了防止无限递归，当type == ExtensionFactory.class赋值为null，结束递归
@@ -209,7 +218,7 @@ public class ExtensionLoader<T> {
         return loader;
     }
 
-    // For testing purposes only
+    // For testing purposes only 注意调用处DubboBootstrap
     public static void resetExtensionLoader(Class type) {
         ExtensionLoader loader = EXTENSION_LOADERS.get(type);
         if (loader != null) {
@@ -223,6 +232,7 @@ public class ExtensionLoader<T> {
         }
     }
 
+    //注意调用处DubboBootstrap 新版本
     public static void destroyAll() {
         EXTENSION_INSTANCES.forEach((_type, instance) -> {
             if (instance instanceof Lifecycle) {
@@ -492,7 +502,7 @@ public class ExtensionLoader<T> {
             throw new IllegalArgumentException("Extension name == null");
         }
         if ("true".equals(name)) {
-            // 获取默认的拓展实现类 todo 待分析
+            // 获取默认的拓展实现类
             return getDefaultExtension();
         }
         // Holder，顾名思义，用于持有目标对象 进去
@@ -600,6 +610,7 @@ public class ExtensionLoader<T> {
             if (StringUtils.isBlank(name)) {
                 throw new IllegalStateException("Extension name is blank (Extension " + type + ")!");
             }
+            // 重复添加name
             if (cachedClasses.get().containsKey(name)) {
                 throw new IllegalStateException("Extension name " +
                         name + " already exists (Extension " + type + ")!");
@@ -609,6 +620,7 @@ public class ExtensionLoader<T> {
             cachedNames.put(clazz, name);
             cachedClasses.get().put(name, clazz);
         } else {
+            // cachedAdaptiveClass只能在不存在的情况下添加
             if (cachedAdaptiveClass != null) {
                 throw new IllegalStateException("Adaptive Extension already exists (Extension " + type + ")!");
             }

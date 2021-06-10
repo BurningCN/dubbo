@@ -36,6 +36,7 @@ public interface MemberUtils {
      * @param member {@link Member} instance, e.g, {@link Constructor}, {@link Method} or {@link Field}
      * @return Iff <code>member</code> is static one, return <code>true</code>, or <code>false</code>
      */
+    // member可以是field，也可以是method
     static boolean isStatic(Member member) {
         return member != null && Modifier.isStatic(member.getModifiers());
     }

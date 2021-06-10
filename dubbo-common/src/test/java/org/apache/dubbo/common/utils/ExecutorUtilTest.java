@@ -63,8 +63,11 @@ public class ExecutorUtilTest {
     @Test
     public void testGracefulShutdown2() throws Exception {
         ExecutorService executor = Mockito.mock(ExecutorService.class);
+        // 三次调用都返回false
         when(executor.isTerminated()).thenReturn(false, false, false);
+        //
         when(executor.awaitTermination(20, TimeUnit.MILLISECONDS)).thenReturn(false);
+        // 两次调用一个false，一个true，为了演示newThreadToCloseExecutor的过程
         when(executor.awaitTermination(10, TimeUnit.MILLISECONDS)).thenReturn(false, true);
         ExecutorUtil.gracefulShutdown(executor, 20);
         Thread.sleep(2000);

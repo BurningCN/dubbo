@@ -20,6 +20,7 @@ import org.apache.dubbo.common.convert.StringConverter;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.apache.dubbo.common.convert.Converter.getConverter;
 import static org.apache.dubbo.common.utils.ClassUtils.getAllInterfaces;
@@ -76,14 +77,38 @@ public abstract class StringToIterableConverter<T extends Iterable> implements S
 
     protected final Class<T> getSupportedType() {
         // 下面这个调用讲过了，比如this为StringToBlockingDequeueConverter实例，那么返回的结果就是BlockingDeque.class
+        // 注意传入的是StringToIterableConverter ，影响到这行，做一些过滤  -> isAssignableFrom(interfaceClass, getRawClass(t))
         return findActualTypeArgument(getClass(), StringToIterableConverter.class, 0);
     }
 
     // todo
     @Override
     public final int getPriority() {
-        int level = getAllInterfaces(getSupportedType(), type ->
-                isAssignableFrom(Iterable.class, type)).size();
+        Set<Class<?>> allInterfaces = getAllInterfaces(getSupportedType(), type ->
+                isAssignableFrom(Iterable.class, type));
+        // 案例1
+        //this = {StringToBlockingDequeConverter@2059}
+        //allInterfaces = {LinkedHashSet@2058}  size = 5
+        // 0 = {Class@2061} "interface java.util.concurrent.BlockingQueue"
+        // 1 = {Class@365} "interface java.util.Deque"
+        // 2 = {Class@364} "interface java.util.Queue"
+        // 3 = {Class@223} "interface java.util.Collection"
+        // 4 = {Class@224} "interface java.lang.Iterable"
+
+        // 案例2
+        /*
+        this = {StringToBlockingQueueConverter@2068}
+        allInterfaces = {LinkedHashSet@2067}  size = 3
+        0 = {Class@364} "interface java.util.Queue"
+        1 = {Class@223} "interface java.util.Collection"
+        2 = {Class@224} "interface java.lang.Iterable"
+
+        // 案例3
+        this = {StringToCollectionConverter@2098}
+        allInterfaces = {LinkedHashSet@2097}  size = 1
+        0 = {Class@224} "interface java.lang.Iterable"
+        */
+        int level = allInterfaces.size();
         return MIN_PRIORITY - level;
     }
 }

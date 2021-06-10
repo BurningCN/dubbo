@@ -33,7 +33,7 @@ public class ConfigConfigurationAdapter implements Configuration {
     private Map<String, String> metaData;
 
     public ConfigConfigurationAdapter(AbstractConfig config) {
-        // 获取AbstractConfig的属性信息，以map的方式返回，的进去
+        // 获取AbstractConfig的所有属性kv信息，以map的方式返回，进去
         Map<String, String> configMetadata = config.getMetaData();
         metaData = new HashMap<>(configMetadata.size());
         for (Map.Entry<String, String> entry : configMetadata.entrySet()) {

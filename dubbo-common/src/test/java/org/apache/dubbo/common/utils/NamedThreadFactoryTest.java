@@ -32,6 +32,7 @@ public class NamedThreadFactoryTest {
     public void testNewThread() throws Exception {
         NamedThreadFactory factory = new NamedThreadFactory();
         Thread t = factory.newThread(Mockito.mock(Runnable.class));
+        // t.getName() = pool-1-thread-1
         assertThat(t.getName(), allOf(containsString("pool-"), containsString("-thread-")));
         assertFalse(t.isDaemon());
         // since security manager is not installed.
@@ -42,6 +43,7 @@ public class NamedThreadFactoryTest {
     public void testPrefixAndDaemon() throws Exception {
         NamedThreadFactory factory = new NamedThreadFactory("prefix", true);
         Thread t = factory.newThread(Mockito.mock(Runnable.class));
+        // t.getName() = prefix-thread-1
         assertThat(t.getName(), allOf(containsString("prefix-"), containsString("-thread-")));
         assertTrue(t.isDaemon());
     }

@@ -43,6 +43,7 @@ public class StatusUtilsTest {
         assertThat(status.getLevel(), is(Status.Level.ERROR));
         assertThat(status.getMessage(), containsString("status1"));
         assertThat(status.getMessage(), containsString("status2"));
+        // 不含ok的字符串
         assertThat(status.getMessage(), not(containsString("status3")));
     }
 
@@ -56,6 +57,7 @@ public class StatusUtilsTest {
         Status status = StatusUtils.getSummaryStatus(statuses);
         assertThat(status.getLevel(), is(Status.Level.WARN));
         assertThat(status.getMessage(), containsString("status1"));
+        // 不含ok的字符串
         assertThat(status.getMessage(), not(containsString("status2")));
     }
 
@@ -65,6 +67,7 @@ public class StatusUtilsTest {
         Map<String, Status> statuses = new HashMap<String, Status>();
         statuses.put("status1", status1);
         Status status = StatusUtils.getSummaryStatus(statuses);
+        // 不含ok的字符串，默认返回OK
         assertThat(status.getLevel(), is(Status.Level.OK));
         assertThat(status.getMessage(), isEmptyOrNullString());
     }

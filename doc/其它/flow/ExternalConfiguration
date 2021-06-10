@@ -1,0 +1,389 @@
+dubbo-samples-configcenter-externalconfiguration
+
+// ====================================================================
+dubbo-properties-in-configcenter.properties
+	dubbo.config-center.address=zookeeper://${zookeeper.address:127.0.0.1}:2181
+	dubbo.registry.address=zookeeper://${zookeeper.address:127.0.0.1}:2181
+	dubbo.protocol.name=dubbo
+	dubbo.protocol.port=20880
+	dubbo.consumer.timeout=3000
+
+dubbo-properties-in-configcenter-provider.properties
+	dubbo.application.name=configcenter-annotation-provider
+
+// ====================================================================
+
+@SpringBootApplication
+@EnableDubbo(scanBasePackages = "org.apache.dubbo.samples.externalconfiguration.service")
+public class AnnotationProvider {
+
+    public static void main(String[] args) throws Exception {
+        // start embedded zookeeper server
+        new EmbeddedZooKeeper(2181, false).start();
+
+        SpringApplication.run(AnnotationProvider.class, args);
+        System.out.println("dubbo service started");
+        new CountDownLatch(1).await();
+    }
+
+	// ...
+// ====================================================================
+resources
+	META-INF
+		spring.factories
+			org.springframework.boot.env.EnvironmentPostProcessor=org.apache.dubbo.samples.externalconfiguration.spring.MyEnvironmentPostProcessor
+
+			public class MyEnvironmentPostProcessor implements EnvironmentPostProcessor {
+
+			    public MyEnvironmentPostProcessor() {
+			    }
+
+			    @Override
+			    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+			        try {
+			        	// ...
+
+// ====================================================================
+public class AnnotationProvider {
+	// ...
+
+	@Configuration
+    static public class ProviderConfiguration {
+
+        @Bean
+        public ConfigCenterBean configCenterBean() {
+            ConfigCenterBean configCenterBean = new ConfigCenterBean();
+            configCenterBean.setIncludeSpringEnv(true);
+            configCenterBean.setConfigFile("dubbo.properties");
+            configCenterBean.setAppConfigFile("configcenter-annotation-provider.dubbo.properties");
+            return configCenterBean;
+        }	
+
+// ====================================================================
+ConfigCenterBean
+	@Override
+    public void setEnvironment(Environment environment) {
+        if (includeSpringEnv) {
+            
+            setExternalConfig(getConfigurations(getConfigFile(), environment));
+            	
+            	getConfigurations
+            		Object rawProperties = environment.getProperty(key, Object.class);
+			        Map<String, String> externalProperties = new HashMap<>();
+			        try {
+			            if (rawProperties instanceof Map) {
+			                externalProperties.putAll((Map<String, String>) rawProperties);
+			            } else if (rawProperties instanceof String) {
+			                externalProperties.putAll(ConfigurationUtils.parseProperties((String) rawProperties));
+			                	
+			                	Map<String, String> map = new HashMap<>();
+						        if (StringUtils.isEmpty(content)) {
+						            logger.warn("...);
+						        } else {
+						            Properties properties = new Properties();
+						            properties.load(new StringReader(content));
+						            properties.stringPropertyNames().forEach(
+						                    k -> map.put(k, properties.getProperty(k))
+						            );
+						        }
+						        return map;
+			            }
+			            // ...
+            	
+            	setExternalConfig
+            		this.externalConfiguration = externalConfiguration;
+            
+            setAppExternalConfig(getConfigurations(StringUtils.isNotEmpty(getAppConfigFile()) ? getAppConfigFile() : ("application." + getConfigFile()), environment));
+            	
+            	getConfigurations
+            		// ...
+            	
+            	setAppExternalConfig
+            		this.appExternalConfiguration = appExternalConfiguration;
+        }
+    }
+// ====================================================================
+ConfigCenterBean
+	@Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+        SpringExtensionFactory.addApplicationContext(applicationContext);
+    }
+// ====================================================================
+Environment
+	@Override
+    public void initialize() throws IllegalStateException {
+        ConfigManager configManager = ApplicationModel.getConfigManager();
+        Optional<Collection<ConfigCenterConfig>> defaultConfigs = configManager.getDefaultConfigCenter();
+        defaultConfigs.ifPresent(configs -> {
+            for (ConfigCenterConfig config : configs) {
+            	
+            	// 这里getExternalConfiguration
+                this.setExternalConfigMap(config.getExternalConfiguration());
+                
+                // 这里getAppExternalConfiguration
+                this.setAppExternalConfigMap(config.getAppExternalConfiguration());
+            }
+        });
+
+        this.externalConfiguration.setProperties(externalConfigurationMap);
+        this.appExternalConfiguration.setProperties(appExternalConfigurationMap);
+    }
+
+// ====================================================================
+
+initialize
+	//...
+	startConfigCenter
+		// ...
+		else {
+            for (ConfigCenterConfig configCenterConfig : configCenters) {
+                
+                configCenterConfig.refresh();
+                	
+                	AbstractConfig refresh
+                		// ...
+                		CompositeConfiguration compositeConfiguration = env.getPrefixedConfiguration(this);
+                			CompositeConfiguration prefixedConfiguration = new CompositeConfiguration(config.getPrefix(), config.getId());
+					        Configuration configuration = new ConfigConfigurationAdapter(config);
+					        if (this.isConfigCenterFirst()) {
+					            // The sequence would be: SystemConfiguration -> AppExternalConfiguration -> ExternalConfiguration -> AbstractConfig -> PropertiesConfiguration
+					            // Config center has the highest priority
+					            prefixedConfiguration.addConfiguration(systemConfiguration);
+					            prefixedConfiguration.addConfiguration(environmentConfiguration);
+					            prefixedConfiguration.addConfiguration(appExternalConfiguration);
+					            prefixedConfiguration.addConfiguration(externalConfiguration);
+					            prefixedConfiguration.addConfiguration(configuration);
+					            prefixedConfiguration.addConfiguration(propertiesConfiguration);
+                		// ..
+                		String value = compositeConfiguration.getString(extractPropertyName(getClass(), method));
+                			Configuration getString
+                				default String getString(String key) {
+							        return convert(String.class, key, null);
+							        	Configuration convert
+							        		String value = (String) getProperty(key);
+							        			getProperty(key, null);
+								        			CompositeConfiguration getProperty(String key, Object defaultValue)
+								        				if (StringUtils.isNotEmpty(prefix)) {
+												            if (StringUtils.isNotEmpty(id)) {
+												                value = getInternalProperty(prefix + id + "." + key);
+												                	CompositeConfiguration getInternalProperty
+												                		for (Configuration config : configList) {
+												                			 if (config.containsKey(key)) {
+												                			 	Configuration containsKey
+												                			 		return getProperty(key) != null;
+												                			 			return getProperty(key, null);
+												                			 				// 另换行
+
+
+							        		// ...
+							        			
+							    }
+
+                ConfigValidationUtils.validateConfigCenterConfig(configCenterConfig);
+            }
+        }
+
+return getProperty(key, null);
+// ====================================================================
+Configuration getProperty(String key, Object defaultValue)
+	Object value = getInternalProperty(key);
+    	InmemoryConfiguration getInternalProperty
+    		return store.get(key);
+    			// key eg 
+    			// dubbo.config-center.configCenterBean.check
+    			// dubbo.config-center.check
+    			// dubbo.config-center.configCenterBean.address  
+    			// dubbo.config-center.address // 注意这个正好就是我们前面dubbo-properties-in-configcenter.properties文件配置的
+    return value != null ? value : defaultValue;
+
+注意有两个InmemoryConfiguration，分别是 externalConfiguration 和 AppExternalConfiguration，取的时候也会都get一次，看有没有
+
+externalConfiguration
+	store = {HashMap@3442}  size = 5
+	 "dubbo.protocol.name" -> "dubbo"
+	 "dubbo.registry.address" -> "zookeeper://127.0.0.1:2181"
+	 "dubbo.protocol.port" -> "20880"
+	 "dubbo.consumer.timeout" -> "3000"
+	 "dubbo.config-center.address" -> "zookeeper://127.0.0.1:2181"
+
+AppExternalConfiguration
+	store = {HashMap@3443}  size = 1
+	 "dubbo.application.name" -> "configcenter-annotation-provider"
+
+
+// ====================================================================
+
+startConfigCenter
+	//...
+	if (CollectionUtils.isNotEmpty(configCenters)) {
+        CompositeDynamicConfiguration compositeDynamicConfiguration = new CompositeDynamicConfiguration();
+        for (ConfigCenterConfig configCenter : configCenters) {
+            compositeDynamicConfiguration.addConfiguration(prepareEnvironment(configCenter));
+            	prepareEnvironment
+            		// ...
+            		String appGroup = getApplication().getName();
+            			 ApplicationConfig application = configManager
+				                .getApplication()
+				                .orElseGet(() -> {
+				                    ApplicationConfig applicationConfig = new ApplicationConfig();
+				                    configManager.setApplication(applicationConfig);
+				                    return applicationConfig;
+				                });
+
+				        application.refresh();
+				        	// ... 和前面刷新confi-center的时候一样
+				        	// key 很多，关键的如下，正好就是我们在配置文件配置的
+				        	// dubbo.application.configcenter-annotation-provider.name
+				        	// dubbo.application.name -> configcenter-annotation-provider 这里就能拿到值了
+				        return application;
+            		// ..
+        }
+        environment.setDynamicConfiguration(compositeDynamicConfiguration);
+    }
+// ====================================================================
+startConfigCenter
+	//...
+
+	configManager.refreshAll();
+	  	write(() -> {
+            // refresh all configs here,
+            getApplication().ifPresent(ApplicationConfig::refresh);
+            getMonitor().ifPresent(MonitorConfig::refresh);
+            	// empty 不会刷新
+            getModule().ifPresent(ModuleConfig::refresh);
+            	// empty 不会刷新
+            getProtocols().forEach(ProtocolConfig::refresh);
+            	// empty 不会刷新
+            getRegistries().forEach(RegistryConfig::refresh);
+            	// empty 不会刷新
+            getProviders().forEach(ProviderConfig::refresh);
+            	// dubbo.provider.threads
+            	// dubbo.provider.providerConfig.threads
+            getConsumers().forEach(ConsumerConfig::refresh);
+            	// empty 不会刷新
+        });
+// ====================================================================
+checkGlobalConfigs();
+	// ..
+	Collection<ConsumerConfig> consumers = configManager.getConsumers();
+    if (CollectionUtils.isEmpty(consumers)) {
+        configManager.getDefaultConsumer().orElseGet(() -> {
+            ConsumerConfig consumerConfig = new ConsumerConfig();
+            configManager.addConsumer(consumerConfig);
+            consumerConfig.refresh();
+            	// ....
+            return consumerConfig;
+        });
+    }
+// ====================================================================
+
+ServiceConfig export
+	// ..
+	checkAndUpdateSubConfigs();
+	// ..
+		checkProtocol();
+			if (CollectionUtils.isEmpty(protocols) && provider != null) {
+	            setProtocols(provider.getProtocols());
+	        }
+	        convertProtocolIdsToProtocols();
+	        	computeValidProtocolIds();
+			        if (StringUtils.isEmpty(protocolIds)) {
+			            if (CollectionUtils.isEmpty(protocols)) {
+			                List<ProtocolConfig> protocolConfigs = ApplicationModel.getConfigManager().getDefaultProtocols();
+			                if (protocolConfigs.isEmpty()) {
+			                    protocolConfigs = new ArrayList<>(1);
+			                    ProtocolConfig protocolConfig = new ProtocolConfig();
+			                    protocolConfig.setDefault(true);
+			                    protocolConfig.refresh();
+			                    	ProtocolConfig refresh // 注意这里
+			                    		if (StringUtils.isEmpty(this.getName())) {
+								            this.setName(DUBBO_VERSION_KEY);
+								        }
+								        super.refresh();
+								        	// ....
+								        	// dubbo.protocol.dubbo.name
+								        	// dubbo.protocol.name
+								        	// dubbo.protocol.dubbo.port
+								        	// dubbo.protocol.port
+								        if (StringUtils.isNotEmpty(this.getId())) {
+								            this.setPrefix(PROTOCOLS_SUFFIX);
+								            super.refresh();
+								        }
+			                    	
+			                    protocolConfigs.add(protocolConfig);
+			                    ApplicationModel.getConfigManager().addProtocol(protocolConfig);
+			                }
+			                setProtocols(protocolConfigs);
+			            }
+	
+        if (!isOnlyInJvm()) {
+            checkRegistry();
+            	AbstractInterfaceConfig checkRegistry
+        			convertRegistryIdsToRegistries();
+        				computeValidRegistryIds();
+				        if (StringUtils.isEmpty(registryIds)) {
+				            if (CollectionUtils.isEmpty(registries)) {
+				                List<RegistryConfig> registryConfigs = ApplicationModel.getConfigManager().getDefaultRegistries();
+				                if (registryConfigs.isEmpty()) {
+				                    registryConfigs = new ArrayList<>();
+				                    RegistryConfig registryConfig = new RegistryConfig();
+				                    registryConfig.refresh(); // 注意
+				                    	super.refresh();
+				                    		// ....
+				                    		// dubbo.registry.address  // CompositeConfiguration#getInternalPropertyid为null
+								        if (StringUtils.isNotEmpty(this.getId())) {
+								            this.setPrefix(REGISTRIES_SUFFIX);
+								            super.refresh();
+								        }
+				                    registryConfigs.add(registryConfig);
+				                }
+				                setRegistries(registryConfigs);
+
+			        // ...
+        }
+	// ..	
+
+// ====================================================================
+consumer的逻辑和前面类似
+
+@SpringBootApplication
+@EnableDubbo(scanBasePackages = "org.apache.dubbo.samples.externalconfiguration.consumer")
+public class AnnotationConsumer {
+
+    public static void main(String[] args) {
+        ConfigurableApplicationContext context = SpringApplication.run(AnnotationConsumer.class, args);
+        AnnotationAction action = context.getBean(AnnotationAction.class);
+
+        String result = action.doSayHello("world");
+        System.out.println("result: " + result);
+    }
+
+    @Configuration
+    static public class ConsumerConfiguration {
+
+        /**
+         * It's still required to initialize ConfigCenterBean, here we use the JavaBean method, but it doesn't matter
+         * which way you use, for example, xml or .properties are all ok.
+         */
+        @Bean
+        public ConfigCenterBean configCenterBean() {
+            ConfigCenterBean configCenterBean = new ConfigCenterBean();
+            // This is a critical switch to tell Dubbo framework to get configs from standard Spring Environment
+            configCenterBean.setIncludeSpringEnv(true);
+            // by default is dubbo.properties
+            configCenterBean.setConfigFile("dubbo.properties");
+            // by default is application.dubbo.properties
+            configCenterBean.setAppConfigFile("configcenter-annotation-provider.dubbo.properties");
+            return configCenterBean;
+        }
+    }
+}
+
+dubo-properties-in-configcenter-consumer.properties
+	dubbo.application.name=configcenter-annotation-consumer
+
+// ....
+// ====================================================================
+
+

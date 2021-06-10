@@ -102,6 +102,9 @@ public interface TypeUtils {
                         Type typeArgument = typeArguments[i];
                         if (typeArgument instanceof Class) {
                             // 如果是Class的类型，填充到容器，这是因为比如在处理Converter<String,T>，T不是Class子类型，所以会被过滤掉
+                            // 且注意这里的add(i)带了下标，表示放到最开头
+                            // 比如前面的两个元素，最后actualTypeArguments = {String,Integer} --StringToIntegerConverter
+                            // 所以Converter#getSourceType -> get(0)取到的就是String，Converter#getTargetType....也就满足Converter#accept了
                             actualTypeArguments.add(i, (Class) typeArgument);
                         }
                     }

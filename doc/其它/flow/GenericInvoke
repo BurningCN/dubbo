@@ -1,0 +1,301 @@
+GenericServiceTest
+// ====================================================================
+DemoService server = new DemoServiceImpl();
+ProxyFactory proxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
+Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
+URL url = URL.valueOf("dubbo://127.0.0.1:5342/" + DemoService.class.getName() + "?version=1.0.0&generic=true&timeout=3000000");
+Exporter<DemoService> exporter = protocol.export(proxyFactory.getInvoker(server, DemoService.class, url));
+
+
+// 这里没有服务接口的信息
+Invoker<GenericService> invoker = protocol.refer(GenericService.class, url);
+GenericService client = proxyFactory.getProxy(invoker, true);
+	public InvokerInvocationHandler(Invoker<?> handler) {
+        
+        this.invoker = handler;
+        this.url = invoker.getUrl();
+        String serviceKey = this.url.getServiceKey();
+        this.protocolServiceKey = this.url.getProtocolServiceKey();
+        if (serviceKey != null) {
+            this.consumerModel = ApplicationModel.getConsumerModel(serviceKey);
+        }
+        // this.protocolServiceKey = "org.apache.dubbo.service.DemoService:1.0.0:dubbo"
+		// serviceKey = "org.apache.dubbo.service.DemoService:1.0.0"
+    }
+
+
+// 了解这一行是怎么就知道调用的是DemoService
+Object result = client.$invoke("sayHello", new String[]{"java.lang.String"}, new Object[]{"haha"});
+	InvokerInvocationHandler invoke
+		RpcInvocation rpcInvocation = new RpcInvocation(method, invoker.getInterface().getName(), protocolServiceKey, args);
+			// ...
+			initParameterDesc();
+				ServiceRepository repository = ApplicationModel.getServiceRepository();
+		        if (StringUtils.isNotEmpty(serviceName)) {
+		            ServiceDescriptor serviceDescriptor = repository.lookupService(serviceName);
+		            if (serviceDescriptor != null) {
+		                MethodDescriptor methodDescriptor = serviceDescriptor.getMethod(methodName, parameterTypes);
+		                if (methodDescriptor != null) {
+		                	// 拿到的是GenericService的方法信息
+		                    this.parameterTypesDesc = methodDescriptor.getParamDesc();
+		                    this.compatibleParamSignatures = methodDescriptor.getCompatibleParamSignatures();
+		                    this.returnTypes = methodDescriptor.getReturnTypes();
+		                }
+		            }
+		        }
+		        // ...
+
+		// serviceKey = org.apache.dubbo.service.DemoService:1.0.0 ,这就是服务接口的信息拿到了
+        String serviceKey = invoker.getUrl().getServiceKey();
+        	FilterNode getUrl
+        		return invoker.getUrl();
+        			ListenerInvokerWrapper getUrl
+        				 return invoker.getUrl();
+        				 	AsyncToSyncInvoker getUrl	
+        				 		return invoker.getUrl();
+        				 			AbstractInvoker getUrl // this 为DubboInvoker
+        				 			  return url; // "dubbo://127.0.0.1:5342/" + DemoService.class.getName() + "?version=1.0.0&generic=true&timeout=3000000"
+        
+   		
+        rpcInvocation.setTargetServiceUniqueName(serviceKey);
+        // ...
+        return invoker.invoke(rpcInvocation).recreate();
+        	//...
+        	GenericImplFilter invoke // 该类被激活是因为url含有generic参数
+        		// ...
+        		else if (isMakingGenericCall(generic, invocation)) {
+		            Object[] args = (Object[]) invocation.getArguments()[2];
+		            if (ProtocolUtils.isJavaGenericSerialization(generic)) {
+
+		                for (Object arg : args) {
+		                    if (byte[].class != arg.getClass()) {
+		                        error(generic, byte[].class.getName(), arg.getClass().getName());
+		                    }
+		                }
+		            } else if (ProtocolUtils.isBeanGenericSerialization(generic)) {
+		                for (Object arg : args) {
+		                    if (!(arg instanceof JavaBeanDescriptor)) {
+		                        error(generic, JavaBeanDescriptor.class.getName(), arg.getClass().getName());
+		                    }
+		                }
+		            }
+
+		            invocation.setAttachment(
+		                    GENERIC_KEY, invoker.getUrl().getParameter(GENERIC_KEY));
+		        }
+		        return invoker.invoke(invocation);
+
+		    AbstractInvoker invoke
+		    	// ...
+		    	invocation.setInvokeMode(RpcUtils.getInvokeMode(url, invocation));
+		    		if (inv instanceof RpcInvocation) {
+			            RpcInvocation rpcInvocation = (RpcInvocation) inv;
+			            // 为空
+			            if (rpcInvocation.getInvokeMode() != null) {
+			                return rpcInvocation.getInvokeMode();
+			            }
+			        }
+
+			        if (isReturnTypeFuture(inv)) {
+			        		Class<?> clazz;
+					        if (inv instanceof RpcInvocation) {
+					        	// 走这里
+					            clazz = ((RpcInvocation) inv).getReturnType();
+					        } else {
+					            clazz = getReturnType(inv);
+					        }
+					        // 走这里
+					        return (clazz != null && CompletableFuture.class.isAssignableFrom(clazz)) || isGenericAsync(inv);
+			            return InvokeMode.FUTURE;
+			        } else if (isAsync(url, inv)) {
+				        	boolean isAsync;
+					        if (inv instanceof RpcInvocation) {
+					            RpcInvocation rpcInvocation = (RpcInvocation) inv;
+					            if (rpcInvocation.getInvokeMode() != null) {
+					                return rpcInvocation.getInvokeMode() == InvokeMode.ASYNC;
+					            }
+					        }
+
+					        if (Boolean.TRUE.toString().equals(inv.getAttachment(ASYNC_KEY))) {
+					            isAsync = true;
+					        } else {
+					            isAsync = url.getMethodParameter(getMethodName(inv), ASYNC_KEY, false);
+					        }
+					        return isAsync;
+			            return InvokeMode.ASYNC;
+			        } else {
+			            return InvokeMode.SYNC;
+			        }
+
+			DubboInvoker doInvoke
+				RpcInvocation inv = (RpcInvocation) invocation;
+		        final String methodName = RpcUtils.getMethodName(invocation);
+		        inv.setAttachment(PATH_KEY, getUrl().getPath());
+		        	// org.apache.dubbo.service.DemoService
+		        inv.setAttachment(VERSION_KEY, version);
+
+		    // ...
+
+		    DubboCodec encodeRequestData(Channel channel, ObjectOutput out, Object data, String version)
+
+		    	RpcInvocation inv = (RpcInvocation) data;
+		        out.writeUTF(version); // 2.0.2
+
+		        String serviceName = inv.getAttachment(INTERFACE_KEY);
+		        if (serviceName == null) {
+		            serviceName = inv.getAttachment(PATH_KEY); // path -> org.apache.dubbo.service.DemoService
+		        }
+		        out.writeUTF(serviceName);
+		        out.writeUTF(inv.getAttachment(VERSION_KEY)); // version -> 1.0.0
+
+		        out.writeUTF(inv.getMethodName()); // $invoke 
+		        out.writeUTF(inv.getParameterTypesDesc()); // Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/Object;
+		        Object[] args = inv.getArguments(); //  "sayHello" "java.lang.String" "haha"
+
+		        if (args != null) {
+		            for (int i = 0; i < args.length; i++) {
+		                out.writeObject(encodeInvocationArgument(channel, inv, i));
+		            }
+		        }
+		        out.writeAttachments(inv.getObjectAttachments());
+		        	attachments = {HashMap@2792}  size = 3
+					 "path" -> "org.apache.dubbo.service.DemoService"
+					 "version" -> "1.0.0"
+					 "generic" -> "true"
+
+// ====================================================================
+服务端
+DecodeableRpcInvocation decode(Channel channel, InputStream input)
+	ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
+                .deserialize(channel.getUrl(), input);
+    this.put(SERIALIZATION_ID_KEY, serializationType);
+
+    String dubboVersion = in.readUTF();
+    request.setVersion(dubboVersion);
+    setAttachment(DUBBO_VERSION_KEY, dubboVersion); // 1
+
+    String path = in.readUTF();
+    setAttachment(PATH_KEY, path); // 1
+    String version = in.readUTF();
+    setAttachment(VERSION_KEY, version); // 1
+
+    setMethodName(in.readUTF()); // 1
+
+    String desc = in.readUTF();
+    setParameterTypesDesc(desc);  // 1 Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/Object;
+
+    // ...
+    Object[] args = DubboCodec.EMPTY_OBJECT_ARRAY;
+    Class<?>[] pts = DubboCodec.EMPTY_CLASS_ARRAY;
+    if (desc.length() > 0) {
+    	ServiceRepository repository = ApplicationModel.getServiceRepository();
+    	// path org.apache.dubbo.service.DemoService
+        ServiceDescriptor serviceDescriptor = repository.lookupService(path);
+        if (serviceDescriptor != null) { // 这里是null
+        	// ...
+        }
+        // 走这里
+        if (pts == DubboCodec.EMPTY_CLASS_ARRAY) {
+            if (!RpcUtils.isGenericCall(desc, getMethodName()) && !RpcUtils.isEcho(desc, getMethodName())) {
+                throw new IllegalArgumentException("Service not found:" + path + ", " + getMethodName());
+            }
+            //  走这里
+             pts = {Class[3]@4364} 
+			 0 = {Class@327} "class java.lang.String"
+			 1 = {Class@193} "class [Ljava.lang.String;"
+			 2 = {Class@256} "class [Ljava.lang.Object;"
+            pts = ReflectUtils.desc2classArray(desc);
+        }
+        args = new Object[pts.length];
+        for (int i = 0; i < args.length; i++) {
+            try {
+                args[i] = in.readObject(pts[i]);
+            } catch (Exception e) {
+                if (log.isWarnEnabled()) {
+                    log.warn("Decode argument failed: " + e.getMessage(), e);
+                }
+            }
+        }
+        setParameterTypes(pts);// 1
+        Map<String, Object> map = in.readAttachments(); 
+        if (map != null && map.size() > 0) {
+            Map<String, Object> attachment = getObjectAttachments();
+            if (attachment == null) {
+                attachment = new HashMap<>();
+            }
+            attachment.putAll(map);
+            setObjectAttachments(attachment); // 1
+        }
+
+		args = {Object[3]@4372} 
+		 0 = "sayHello"
+		 1 = {String[1]@4430} 
+		  0 = "java.lang.String"
+		 2 = {Object[1]@4440} 
+		  0 = "haha"
+        for (int i = 0; i < args.length; i++) {
+            args[i] = decodeInvocationArgument(channel, this, pts, i, args[i]);
+        }
+
+        setArguments(args);
+        // targetServiceName = org.apache.dubbo.service.DemoService:1.0.0
+        String targetServiceName = buildKey((String) getAttachment(PATH_KEY),
+                getAttachment(GROUP_KEY),
+                getAttachment(VERSION_KEY));
+        setTargetServiceUniqueName(targetServiceName);
+// ====================================================================
+requestHandler reply
+	// ..
+	Invoker<?> invoker = getInvoker(channel, inv);
+		String serviceKey = serviceKey(
+                port,
+                path,
+                (String) inv.getObjectAttachments().get(VERSION_KEY),
+                (String) inv.getObjectAttachments().get(GROUP_KEY)
+        );
+        // serviceKey  org.apache.dubbo.service.DemoService:1.0.0:5342
+        DubboExporter<?> exporter = (DubboExporter<?>) exporterMap.get(serviceKey);
+    // ....
+    Result result = invoker.invoke(inv);
+    	// 层ceng过滤器
+    	GenericFilter  Result invoke(Invoker<?> invoker, Invocation inv)
+    		if ((inv.getMethodName().equals($INVOKE) || inv.getMethodName().equals($INVOKE_ASYNC))
+                && inv.getArguments() != null
+                && inv.getArguments().length == 3
+                && !GenericService.class.isAssignableFrom(invoker.getInterface())) {
+
+		        String name = ((String) inv.getArguments()[0]).trim(); // sayHello
+		        String[] types = (String[]) inv.getArguments()[1]; // java.lang.String
+		        Object[] args = (Object[]) inv.getArguments()[2]; // haha
+		        try {
+		        	// invoker.getInterface() 是 DemoService.class
+		            Method method = ReflectUtils.findMethodByMethodSignature(invoker.getInterface(), name, types);
+		            Class<?>[] params = method.getParameterTypes();
+		            // ...
+		            String generic = inv.getAttachment(GENERIC_KEY);
+
+	                if (StringUtils.isBlank(generic)) {
+	                    generic = RpcContext.getContext().getAttachment(GENERIC_KEY);
+	                }
+
+	                if (StringUtils.isEmpty(generic)
+	                        || ProtocolUtils.isDefaultGenericSerialization(generic)
+	                        || ProtocolUtils.isGenericReturnRawResult(generic)) {
+	                    // 走这里
+	                    args = PojoUtils.realize(args, params, method.getGenericParameterTypes());
+	                else{
+	                	 // ... 不走
+	                }
+	                RpcInvocation rpcInvocation = new RpcInvocation(method, invoker.getInterface().getName(), invoker.getUrl().getProtocolServiceKey(), args, inv.getObjectAttachments(), inv.getAttributes());
+	                rpcInvocation.setInvoker(inv.getInvoker());
+	                rpcInvocation.setTargetServiceUniqueName(inv.getTargetServiceUniqueName());
+
+	                return invoker.invoke(rpcInvocation);
+	                	// 继续过滤器 ....  
+	                	AbstractProxyInvoker  invoke
+	                		Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
+	                		// value = hello haha
+
+    // ....
+GenericFilter # onResponse 的逻辑不说了，也很复杂
+GenericImplFilter # onResponse 的逻辑不说了，也很复杂

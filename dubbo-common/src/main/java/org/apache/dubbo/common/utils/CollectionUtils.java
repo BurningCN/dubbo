@@ -48,6 +48,7 @@ public class CollectionUtils {
             if (s1 == null && s2 == null) {
                 return 0;
             }
+            // null的排在最前面
             if (s1 == null) {
                 return -1;
             }
@@ -105,6 +106,10 @@ public class CollectionUtils {
 
     // gx 和前面的反操作，把Map<String, Map<String, String>>结构变成string
     public static Map<String, List<String>> joinAll(Map<String, Map<String, String>> map, String separator) {
+        //map = {HashMap@1608}  size = 3
+        // "1" -> "a"
+        // "2" -> "b"
+        // "3" -> "c"
         if (map == null) {
             return null;
         }
@@ -112,11 +117,19 @@ public class CollectionUtils {
         for (Map.Entry<String, Map<String, String>> entry : map.entrySet()) {
             result.put(entry.getKey(), join(entry.getValue(), separator));
         }
+        //list = {ArrayList@1609}  size = 3
+        // 0 = "1:a"
+        // 1 = "2:b"
+        // 2 = "3:c"
         return result;
     }
 
     //
     public static Map<String, String> split(List<String> list, String separator) {
+        //list = {Arrays$ArrayList@1619}  size = 3
+        // 0 = "1:a"
+        // 1 = "2:b"
+        // 2 = "3:c"
         if (list == null) {
             return null;
         }
@@ -133,6 +146,10 @@ public class CollectionUtils {
                 map.put(item.substring(0, index), item.substring(index + 1));
             }
         }
+        //map = {HashMap@1624}  size = 3
+        // "1" -> "a"
+        // "2" -> "b"
+        // "3" -> "c"
         return map;
     }
 
@@ -201,6 +218,13 @@ public class CollectionUtils {
     }
 
     public static Map<String, String> toStringMap(String... pairs) {
+        //pairs = {String[6]@1604}
+        // 0 = "1"
+        // 1 = "a"
+        // 2 = "2"
+        // 3 = "b"
+        // 4 = "3"
+        // 5 = "c"
         Map<String, String> parameters = new HashMap<>();
         if (ArrayUtils.isEmpty(pairs)) {
             return parameters;
@@ -214,6 +238,10 @@ public class CollectionUtils {
                 parameters.put(pairs[i], pairs[i + 1]);
             }
         }
+        //parameters = {HashMap@1612}  size = 3
+        // "1" -> "a"
+        // "2" -> "b"
+        // "3" -> "c"
         return parameters;
     }
 

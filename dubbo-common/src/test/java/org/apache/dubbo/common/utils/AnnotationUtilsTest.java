@@ -166,6 +166,7 @@ public class AnnotationUtilsTest {
         assertADeclaredAnnotations(annotations, 2);
 
         // 获取A类的execute方法，这个方法上面也有注解，传进去的Method也是被AnnotatedElement接受的（之前A.class也是）
+        // 注意这个方法 和 前面的是重载的两个方法，第一个参数类型不同
         annotations = getAllDeclaredAnnotations(findMethod(A.class, "execute"));
         // execute方法上的注解就是MyAdaptive，强转下
         MyAdaptive myAdaptive = (MyAdaptive) annotations.get(0);

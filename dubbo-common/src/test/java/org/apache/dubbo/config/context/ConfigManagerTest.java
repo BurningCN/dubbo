@@ -139,7 +139,7 @@ public class ConfigManagerTest {
     @Test
     public void testProviderConfig() {
         ProviderConfig config = new ProviderConfig();
-        // asList两个元素，一个为null，内部处理肯定忽略了，所以后面的configs.size = 0
+        // asList两个元素，一个为null，内部处理肯定忽略了，所以后面的configs.size = 1
         // 进去
         configManager.addProviders(asList(config, null));
         // 进去
@@ -185,7 +185,7 @@ public class ConfigManagerTest {
         Collection<ProtocolConfig> configs = configManager.getProtocols();
         assertEquals(1, configs.size());
         assertEquals(config, configs.iterator().next());
-        // 上面的config也是默认的，进去
+        // 上面的config也是默认的，进去 只要没有设置过 default = false属性(AbstractConfig 的 protected Boolean isDefault;)，那么都是默认的，那么使用getDefaultProtocols都能返回
         assertFalse(configManager.getDefaultProtocols().isEmpty());
     }
 

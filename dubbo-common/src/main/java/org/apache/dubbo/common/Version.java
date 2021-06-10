@@ -98,7 +98,7 @@ public final class Version {
     /**
      * Dubbo 2.x protocol version numbers are limited to 2.0.2/2000200 ~ 2.0.99/2009900, other versions are consider as
      * invalid or not from official release.
-     *
+     *Dubbo 2.x 协议版本号限制在 2.0.2/2000200 ~ 2.0.99/2009900，其他版本以官方发布为准。
      * @param version, the protocol version.
      * @return
      */

@@ -417,7 +417,8 @@ public abstract class AbstractConfig implements Serializable {
     }
 
     // 结合AbstractConfigTest.appendAnnotation测试程序
-    // 第一个参数一般是注解.class，第二个一般是（获取到的）注解对象，方法的主要作用就是把annotation注解对象的一些值填充到this对象
+    // 第一个参数一般是"注解.class"，第二个一般是（获取到的）注解对象，方法的主要作用就是把annotation注解对象的一些值填充到this对象
+    // 其实第一个对象是多余的，直接第二个就能拿到class信息，但是这里可能是为了更好理解
     protected void appendAnnotation(Class<?> annotationClass, Object annotation) {
         Method[] methods = annotationClass.getMethods();
         // 遍历注解的所有方法
@@ -430,6 +431,7 @@ public abstract class AbstractConfig implements Serializable {
                     && !Modifier.isStatic(method.getModifiers())) {
                 try {
                     String property = method.getName();
+                    // 去看@Service和@Reference注解里面就有这些属性 （下面字面量的属性都有）
                     if ("interfaceClass".equals(property) || "interfaceName".equals(property)) {
                         property = "interface";
                     }
@@ -437,7 +439,7 @@ public abstract class AbstractConfig implements Serializable {
                     String setter = "set" + property.substring(0, 1).toUpperCase() + property.substring(1);
                     // 调用方法获取返回值
                     Object value = method.invoke(annotation);
-                    // 返回值不null且不是默认值
+                    // 返回值不null且不是默认值（一般注解的method.getDefaultValue()就是有默认值的）
                     if (value != null && !value.equals(method.getDefaultValue())) {
                         // 如果是基本数据类型，获取其包装类型，否则返回类型自己，目的是为了后面获取this的set方法（this一般是AbstractConfig的子类对象）
                         Class<?> parameterType = ReflectUtils.getBoxedClass(method.getReturnType());
@@ -477,6 +479,8 @@ public abstract class AbstractConfig implements Serializable {
      * Notice! This method should include all properties in the returning map, treat @Parameter differently compared to appendParameters.
      */
     // 看上面最后一行注释前半句就是该方法的作用，然后还有一些意思就是说这个方法和appendParameters有不少重复的地方，耦合了，希望重构下，而且和appendParameters对待@Parameter是不一样的
+    // 还有注意上面注释最后一句----注意！ 此方法应包括返回映射中的所有属性（即使属性值为null也要存入map），与 appendParameters 相比，以不同方式对待 @Parameter。
+    // 也就是说下面parameter.key()、parameter.useKeyAsProperty()属性，其他parameter的属性一律不管
     public Map<String, String> getMetaData() {
         Map<String, String> metaData = new HashMap<>();
         Method[] methods = this.getClass().getMethods();
@@ -494,6 +498,8 @@ public abstract class AbstractConfig implements Serializable {
                         key = calculateAttributeFromGetter(name);
                     }
                     // treat url and configuration differently, the value should always present in configuration though it may not need to present in url.
+                    // if (method.getReturnType() == Object.class || parameter != null && parameter.excluded()) {
+                    // 区别对待 url 和配置，该值应该始终出现在配置中，尽管它可能不需要出现在 url 中。
                     // if (method.getReturnType() == Object.class || parameter != null && parameter.excluded()) {
                     if (method.getReturnType() == Object.class) {
                         metaData.put(key, null);
@@ -554,7 +560,7 @@ public abstract class AbstractConfig implements Serializable {
                 if(method.getName().equals("setEscape")){
                     int i = 0;
                 }
-                // SetXx方法
+                // SetXx方法 进去
                 if (MethodUtils.isSetter(method)) {
                     try {
                         // extractPropertyName(getClass(), method))从setXx方法获取属性名xx，然后到compositeConfiguration查找值
@@ -573,6 +579,7 @@ public abstract class AbstractConfig implements Serializable {
                     }
                 } else if (isParametersSetter(method)) {
                     // extractPropertyName(getClass(), method)的值为parameters，先从compositeConfiguration获取k为parameters的值
+                    // 比如 dubbo.protocol.parameters(dubbo.protocol.为ProtocolConfig的默认前缀)
                     String value = StringUtils.trim(compositeConfiguration.getString(extractPropertyName(getClass(), method)));
                     if (StringUtils.isNotEmpty(value)) {
                         // 调用this.getParameters()方法
