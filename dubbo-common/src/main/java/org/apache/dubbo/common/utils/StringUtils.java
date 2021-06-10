@@ -1076,16 +1076,19 @@ public final class StringUtils {
     // 主要是构建一个map，比如上面的例子那么就是map里有两个entry
     public static Map<String, String> parseParameters(String rawParameters) {
 
+        // 第一次通配
         Matcher matcher = PARAMETERS_PATTERN.matcher(rawParameters);
         if (!matcher.matches()) {
             return Collections.emptyMap();
         }
 
+        // 拿到{},{},{} （除掉了外层的[]）
         String pairs = matcher.group(1);
         String[] pairArr = pairs.split("\\s*,\\s*");
 
         Map<String, String> parameters = new HashMap<>();
         for (String pair : pairArr) {
+            // 第二次通配
             Matcher pairMatcher = PAIR_PARAMETERS_PATTERN.matcher(pair);
             if (pairMatcher.matches()) {
                 parameters.put(pairMatcher.group(1), pairMatcher.group(2));

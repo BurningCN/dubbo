@@ -68,7 +68,7 @@ public abstract class AbstractMethodConfig extends AbstractConfig {
      * note that: the mock doesn't support on the provider side，and the mock is executed when a non-business exception
      * occurs after a remote service call
      *  当服务执行失败时调用的模拟类的名称
-     *  请注意:mock在提供者端不支持，当远程服务调用后发生非业务异常时，将执行mock
+     *  请注意:mock在提供者端不支持（说白了就是在消费端配置的），当远程服务调用后发生非业务异常时，将执行mock
      */
     protected String mock;
 

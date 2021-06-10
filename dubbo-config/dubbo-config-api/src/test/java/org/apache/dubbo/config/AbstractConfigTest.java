@@ -501,6 +501,8 @@ public class AbstractConfigTest {
     public void testRefreshById() {
         try {
             OverrideConfig overrideConfig = new OverrideConfig();
+            // 这里含有id，那么后面的refresh的前缀就是prefix+id = dubbo.override.override-id.
+            // 且注意下面的属性在getPrefixedConfiguration方法中会被封装到ConfigConfigurationAdapter中，且也是自动装配前缀的（下面的external需要自己填前缀、env和system-property以及dubbo.properties也是需要自己加前缀）
             overrideConfig.setId("override-id");
             overrideConfig.setAddress("override-config://127.0.0.1:2181");
             overrideConfig.setProtocol("override-config");
@@ -522,6 +524,8 @@ public class AbstractConfigTest {
             ConfigCenterConfig configCenter = new ConfigCenterConfig();
             overrideConfig.setConfigCenter(configCenter);
             // Load configuration from  system properties -> externalConfiguration -> RegistryConfig -> dubbo.properties
+            // 进去 注意里面的prefix+id
+            // CompositeConfiguration#getProperty 如果 value = getInternalProperty(prefix + id + "." + key); 为 null，那么会用getInternalProperty(prefix + key);再去找一遍
             overrideConfig.refresh();
 
             Assertions.assertEquals("external-override-id://127.0.0.1:2181", overrideConfig.getAddress());
@@ -557,7 +561,7 @@ public class AbstractConfigTest {
             overrideConfig.refresh();
 
             Assertions.assertEquals("value1", overrideConfig.getParameters().get("key1"));
-            // 上面配置了两个key2，不过refresh内部会用第二个key的v覆盖掉前一个
+            // 上面配置了两个key2，不过refresh内部会用第二个key的v覆盖掉前一个，因为后者的优先级更高
             Assertions.assertEquals("value5", overrideConfig.getParameters().get("key2"));
             Assertions.assertEquals("value3", overrideConfig.getParameters().get("key3"));
             Assertions.assertEquals("value4", overrideConfig.getParameters().get("key4"));
@@ -592,6 +596,7 @@ public class AbstractConfigTest {
                 Map<String, String> map = new HashMap<>();
                 map.put("notConflictKey", "value-from-env");
                 map.put("dubbo.override.notConflictKey2", "value-from-env");
+                // 设置到env（env的优先级在第二，仅次于system）
                 setOsEnv(map);
             } catch (Exception e) {
                 // ignore
@@ -600,7 +605,10 @@ public class AbstractConfigTest {
 
             overrideConfig.refresh();
 
+            // 内部会寻找 dubbn.override.notConflictKey，虽然前面External和env配置了，但是不带前缀，内部处理是优先获取前缀的，前缀走一轮
+            // 按照前缀循环一轮获取不到（循环指的是 CompositeConfiguration#getInternalProperty方法） 才会进行prefix+key进行循环第二轮，而OverrideConfig正好有（具体看 CompositeConfiguration#getProperty）
             Assertions.assertEquals("value-from-config", overrideConfig.getNotConflictKey());
+            // 内部会寻找 dubbn.override.notConflictKey2，正好从env找到
             Assertions.assertEquals("value-from-env", overrideConfig.getNotConflictKey2());
         } finally {
             ApplicationModel.getEnvironment().clearExternalConfigs();
@@ -617,7 +625,7 @@ public class AbstractConfigTest {
         overrideConfig.setEscape("override-config://");
         overrideConfig.setExclude("override-config");
 
-        // 进去
+        // 进去 ，这里是不会拼接前缀的。前缀的拼接在构建ConfigConfigurationAdapter的时候
         Map<String, String> metaData = overrideConfig.getMetaData();
         Assertions.assertEquals("override-config://127.0.0.1:2181", metaData.get("address"));
         Assertions.assertEquals("override-config", metaData.get("protocol"));

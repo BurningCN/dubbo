@@ -81,6 +81,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     /**
      * The {@code Filter} when the provider side exposed a service or the customer side references a remote service used,
      * if there are more than one, you can use commas to separate them
+     * * {@code Filter} 当provider端暴露一个service或者client端引用一个远程服务使用时，如果有多个，可以用逗号隔开
      */
     protected String filter;
 
@@ -209,7 +210,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
      * Check whether the remote service interface and the methods meet with Dubbo's requirements.it mainly check, if the
      * methods configured in the configuration file are included in the interface of remote service
      * <p>
-     * 检查远程服务接口和方法是否符合Dubbo的要求。主要检查配置文件中配置的方法是否包含在远程服务的接口中
+     * 检查远程服务接口和方法是否符合Dubbo的要求。主要检查配置文件中配置的方法是否包含在服务的接口中
      *
      * @param interfaceClass the interface of remote service
      * @param methods        the methods configured
@@ -227,11 +228,17 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
             for (MethodConfig methodBean : methods) {
                 methodBean.setService(interfaceClass.getName());
                 methodBean.setServiceId(this.getId());
+                // 注意内部会调用 config的getPrefix，注意MethodConfig的getConfig的内容如下
+                //return CommonConstants.DUBBO + "." + service
+                //                + (StringUtils.isEmpty(serviceId) ? "" : ("." + serviceId))
+                //                + "." + getName();
+                // eg dubbo.org.apache.dubbo.config.api.Greeting.null
                 methodBean.refresh();
                 String methodName = methodBean.getName();
                 if (StringUtils.isEmpty(methodName)) {
-                    //<dubbo:method> name attribute is required! Please check:
-                    // <dubbo:service interface="org.apache.dubbo.config.api.Greeting" ... ><dubbo:method name="" ... /></<dubbo:reference>
+                    /*
+                    <dubbo:method> name attribute is required! Please check: <dubbo:service interface="org.apache.dubbo.config.api.Greeting" ... ><dubbo:method name="" ... /></<dubbo:reference>
+                    */
                     throw new IllegalStateException("<dubbo:method> name attribute is required! Please check: " +
                             "<dubbo:service interface=\"" + interfaceClass.getName() + "\" ... >" +
                             "<dubbo:method name=\"\" ... /></<dubbo:reference>");
@@ -296,15 +303,16 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         }
     }
 
-    // 方法整体逻辑和 convertRegistryIdsToRegistries 相似
+    // 方法整体逻辑和 convertProtocolIdsToRegistries 相似
     private void convertRegistryIdsToRegistries() {
         // 进去
         computeValidRegistryIds();
         if (StringUtils.isEmpty(registryIds)) {
             if (CollectionUtils.isEmpty(registries)) {
-                // ids和list都为空
+                // ids和list都为空 --- 这种场景就是说dubbo:application和Reference/service都没有配置registry=xxx
 
                 // 从ConfigManager获取默认的注册中心，进去（比如demo-api-provider的程序，一开始就调用dubboBootstrap.registery(xx)方法xx注册到了configManager，所以肯定能取到）
+                // 如果在xml配置过dubbo:registry 那么是可以取到的
                 List<RegistryConfig> registryConfigs = ApplicationModel.getConfigManager().getDefaultRegistries();
                 if (registryConfigs.isEmpty()) {
                     // 为空的话构建一个
@@ -320,7 +328,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
                 setRegistries(registryConfigs); // 赋值给自己的属性
             }
         } else {
-            // 下面的逻辑不说了，参考 convertRegistryIdsToRegistries
+            // 去看下    public void setRegistryIds(String registryIds) { 方法的注释
 
             String[] ids = COMMA_SPLIT_PATTERN.split(registryIds);
             List<RegistryConfig> tmpRegistries = new ArrayList<>();
@@ -348,6 +356,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
 
     }
 
+    // 完整的复合配置
     public void completeCompoundConfigs(AbstractInterfaceConfig interfaceConfig) {
         if (interfaceConfig != null) {
             if (application == null) {
@@ -384,6 +393,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     protected void computeValidRegistryIds() {
         if (StringUtils.isEmpty(getRegistryIds())) {
             // 如果当前getRegistryIds为空，那么从ApplicationConfig获取registryIds
+            // 这就说明Application和reference/service标签都可以配置registry=xx属性，一个代表全局-app级别，一个代表serivice级别
             if (getApplication() != null && StringUtils.isNotEmpty(getApplication().getRegistryIds())) {
                 setRegistryIds(getApplication().getRegistryIds());// 赋值给自己的属性
             }
@@ -496,6 +506,7 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         return ApplicationModel.getConfigManager().getApplicationOrElseThrow();
     }
 
+    // 在 比如 <dubbo:reference 配置了 application
     @Deprecated
     public void setApplication(ApplicationConfig application) {
         this.application = application;
@@ -554,6 +565,10 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
         return registryIds;
     }
 
+    // 这个方法是怎么被调用的呢？看 DubboBeanDefinitionParser 的 这处代码
+    // beanDefinition.getPropertyValues().addPropertyValue(beanProperty + "Ids", value);
+    // 随着bean实例化的时候就会调用下面的方法 --- setProtocolIds也是
+    // 不仅是这个方法，其他setXX 都是在bean 的实例化过程被调用的（这样xml的信息就赋值过来了）
     public void setRegistryIds(String registryIds) {
         this.registryIds = registryIds;
     }

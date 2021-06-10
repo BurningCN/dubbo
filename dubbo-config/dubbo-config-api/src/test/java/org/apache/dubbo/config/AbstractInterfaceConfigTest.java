@@ -41,9 +41,11 @@ import java.util.Collections;
 public class AbstractInterfaceConfigTest {
     private static File dubboProperties;
 
+    // 注意这个注解@TempDir
     @BeforeAll
     public static void setUp(@TempDir Path folder) {
         ApplicationModel.reset();
+        ///var/folders/6s/_gz_922s2bs2ss1xfz335zl80000gp/T/junit3386098234995611063/dubbo.properties.file
         dubboProperties = folder.resolve(CommonConstants.DUBBO_PROPERTIES_KEY).toFile();
         System.setProperty(CommonConstants.DUBBO_PROPERTIES_KEY, dubboProperties.getAbsolutePath());
     }
@@ -80,7 +82,7 @@ public class AbstractInterfaceConfigTest {
 
         Assertions.assertThrows(IllegalStateException.class, () -> {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
-            // 进去 抛异常点注意下，即interfaceConfig必须得有ApplicationConfig对象
+            // 进去 抛异常点注意下，的确能自动构建一个RegistryConfig，但是valid不通过，因为address为空
             interfaceConfig.checkRegistry();
         });
     }
@@ -150,6 +152,7 @@ public class AbstractInterfaceConfigTest {
     public void checkStubAndMock2() {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
+            //<dubbo:service local="x.x.xClass" stub="x.x.xClass"/> 这里配置，配置实现类名称
             interfaceConfig.setLocal(GreetingLocal2.class.getName());
             // 内部检查第一步肯定通过，即Local-GreetingLocal2是Greeting的子类，但是没有含有Greeting类型参数的构造器，还是会抛异常
             interfaceConfig.checkStubAndLocal(Greeting.class);
@@ -200,6 +203,7 @@ public class AbstractInterfaceConfigTest {
         Assertions.assertThrows(IllegalStateException.class, () -> {
             InterfaceConfig interfaceConfig = new InterfaceConfig();
             // AbstractMethodConfig的mock属性，进去
+            // <dubbo:reference mock="return a"
             interfaceConfig.setMock("return {a, b}");
             // 内部不会抛异常，判断local和stub为空直接return
             interfaceConfig.checkStubAndLocal(Greeting.class);

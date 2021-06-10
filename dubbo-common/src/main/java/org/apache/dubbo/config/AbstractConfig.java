@@ -156,7 +156,7 @@ public abstract class AbstractConfig implements Serializable {
                         // 获取key值 application.version
                         key = parameter.key();
                     } else {
-                        // 获取getXXX的XXX属性名称并根绝驼峰转化按照split分割返回
+                        // 获取getXXX的XXX属性名称并根绝驼峰转化按照"."分割返回
                         key = calculatePropertyFromGetter(name);
                     }
                     // get方法没有参数，所以invoke传对象即可
@@ -328,6 +328,7 @@ public abstract class AbstractConfig implements Serializable {
 
     // gx
     private static String calculateAttributeFromGetter(String getter) {
+        // 3:2分别表示get和is
         int i = getter.startsWith("get") ? 3 : 2;
         return getter.substring(i, i + 1).toLowerCase() + getter.substring(i + 1);
     }
@@ -542,6 +543,7 @@ public abstract class AbstractConfig implements Serializable {
         return StringUtils.isNotEmpty(prefix) ? prefix : (CommonConstants.DUBBO + "." + getTagName(this.getClass()));
     }
 
+    // gx
     public void setPrefix(String prefix) {
         this.prefix = prefix;
     }
@@ -557,9 +559,6 @@ public abstract class AbstractConfig implements Serializable {
             Method[] methods = getClass().getMethods();
             // 遍历所有的SetXx方法和setParameters方法
             for (Method method : methods) {
-                if(method.getName().equals("setEscape")){
-                    int i = 0;
-                }
                 // SetXx方法 进去
                 if (MethodUtils.isSetter(method)) {
                     try {
@@ -604,13 +603,14 @@ public abstract class AbstractConfig implements Serializable {
             StringBuilder buf = new StringBuilder();
             buf.append("<dubbo:");
             // 获取tagName，this是AbstractConfig的子类对象，比如ApplicationConfig进行getTagName就是application、ReferenceConfig就是reference，进去
+            // eg <dubbo:application
             buf.append(getTagName(getClass()));
             Method[] methods = getClass().getMethods();
             for (Method method : methods) {
                 try {
                     // 遍历所有的get方法
                     if (MethodUtils.isGetter(method)) {
-                        // 根据getXx方法名取出xx属性名称
+                        // 根据getXx方法名取出xx属性名称（或者isXx的Xx）
                         String key = calculateAttributeFromGetter(method.getName());
 
                         try {
@@ -628,7 +628,7 @@ public abstract class AbstractConfig implements Serializable {
                             buf.append(" ");
                             buf.append(key);
                             buf.append("=\"");
-                            buf.append(value);
+                            buf.append(key.equals("password") ? "******" : value);
                             buf.append("\"");
                         }
                     }

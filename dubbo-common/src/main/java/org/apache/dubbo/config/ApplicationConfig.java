@@ -310,6 +310,7 @@ public class ApplicationConfig extends AbstractConfig {
         this.isDefault = isDefault;
     }
 
+    // 跟下  DUMP_DIRECTORY 参数的引用处，给 AbortPolicyWithReport 使用的
     @Parameter(key = DUMP_DIRECTORY)
     public String getDumpDirectory() {
         return dumpDirectory;
@@ -484,6 +485,9 @@ public class ApplicationConfig extends AbstractConfig {
             Map<String, String> inputParameters = new HashMap<>();
             inputParameters.put(APPLICATION_KEY, getName());
             inputParameters.put(HOST_KEY, getHostname());
+            //inputParameters = {HashMap@2087}  size = 2
+            // "application" -> "app"
+            // "host" -> "B-RHDTJG5H-2145.local"
 
             for (InfraAdapter adapter : adapters) {
                 // 进去

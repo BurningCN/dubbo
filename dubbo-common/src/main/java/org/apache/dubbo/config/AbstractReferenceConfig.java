@@ -40,6 +40,7 @@ public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
     /**
      * Check if service provider exists, if not exists, it will be fast fail
      */
+    // gx
     protected Boolean check;
 
     /**
@@ -89,6 +90,7 @@ public abstract class AbstractReferenceConfig extends AbstractInterfaceConfig {
 
     protected String router;
 
+    // gx
     public Boolean isCheck() {
         return check;
     }

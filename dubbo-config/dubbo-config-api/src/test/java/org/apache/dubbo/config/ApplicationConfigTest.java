@@ -165,6 +165,7 @@ public class ApplicationConfigTest {
     public void testDumpDirectory() throws Exception {
         ApplicationConfig application = new ApplicationConfig("app");
         application.setDumpDirectory("/dump");
+        // 进去
         assertThat(application.getDumpDirectory(), equalTo("/dump"));
         Map<String, String> parameters = new HashMap<String, String>();
         ApplicationConfig.appendParameters(parameters, application);
