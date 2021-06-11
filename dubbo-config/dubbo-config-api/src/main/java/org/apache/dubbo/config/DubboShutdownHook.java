@@ -35,6 +35,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * This is a singleton in order to ensure there is only one shutdown hook registered.
  * Because {@link //ApplicationShutdownHooks} use {@link java.util.IdentityHashMap}
  * to store the shutdown hooks.
+ *   关闭钩子线程来做清理工作。
+ *   这是一个单例，以确保只注册一个关闭钩子。
+ *   因为 {@link //ApplicationShutdownHooks} 使用 {@link java.util.IdentityHashMap}
+ *   存储关闭钩子。
  */
 // OK
 public class DubboShutdownHook extends Thread {

@@ -559,10 +559,10 @@ public class DubboBootstrap extends GenericEventListener {
         // 启动元数据中心 进去
         startMetadataCenter();
 
-        // 初始化元数据中心 进去（前面是Metadata[Center]、这里是Metadata[Service]，注意区分，后者默认实现为InMemoryWritableMetadataService）
+        // 初始化元数据中心 进去（前面是Metadata[Center]/MetadataReportInstance/MetadataReportConfig、这里是Metadata[Service](有个接口就是这个)，注意区分，后者默认实现为InMemoryWritableMetadataService）
         initMetadataService();
 
-        // 初始化事件监听器 进去
+        // 初始化事件监听器 进去（新版本删除了）
         initEventListener();
 
         if (logger.isInfoEnabled()) {
@@ -664,7 +664,7 @@ public class DubboBootstrap extends GenericEventListener {
             ConfigCenterConfig configCenterConfig = new ConfigCenterConfig();
             // 刷新下
             configCenterConfig.refresh();
-            // 进去
+            // 进去 （内部验证address是否为空，如果不为空，就要期望上面refresh能否填充address，也就是能否从组合配置中找到 dubbo.config-center.address的参数）
             if (configCenterConfig.isValid()) {
                 // 有效的话添加到configManager
                 configManager.addConfigCenter(configCenterConfig);
@@ -681,7 +681,7 @@ public class DubboBootstrap extends GenericEventListener {
         }
         // 到这里configCenters一般是不为空的（会进下面的分支），因为前面有 useRegistryAsConfigCenterIfNecessary 方法做保障。
         if (CollectionUtils.isNotEmpty(configCenters)) {
-            // 创建CompositeDynamicConfiguration
+            // 创建CompositeDynamicConfiguration （注意区分 CompositeConfiguration ）
             CompositeDynamicConfiguration compositeDynamicConfiguration = new CompositeDynamicConfiguration();
 
             for (ConfigCenterConfig configCenter : configCenters) {
@@ -695,6 +695,7 @@ public class DubboBootstrap extends GenericEventListener {
         // 主要还是吧一些prefix值为null的，设置了对应的值，比如
         //        RegistryConfig  prefix = "dubbo.registries."
         //        ProtocolConfig  prefix = "dubbo.protocols."
+        // 进去后发现刷新了一部分config，但是一部分还没有刷新，比如ConfigCenter、MetadataConfig，这些在checkGlobalConfigs方法得到刷新
         configManager.refreshAll();
     }
 
@@ -796,8 +797,8 @@ public class DubboBootstrap extends GenericEventListener {
         if (registryConfig.getTimeout() != null) {
             cc.setTimeout(registryConfig.getTimeout().longValue());
         }
+        // 注意这里是false，默认为true。因为是借助registry构建的，所以优先级肯定不是最高
         cc.setHighestPriority(false);
-        //
         return cc;
     }
 
@@ -843,6 +844,7 @@ public class DubboBootstrap extends GenericEventListener {
                                            String centerType,
                                            Class<?> extensionClass) {
         final boolean supported;
+        //     <dubbo:registry address="127.0.0.1:4548" use-as-config-center="true" use-as-metadata-center="true" />
         Boolean configuredValue = usedRegistryAsCenter.get(); // 一般返回null
         // If configured, take its value.
         if (configuredValue != null) {
@@ -931,10 +933,11 @@ public class DubboBootstrap extends GenericEventListener {
         return metadataAddressBuilder.toString();
     }
 
-    // add registry + protocol  to configManager
+    // add registry + protocol  to configManager  看 dubbo-samples  -- dubbo-samples-configcenter-externalconfiguration
     private void loadRemoteConfigs() {
         // registry ids to registry configs（虽然configManager含有RegistryConfig，但是下面getRegistryIds还是有可能为空的，因为获取id的目的就是为了构建RegistryConfig，但是已经有了都，当然无关乎id了）
         List<RegistryConfig> tmpRegistries = new ArrayList<>();
+        // getRegistryIds 进去 很重要
         Set<String> registryIds = configManager.getRegistryIds();
         registryIds.forEach(id -> {
             if (tmpRegistries.stream().noneMatch(reg -> reg.getId().equals(id))) {
@@ -952,6 +955,7 @@ public class DubboBootstrap extends GenericEventListener {
         // protocol ids to protocol configs
         List<ProtocolConfig> tmpProtocols = new ArrayList<>();
         // configManager如果有ProtocolConfig，id列表一般为空
+        // getProtocolIds 进去
         Set<String> protocolIds = configManager.getProtocolIds();
         protocolIds.forEach(id -> {
             if (tmpProtocols.stream().noneMatch(prot -> prot.getId().equals(id))) {
@@ -1174,6 +1178,7 @@ public class DubboBootstrap extends GenericEventListener {
             String appGroup = getApplication().getName();
             String appConfigContent = null;
             if (isNotEmpty(appGroup)) {
+                // 注意group为appname，最后的node为 /dubbo/config/appName/dubbo.properties
                 String key = isNotEmpty(configCenter.getAppConfigFile()) ? configCenter.getAppConfigFile() : configCenter.getConfigFile();
                 appConfigContent = dynamicConfiguration.getProperties(key, appGroup);
             }

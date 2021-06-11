@@ -275,6 +275,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             checkRegistry();
         }
         // AbstractConfig的refresh方法。主要是prefix的值得到更新，比如prefix = "dubbo.service.samples.servicediscovery.demo.DemoService"
+        // 三处刷新 （ startConfigCenter-》ConfigManager#refreshAll 、 checkGlobalConfigs() 、 还有如下）
         this.refresh();
 
         // 检测 interfaceName 是否合法（<dubbo:service> 标签的 interface 属性合法性）
@@ -283,7 +284,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             throw new IllegalStateException("<dubbo:service interface=\"\" /> interface not allow null!");
         }
 
-        // 检测 ref 是否为泛化服务类型。ref是具体实现类对象
+        // 检测 ref 是否为泛化服务类型。ref是具体实现类对象 （ ref 比如说是自己搞的一个GenericService实现类，比如 GenericServiceImpl ）
         if (ref instanceof GenericService) {
             // 设置 interfaceClass 为 GenericService.class
             interfaceClass = GenericService.class;
@@ -307,40 +308,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             // 设置 generic = "false"
             generic = Boolean.FALSE.toString();
         }
-        // local 和 stub 在功能应该是一致的，用于配置本地存根
-        if (local != null) {
-            if ("true".equals(local)) {
-                local = interfaceName + "Local";
-            }
-            Class<?> localClass;
-            try {
-                // 获取本地存根类
-                localClass = ClassUtils.forNameWithThreadContextClassLoader(local);
-            } catch (ClassNotFoundException e) {
-                throw new IllegalStateException(e.getMessage(), e);
-            }
-            // 检测本地存根类是否可赋值给接口类，若不可赋值则会抛出异常，提醒使用者本地存根类类型不合法
-            if (!interfaceClass.isAssignableFrom(localClass)) {
-                // 日志
-                throw new IllegalStateException("The local implementation class " + localClass.getName() + " not implement interface " + interfaceName);
-            }
-        }
-        if (stub != null) {
-            // 此处的代码和上一个 if 分支的代码基本一致
-
-            if ("true".equals(stub)) {
-                stub = interfaceName + "Stub";
-            }
-            Class<?> stubClass;
-            try {
-                stubClass = ClassUtils.forNameWithThreadContextClassLoader(stub);
-            } catch (ClassNotFoundException e) {
-                throw new IllegalStateException(e.getMessage(), e);
-            }
-            if (!interfaceClass.isAssignableFrom(stubClass)) {
-                throw new IllegalStateException("The stub implementation class " + stubClass.getName() + " not implement interface " + interfaceName);
-            }
-        }
+        // 原版有stub和local的冗余检查代码，我给删除了 https://github.com/apache/dubbo/pull/8036
         // 再检查一遍stub和local，进去
         checkStubAndLocal(interfaceClass);
         // 检查mock，进去

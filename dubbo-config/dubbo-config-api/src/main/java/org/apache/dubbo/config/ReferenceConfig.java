@@ -406,6 +406,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                             // 合并 url，移除服务提供者的一些配置（这些配置来源于用户配置的 url 属性），
                             // 比如线程池相关配置。并保留服务提供者的部分配置，比如版本，group，时间戳等
                             // 最后将合并后的配置设置为 url 查询字符串中。
+                            // eg dubbo://localhost:20880/org.apache.dubbo.samples.direct.api.DirectService?application=direct-consumer&check=false&group=test&init=false&interface=org.apache.dubbo.samples.direct.api.DirectService&pid=33536&register.ip=30.25.58.57&remote.application=&revision=1.0.0-daily&side=consumer&sticky=false&version=1.0.0-daily
                             urls.add(ClusterUtils.mergeUrl(url, map));
                         }
                     }
@@ -438,6 +439,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             // 单个注册中心或服务提供者(服务直连，下同) 一般是这个
             if (urls.size() == 1) {
                 // 调用 RegistryProtocol 的 refer 构建 Invoker 实例
+                // 注意前面direct模式的调用，生成的url不是registry://开头的，也没有refer参数，最终不会进入registryProtocol，详见Samples-direct flow
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
 
                 // 多个注册中心或多个服务提供者，或者两者混合

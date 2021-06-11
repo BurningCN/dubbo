@@ -290,7 +290,11 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
     }
 
     public Set<String> getProtocolIds() {
+
         Set<String> protocolIds = new HashSet<>();
+        // getExternalConfigurationMap 里面容器 对应的设置点 在prepareEnvironment里面，其实就是写数据到了zk的/dubbo/config/dubbo/dubbo.properties
+        //  文件里面的内容就是dubbo.registries.r1.address = .... 或者 dubbo.protocols.rmi.address = ...这种，中间的r1、rmi就是这里的registryId或者protocolId
+        // getSubProperties 进去
         protocolIds.addAll(getSubProperties(ApplicationModel.getEnvironment()
                 .getExternalConfigurationMap(), PROTOCOLS_SUFFIX));
         protocolIds.addAll(getSubProperties(ApplicationModel.getEnvironment()
@@ -328,6 +332,10 @@ public class ConfigManager extends LifecycleAdapter implements FrameworkExt {
 
     public Set<String> getRegistryIds() {
         Set<String> registryIds = new HashSet<>();
+
+        // getExternalConfigurationMap 里面容器 对应的设置点 在prepareEnvironment里面，其实就是写数据到了zk的/dubbo/config/dubbo/dubbo.properties
+        //  文件里面的内容就是dubbo.registries.r1.address = .... 或者 dubbo.protocols.rmi.address = ...这种，中间的r1、rmi就是这里的registryId或者protocolId
+        // getSubProperties 进去
         registryIds.addAll(getSubProperties(ApplicationModel.getEnvironment().getExternalConfigurationMap(),
                 REGISTRIES_SUFFIX));
         registryIds.addAll(getSubProperties(ApplicationModel.getEnvironment().getAppExternalConfigurationMap(),

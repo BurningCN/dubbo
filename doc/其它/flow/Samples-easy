@@ -1,0 +1,201 @@
+// ====================================================================
+// ====================================================================
+dubbo-samples-environment-keys
+// ====================================================================
+public static void main(String[] args) throws Exception {
+    // new EmbeddedZooKeeper(2181, false).start();
+    // wait for embedded zookeeper start completely.
+    Thread.sleep(1000);
+
+    // 注意
+    System.setProperty("dubbo.labels", "dubbo.key1=value1; dubbo.key2=value2");
+    System.setProperty("dubbo.env.keys", "DUBBO_KEY1, DUBBO_KEY2");
+
+    ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring/dubbo-demo-provider.xml");
+    context.start();
+
+    System.out.println("dubbo service started");
+    System.in.read();
+}
+// ====================================================================
+ApplicationConfig
+	refresh()
+		super.refresh();
+	    appendEnvironmentProperties();
+				Set<InfraAdapter> adapters = ExtensionLoader.getExtensionLoader(InfraAdapter.class).getSupportedExtensionInstances();
+			    if (CollectionUtils.isNotEmpty(adapters)) {
+			        Map<String, String> inputParameters = new HashMap<>();
+			        inputParameters.put(APPLICATION_KEY, getName());
+		        inputParameters.put(HOST_KEY, getHostname());
+		        for (InfraAdapter adapter : adapters) {
+		        	// 这里进去
+		            Map<String, String> extraParameters = adapter.getExtraAttributes(inputParameters);
+		            	// ...
+		            if (CollectionUtils.isNotEmptyMap(extraParameters)) {
+		                parameters.putAll(extraParameters);
+		            }
+		        }
+
+
+
+// ====================================================================
+// ====================================================================
+dubbo-samples-gateway
+// ====================================================================
+public class UserLoadBalance extends RandomLoadBalance {
+
+    @Override
+    public <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException {
+        for (Invoker t : invokers) {
+            try {
+                InetAddress addr = InetAddress.getLocalHost();
+                String ip = addr.getHostAddress().toString();
+                URL u = t.getUrl();
+                if (u.getIp().equals(ip)) {
+                    return t;
+                }
+            } catch (Exception e) {
+                // no op
+            }
+        }
+        return super.doSelect(invokers, url, invocation);
+    }
+}
+// ====================================================================
+// ====================================================================
+dubbo-samples-direct
+// ====================================================================
+
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"
+       xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://dubbo.apache.org/schema/dubbo http://dubbo.apache.org/schema/dubbo/dubbo.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+    <context:property-placeholder/>
+
+    <dubbo:application name="direct-consumer"/>
+
+    <dubbo:reference id="directService" check="false" interface="org.apache.dubbo.samples.direct.api.DirectService"
+    				// 注意这里
+                     url="dubbo://${dubbo.address:localhost}:20880" group="test" version="1.0.0-daily"/>
+</beans>
+// ====================================================================
+createProxy(Map<String, String> map) 
+	// ...
+	else {
+        urls.clear();
+        if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
+            String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
+            if (us != null && us.length > 0) {
+                for (String u : us) {
+                    URL url = URL.valueOf(u);
+                    if (StringUtils.isEmpty(url.getPath())) {
+                        url = url.setPath(interfaceName);
+                    }
+                    if (UrlUtils.isRegistry(url)) {
+                        urls.add(url.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
+                    } else {
+                     	// 走这里
+                     	// dubbo://localhost:20880/org.apache.dubbo.samples.direct.api.DirectService?application=direct-consumer&check=false&group=test&init=false&interface=org.apache.dubbo.samples.direct.api.DirectService&pid=33536&register.ip=30.25.58.57&remote.application=&revision=1.0.0-daily&side=consumer&sticky=false&version=1.0.0-daily
+                        urls.add(ClusterUtils.mergeUrl(url, map));
+                    }
+                }
+            }
+        } else { 
+        	//...
+        }
+
+        if (urls.size() == 1) {
+        	// 走这里 ，注意url不是registry://开头的，也没有refer参数，
+            invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
+            	QosProtocolWrapper refer
+            		if (UrlUtils.isRegistry(url)) {
+			            // ..
+			        }
+			        // 走这里
+			        return protocol.refer(type, url);
+			        	ProtocolFilterWrapper refer
+			        		ProtocolListenerWrapper refer
+			        			AbstractProtocol refer
+			        				return new AsyncToSyncInvoker<>(protocolBindingRefer(type, url));
+			        					DubboProtocol protocolBindingRefer
+			        						optimizeSerialization(url);
+
+									        DubboInvoker<T> invoker = new DubboInvoker<T>(serviceType, url, getClients(url), invokers);
+									        invokers.add(invoker);
+
+									        return invoker;
+        } else {
+        	// ....
+// ====================================================================
+// ====================================================================
+dubbo-samples-context
+// ====================================================================
+
+<dubbo:reference scope="remote" id="contextService" check="false" interface="org.apache.dubbo.samples.context.api.ContextService"/>
+
+
+ReferenceConfig
+    private T createProxy(Map<String, String> map) {
+        shouldJvmRefer(map)
+            URL tmpUrl = new URL("temp", "localhost", 0, map);
+            boolean isJvmRefer;
+            if (isInjvm() == null) {
+                if (url != null && url.length() > 0) {
+                    isJvmRefer = false;
+                } else {
+                    isJvmRefer = InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl);
+                        String scope = url.getParameter("scope");
+                        if (!"local".equals(scope) && !url.getParameter("injvm", false)) {
+                            if ("remote".equals(scope)) {
+                                return false;
+                            } else if (url.getParameter("generic", false)) {
+                                return false;
+                            } else {
+                                return getExporter(this.exporterMap, url) != null;
+                            }
+                        } else {
+                            return true;
+                        }
+                }
+            } else {
+                isJvmRefer = isInjvm();
+            }
+            return isJvmRefer;
+// ====================================================================
+
+public class ContextServiceImpl implements ContextService {
+
+    @Override
+    public String sayHello(String name) {
+
+        boolean isProviderSide = RpcContext.getContext().isProviderSide();  
+        String clientIP = RpcContext.getContext().getRemoteHost();
+        String remoteApplication = RpcContext.getContext().getRemoteApplicationName();
+        String application = RpcContext.getContext().getUrl().getParameter("application");
+
+        return "Hello " + name + ", response from provider: " + RpcContext.getContext().getLocalAddress() +
+                ", client: " + clientIP + ", local: " + application + ", remote: " + remoteApplication +
+                ", isProviderSide: " + isProviderSide;
+    }
+}
+
+// ====================================================================
+// ====================================================================
+dubbo-samples-echo
+// ====================================================================
+public class EchoConsumer {
+
+    public static void main(String[] args) {
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring/echo-consumer.xml");
+        context.start();
+        DemoService demoService = context.getBean("demoService", DemoService.class);
+
+        // 可以强转成功的原因在于生成getProxy的时候会自动添加该接口
+        EchoService echoService = (EchoService) demoService;
+        String status = (String) echoService.$echo("OK");
+        // 结果也是OK
+        System.out.println("echo result: " + status);
+    }
+}
+流程不说了，主要是服务端有一个EchoFilter

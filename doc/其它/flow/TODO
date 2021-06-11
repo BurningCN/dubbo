@@ -8,6 +8,7 @@ todo RegistryProtocol # export的覆盖逻辑
 todo spi getActivateExtension
 todo spi threadPool
 todo 心跳
+
 // ====================================================================
 sd-transfer - provider 测试程序
 
@@ -39,3 +40,12 @@ Invoker<DemoService> invoker2 = protocol.refer(DemoService.class, url);
         Object result2 = client2.$invoke("sayHello", new String[]{"java.lang.String"}, new Object[]{"haha"});
         这里是DemoService，不是GenericService，看和GenericInvoke-flow 里的有何区别
 5 testGenericComplexCompute4FullServiceMetadata 复杂对象程序
+// ====================================================================
+todo dubbo-samples-default-config
+todo dubbo-samples-docker
+todo dubbo-samples-edas
+
+todo dubbo官网
+todo dubbo-admin
+
+

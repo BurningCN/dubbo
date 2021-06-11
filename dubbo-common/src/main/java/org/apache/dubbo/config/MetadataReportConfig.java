@@ -192,6 +192,7 @@ public class MetadataReportConfig extends AbstractConfig {
         this.syncReport = syncReport;
     }
 
+    // 注意这里 duubo.metadata-report
     @Override
     @Parameter(excluded = true)
     public String getPrefix() {

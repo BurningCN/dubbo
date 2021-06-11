@@ -80,6 +80,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
 
     protected ServiceMetadata serviceMetadata;
 
+    // gx
     public ServiceConfigBase() {
         serviceMetadata = new ServiceMetadata();
         serviceMetadata.addAttribute("ORIGIN_CONFIG", this);
@@ -207,12 +208,20 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     }
 
     public void checkProtocol() {
+        if (provider != null && notHasSelfProtocolProperty()) {
+            setProtocols(provider.getProtocols());
+            setProtocolIds(provider.getProtocolIds());
+        }
+
         if (CollectionUtils.isEmpty(protocols) && provider != null) {
-            // 当然provider.getProtocols()也能也为null
             setProtocols(provider.getProtocols());
         }
         // 进去
         convertProtocolIdsToProtocols();
+    }
+
+    private boolean notHasSelfProtocolProperty() {
+        return CollectionUtils.isEmpty(protocols) && StringUtils.isEmpty(protocolIds);
     }
 
     public void completeCompoundConfigs() { // 这里provider可能为null（也很正常），两部分代码都不会走，直接return
@@ -234,6 +243,8 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         }
     }
 
+    // 如下部分放在父类 AbstractInterfaceConfig 我觉得更好，因为里面有 checkRegistry -》 convertRegistryIdsToRegistries
+    // 但是仔细看了下 referenceConfig的checkAndUpdateSubConfigs方法没有调用checkProtocol，也就没有用到 convertProtocolIdsToProtocols方法
     private void convertProtocolIdsToProtocols() {
         // 计算有效的ProtocolIds，进去
         computeValidProtocolIds();
@@ -450,7 +461,7 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     @Override
     protected void computeValidRegistryIds() {
         super.computeValidRegistryIds(); //
-        if(StringUtils.isEmpty(getRegistryIds())) {// 下面的步骤和上面方法super内部基本一样（一个是ApplicationConfig的RegistryIds，一个是ProviderConfig的），不管咋样都是为了获取RegistryIds然后调用setRegistryIds赋值给自己的属性
+        if (StringUtils.isEmpty(getRegistryIds())) {// 下面的步骤和上面方法super内部基本一样（一个是ApplicationConfig的RegistryIds，一个是ProviderConfig的），不管咋样都是为了获取RegistryIds然后调用setRegistryIds赋值给自己的属性
             if (getProvider() != null && StringUtils.isNotEmpty(getProvider().getRegistryIds())) {
                 setRegistryIds(getProvider().getRegistryIds());
             }
