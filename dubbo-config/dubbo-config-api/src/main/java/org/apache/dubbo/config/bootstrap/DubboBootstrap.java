@@ -54,9 +54,16 @@ import org.apache.dubbo.config.bootstrap.builders.ReferenceBuilder;
 import org.apache.dubbo.config.bootstrap.builders.RegistryBuilder;
 import org.apache.dubbo.config.bootstrap.builders.ServiceBuilder;
 import org.apache.dubbo.config.context.ConfigManager;
+import org.apache.dubbo.config.event.DubboServiceInitializedEvent;
+import org.apache.dubbo.config.event.DubboServiceStartingEvent;
+import org.apache.dubbo.config.event.DubboServiceReadyEvent;
+import org.apache.dubbo.config.event.DubboServiceStartedEvent;
+import org.apache.dubbo.config.event.DubboServiceAwaitingEvent;
+import org.apache.dubbo.config.event.DubboServiceShutdownEvent;
 import org.apache.dubbo.config.metadata.ConfigurableMetadataServiceExporter;
 import org.apache.dubbo.config.utils.ConfigValidationUtils;
 import org.apache.dubbo.config.utils.ReferenceConfigCache;
+import org.apache.dubbo.event.EventDispatcher;
 import org.apache.dubbo.metadata.MetadataService;
 import org.apache.dubbo.metadata.MetadataServiceExporter;
 import org.apache.dubbo.metadata.WritableMetadataService;
@@ -152,6 +159,8 @@ public class DubboBootstrap {
     private final Lock destroyLock = new ReentrantLock();
 
     private final ExecutorService executorService = newSingleThreadExecutor();
+
+    private final EventDispatcher eventDispatcher = EventDispatcher.getDefaultExtension();
 
     private final ExecutorRepository executorRepository = getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
 
@@ -529,9 +538,7 @@ public class DubboBootstrap {
 
         initMetadataService();
 
-        if (logger.isInfoEnabled()) {
-            logger.info(NAME + " has been initialized!");
-        }
+        eventDispatcher.dispatch(new DubboServiceInitializedEvent(this));
     }
 
     private void checkGlobalConfigs() {
@@ -878,9 +885,7 @@ public class DubboBootstrap {
         if (started.compareAndSet(false, true)) {
             ready.set(false);
             initialize();
-            if (logger.isInfoEnabled()) {
-                logger.info(NAME + " is starting...");
-            }
+            eventDispatcher.dispatch(new DubboServiceStartingEvent(this));
             // 1. export Dubbo Services
             exportServices();
 
@@ -901,23 +906,17 @@ public class DubboBootstrap {
                         logger.warn(NAME + " exportAsync occurred an exception.");
                     }
                     ready.set(true);
-                    if (logger.isInfoEnabled()) {
-                        logger.info(NAME + " is ready.");
-                    }
+                    eventDispatcher.dispatch(new DubboServiceReadyEvent(this));
                     ExtensionLoader<DubboBootstrapStartStopListener> exts = getExtensionLoader(DubboBootstrapStartStopListener.class);
                     exts.getSupportedExtensionInstances().forEach(ext -> ext.onStart(this));
                 }).start();
             } else {
                 ready.set(true);
-                if (logger.isInfoEnabled()) {
-                    logger.info(NAME + " is ready.");
-                }
+                eventDispatcher.dispatch(new DubboServiceReadyEvent(this));
                 ExtensionLoader<DubboBootstrapStartStopListener> exts = getExtensionLoader(DubboBootstrapStartStopListener.class);
                 exts.getSupportedExtensionInstances().forEach(ext -> ext.onStart(this));
             }
-            if (logger.isInfoEnabled()) {
-                logger.info(NAME + " has started.");
-            }
+            eventDispatcher.dispatch(new DubboServiceStartedEvent(this));
         }
         return this;
     }
@@ -937,9 +936,7 @@ public class DubboBootstrap {
             if (!executorService.isShutdown()) {
                 executeMutually(() -> {
                     while (!awaited.get()) {
-                        if (logger.isInfoEnabled()) {
-                            logger.info(NAME + " awaiting ...");
-                        }
+                        eventDispatcher.dispatch(new DubboServiceAwaitingEvent(this));
                         try {
                             condition.await();
                         } catch (InterruptedException e) {
@@ -1311,9 +1308,7 @@ public class DubboBootstrap {
     private void release() {
         executeMutually(() -> {
             while (awaited.compareAndSet(false, true)) {
-                if (logger.isInfoEnabled()) {
-                    logger.info(NAME + " is about to shutdown...");
-                }
+                eventDispatcher.dispatch(new DubboServiceShutdownEvent(this));
                 condition.signalAll();
             }
         });

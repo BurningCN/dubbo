@@ -18,8 +18,13 @@ package org.apache.dubbo.config.event.listener;
 
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
+import org.apache.dubbo.config.event.DubboServiceInitializedEvent;
+import org.apache.dubbo.config.event.DubboServiceStartingEvent;
+import org.apache.dubbo.config.event.DubboServiceReadyEvent;
+import org.apache.dubbo.config.event.DubboServiceStartedEvent;
+import org.apache.dubbo.config.event.DubboServiceAwaitingEvent;
+import org.apache.dubbo.config.event.DubboServiceShutdownEvent;
 import org.apache.dubbo.config.event.DubboServiceDestroyedEvent;
-import org.apache.dubbo.config.event.ServiceConfigExportedEvent;
 import org.apache.dubbo.event.Event;
 import org.apache.dubbo.event.GenericEventListener;
 
@@ -36,6 +41,42 @@ public class LoggingEventListener extends GenericEventListener {
     private static final String NAME = "Dubbo Service";
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    public void onEvent(DubboServiceInitializedEvent event) {
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " has been initialized!");
+        }
+    }
+
+    public void onEvent(DubboServiceStartingEvent event) {
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " is starting...");
+        }
+    }
+
+    public void onEvent(DubboServiceReadyEvent event) {
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " is ready.");
+        }
+    }
+
+    public void onEvent(DubboServiceStartedEvent event) {
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " has started.");
+        }
+    }
+
+    public void onEvent(DubboServiceAwaitingEvent event) {
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " awaiting ...");
+        }
+    }
+
+    public void onEvent(DubboServiceShutdownEvent event) {
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " is about to shutdown...");
+        }
+    }
 
     public void onEvent(DubboServiceDestroyedEvent event) {
         if (logger.isInfoEnabled()) {
