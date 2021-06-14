@@ -581,7 +581,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         if (LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
                             continue;
                         }
-                        // 填充registryURL的dynamic参数到url（如果为true，创建zk节点的时候是临时节点）
+                        // 填充registryURL的dynamic参数到url（如果为true，创建zk节点的时候是临时节点） 之前填充了此参数为true
                         url = url.addParameterIfAbsent(DYNAMIC_KEY, registryURL.getParameter(DYNAMIC_KEY));
                         URL monitorUrl = ConfigValidationUtils.loadMonitor(this, registryURL);
                         if (monitorUrl != null) {

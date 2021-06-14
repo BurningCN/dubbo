@@ -251,6 +251,7 @@ public class ConfigValidationUtils {
                 // for registries enabled service discovery, automatically register interface compatible addresses.
                 // 对于注册表启用的服务发现，自动注册接口兼容的地址。 下面的逻辑一般不会进去
                 if (SERVICE_REGISTRY_PROTOCOL.equals(registryURL.getProtocol())
+                        // duplicate = true
                         && registryURL.getParameter(REGISTRY_DUPLICATE_KEY, false)
                         && registryNotExists(registryURL, registryList, REGISTRY_PROTOCOL)) {
                     URL interfaceCompatibleRegistryURL = URLBuilder.from(registryURL)
