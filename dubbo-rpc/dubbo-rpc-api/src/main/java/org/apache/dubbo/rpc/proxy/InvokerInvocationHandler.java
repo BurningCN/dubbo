@@ -72,7 +72,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         if (parameterTypes.length == 0) {
             if ("toString".equals(methodName)) {
                 return invoker.toString();
-                } else if ("$destroy".equals(methodName)) {
+            } else if ("$destroy".equals(methodName)) {
                 invoker.destroy();
                 return null;
             } else if ("hashCode".equals(methodName)) {
