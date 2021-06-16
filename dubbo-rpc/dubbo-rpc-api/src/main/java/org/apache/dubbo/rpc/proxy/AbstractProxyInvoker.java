@@ -78,11 +78,6 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
 
     @Override
     public void destroy() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_MONTH,1);
-        calendar.set(Calendar.HOUR_OF_DAY,0);
-        Date time = calendar.getTime();
-        long timeInMillis = calendar.getTimeInMillis();
     }
 
     @Override

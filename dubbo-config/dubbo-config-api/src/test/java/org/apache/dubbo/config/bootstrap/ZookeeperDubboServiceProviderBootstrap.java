@@ -34,7 +34,7 @@ public class ZookeeperDubboServiceProviderBootstrap {
                 .registry(builder -> builder.address("127.0.0.1:2181").protocol("zookeeper")
                         .parameter(REGISTRY_TYPE_KEY, SERVICE_REGISTRY_TYPE))
                 .protocol("dubbo", builder -> builder.port(-1).name("dubbo"))
-                .protocol("rest", builder -> builder.port(8081).name("rest"))
+                .protocol("rest", builder -> builder.port(8083).name("rest"))
                 .service("echo", builder -> builder.interfaceClass(EchoService.class).ref(new EchoServiceImpl()).protocolIds("dubbo"))
                 .service("user", builder -> builder.interfaceClass(UserService.class).ref(new UserServiceImpl()).protocolIds("rest"))
                 .start()

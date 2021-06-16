@@ -1,0 +1,52 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.dubbo.config.hook;
+
+import org.apache.dubbo.common.lang.ShutdownHookCallbacks;
+import org.apache.dubbo.config.DubboShutdownHook;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.CountDownLatch;
+
+
+public class DubboShutdownHookTest {
+
+    @Test
+    public void test() throws Exception {
+        DubboShutdownHook dubboShutdownHook = DubboShutdownHook.getDubboShutdownHook();
+        Assertions.assertNotNull(dubboShutdownHook);
+
+        dubboShutdownHook.register();
+        Assertions.assertTrue(dubboShutdownHook.getRegistered());
+
+        CountDownLatch countDown = new CountDownLatch(1);
+        ShutdownHookCallbacks.INSTANCE.addCallback(() -> {
+            countDown.countDown();
+        });
+
+        dubboShutdownHook.run();
+        countDown.await();
+
+        dubboShutdownHook.destroyAll();
+        dubboShutdownHook.doDestroy();
+
+        dubboShutdownHook.unregister();
+        Assertions.assertFalse(dubboShutdownHook.getRegistered());
+    }
+
+}

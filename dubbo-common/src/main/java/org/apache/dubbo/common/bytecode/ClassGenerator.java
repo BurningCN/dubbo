@@ -353,7 +353,7 @@ public final class ClassGenerator {
     }
 
     public static void testWriteFile(CtClass mCtc) {
-        String path = "target/javassist-classGenerator/";
+        String path = System.getProperty("user.home")+"/"+"javassistTest";
         try {
             File dir = new File(path);
             if (!dir.exists()) {
