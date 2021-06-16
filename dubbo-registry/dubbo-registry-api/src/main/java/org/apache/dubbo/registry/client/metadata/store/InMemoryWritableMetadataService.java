@@ -264,6 +264,7 @@ public class InMemoryWritableMetadataService implements WritableMetadataService 
     public void blockUntilUpdated() {
         try {
             // 注意release的地方。这里一直阻塞，知道信号量有剩余，当然也可能先前就release了，这里直接返回
+            // release的触发点在 上面的 exportURL 方法 （如果provider暴露了两个服务，那么此时permits的值就是4 初始的1 + 两个service + 自动暴露的 ConfigurableMetadataServiceExporter = 4）
             metadataSemaphore.acquire();
         } catch (InterruptedException e) {
             logger.warn("metadata refresh thread has been interrupted unexpectedly while wating for update.", e);

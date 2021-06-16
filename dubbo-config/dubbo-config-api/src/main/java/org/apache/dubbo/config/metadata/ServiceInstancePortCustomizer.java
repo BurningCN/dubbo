@@ -36,6 +36,7 @@ public class ServiceInstancePortCustomizer implements ServiceInstanceCustomizer 
     @Override
     public void customize(ServiceInstance serviceInstance) {
 
+        // 一般满足如下，直接rreturn
         if (serviceInstance.getPort() != null) {
             return;
         }

@@ -424,8 +424,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // 此时map如下：
         //"side" -> "provider"
         //"release" -> ""   -------------------appendRuntimeParameters
-        //"dubbo" -> "2.0.2"------------------- ........
-        //"pid" -> "9072"------------------- ..........
+        //"dubbo" -> "2.0.2"------------------- appendRuntimeParameters
+        //"pid" -> "9072"------------------- appendRuntimeParameters
         //"timestamp" -> "1609903950153" ------appendRuntimeParameters
         //"application" -> "dubbo-demo-api-provider" ------ getApplication
         //"dynamic" -> "true"           --------   provider（这个属性的默认值就是true）
@@ -545,7 +545,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // 获取当前配置的主机所在port，eg:20880 ，内部给map填充bind.port -> 20880，进去
         Integer port = findConfigedPorts(protocolConfig, name, map);
         // -----------------------------------✨✨分割线✨✨---------------------------------------------------------------------
-        // map全部填充完毕，根据其以及其他一些参数构建url
+        // map全部填充完毕，根据其以及其他一些参数构建url （ getContextPath(protocolConfig)  一般为空）
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
         // url eg:dubbo://30.25.58.102:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=30.25.58.102&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&metadata-type=remote&methods=sayHello,sayHelloAsync&pid=9682&release=&side=provider&timestamp=1609906152829
         // You can customize Configurator to append extra parameters
@@ -681,6 +681,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // String extName = url.getParameter("proxy", "javassist")，所以取出的扩展实例是 JavassistProxyFactory（也注意其被StubProxyFactoryWrapper包装了）
         Exporter<?> exporter = PROTOCOL.export(
                 // 这里的local只是前面protocol+provider+service...复合多个对象（代表provider信息）生成的url，没有和Registry的url结合！而前面向注册中心暴露的时候会融合这两个url（上面 ****）
+                // 将Class<?> x 赋值给 Class<T> y的时候需要强转，如下  (Class) interfaceClass
                 PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, local));
         exporters.add(exporter); // exporter是ListenerExporterWrapper实例
         // 日志注意下

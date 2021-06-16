@@ -40,8 +40,8 @@ public class ServiceInstanceMetadataCustomizer implements ServiceInstanceCustomi
 
     @Override
     public void customize(ServiceInstance serviceInstance) {
-        Map<String, String> params = new HashMap<>();
 
+        // 仅一个实现 DefaultMetadataParamsFilter
         ExtensionLoader<MetadataParamsFilter> loader = ExtensionLoader.getExtensionLoader(MetadataParamsFilter.class);
         Set<MetadataParamsFilter> paramsFilters = loader.getSupportedExtensionInstances();
 
@@ -73,6 +73,7 @@ public class ServiceInstanceMetadataCustomizer implements ServiceInstanceCustomi
         }
 
         paramsFilters.forEach(filter -> {
+            // 默认实现为空 最后什么也没填充上
             String[] included = filter.instanceParamsIncluded();
             if (included == null) {
                 serviceInstance.getMetadata().putAll(allParams);

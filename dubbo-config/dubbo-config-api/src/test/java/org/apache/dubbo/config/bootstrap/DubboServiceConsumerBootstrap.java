@@ -35,6 +35,7 @@ public class DubboServiceConsumerBootstrap {
 //                .registry(builder -> builder.address("eureka://127.0.0.1:8761?registry-type=service&subscribed-services=dubbo-provider-demo"))
 
                 // Zookeeper
+                // 指定了一个应用级别的服务发现注册中心，不碍事，因为provider将两个service都注册到其上了
                 .registry("zookeeper", builder -> builder.address("zookeeper://127.0.0.1:2181?registry-type=service&subscribed-services=dubbo-provider-demo"))
                 .metadataReport(new MetadataReportConfig("zookeeper://127.0.0.1:2181"))
 
@@ -43,6 +44,7 @@ public class DubboServiceConsumerBootstrap {
 
                 // Consul
                 // .registry("consul", builder -> builder.address("consul://127.0.0.1:8500?registry.type=service&subscribed.services=dubbo-provider-demo").group("namespace1"))
+                // 注意指定了protocol参数，这个参数值的封装处在 ReferenceConfig#init() -> AbstractConfig.appendParameters(map, this); 的过程中，就会把参数填充到map
                 .reference("echo", builder -> builder.interfaceClass(EchoService.class).protocol("dubbo"))
                 .reference("user", builder -> builder.interfaceClass(UserService.class).protocol("rest"))
                 .start();

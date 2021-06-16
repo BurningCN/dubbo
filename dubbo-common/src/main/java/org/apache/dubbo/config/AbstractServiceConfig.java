@@ -77,9 +77,7 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
      * manual processing
      */
     /**
-     * 是否在注册中心注册为动态服务，值为true，状态为启用
-     * 服务注册后，需要手动关闭； 如果您想禁用该服务，您还需要
-     * 人工处理
+     是否在注册中心注册为动态服务，值为true，服务注册后状态为启用，需要手动禁用； 如果要禁用该服务，还需要手动处理
      */
     protected Boolean dynamic = true;
 

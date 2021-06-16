@@ -65,8 +65,6 @@ public class RemoteMetadataServiceImpl {
         // key比如为service-discovery
         metadataInfos.forEach((registryCluster, metadataInfo) -> {
             if (!metadataInfo.hasReported()) {
-                 //todo need pr 这个没用
-                metadataInfo.calAndGetRevision();
                 metadataInfo.getExtendParams().put(REGISTRY_CLUSTER_KEY, registryCluster);
                 MetadataReport metadataReport = getMetadataReports().get(registryCluster);
                 if (metadataReport == null) {

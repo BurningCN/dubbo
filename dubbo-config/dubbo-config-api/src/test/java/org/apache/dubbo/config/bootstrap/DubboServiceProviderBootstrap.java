@@ -63,21 +63,24 @@ public class DubboServiceProviderBootstrap {
 //        userService.setRegistries(Arrays.asList(interfaceRegistry, serviceRegistry));
 
         ApplicationConfig applicationConfig = new ApplicationConfig("dubbo-provider-demo");
+        // 注意getMetadataType的调用点
         applicationConfig.setMetadataType("remote");
         DubboBootstrap.getInstance()
                 .application(applicationConfig)
-                // Zookeeper in service registry type
-//                .registry("zookeeper", builder -> builder.address("zookeeper://127.0.0.1:2181?registry.type=service"))
-                // Nacos
-//                .registry("zookeeper", builder -> builder.address("nacos://127.0.0.1:8848?registry.type=service"))
+                // 指定了app级别的registry，前面两个service没有指定了自己的registry，那么都会用这个（在loadRegistries方法）
                 .registries(Arrays.asList(interfaceRegistry, serviceRegistry))
-//                .registry(RegistryBuilder.newBuilder().address("consul://127.0.0.1:8500?registry.type=service").build())
+                // 指定了app级别的protocol，前面 userService.setProtocol(restProtocol); 指定了 Service级别的protocol，注意两个service的export过程，
+                // 再结合前面两个registry（ConfigurableMetadataServiceExporter 暴露两次，他的protocol
+                // 不在乎用户配置的，而是dubbo协议，详见generateMetadataProtocol）
+                // echoService的protocol使用的是下面的（详见convertProtocolIdsToProtocols 第三行代码）， userService 使用的是restProtocol
                 .protocol(builder -> builder.port(-1).name("dubbo"))
+                // 和上面 applicationConfig.setMetadataType("remote");
                 .metadataReport(new MetadataReportConfig("zookeeper://127.0.0.1:2181"))
                 .service(echoService)
                 .service(userService)
                 .start()
                 .await();
+        // 进去看程序的时候，重点关注的就是两个registry 和两个 protocol
     }
 
     private static void testSCCallDubbo() {

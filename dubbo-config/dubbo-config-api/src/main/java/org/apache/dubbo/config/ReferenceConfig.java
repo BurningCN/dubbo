@@ -295,6 +295,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             attributes = new HashMap<>();
             // 遍历 MethodConfig 列表
             for (MethodConfig methodConfig : getMethods()) {
+                // eg 填充了 findCache.cache -> lru （注意第三个参数）可以看下 org.apache.dubbo.config.cache 的 CacheTest 测试用例
                 AbstractConfig.appendParameters(map, methodConfig, methodConfig.getName());
                 String retryKey = methodConfig.getName() + ".retry";
                 // 检测 map 是否包含 methodName.retry
@@ -322,23 +323,24 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         } else if (isInvalidLocalHost(hostToRegistry)) {
             throw new IllegalArgumentException("Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
         }
+        // 注意这里key是register.ip ，在生成url的时候回填充到methodParameters参数中
         map.put(REGISTER_IP_KEY, hostToRegistry);
 
         //map = {HashMap@6399}  size = 14
         // "init" -> "false"
         // "side" -> "consumer"
         // "register.ip" -> "30.25.58.39"
-        // "release" -> ""
+        // "release" -> ""  appendRuntimeParameters(map);
         // "methods" -> "sayHello"
         // "provided-by" -> "demo-provider"
-        // "dubbo" -> "2.0.2"
-        // "pid" -> "93053"
+        // "dubbo" -> "2.0.2"   appendRuntimeParameters(map);
+        // "pid" -> "93053"     appendRuntimeParameters(map);
         // "check" -> "false"
         // "interface" -> "samples.servicediscovery.demo.DemoService"
         // "metadata-type" -> "remote"
-        // "application" -> "demo-consumer"
-        // "sticky" -> "false"
-        // "timestamp" -> "1619440124701"
+        // "application" -> "demo-consumer"   ------- AbstractConfig.appendParameters(map, getApplication());
+        // "sticky" -> "false"              ------- AbstractConfig.appendParameters(map, consumer);
+        // "timestamp" -> "1619440124701"       appendRuntimeParameters(map);
 
         serviceMetadata.getAttachments().putAll(map);
 
@@ -536,7 +538,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 .getActivateExtension(URL.valueOf("configInitializer://"), (String[]) null);
         configInitializers.forEach(e -> e.initReferConfig(this));
 
-        // prefix=dubbo.reference.samples.servicediscovery.demo.DemoService
+        // prefix=dubbo.reference.samples.servicediscovery.demo.DemoService --- 注意 ReferenceConfigBase 的getPrefix方法
         this.refresh();
         if (getGeneric() == null && getConsumer() != null) {
             // 设置 generic

@@ -79,6 +79,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
         return true;
     }
 
+    // 和 AbstractInvoker的destroy方法不同，后者有内容 （两个方法分别通过 service.unexport(); 和 reference.destroy(); 触发）
     @Override
     public void destroy() {
     }

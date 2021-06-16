@@ -53,6 +53,7 @@ public class ClusterUtils {
 
     public static URL mergeUrl(URL remoteUrl, Map<String, String> localMap) {
         Map<String, String> map = new HashMap<String, String>();
+        // 注意一个是 remoteMap 一个是 localMap
         Map<String, String> remoteMap = remoteUrl.getParameters();
 
         if (remoteMap != null && remoteMap.size() > 0) {
@@ -84,6 +85,7 @@ public class ClusterUtils {
         if (localMap != null && localMap.size() > 0) {
             Map<String, String> copyOfLocalMap = new HashMap<>(localMap);
 
+            // local和remote都含有这个，那么删除local的，以remote为准
             if(map.containsKey(GROUP_KEY)){
                 copyOfLocalMap.remove(GROUP_KEY);
             }
@@ -99,6 +101,7 @@ public class ClusterUtils {
 
             map.putAll(copyOfLocalMap);
 
+            // 注意这里key是 "remote.application"，在生成url的时候回填充到methodParameters参数中 两级缓存 <remote,<application,val>>
             map.put(REMOTE_APPLICATION_KEY, remoteMap.get(APPLICATION_KEY));
 
             // Combine filters and listeners on Provider and Consumer

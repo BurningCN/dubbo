@@ -32,11 +32,13 @@ public class ZookeeperDubboServiceConsumerBootstrap {
     public static void main(String[] args) throws Exception {
 
         DubboBootstrap bootstrap = DubboBootstrap.getInstance()
+                //注意消费端的metadata-type比较有用，影响的是 ServiceInstancesChangedListener#getMetadataInfo 方法
                 .application("zookeeper-dubbo-consumer", app -> app.metadata(COMPOSITE_METADATA_STORAGE_TYPE))
                 .registry("zookeeper", builder -> builder.address("zookeeper://127.0.0.1:2181")
                         .parameter(REGISTRY_TYPE_KEY, SERVICE_REGISTRY_TYPE)
                         .useAsConfigCenter(true)
                         .useAsMetadataCenter(true))
+                // 注意这里 services，最终跟踪到  "subscribed-services"
                 .reference("echo", builder -> builder.interfaceClass(EchoService.class).protocol("dubbo").services("zookeeper-dubbo-provider"))
                 .reference("user", builder -> builder.interfaceClass(UserService.class).protocol("rest"))
                 .start();

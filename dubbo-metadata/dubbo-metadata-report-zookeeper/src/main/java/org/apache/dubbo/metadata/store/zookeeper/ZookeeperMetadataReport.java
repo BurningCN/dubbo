@@ -171,6 +171,45 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
                 reported = {AtomicBoolean@4162} "false"
             */
             zkClient.create(path, gson.toJson(metadataInfo), false);
+            /*{
+                "app": "consul-dubbo-provider",
+                "revision": "DA1D0A6F05FB221710F8387BFACA0C71",
+                "services": {
+                    "org.apache.dubbo.config.bootstrap.rest.UserService:rest": {
+                        "name": "org.apache.dubbo.config.bootstrap.rest.UserService",
+                                "protocol": "rest",
+                                "path": "org.apache.dubbo.config.bootstrap.rest.UserService",
+                                "params": {
+                                    "deprecated": "false",
+                                            "dubbo": "2.0.2"
+                                }
+                    },
+                    "org.apache.dubbo.config.bootstrap.EchoService:dubbo": {
+                        "name": "org.apache.dubbo.config.bootstrap.EchoService",
+                                "protocol": "dubbo",
+                                "path": "org.apache.dubbo.config.bootstrap.EchoService",
+                                "params": {
+                                    "deprecated": "false",
+                                            "dubbo": "2.0.2"
+                                }
+                    },
+                    "consul-dubbo-provider/org.apache.dubbo.metadata.MetadataService:1.0.0:dubbo": {
+                        "name": "org.apache.dubbo.metadata.MetadataService",
+                                "group": "consul-dubbo-provider",
+                                "version": "1.0.0",
+                                "protocol": "dubbo",
+                                "path": "org.apache.dubbo.metadata.MetadataService",
+                                "params": {
+                                    "deprecated": "false",
+                                            "dubbo": "2.0.2",
+                                            "version": "1.0.0",
+                                            "group": "consul-dubbo-provider"
+                                }
+                    }
+                }
+            }
+            */
+
         }
     }
 

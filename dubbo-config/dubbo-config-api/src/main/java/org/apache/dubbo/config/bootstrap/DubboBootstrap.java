@@ -1006,7 +1006,7 @@ public class DubboBootstrap extends GenericEventListener {
             exportServices();
 
             // Not only provider register
-            // 不是仅注册Provider信息或者有其他要暴露的服务（两个都进去）（一般provider，使用的是ServiceDiscovery的时候，就会满足第二个条件（第一个一般不满足））
+            // 不是仅注册Provider信息或者有其他要暴露的服务（两个都进去）（一般provider，使用的是ServiceDiscovery的时候(registry含有registry-type=service参数)，就会满足第二个条件（第一个一般不满足））
             if (!isOnlyRegisterProvider() || hasExportedServices()) {
                 // 2. export MetadataService
                 exportMetadataService();
@@ -1073,6 +1073,7 @@ public class DubboBootstrap extends GenericEventListener {
                             // 无限等待  表示通过api方式使用dubbo进行demo演示，这里永不退出，知道调用销毁方法，即DubboBootstrap destroy
                             condition.await();
                         } catch (InterruptedException e) {
+                            // 当前线程就是这个执行这个await方法的线程
                             Thread.currentThread().interrupt();
                         }
                     }
@@ -1349,8 +1350,10 @@ public class DubboBootstrap extends GenericEventListener {
 
     private void doRegisterServiceInstance(ServiceInstance serviceInstance) {
         //FIXME
+        //核心1 ：进去 app应用级别服务发现的核心
         publishMetadataToRemote(serviceInstance);
 
+        //核心2
         getServiceDiscoveries().forEach(serviceDiscovery ->
         {
             // 进去，将app的reversion设置到serviceInstance的map属性中

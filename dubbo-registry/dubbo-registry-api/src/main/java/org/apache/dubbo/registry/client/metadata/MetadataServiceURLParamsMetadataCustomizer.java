@@ -39,6 +39,7 @@ public class MetadataServiceURLParamsMetadataCustomizer implements ServiceInstan
         Map<String, String> metadata = serviceInstance.getMetadata();
 
         String propertyName = resolveMetadataPropertyName(serviceInstance);
+        // 进去
         String propertyValue = resolveMetadataPropertyValue(serviceInstance);
         // dubbo.metadata-service.url-params -> {"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}
 

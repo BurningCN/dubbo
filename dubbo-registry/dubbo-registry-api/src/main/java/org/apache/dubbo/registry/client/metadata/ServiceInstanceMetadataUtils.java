@@ -279,7 +279,7 @@ public class ServiceInstanceMetadataUtils {
                 // metadata = {HashMap@5330}  size = 4
                 //  "dubbo.metadata-service.url-params" -> "{"dubbo":{"version":"1.0.0","dubbo":"2.0.2","port":"20881"}}"
                 //  "dubbo.endpoints" -> "[{"port":20880,"protocol":"dubbo"}]"
-                //  "dubbo.metadata.revision" -> "AB6F0B7C2429C8828F640F853B65E1E1"
+                //  "dubbo.metadata.revision" -> "AB6F0B7C2429C8828F640F853B65E1E1"  <---- 注意这里
                 //  "dubbo.metadata.storage-type" -> "remote"
                 // address = null
                 // serviceMetadata = null
@@ -294,11 +294,13 @@ public class ServiceInstanceMetadataUtils {
 
     public static void refreshMetadataAndInstance() {
         RemoteMetadataServiceImpl remoteMetadataService = MetadataUtils.getRemoteMetadataService();
+        // 进去 不过不一定能发布成功，取决于 if (!metadataInfo.hasReported()) {
         remoteMetadataService.publishMetadata(ApplicationModel.getName());
 
         AbstractRegistryFactory.getServiceDiscoveries().forEach(serviceDiscovery -> {
             calInstanceRevision(serviceDiscovery, serviceDiscovery.getLocalInstance());
             // update service instance revision
+            // 进去 不一定能实际发生更新，取决于上面的方法是否添加了 INSTANCE_REVISION_UPDATED_KEY = true 参数
             serviceDiscovery.update(serviceDiscovery.getLocalInstance());
         });
     }

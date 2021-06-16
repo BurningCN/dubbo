@@ -34,6 +34,7 @@ public class ConsulDubboServiceProviderBootstrap {
                         .useAsMetadataCenter(true))
                 .protocol("dubbo", builder -> builder.port(-1).name("dubbo"))
                 .protocol("rest", builder -> builder.port(8081).name("rest"))
+                // 注意protocolIds  --- checkProtocol -> convertProtocolIdsToProtocols
                 .service("echo", builder -> builder.interfaceClass(EchoService.class).ref(new EchoServiceImpl()).protocolIds("dubbo"))
                 .service("user", builder -> builder.interfaceClass(UserService.class).ref(new UserServiceImpl()).protocolIds("rest"))
                 .start()

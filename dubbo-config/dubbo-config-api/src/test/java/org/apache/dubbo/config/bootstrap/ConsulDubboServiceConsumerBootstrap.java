@@ -31,9 +31,11 @@ public class ConsulDubboServiceConsumerBootstrap {
 
         DubboBootstrap bootstrap = DubboBootstrap.getInstance()
                 .application("consul-dubbo-consumer", app -> app.metadata(DEFAULT_METADATA_STORAGE_TYPE))
+                // 注意subscribed-services 的 调用点，这个参数可以等同于provided-by
                 .registry("zookeeper", builder -> builder.address("consul://127.0.0.1:8500?registry-type=service&subscribed-services=consul-dubbo-provider")
                         .useAsConfigCenter(true)
                         .useAsMetadataCenter(true))
+                // 注意protocol
                 .reference("echo", builder -> builder.interfaceClass(EchoService.class).protocol("dubbo"))
                 .reference("user", builder -> builder.interfaceClass(UserService.class).protocol("rest"))
                 .start();
