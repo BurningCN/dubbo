@@ -21,7 +21,7 @@
     http://dubbo.apache.org/schema/dubbo http://dubbo.apache.org/schema/dubbo/dubbo.xsd">
 
     <!-- current application configuration -->
-    <dubbo:application name="${dubbo.application.name:foo-app}"/>
+    <dubbo:application name="demo-provider"/>
 
     <!-- registry center configuration -->
     <dubbo:registry address="${dubbo.registry.address:foo-address}"/>
@@ -31,6 +31,8 @@
 
     <!-- service configuration -->
     <dubbo:service interface="org.apache.dubbo.config.spring.api.DemoService" group="demo" version="1.2.3" ref="demoService"/>
+
+    <dubbo:service interface="org.apache.dubbo.config.spring.api.DemoService" group="demo" version="1.2.4" ref="demoService"/>
 
     <bean id="demoService" class="org.apache.dubbo.config.spring.impl.DemoServiceImpl"/>
 

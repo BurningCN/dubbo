@@ -31,6 +31,7 @@ import org.apache.dubbo.common.url.component.URLParam;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.common.utils.UrlUtils;
+import org.apache.dubbo.registry.NotifyListener;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,9 +56,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.PATH_SEPARATOR;
 import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_SEPARATOR_ENCODED;
 import static org.apache.dubbo.common.constants.RegistryConstants.CATEGORY_KEY;
 import static org.apache.dubbo.common.constants.RegistryConstants.EMPTY_PROTOCOL;
-import static org.apache.dubbo.common.constants.RegistryConstants.OVERRIDE_PROTOCOL;
-import static org.apache.dubbo.common.constants.RegistryConstants.ROUTE_PROTOCOL;
-import static org.apache.dubbo.common.constants.RegistryConstants.ROUTE_SCRIPT_PROTOCOL;
+import static org.apache.dubbo.common.constants.RegistryConstants.PROVIDERS_CATEGORY;
 import static org.apache.dubbo.common.url.component.DubboServiceAddressURL.PROVIDER_FIRST_KEYS;
 
 /**
@@ -81,8 +80,8 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
     static {
         ExecutorRepository executorRepository = ExtensionLoader.getExtensionLoader(ExecutorRepository.class).getDefaultExtension();
         cacheRemovalScheduler = executorRepository.nextScheduledExecutor();
-        cacheRemovalTaskIntervalInMillis = getIntConfig(CACHE_CLEAR_TASK_INTERVAL, 10 * 60 * 1000);
-        cacheClearWaitingThresholdInMillis = getIntConfig(CACHE_CLEAR_WAITING_THRESHOLD, 30 * 60 * 1000);
+        cacheRemovalTaskIntervalInMillis = getIntConfig(CACHE_CLEAR_TASK_INTERVAL, 2 * 60 * 1000);
+        cacheClearWaitingThresholdInMillis = getIntConfig(CACHE_CLEAR_WAITING_THRESHOLD, 5 * 60 * 1000);
     }
 
     public CacheableFailbackRegistry(URL url) {
@@ -102,6 +101,31 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
             }
         }
         return result;
+    }
+
+    @Override
+    public void doUnsubscribe(URL url, NotifyListener listener) {
+        this.evictURLCache(url);
+    }
+
+    protected void evictURLCache(URL url) {
+        Map<String, ServiceAddressURL> oldURLs = stringUrls.remove(url);
+        try {
+            if (oldURLs != null && oldURLs.size() > 0) {
+                logger.info("Evicting urls for service " + url.getServiceKey() + ", size " + oldURLs.size());
+                Long currentTimestamp = System.currentTimeMillis();
+                for (Map.Entry<String, ServiceAddressURL> entry : oldURLs.entrySet()) {
+                    waitForRemove.put(entry.getValue(), currentTimestamp);
+                }
+                if (CollectionUtils.isNotEmptyMap(waitForRemove)) {
+                    if (semaphore.tryAcquire()) {
+                        cacheRemovalScheduler.schedule(new RemovalTask(), cacheRemovalTaskIntervalInMillis, TimeUnit.MILLISECONDS);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to evict url for " + url.getServiceKey(), e);
+        }
     }
 
     protected List<URL> toUrlsWithoutEmpty(URL consumer, Collection<String> providers) {
@@ -138,42 +162,28 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
             }
         }
 
+        evictURLCache(consumer);
         stringUrls.put(consumer, newURLs);
-
-        // destroy used urls
-        try {
-            if (oldURLs != null && oldURLs.size() > 0) {
-                Long currentTimestamp = System.currentTimeMillis();
-                for (Map.Entry<String, ServiceAddressURL> entry : oldURLs.entrySet()) {
-                    waitForRemove.put(entry.getValue(), currentTimestamp);
-                }
-                if (CollectionUtils.isNotEmptyMap(waitForRemove)) {
-                    if (semaphore.tryAcquire()) {
-                        cacheRemovalScheduler.schedule(new RemovalTask(), cacheRemovalTaskIntervalInMillis, TimeUnit.MILLISECONDS);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            logger.warn("Failed to evict url for " + consumer, e);
-        }
 
         return new ArrayList<>(newURLs.values());
     }
 
     protected List<URL> toUrlsWithEmpty(URL consumer, String path, Collection<String> providers) {
-        List<URL> urls;
-        if (CollectionUtils.isEmpty(providers)) {
-            urls = new ArrayList<>(1);
-            // clear cache on empty notification: unsubscribe or provider offline
-            stringUrls.remove(consumer);
-        } else {
-            String rawProvider = providers.iterator().next();
-            if (rawProvider.startsWith(OVERRIDE_PROTOCOL) || rawProvider.startsWith(ROUTE_PROTOCOL) || rawProvider.startsWith(ROUTE_SCRIPT_PROTOCOL)) {
-                urls = toConfiguratorsWithoutEmpty(consumer, providers);
-            } else {
+        List<URL> urls = new ArrayList<>(1);
+        boolean isProviderPath = path.endsWith(PROVIDERS_CATEGORY);
+        if (isProviderPath) {
+            if (CollectionUtils.isNotEmpty(providers)) {
                 urls = toUrlsWithoutEmpty(consumer, providers);
+            } else {
+                // clear cache on empty notification: unsubscribe or provider offline
+                evictURLCache(consumer);
+            }
+        } else {
+            if (CollectionUtils.isNotEmpty(providers)) {
+                urls = toConfiguratorsWithoutEmpty(consumer, providers);
             }
         }
+
         if (urls.isEmpty()) {
             int i = path.lastIndexOf(PATH_SEPARATOR);
             String category = i < 0 ? path : path.substring(i + 1);
@@ -183,6 +193,7 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
                     .build();
             urls.add(empty);
         }
+
         return urls;
     }
 
@@ -297,26 +308,34 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
     private static class RemovalTask implements Runnable {
         @Override
         public void run() {
-            logger.info("Clearing cached URLs, size " + waitForRemove.size());
-            Iterator<Map.Entry<ServiceAddressURL, Long>> it = waitForRemove.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry<ServiceAddressURL, Long> entry = it.next();
-                ServiceAddressURL removeURL = entry.getKey();
-                long removeTime = entry.getValue();
-                long current = System.currentTimeMillis();
-                if (current - removeTime >= cacheClearWaitingThresholdInMillis) {
-                    URLAddress urlAddress = removeURL.getUrlAddress();
-                    URLParam urlParam = removeURL.getUrlParam();
-                    if (current - urlAddress.getTimestamp() >= cacheClearWaitingThresholdInMillis) {
-                        stringAddress.remove(urlAddress.getRawAddress());
+            logger.info("Clearing cached URLs, waiting to clear size " + waitForRemove.size());
+            int clearCount = 0;
+            try {
+                Iterator<Map.Entry<ServiceAddressURL, Long>> it = waitForRemove.entrySet().iterator();
+                while (it.hasNext()) {
+                    Map.Entry<ServiceAddressURL, Long> entry = it.next();
+                    ServiceAddressURL removeURL = entry.getKey();
+                    long removeTime = entry.getValue();
+                    long current = System.currentTimeMillis();
+                    if (current - removeTime >= cacheClearWaitingThresholdInMillis) {
+                        URLAddress urlAddress = removeURL.getUrlAddress();
+                        URLParam urlParam = removeURL.getUrlParam();
+                        if (current - urlAddress.getTimestamp() >= cacheClearWaitingThresholdInMillis) {
+                            stringAddress.remove(urlAddress.getRawAddress());
+                        }
+                        if (current - urlParam.getTimestamp() >= cacheClearWaitingThresholdInMillis) {
+                            stringParam.remove(urlParam.getRawParam());
+                        }
+                        it.remove();
+                        clearCount++;
                     }
-                    if (current - urlParam.getTimestamp() >= cacheClearWaitingThresholdInMillis) {
-                        stringParam.remove(urlParam.getRawParam());
-                    }
-                    it.remove();
                 }
+            } catch (Throwable t) {
+                logger.error("Error occurred when clearing cached URLs", t);
+            } finally {
+                semaphore.release();
             }
-            semaphore.release();
+            logger.info("Clear cached URLs, size " + clearCount);
 
             if (CollectionUtils.isNotEmptyMap(waitForRemove)) {
                 // move to next schedule

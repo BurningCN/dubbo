@@ -16,8 +16,12 @@
  */
 package org.apache.dubbo.config.spring.context;
 
+import org.apache.dubbo.config.DubboShutdownHook;
+import org.apache.dubbo.config.bootstrap.BootstrapTakeoverMode;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 
+import com.alibaba.spring.context.OnceApplicationContextEventListener;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ApplicationContextEvent;
 import org.springframework.context.event.ContextClosedEvent;
@@ -30,8 +34,7 @@ import org.springframework.core.Ordered;
  *
  * @since 2.7.5
  */
-public class DubboBootstrapApplicationListener extends OneTimeExecutionApplicationContextEventListener
-        implements Ordered {
+public class DubboBootstrapApplicationListener extends OnceApplicationContextEventListener implements Ordered {
 
     /**
      * The bean name of {@link DubboBootstrapApplicationListener}
@@ -43,11 +46,28 @@ public class DubboBootstrapApplicationListener extends OneTimeExecutionApplicati
     private final DubboBootstrap dubboBootstrap;
 
     public DubboBootstrapApplicationListener() {
-        this.dubboBootstrap = DubboBootstrap.getInstance();
+        this.dubboBootstrap = initBootstrap();
+    }
+
+    public DubboBootstrapApplicationListener(ApplicationContext applicationContext) {
+        super(applicationContext);
+        this.dubboBootstrap = initBootstrap();
+        DubboBootstrapStartStopListenerSpringAdapter.applicationContext = applicationContext;
+    }
+
+    private DubboBootstrap initBootstrap() {
+        DubboBootstrap dubboBootstrap = DubboBootstrap.getInstance();
+        if (dubboBootstrap.getTakeoverMode() != BootstrapTakeoverMode.MANUAL) {
+            dubboBootstrap.setTakeoverMode(BootstrapTakeoverMode.SPRING);
+        }
+        return dubboBootstrap;
     }
 
     @Override
     public void onApplicationContextEvent(ApplicationContextEvent event) {
+        if (DubboBootstrapStartStopListenerSpringAdapter.applicationContext == null) {
+            DubboBootstrapStartStopListenerSpringAdapter.applicationContext = event.getApplicationContext();
+        }
         if (event instanceof ContextRefreshedEvent) {
             onContextRefreshedEvent((ContextRefreshedEvent) event);
         } else if (event instanceof ContextClosedEvent) {
@@ -56,11 +76,15 @@ public class DubboBootstrapApplicationListener extends OneTimeExecutionApplicati
     }
 
     private void onContextRefreshedEvent(ContextRefreshedEvent event) {
-        dubboBootstrap.start();
+        if (dubboBootstrap.getTakeoverMode() == BootstrapTakeoverMode.SPRING) {
+            dubboBootstrap.start();
+        }
     }
 
     private void onContextClosedEvent(ContextClosedEvent event) {
-        dubboBootstrap.stop();
+        if (dubboBootstrap.getTakeoverMode() == BootstrapTakeoverMode.SPRING) {
+            DubboShutdownHook.getDubboShutdownHook().run();
+        }
     }
 
     @Override

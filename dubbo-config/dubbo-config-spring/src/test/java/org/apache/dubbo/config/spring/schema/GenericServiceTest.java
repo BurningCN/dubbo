@@ -16,46 +16,81 @@
  */
 package org.apache.dubbo.config.spring.schema;
 
+import org.apache.dubbo.common.utils.ClassUtils;
+import org.apache.dubbo.config.ReferenceConfigBase;
+import org.apache.dubbo.config.ServiceConfigBase;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
-import org.apache.dubbo.config.spring.ReferenceBean;
+import org.apache.dubbo.config.context.ConfigManager;
 import org.apache.dubbo.config.spring.ServiceBean;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.runner.RunWith;
+import org.apache.dubbo.config.spring.ZooKeeperServer;
+import org.apache.dubbo.config.spring.api.DemoService;
+import org.apache.dubbo.rpc.service.GenericService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = GenericServiceTest.class)
+@DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 @ImportResource(locations = "classpath:/META-INF/spring/dubbo-generic-consumer.xml")
 public class GenericServiceTest {
 
-    @BeforeEach
-    public void setUp() {
+    @BeforeAll
+    public static void setUp() {
+        ZooKeeperServer.start();
         DubboBootstrap.reset();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
+        DubboBootstrap.reset();
     }
 
     @Autowired
     @Qualifier("demoServiceRef")
-    private ReferenceBean referenceBean;
+    private GenericService demoServiceRef;
+
+    @Autowired
+    @Qualifier("genericServiceWithoutInterfaceRef")
+    private GenericService genericServiceWithoutInterfaceRef;
 
     @Autowired
     @Qualifier("demoService")
     private ServiceBean serviceBean;
 
     @Test
-    public void testBeanDefinitionParser() {
-        assertNotNull(referenceBean);
+    public void testGeneric() {
+        assertNotNull(demoServiceRef);
         assertNotNull(serviceBean);
+
+        ConfigManager configManager = DubboBootstrap.getInstance().getConfigManager();
+        ServiceConfigBase<Object> serviceConfig = configManager.getService("demoService");
+        Assertions.assertEquals(DemoService.class.getName(), serviceConfig.getInterface());
+        Assertions.assertEquals(true, serviceConfig.isExported());
+
+        Object result = demoServiceRef.$invoke("sayHello", new String[]{"java.lang.String"}, new Object[]{"dubbo"});
+        Assertions.assertEquals("Welcome dubbo", result);
+
+
+        // Test generic service without interface class locally
+        result = genericServiceWithoutInterfaceRef.$invoke("sayHello", new String[]{"java.lang.String"}, new Object[]{"generic"});
+        Assertions.assertEquals("Welcome generic", result);
+
+        ReferenceConfigBase<Object> reference = configManager.getReference("genericServiceWithoutInterfaceRef");
+        Assertions.assertNull(reference.getServiceInterfaceClass());
+        Assertions.assertEquals("org.apache.dubbo.config.spring.api.LocalMissClass", reference.getInterface());
+        Assertions.assertThrows(ClassNotFoundException.class, () -> ClassUtils.forName(reference.getInterface()));
+
     }
 }

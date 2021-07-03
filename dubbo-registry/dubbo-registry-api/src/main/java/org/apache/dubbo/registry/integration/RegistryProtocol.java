@@ -23,6 +23,7 @@ import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.common.timer.HashedWheelTimer;
+import org.apache.dubbo.common.url.component.ServiceConfigURL;
 import org.apache.dubbo.common.utils.CollectionUtils;
 import org.apache.dubbo.common.utils.NamedThreadFactory;
 import org.apache.dubbo.common.utils.StringUtils;
@@ -131,7 +132,7 @@ public class RegistryProtocol implements Protocol {
             APPLICATION_KEY, VERSION_KEY, GROUP_KEY, DUBBO_VERSION_KEY, RELEASE_KEY
     };
 
-    private final static Logger logger = LoggerFactory.getLogger(InterfaceCompatibleRegistryProtocol.class);
+    private final static Logger logger = LoggerFactory.getLogger(RegistryProtocol.class);
     private final Map<URL, NotifyListener> overrideListeners = new ConcurrentHashMap<>();
     private final Map<String, ServiceConfigurationListener> serviceConfigurationListeners = new ConcurrentHashMap<>();
     private final ProviderConfigurationListener providerConfigurationListener = new ProviderConfigurationListener();
@@ -452,7 +453,15 @@ public class RegistryProtocol implements Protocol {
     }
 
     protected <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url, Map<String, String> parameters) {
-        URL consumerUrl = new URL(parameters.get(PROTOCOL_KEY) == null ? DUBBO : parameters.get(PROTOCOL_KEY), parameters.get(REGISTER_IP_KEY), 0, getPath(parameters, type), parameters);
+        Map<String, Object> consumerAttribute = new HashMap<>(url.getAttributes());
+        consumerAttribute.remove(REFER_KEY);
+        URL consumerUrl = new ServiceConfigURL(parameters.get(PROTOCOL_KEY) == null ? DUBBO : parameters.get(PROTOCOL_KEY),
+                null,
+                null,
+                parameters.get(REGISTER_IP_KEY),
+                0, getPath(parameters, type),
+                parameters,
+                consumerAttribute);
         url = url.putAttribute(CONSUMER_URL_KEY, consumerUrl);
         ClusterInvoker<T> migrationInvoker = getMigrationInvoker(this, cluster, registry, type, url, consumerUrl);
         return interceptInvoker(migrationInvoker, url, consumerUrl, url);
@@ -494,8 +503,9 @@ public class RegistryProtocol implements Protocol {
         directory.setProtocol(protocol);
         // all attributes of REFER_KEY
         Map<String, String> parameters = new HashMap<String, String>(directory.getConsumerUrl().getParameters());
-        URL urlToRegistry = new URL(parameters.get(PROTOCOL_KEY) == null ? DUBBO : parameters.get(PROTOCOL_KEY), parameters.remove(REGISTER_IP_KEY), 0, getPath(parameters, type), parameters);
-        URL consumerURL = directory.getConsumerUrl();
+        URL urlToRegistry = new ServiceConfigURL(
+                parameters.get(PROTOCOL_KEY) == null ? DUBBO : parameters.get(PROTOCOL_KEY),
+                parameters.remove(REGISTER_IP_KEY), 0, getPath(parameters, type), parameters);
         if (directory.isShouldRegister()) {
             directory.setRegisteredConsumerUrl(urlToRegistry);
             registry.register(directory.getRegisteredConsumerUrl());
@@ -551,7 +561,7 @@ public class RegistryProtocol implements Protocol {
         bounds.clear();
 
         ExtensionLoader.getExtensionLoader(GovernanceRuleRepository.class).getDefaultExtension()
-                .removeListener(ApplicationModel.getApplication() + CONFIGURATORS_SUFFIX, providerConfigurationListener);
+                .removeListener(ApplicationModel.getName() + CONFIGURATORS_SUFFIX, providerConfigurationListener);
     }
 
     @Override
@@ -668,7 +678,7 @@ public class RegistryProtocol implements Protocol {
             //The current, may have been merged many times
             URL currentUrl = exporter.getInvoker().getUrl();
             //Merged with this configuration
-            URL newUrl = getConfigedInvokerUrl(configurators, currentUrl);
+            URL newUrl = getConfigedInvokerUrl(configurators, originUrl);
             newUrl = getConfigedInvokerUrl(providerConfigurationListener.getConfigurators(), newUrl);
             newUrl = getConfigedInvokerUrl(serviceConfigurationListeners.get(originUrl.getServiceKey())
                     .getConfigurators(), newUrl);
@@ -720,7 +730,7 @@ public class RegistryProtocol implements Protocol {
     private class ProviderConfigurationListener extends AbstractConfiguratorListener {
 
         public ProviderConfigurationListener() {
-            this.initWith(ApplicationModel.getApplication() + CONFIGURATORS_SUFFIX);
+            this.initWith(ApplicationModel.getName() + CONFIGURATORS_SUFFIX);
         }
 
         /**

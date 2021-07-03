@@ -41,7 +41,7 @@ public interface WritableMetadataService extends MetadataService {
      */
     @Override
     default String serviceName() {
-        return ApplicationModel.getApplication();
+        return ApplicationModel.getName();
     }
 
     /**
@@ -76,7 +76,7 @@ public interface WritableMetadataService extends MetadataService {
      */
     boolean unsubscribeURL(URL url);
 
-    void publishServiceDefinition(URL providerUrl);
+    void publishServiceDefinition(URL url);
 
     default void setMetadataServiceURL(URL url) {
 
@@ -88,13 +88,13 @@ public interface WritableMetadataService extends MetadataService {
 
     void putCachedMapping(String serviceKey, Set<String> apps);
 
-    Map<String, Set<String>> getCachedMapping();
-
     Set<String> getCachedMapping(String mappingKey);
 
     Set<String> getCachedMapping(URL consumerURL);
 
     Set<String> removeCachedMapping(String serviceKey);
+
+    Map<String, Set<String>> getCachedMapping();
 
     MetadataInfo getDefaultMetadataInfo();
 

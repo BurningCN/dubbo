@@ -26,6 +26,8 @@ import org.apache.dubbo.config.ProtocolConfig;
 import org.apache.dubbo.config.ProviderConfig;
 import org.apache.dubbo.config.RegistryConfig;
 
+import org.apache.dubbo.rpc.model.ApplicationModel;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,10 +35,13 @@ import java.util.Collection;
 
 import static java.util.Arrays.asList;
 import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_KEY;
+import static org.apache.dubbo.config.context.ConfigManager.DUBBO_CONFIG_MODE;
 import static org.apache.dubbo.rpc.model.ApplicationModel.getConfigManager;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * {@link ConfigManager} Test
@@ -74,12 +79,10 @@ public class ConfigManagerTest {
         // protocols
         assertTrue(configManager.getProtocols().isEmpty());
         assertTrue(configManager.getDefaultProtocols().isEmpty());
-        assertTrue(configManager.getProtocolIds().isEmpty());
 
         // registries
         assertTrue(configManager.getRegistries().isEmpty());
         assertTrue(configManager.getDefaultRegistries().isEmpty());
-        assertTrue(configManager.getRegistryIds().isEmpty());
 
         // services and references
         assertTrue(configManager.getServices().isEmpty());
@@ -95,7 +98,7 @@ public class ConfigManagerTest {
     // Test ApplicationConfig correlative methods
     @Test
     public void testApplicationConfig() {
-        ApplicationConfig config = new ApplicationConfig();
+        ApplicationConfig config = new ApplicationConfig("ConfigManagerTest");
         configManager.setApplication(config);
         assertTrue(configManager.getApplication().isPresent());
         assertEquals(config, configManager.getApplication().get());
@@ -139,7 +142,9 @@ public class ConfigManagerTest {
         assertEquals(config, configs.iterator().next());
         assertTrue(configManager.getDefaultProvider().isPresent());
 
+        config = new ProviderConfig();
         config.setId(DEFAULT_KEY);
+        config.setQueues(10);
         configManager.addProvider(config);
         assertTrue(configManager.getDefaultProvider().isPresent());
         configs = configManager.getProviders();
@@ -156,7 +161,9 @@ public class ConfigManagerTest {
         assertEquals(config, configs.iterator().next());
         assertTrue(configManager.getDefaultConsumer().isPresent());
 
+        config = new ConsumerConfig();
         config.setId(DEFAULT_KEY);
+        config.setThreads(10);
         configManager.addConsumer(config);
         assertTrue(configManager.getDefaultConsumer().isPresent());
         configs = configManager.getConsumers();
@@ -188,16 +195,28 @@ public class ConfigManagerTest {
     // Test ConfigCenterConfig correlative methods
     @Test
     public void testConfigCenterConfig() {
+        String address = "zookeeper://127.0.0.1:2181";
         ConfigCenterConfig config = new ConfigCenterConfig();
+        config.setAddress(address);
         configManager.addConfigCenters(asList(config, null));
         Collection<ConfigCenterConfig> configs = configManager.getConfigCenters();
         assertEquals(1, configs.size());
         assertEquals(config, configs.iterator().next());
+
+        // add duplicated config, expecting ignore equivalent configs
+        ConfigCenterConfig config2 = new ConfigCenterConfig();
+        config2.setAddress(address);
+        configManager.addConfigCenter(config2);
+
+        configs = configManager.getConfigCenters();
+        assertEquals(1, configs.size());
+        assertEquals(config, configs.iterator().next());
+
     }
 
     @Test
     public void testAddConfig() {
-        configManager.addConfig(new ApplicationConfig());
+        configManager.addConfig(new ApplicationConfig("ConfigManagerTest"));
         configManager.addConfig(new ProviderConfig());
         configManager.addConfig(new ProtocolConfig());
 
@@ -218,14 +237,60 @@ public class ConfigManagerTest {
         assertFalse(ConfigManager.isDefaultConfig(providerConfig));
 
         ProviderConfig providerConfig1 = new ProviderConfig();
-        assertTrue(ConfigManager.isDefaultConfig(providerConfig1));
+        assertNull(ConfigManager.isDefaultConfig(providerConfig1));
 
         ProviderConfig providerConfig3 = new ProviderConfig();
-        providerConfig.setDefault(true);
+        providerConfig3.setDefault(true);
         assertTrue(ConfigManager.isDefaultConfig(providerConfig3));
 
         ProtocolConfig protocolConfig = new ProtocolConfig();
         protocolConfig.setDefault(false);
         assertFalse(ConfigManager.isDefaultConfig(protocolConfig));
+    }
+
+    @Test
+    public void testConfigMode() {
+        ApplicationConfig applicationConfig1 = new ApplicationConfig("app1");
+        ApplicationConfig applicationConfig2 = new ApplicationConfig("app2");
+
+        try {
+            // test strict mode
+            ApplicationModel.reset();
+            Assertions.assertEquals(ConfigMode.STRICT, getConfigManager().getConfigMode());
+
+            System.setProperty(DUBBO_CONFIG_MODE, ConfigMode.STRICT.name());
+            ApplicationModel.reset();
+            Assertions.assertEquals(ConfigMode.STRICT, getConfigManager().getConfigMode());
+
+            getConfigManager().addConfig(applicationConfig1);
+            try {
+                getConfigManager().addConfig(applicationConfig2);
+                fail("strict mode cannot add two application configs");
+            } catch (Exception e) {
+                assertEquals(IllegalStateException.class, e.getClass());
+                assertTrue(e.getMessage().contains("please remove redundant configs and keep only one"));
+            }
+
+            // test override mode
+            System.setProperty(DUBBO_CONFIG_MODE, ConfigMode.OVERRIDE.name());
+            ApplicationModel.reset();
+            Assertions.assertEquals(ConfigMode.OVERRIDE, getConfigManager().getConfigMode());
+
+            getConfigManager().addConfig(applicationConfig1);
+            getConfigManager().addConfig(applicationConfig2);
+            assertEquals(applicationConfig2, getConfigManager().getApplicationOrElseThrow());
+
+
+            // test ignore mode
+            System.setProperty(DUBBO_CONFIG_MODE, ConfigMode.IGNORE.name());
+            ApplicationModel.reset();
+            Assertions.assertEquals(ConfigMode.IGNORE, getConfigManager().getConfigMode());
+
+            getConfigManager().addConfig(applicationConfig1);
+            getConfigManager().addConfig(applicationConfig2);
+            assertEquals(applicationConfig1, getConfigManager().getApplicationOrElseThrow());
+        } finally {
+            System.clearProperty(DUBBO_CONFIG_MODE);
+        }
     }
 }

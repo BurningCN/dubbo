@@ -18,16 +18,19 @@
 package org.apache.dubbo.config;
 
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.config.api.DemoService;
 import org.apache.dubbo.config.api.Greeting;
 import org.apache.dubbo.config.mock.MockProtocol2;
 import org.apache.dubbo.config.mock.MockRegistryFactory2;
+import org.apache.dubbo.config.mock.MockServiceListener;
 import org.apache.dubbo.config.mock.TestProxyFactory;
 import org.apache.dubbo.config.provider.impl.DemoServiceImpl;
 import org.apache.dubbo.registry.Registry;
 import org.apache.dubbo.rpc.Exporter;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Protocol;
+import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.service.GenericService;
 
 import org.junit.jupiter.api.AfterEach;
@@ -38,6 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.dubbo.common.constants.CommonConstants.ANYHOST_KEY;
@@ -45,11 +49,13 @@ import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_BEAN;
 import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_DEFAULT;
 import static org.apache.dubbo.common.constants.CommonConstants.GENERIC_SERIALIZATION_NATIVE_JAVA;
+import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.METHODS_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.PROVIDER;
 import static org.apache.dubbo.common.constants.CommonConstants.SHUTDOWN_WAIT_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.SIDE_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.config.Constants.SHUTDOWN_TIMEOUT_KEY;
 import static org.apache.dubbo.remoting.Constants.BIND_IP_KEY;
 import static org.apache.dubbo.remoting.Constants.BIND_PORT_KEY;
@@ -63,6 +69,8 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.withSettings;
 
@@ -70,12 +78,15 @@ public class ServiceConfigTest {
     private Protocol protocolDelegate = Mockito.mock(Protocol.class);
     private Registry registryDelegate = Mockito.mock(Registry.class);
     private Exporter exporter = Mockito.mock(Exporter.class);
-    private ServiceConfig<DemoServiceImpl> service = new ServiceConfig<DemoServiceImpl>();
-    private ServiceConfig<DemoServiceImpl> service2 = new ServiceConfig<DemoServiceImpl>();
-    private ServiceConfig<DemoServiceImpl> delayService = new ServiceConfig<DemoServiceImpl>();
+    private ServiceConfig<DemoServiceImpl> service = new ServiceConfig<>();
+    private ServiceConfig<DemoServiceImpl> service2 = new ServiceConfig<>();
+    private ServiceConfig<DemoServiceImpl> serviceWithoutRegistryConfig = new ServiceConfig<>();
+    private ServiceConfig<DemoServiceImpl> delayService = new ServiceConfig<>();
 
     @BeforeEach
     public void setUp() throws Exception {
+        ApplicationModel.getConfigManager().clear();
+
         MockProtocol2.delegate = protocolDelegate;
         MockRegistryFactory2.registry = registryDelegate;
         Mockito.when(protocolDelegate.export(Mockito.any(Invoker.class))).thenReturn(exporter);
@@ -107,6 +118,7 @@ public class ServiceConfigTest {
         service.setInterface(DemoService.class);
         service.setRef(new DemoServiceImpl());
         service.setMethods(Collections.singletonList(method));
+        service.setGroup("demo1");
 
         service2.setProvider(provider);
         service2.setApplication(app);
@@ -115,6 +127,7 @@ public class ServiceConfigTest {
         service2.setRef(new DemoServiceImpl());
         service2.setMethods(Collections.singletonList(method));
         service2.setProxy("testproxyfactory");
+        service2.setGroup("demo2");
 
         delayService.setProvider(provider);
         delayService.setApplication(app);
@@ -123,13 +136,19 @@ public class ServiceConfigTest {
         delayService.setRef(new DemoServiceImpl());
         delayService.setMethods(Collections.singletonList(method));
         delayService.setDelay(100);
+        delayService.setGroup("demo3");
 
-//        ApplicationModel.getConfigManager().clear();
+        serviceWithoutRegistryConfig.setProvider(provider);
+        serviceWithoutRegistryConfig.setApplication(app);
+        serviceWithoutRegistryConfig.setInterface(DemoService.class);
+        serviceWithoutRegistryConfig.setRef(new DemoServiceImpl());
+        serviceWithoutRegistryConfig.setMethods(Collections.singletonList(method));
+        serviceWithoutRegistryConfig.setGroup("demo4");
     }
 
     @AfterEach
     public void tearDown() {
-//        ApplicationModel.getConfigManager().clear();
+        ApplicationModel.getConfigManager().clear();
     }
 
     @Test
@@ -155,11 +174,29 @@ public class ServiceConfigTest {
     }
 
     @Test
+    public void testVersionAndGroupConfigFromProvider() {
+        //Service no configuration version , the Provider configured.
+        service.getProvider().setVersion("1.0.0");
+        service.getProvider().setGroup("groupA");
+        service.export();
+
+        String serviceVersion = service.getVersion();
+        String serviceVersion2 = service.toUrl().getParameter(VERSION_KEY);
+
+        String group = service.getGroup();
+        String group2 = service.toUrl().getParameter(GROUP_KEY);
+
+        assertEquals(serviceVersion2, serviceVersion);
+        assertEquals(group, group2);
+    }
+
+    @Test
     public void testProxy() throws Exception {
         service2.export();
 
         assertThat(service2.getExportedUrls(), hasSize(1));
         assertEquals(2, TestProxyFactory.count); // local injvm and registry protocol, so expected is 2
+        TestProxyFactory.count = 0;
     }
 
 
@@ -258,7 +295,66 @@ public class ServiceConfigTest {
     @Test
     public void testApplicationInUrl() {
         service.export();
-        Assertions.assertNotNull(service.toUrl().getApplication());
+        assertNotNull(service.toUrl().getApplication());
         Assertions.assertEquals("app", service.toUrl().getApplication());
+    }
+
+    @Test
+    public void testMetaData() {
+        // test new instance
+        ServiceConfig config = new ServiceConfig();
+        Map<String, String> metaData = config.getMetaData();
+        Assertions.assertEquals(0, metaData.size(), "Expect empty metadata but found: " + metaData);
+
+        // test merged and override provider attributes
+        ProviderConfig providerConfig = new ProviderConfig();
+        providerConfig.setAsync(true);
+        providerConfig.setActives(10);
+        config.setProvider(providerConfig);
+        config.setAsync(false);// override
+
+        metaData = config.getMetaData();
+        Assertions.assertEquals(2, metaData.size());
+        Assertions.assertEquals("" + providerConfig.getActives(), metaData.get("actives"));
+        Assertions.assertEquals("" + config.isAsync(), metaData.get("async"));
+    }
+
+
+
+    @Test
+    public void testExportWithoutRegistryConfig() {
+        serviceWithoutRegistryConfig.export();
+
+        assertThat(serviceWithoutRegistryConfig.getExportedUrls(), hasSize(1));
+        URL url = serviceWithoutRegistryConfig.toUrl();
+        assertThat(url.getProtocol(), equalTo("mockprotocol2"));
+        assertThat(url.getPath(), equalTo(DemoService.class.getName()));
+        assertThat(url.getParameters(), hasEntry(ANYHOST_KEY, "true"));
+        assertThat(url.getParameters(), hasEntry(APPLICATION_KEY, "app"));
+        assertThat(url.getParameters(), hasKey(BIND_IP_KEY));
+        assertThat(url.getParameters(), hasKey(BIND_PORT_KEY));
+        assertThat(url.getParameters(), hasEntry(EXPORT_KEY, "true"));
+        assertThat(url.getParameters(), hasEntry("echo.0.callback", "false"));
+        assertThat(url.getParameters(), hasEntry(GENERIC_KEY, "false"));
+        assertThat(url.getParameters(), hasEntry(INTERFACE_KEY, DemoService.class.getName()));
+        assertThat(url.getParameters(), hasKey(METHODS_KEY));
+        assertThat(url.getParameters().get(METHODS_KEY), containsString("echo"));
+        assertThat(url.getParameters(), hasEntry(SIDE_KEY, PROVIDER));
+        Mockito.verify(protocolDelegate).export(Mockito.any(Invoker.class));
+    }
+
+    @Test
+    public void testServiceListener() {
+        ExtensionLoader<ServiceListener> extensionLoader = ExtensionLoader.getExtensionLoader(ServiceListener.class);
+        MockServiceListener mockServiceListener = (MockServiceListener) extensionLoader.getExtension("mock");
+        assertNotNull(mockServiceListener);
+        mockServiceListener.clearExportedServices();
+
+        service.export();
+
+        Map<String, ServiceConfig> exportedServices = mockServiceListener.getExportedServices();
+        assertEquals(1, exportedServices.size());
+        ServiceConfig serviceConfig = exportedServices.get(service.getUniqueServiceName());
+        assertSame(service, serviceConfig);
     }
 }
