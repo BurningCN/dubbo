@@ -44,6 +44,7 @@ public class MockClusterInvoker<T> implements ClusterInvoker<T> {
 
     private final Invoker<T> invoker;
 
+    // 一般情况这里的invoker是 AbstractCluster 里的 InterceptorInvokerNode，这个node里面含有的invoker就是比如 FailoverClusterInvoker
     public MockClusterInvoker(Directory<T> directory, Invoker<T> invoker) {
         this.directory = directory;
         this.invoker = invoker;

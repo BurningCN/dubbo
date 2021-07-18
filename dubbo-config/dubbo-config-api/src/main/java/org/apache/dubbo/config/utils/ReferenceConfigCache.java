@@ -116,6 +116,7 @@ public class ReferenceConfigCache {
         proxiesOfType.computeIfAbsent(key, _k -> {
             // 进去
             Object proxy = referenceConfig.get();
+            // 这里的value是referenceConfig，proxies的内层value是proxy0，注意区分
             referredReferences.put(key, referenceConfig);
             return proxy;
         });
@@ -227,7 +228,9 @@ public class ReferenceConfigCache {
 
         proxies.forEach((_type, proxiesOfType) -> {
             proxiesOfType.forEach((_k, v) -> {
+                // 每个proxy0都是实现了内置的 Destroyable 接口
                 Destroyable proxy = (Destroyable) v;
+                // 调用proxy0的$destroy方法，走到 InvokerInvocationHandler # invoke -> invoker.destroy(); -> MigrationInvoker#destroy
                 proxy.$destroy();
             });
         });

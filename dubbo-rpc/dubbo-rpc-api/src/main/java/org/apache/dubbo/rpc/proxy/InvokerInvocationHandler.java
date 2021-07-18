@@ -59,6 +59,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
     // 第一个参数就是代理类对象
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // invoker 是 migrationInvoker
         // 拦截定义在 Object 类中的方法（未被子类重写），比如 wait/notify
         if (method.getDeclaringClass() == Object.class) {
             // 如果是Object方法直接调用即可
