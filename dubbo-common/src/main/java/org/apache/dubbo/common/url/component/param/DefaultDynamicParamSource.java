@@ -27,6 +27,7 @@ public class DefaultDynamicParamSource implements DynamicParamSource {
         values.add(new DynamicValues(null));
 
         keys.add(CommonConstants.SIDE_KEY);
+        // 这个是Fixed，其他都是 DynamicValues
         values.add(new FixedParamValue(CommonConstants.CONSUMER_SIDE, CommonConstants.PROVIDER_SIDE));
 
         keys.add(CommonConstants.INTERFACE_KEY);

@@ -26,13 +26,18 @@ import java.util.Map;
  * Act like URLParam, will not use DynamicParamTable to compress parameters,
  * which can support serializer serialization and deserialization.
  * DynamicParamTable is environment hard related.
+ * 像 URLParam 一样，不会使用 DynamicParamTable 来压缩参数，
+ * 可以支持序列化器序列化和反序列化。
+ * DynamicParamTable 与环境硬相关。
  */
+// 实现了序列化接口并给了id
 public class URLPlainParam extends URLParam implements Serializable {
 
     private static final long serialVersionUID = 4722019979665434393L;
 
     protected URLPlainParam(BitSet key, BitSet defaultKey, Integer[] value, Map<String, String> extraParams, Map<String, Map<String, String>> methodParameters, String rawParam) {
         super(key, defaultKey, value, extraParams, methodParameters, rawParam);
+        // 这个参数影响DynamicTable#getKeyIndex方法，直接返回null
         this.enableCompressed = false;
     }
 

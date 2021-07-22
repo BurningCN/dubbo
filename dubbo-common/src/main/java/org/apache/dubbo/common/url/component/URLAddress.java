@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Objects;
 
+// 实现了序列化接口并给了id
 public class URLAddress implements Serializable {
     private static final long serialVersionUID = -1985165475234910535L;
 

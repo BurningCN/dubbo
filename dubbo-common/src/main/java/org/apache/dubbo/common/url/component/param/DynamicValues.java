@@ -20,10 +20,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DynamicValues implements ParamValue {
+    // 和Fixed比较，前者是values数组存放的值，这里是map存放的，不过前后这都是用map存储value->index的映射
+    // 前者的属性在构造器里面赋值后就不可变了，而后者可以动态add
     private final Map<Integer, String> index2Value = new ConcurrentHashMap<>();
     private final Map<String, Integer> value2Index = new ConcurrentHashMap<>();
     private int indexSeq = 0;
 
+
+    // gx 调用点都是 new DynamicValues(null) --> indexSeq = 1  ，作用就是以后别处调用getIndex或者add的时候，计数器从1开始，
+    // 计数器其实就是该val在当前DynamicValues的索引下标
     public DynamicValues(String defaultVal) {
         if (defaultVal == null) {
             indexSeq += 1;

@@ -44,12 +44,14 @@ public class URLParamTest {
         Assertions.assertEquals("test", urlParam2.getParameter("aaa"));
 
         Map<String, String> overrideMap = Collections.singletonMap("aaa", "bbb");
+        // 最后map的优先级更高，会覆盖原有rawParam的参数
         URLParam urlParam3 = URLParam.parse("aaa%3dtest", true, overrideMap);
         Assertions.assertEquals("bbb", urlParam3.getParameter("aaa"));
 
         URLParam urlParam4 = URLParam.parse("ccc=456&&default.ccc=123");
         Assertions.assertEquals("456", urlParam4.getParameter("ccc"));
 
+        // 测试 default.xx的skipIfPresent = true
         URLParam urlParam5 = URLParam.parse("version=2.0&&default.version=1.0");
         Assertions.assertEquals("2.0", urlParam5.getParameter("version"));
     }
@@ -66,7 +68,9 @@ public class URLParamTest {
         Assertions.assertEquals("aaa", urlParam1.getParameter("aaa"));
         Assertions.assertEquals("bbb", urlParam1.getParameter("bbb"));
         Assertions.assertEquals("2.0", urlParam1.getParameter("version"));
+        // 注意这个是默认值，会存到DEFAULT_KEY
         Assertions.assertEquals("consumer", urlParam1.getParameter("side"));
+        // 走toString逻辑和equals逻辑（因为前面parse(map)方法没有传递rawParam，内部toString会生成一个）
         Assertions.assertEquals(urlParam1, URLParam.parse(urlParam1.getRawParam()));
 
         map.put("bbb", "ccc");
@@ -76,6 +80,7 @@ public class URLParamTest {
         URLParam urlParam2 = URLParam.parse(map);
         Assertions.assertEquals("ccc", urlParam2.getParameter("bbb"));
 
+        // 返回的是里面的固有提前初始化好的变量 EMPTY_PARAM
         URLParam urlParam3 = URLParam.parse(null, null);
         Assertions.assertFalse(urlParam3.hasParameter("aaa"));
         Assertions.assertEquals(urlParam3, URLParam.parse(urlParam3.getRawParam()));
@@ -83,6 +88,7 @@ public class URLParamTest {
 
     @Test
     public void testGetParameter() {
+        // bbb没有值
         URLParam urlParam1 = URLParam.parse("aaa=aaa&bbb&version=1.0&default.ccc=123");
         Assertions.assertNull(urlParam1.getParameter("abcde"));
 
@@ -120,6 +126,7 @@ public class URLParamTest {
         Assertions.assertFalse(urlParam3.hasParameter("aaa"));
         Assertions.assertFalse(urlParam3.hasParameter("version"));
 
+        // 什么也不穿入，表示不作操作
         URLParam urlParam4 = urlParam1.removeParameters();
         Assertions.assertTrue(urlParam4.hasParameter("aaa"));
         Assertions.assertTrue(urlParam4.hasParameter("side"));
@@ -133,6 +140,7 @@ public class URLParamTest {
         URLParam urlParam6 = urlParam1.removeParameters("aaa");
         Assertions.assertFalse(urlParam6.hasParameter("aaa"));
 
+        // 测试DEFAULT_KEY
         URLParam urlParam7 = URLParam.parse("side=consumer").removeParameters("side");
         Assertions.assertFalse(urlParam7.hasParameter("side"));
     }
@@ -188,17 +196,21 @@ public class URLParamTest {
     @Test
     public void testURLParamMap() {
         URLParam urlParam1 = URLParam.parse("");
+        // isEmpty内部调用的size
         Assertions.assertTrue(urlParam1.getParameters().isEmpty());
         Assertions.assertEquals(0, urlParam1.getParameters().size());
+        // urlParam.hasParameter((String) key);
         Assertions.assertFalse(urlParam1.getParameters().containsKey("aaa"));
         Assertions.assertFalse(urlParam1.getParameters().containsKey("version"));
         Assertions.assertFalse(urlParam1.getParameters().containsKey(new Object()));
 
         URLParam urlParam2 = URLParam.parse("aaa=aaa&version=1.0");
         URLParam.URLParamMap urlParam2Map = (URLParam.URLParamMap) urlParam2.getParameters();
+        // urlParam.hasParameter((String) key);
         Assertions.assertTrue(urlParam2Map.containsKey("version"));
         Assertions.assertFalse(urlParam2Map.containsKey("side"));
 
+        // values().contains(value);
         Assertions.assertTrue(urlParam2Map.containsValue("1.0"));
         Assertions.assertFalse(urlParam2Map.containsValue("2.0"));
 
@@ -262,11 +274,24 @@ public class URLParamTest {
     @Test
     public void testMethodParameters() {
         URLParam urlParam1 = URLParam.parse("aaa.method1=aaa&bbb.method2=bbb");
+        //EXTRA_PARAMS = {Collections$UnmodifiableMap@1979}  size = 2
+        // "aaa.method1" -> "aaa"
+        // "bbb.method2" -> "bbb"
+        //METHOD_PARAMETERS = {Collections$UnmodifiableMap@1980}  size = 2
+        // "method1" -> {HashMap@1998}  size = 1
+        // "method2" -> {HashMap@2000}  size = 1
         Assertions.assertEquals("aaa",urlParam1.getAnyMethodParameter("method1"));
         Assertions.assertEquals("bbb",urlParam1.getAnyMethodParameter("method2"));
 
 
         URLParam urlParam2 = URLParam.parse("methods=aaa&aaa.method1=aaa&bbb.method2=bbb");
+        //EXTRA_PARAMS = {Collections$UnmodifiableMap@1984}  size = 3
+        // "bbb.method2" -> "bbb"
+        // "methods" -> "aaa"
+        // "aaa.method1" -> "aaa"
+        //METHOD_PARAMETERS = {Collections$UnmodifiableMap@1985}  size = 2
+        // "method1" -> {HashMap@2006}  size = 1
+        // "method2" -> {HashMap@2008}  size = 1
         Assertions.assertEquals("aaa",urlParam2.getAnyMethodParameter("method1"));
         Assertions.assertNull(urlParam2.getAnyMethodParameter("method2"));
     }

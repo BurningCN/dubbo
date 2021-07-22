@@ -24,6 +24,7 @@ import java.util.Map;
 
 /**
  * In lower case
+ * 小写 ？？？
  */
 public class FixedParamValue implements ParamValue {
     private final String[] values;
@@ -58,6 +59,7 @@ public class FixedParamValue implements ParamValue {
         if (offset == null) {
             throw new IllegalArgumentException("unrecognized value " + value
                     + " , please check if value is illegal. " +
+                // 这里直接就输出字符串了，和Arrays.toString(T... )一样
                     "Permitted values: " + Arrays.asList(values));
         }
         return offset;

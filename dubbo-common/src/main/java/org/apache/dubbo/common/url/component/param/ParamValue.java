@@ -19,7 +19,7 @@ package org.apache.dubbo.common.url.component.param;
 public interface ParamValue {
     /**
      * get value at the specified index.
-     *
+     * 这里的n就是index
      * @param n the nth value
      * @return the value stored at index = n
      */
@@ -37,7 +37,7 @@ public interface ParamValue {
     /**
      * get default value
      *
-     * @return the default value stored at index = 0
+     * @return the default value stored at index = 0  注意这里
      */
     String defaultVal();
 }
