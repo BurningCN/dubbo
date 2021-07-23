@@ -60,12 +60,15 @@ public final class Utf8Utils {
 
         // Optimize for 100% ASCII (Hotspot loves small simple top-level loops like this).
         // This simple loop stops when we encounter a byte >= 0x80 (i.e. non-ASCII).
+        // 针对 100% ASCII 进行优化（Hotspot 喜欢像这样的小型简单顶级循环）。
+        // 当我们遇到一个字节 >= 0x80（即非 ASCII）时，这个简单的循环就会停止。
         while (offset < limit) {
             byte b = srcBytes[offset];
             if (!DecodeUtil.isOneByte(b)) {
                 break;
             }
             offset++;
+            // 安全的处理这个字节，就是将b写到destChars
             DecodeUtil.handleOneByteSafe(b, destChars, destIdx++);
         }
 
@@ -112,6 +115,7 @@ public final class Utf8Utils {
                 destIdx += 2;
             }
         }
+        // 表示消费了destChars几个索引长度
         return destIdx - destIdx0;
     }
 
@@ -120,6 +124,7 @@ public final class Utf8Utils {
 
         /**
          * Returns whether this is a single-byte codepoint (i.e., ASCII) with the form '0XXXXXXX'.
+         * 返回这是否是格式为“0XXXXXXX”的单字节代码点（即 ASCII）。
          */
         private static boolean isOneByte(byte b) {
             return b >= 0;
@@ -140,6 +145,8 @@ public final class Utf8Utils {
         }
 
         private static void handleOneByteSafe(byte byte1, char[] resultArr, int resultPos) {
+            // 比如byte1=58，那么char就是:
+            // 比如byte1=47，那么char就是/
             resultArr[resultPos] = (char) byte1;
         }
 

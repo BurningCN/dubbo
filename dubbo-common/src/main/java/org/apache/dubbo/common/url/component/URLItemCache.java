@@ -68,6 +68,18 @@ public class URLItemCache {
         if (_protocol == null) {
             return _protocol;
         }
+        /**
+         * 返回字符串对象的规范表示。
+         * <p>
+         * 字符串池，最初为空，由类 {@code String} 私下维护。
+         * <p>
+         * 当调用 intern 方法时，如果池中已经包含一个字符串等于这个 {@code String} 对象，由 {@link #equals(Object)} 方法确定，则返回池中的字符串。否则，此 {@code String} 对象将添加到池中，并返回对此 {@code String} 对象的引用。
+         * <p>
+         * 对于任意两个字符串 {@code s} 和 {@code t}，{@code s.intern() == t.intern()} 是 {@code true} 当且仅当 {@code s .equals(t)} 是 {@code true}。
+         * <p>
+         * 所有文字字符串和字符串值常量表达式都是实习生的。字符串文字在 <cite>The Java&trade; 的第 3.10.5 节中定义。语言规范</cite>。
+         * @return 与此字符串具有相同内容的字符串，但保证来自唯一字符串池。
+         */
         return _protocol.intern();
     }
 

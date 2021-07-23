@@ -1181,21 +1181,28 @@ public final class StringUtils {
     public static int decodeHexNibble(final char c) {
         // Character.digit() is not used here, as it addresses a larger
         // set of characters (both ASCII and full-width latin letters).
+        // 此处不使用 Character.digit()，因为它处理更大的
+        // 字符集（ASCII 和全角拉丁字母）。
         byte[] hex2b = HEX2B;
+        // 将十六进制转化为2进制，其实没有什么难点，十六进制无非就是0~f，对应的十进制0~15，相将其转化为二进制，直接就是(byte)15
+        // 所以看到HEX2B的填充就是比如 HEX2B['f'] = (byte)15;
         return c < hex2b.length ? hex2b[c] : -1;
     }
 
     /**
      * Decode a 2-digit hex byte from within a string.
+     * 从字符串中解码 2 位十六进制字节。
      */
     public static byte decodeHexByte(CharSequence s, int pos) {
-        int hi = decodeHexNibble(s.charAt(pos));
-        int lo = decodeHexNibble(s.charAt(pos + 1));
+        // Nibble 蚕食、一点点咬、轻咬；啃；细咬
+        // s.charAt(pos)和s.charAt(pos + 1)比如为3和A（%3A的3A）
+        int hi = decodeHexNibble(s.charAt(pos)); // 3 -> 3
+        int lo = decodeHexNibble(s.charAt(pos + 1));// A -> 10
         if (hi == -1 || lo == -1) {
             throw new IllegalArgumentException(String.format(
                     "invalid hex byte '%s' at index %d of '%s'", s.subSequence(pos, pos + 2), pos, s));
         }
-        return (byte) ((hi << 4) + lo);
+        return (byte) ((hi << 4) + lo);// 3A -> 58 58对应的ascii就是:
     }
 
     /**
