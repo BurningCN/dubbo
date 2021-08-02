@@ -39,6 +39,7 @@ public final class URLStrParser {
     public static final String ENCODED_AND_MARK = "%26";
     private static final char SPACE = 0x20;
 
+    // 进去 默认1024
     private static final ThreadLocal<TempBuf> DECODE_TEMP_BUF = ThreadLocal.withInitial(() -> new TempBuf(1024));
 
     private URLStrParser() {
@@ -108,6 +109,7 @@ public final class URLStrParser {
      * @return URL
      */
     private static URL parseURLBody(String fullURLStr, String decodedBody, Map<String, String> parameters, boolean modifiable) {
+        // eg decodedBody = file:/path/to/file.txt
         int starIdx = 0, endIdx = decodedBody.length();
         // ignore the url content following '#'
         int poundIndex = decodedBody.indexOf('#');
@@ -159,6 +161,7 @@ public final class URLStrParser {
 
         String host = null;
         int port = 0;
+        // lastIndexOf 和前面 indexOf内部的实现原理其实很简单
         int hostEndIdx = lastIndexOf(decodedBody, ':', starIdx, endIdx);
         if (hostEndIdx > 0 && hostEndIdx < decodedBody.length() - 1) {
             if (lastIndexOf(decodedBody, '%', starIdx, endIdx) > hostEndIdx) {
@@ -176,7 +179,7 @@ public final class URLStrParser {
             host = decodedBody.substring(starIdx, endIdx);
         }
 
-        // check cache
+        // check cache 协议、path可能出现次数很多，所以用了缓存，协议用的是常量池缓存，path用的是内存map缓存，分别进去看下。可能是考虑到path的长度有时候要远超过协议
         protocol = URLItemCache.intern(protocol);
         path = URLItemCache.checkPath(path);
 
@@ -220,7 +223,8 @@ public final class URLStrParser {
      *                      encodedURLStr after decode format: protocol://username:password@host:port/path?k1=v1&k2=v2
      *                      [protocol://][username:password@][host:port]/[path][?k1=v1&k2=v2]
      */
-    // file%3A%2Fpath%2Fto%2Ffile.txt
+    // file:/path/to/file.txt  -> file%3A%2Fpath%2Fto%2Ffile.txt
+    // dubbo://127.0.0.1?test=中文测试 -> dubbo%3A%2F%2F127.0.0.1%3Ftest%3D%E4%B8%AD%E6%96%87%E6%B5%8B%E8%AF%95
     public static URL parseEncodedStr(String encodedURLStr, boolean modifiable) {
         Map<String, String> parameters = null;
         int pathEndIdx = encodedURLStr.toUpperCase().indexOf("%3F");// '?'
@@ -232,6 +236,7 @@ public final class URLStrParser {
         }
 
         //decodedBody format: [protocol://][username:password@][host:port]/[path]
+        // DECODE_TEMP_BUF是ThreadLocal的
         String decodedBody = decodeComponent(encodedURLStr, 0, pathEndIdx, false, DECODE_TEMP_BUF.get());
         // 按照前面的案例 此时上面的decodedBody如右边所示  file:/path/to/file.txt
         // 在比如 dubbo%3A%2F%2F192.168.1.1 -> dubbo://192.168.1.1

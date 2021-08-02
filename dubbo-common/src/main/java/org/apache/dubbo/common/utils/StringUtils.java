@@ -1202,6 +1202,7 @@ public final class StringUtils {
             throw new IllegalArgumentException(String.format(
                     "invalid hex byte '%s' at index %d of '%s'", s.subSequence(pos, pos + 2), pos, s));
         }
+        // 3<<4 + 10 = 3*2^4 + 10 = 48+10 = 58
         return (byte) ((hi << 4) + lo);// 3A -> 58 58对应的ascii就是:
     }
 

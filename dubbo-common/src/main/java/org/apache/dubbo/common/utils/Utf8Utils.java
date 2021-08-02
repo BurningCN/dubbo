@@ -45,13 +45,15 @@ public final class Utf8Utils {
     }
 
     public static int decodeUtf8(byte[] srcBytes, int srcIdx, int srcSize, char[] destChars, int destIdx) {
-        // Bitwise OR combines the sign bits so any negative value fails the check.
+        // Bitwise（按位） OR combines the sign bits so any negative value fails the check.
+        // 按位或组合符号位，因此任何负值都无法通过检查。
+        // 下面的操作就是看空间还够不够
         if ((srcIdx | srcSize | srcBytes.length - srcIdx - srcSize) < 0
-                || (destIdx | destChars.length - destIdx - srcSize) < 0) {
+            || (destIdx | destChars.length - destIdx - srcSize) < 0) {
             String exMsg = String.format("buffer srcBytes.length=%d, srcIdx=%d, srcSize=%d, destChars.length=%d, " +
-                    "destIdx=%d", srcBytes.length, srcIdx, srcSize, destChars.length, destIdx);
+                "destIdx=%d", srcBytes.length, srcIdx, srcSize, destChars.length, destIdx);
             throw new ArrayIndexOutOfBoundsException(
-                    exMsg);
+                exMsg);
         }
 
         int offset = srcIdx;
@@ -64,6 +66,7 @@ public final class Utf8Utils {
         // 当我们遇到一个字节 >= 0x80（即非 ASCII）时，这个简单的循环就会停止。
         while (offset < limit) {
             byte b = srcBytes[offset];
+            // 这里的b有可能为负数，那么下面就判断表示单字节，就break了。出现负数的原因是可以看 URLStrParserTest - dubbo://127.0.0.1?test=中文测试 这个测试用例
             if (!DecodeUtil.isOneByte(b)) {
                 break;
             }
@@ -95,23 +98,24 @@ public final class Utf8Utils {
                 if (offset >= limit - 1) {
                     throw new IllegalArgumentException("invalid UTF-8.");
                 }
+                // utf8 一个中文三个字节
                 DecodeUtil.handleThreeBytesSafe(
-                        byte1,
-                        /* byte2 */ srcBytes[offset++],
-                        /* byte3 */ srcBytes[offset++],
-                        destChars,
-                        destIdx++);
+                    byte1,
+                    /* byte2 */ srcBytes[offset++],
+                    /* byte3 */ srcBytes[offset++],
+                    destChars,
+                    destIdx++);
             } else {
                 if (offset >= limit - 2) {
                     throw new IllegalArgumentException("invalid UTF-8.");
                 }
                 DecodeUtil.handleFourBytesSafe(
-                        byte1,
-                        /* byte2 */ srcBytes[offset++],
-                        /* byte3 */ srcBytes[offset++],
-                        /* byte4 */ srcBytes[offset++],
-                        destChars,
-                        destIdx);
+                    byte1,
+                    /* byte2 */ srcBytes[offset++],
+                    /* byte3 */ srcBytes[offset++],
+                    /* byte4 */ srcBytes[offset++],
+                    destChars,
+                    destIdx);
                 destIdx += 2;
             }
         }
@@ -164,18 +168,21 @@ public final class Utf8Utils {
         }
 
         private static void handleThreeBytesSafe(byte byte1, byte byte2, byte byte3, char[] resultArr, int resultPos) {
+            // -28 -72 -83
             checkUtf8(byte1, byte2, byte3);
             resultArr[resultPos] =
-                    (char) (((byte1 & 0x0F) << 12) | (trailingByteValue(byte2) << 6) | trailingByteValue(byte3));
+                (char) (((byte1 & 0x0F) << 12) | (trailingByteValue(byte2) << 6) | trailingByteValue(byte3));
         }
 
         private static void checkUtf8(byte byte1, byte byte2, byte byte3) {
             if (isNotTrailingByte(byte2)
-                    // overlong? 5 most significant bits must not all be zero
-                    || (byte1 == (byte) 0xE0 && byte2 < (byte) 0xA0)
-                    // check for illegal surrogate codepoints
-                    || (byte1 == (byte) 0xED && byte2 >= (byte) 0xA0)
-                    || isNotTrailingByte(byte3)) {
+                // overlong? 5 most significant bits must not all be zero
+                // 过长？ 5 个最高有效位不得全为零
+                || (byte1 == (byte) 0xE0 && byte2 < (byte) 0xA0)
+                // check for illegal surrogate codepoints
+                // 检查非法代理代码点
+                || (byte1 == (byte) 0xED && byte2 >= (byte) 0xA0)
+                || isNotTrailingByte(byte3)) {
                 throw new IllegalArgumentException("invalid UTF-8.");
             }
         }
@@ -184,10 +191,10 @@ public final class Utf8Utils {
                                                 int resultPos) {
             checkUtf8(byte1, byte2, byte3, byte4);
             int codepoint =
-                    ((byte1 & 0x07) << 18)
-                            | (trailingByteValue(byte2) << 12)
-                            | (trailingByteValue(byte3) << 6)
-                            | trailingByteValue(byte4);
+                ((byte1 & 0x07) << 18)
+                    | (trailingByteValue(byte2) << 12)
+                    | (trailingByteValue(byte3) << 6)
+                    | trailingByteValue(byte4);
 
             resultArr[resultPos] = DecodeUtil.highSurrogate(codepoint);
             resultArr[resultPos + 1] = DecodeUtil.lowSurrogate(codepoint);
@@ -195,16 +202,16 @@ public final class Utf8Utils {
 
         private static void checkUtf8(byte byte1, byte byte2, byte byte3, byte byte4) {
             if (isNotTrailingByte(byte2)
-                    // Check that 1 <= plane <= 16.  Tricky optimized form of:
-                    //   valid 4-byte leading byte?
-                    // if (byte1 > (byte) 0xF4 ||
-                    //   overlong? 4 most significant bits must not all be zero
-                    //     byte1 == (byte) 0xF0 && byte2 < (byte) 0x90 ||
-                    //   codepoint larger than the highest code point (U+10FFFF)?
-                    //     byte1 == (byte) 0xF4 && byte2 > (byte) 0x8F)
-                    || (((byte1 << 28) + (byte2 - (byte) 0x90)) >> 30) != 0
-                    || isNotTrailingByte(byte3)
-                    || isNotTrailingByte(byte4)) {
+                // Check that 1 <= plane <= 16.  Tricky optimized form of:
+                //   valid 4-byte leading byte?
+                // if (byte1 > (byte) 0xF4 ||
+                //   overlong? 4 most significant bits must not all be zero
+                //     byte1 == (byte) 0xF0 && byte2 < (byte) 0x90 ||
+                //   codepoint larger than the highest code point (U+10FFFF)?
+                //     byte1 == (byte) 0xF4 && byte2 > (byte) 0x8F)
+                || (((byte1 << 28) + (byte2 - (byte) 0x90)) >> 30) != 0
+                || isNotTrailingByte(byte3)
+                || isNotTrailingByte(byte4)) {
                 throw new IllegalArgumentException("invalid UTF-8.");
             }
         }
@@ -225,7 +232,7 @@ public final class Utf8Utils {
 
         private static char highSurrogate(int codePoint) {
             return (char)
-                    ((MIN_HIGH_SURROGATE - (MIN_SUPPLEMENTARY_CODE_POINT >>> 10)) + (codePoint >>> 10));
+                ((MIN_HIGH_SURROGATE - (MIN_SUPPLEMENTARY_CODE_POINT >>> 10)) + (codePoint >>> 10));
         }
 
         private static char lowSurrogate(int codePoint) {

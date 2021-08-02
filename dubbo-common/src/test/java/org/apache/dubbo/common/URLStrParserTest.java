@@ -40,6 +40,7 @@ public class URLStrParserTest {
         testCases.add("dubbo://127.0.0.1?test=中文测试");
         testCases.add("dubbo://admin:admin123@192.168.1.41:28113/org.test.api.DemoService$Iface?anyhost=true&application=demo-service&dubbo=2.6.1&generic=false&interface=org.test.api.DemoService$Iface&methods=orbCompare,checkText,checkPicture&pid=65557&revision=1.4.17&service.filter=bootMetrics&side=provider&status=server&threads=200&timestamp=1583136298859&version=1.0.0");
         // super long text test
+        // 这个用法看下
         testCases.add("dubbo://192.168.1.1/" + RandomString.make(10240));
         testCases.add("file:/path/to/file.txt");
         testCases.add("dubbo://fe80:0:0:0:894:aeec:f37d:23e1%en0/path?abc=abc");
@@ -58,6 +59,7 @@ public class URLStrParserTest {
     @Test
     public void testEncoded() {
         testCases.forEach(testCase -> {
+            // 这里直接使用的URL.encode进行编码，正常我们可以直接URL.decode，但是这里自定义这个URLStrParser的作用就是带了缓存，加速decode的过程
             assertThat(URLStrParser.parseEncodedStr(URL.encode(testCase)), equalTo(URL.valueOf(testCase)));
         });
 
