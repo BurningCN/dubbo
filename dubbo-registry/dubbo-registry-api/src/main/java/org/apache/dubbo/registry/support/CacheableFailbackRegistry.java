@@ -243,6 +243,7 @@ public abstract class CacheableFailbackRegistry extends FailbackRegistry {
         boolean isEncoded = encoded;
         // 再次利用了下两个缓存，如果命中也会省去URLAddress.parse和URLParam.parse的解析消耗
         URLAddress address = stringAddress.computeIfAbsent(rawAddress, k -> URLAddress.parse(k, getDefaultURLProtocol(), isEncoded));
+        // 这里取出来的可能是原先旧的，所以需要重新设置时间戳
         address.setTimestamp(System.currentTimeMillis());
 
         URLParam param = stringParam.computeIfAbsent(rawParams, k -> URLParam.parse(k, isEncoded, extraParameters));

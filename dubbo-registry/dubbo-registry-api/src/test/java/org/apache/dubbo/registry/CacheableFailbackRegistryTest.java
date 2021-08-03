@@ -101,27 +101,25 @@ public class CacheableFailbackRegistryTest {
         registry = new MockCacheableRegistryImpl(registryUrl);
         URL url = URLStrParser.parseEncodedStr(urlStr);
 
-        NotifyListener listener = new NotifyListener() {
-            @Override
-            public void notify(List<URL> urls) {
-                resCount.set(urls.size());
-            }
-        };
+        NotifyListener listener = urls -> resCount.set(urls.size());
 
         registry.addChildren(url);
         registry.subscribe(serviceUrl, listener);
+        // 注意这里调用的是getStringAddress，前面的方法调用的是getStringUrl
         assertEquals(1, registry.getStringAddress().size());
         assertEquals(1, resCount.get());
 
         URL url1 = url.addParameter("k1", "v1");
         registry.addChildren(url1);
         registry.subscribe(serviceUrl, listener);
+        // 可以发现仅仅是加了新参数，虽然走了createUrl，但是内部还是会命中stringAddress缓存的
         assertEquals(1, registry.getStringAddress().size());
         assertEquals(2, resCount.get());
 
         URL url2 = url1.setHost("192.168.1.1");
         registry.addChildren(url2);
         registry.subscribe(serviceUrl, listener);
+        // 因为ip/address变了，所以这次就没有命中了
         assertEquals(2, registry.getStringAddress().size());
         assertEquals(3, resCount.get());
     }
@@ -132,12 +130,7 @@ public class CacheableFailbackRegistryTest {
         registry = new MockCacheableRegistryImpl(registryUrl);
         URL url = URLStrParser.parseEncodedStr(urlStr);
 
-        NotifyListener listener = new NotifyListener() {
-            @Override
-            public void notify(List<URL> urls) {
-                resCount.set(urls.size());
-            }
-        };
+        NotifyListener listener = urls -> resCount.set(urls.size());
 
         registry.addChildren(url);
         registry.subscribe(serviceUrl, listener);
@@ -153,6 +146,7 @@ public class CacheableFailbackRegistryTest {
         URL url2 = url1.setHost("192.168.1.1");
         registry.addChildren(url2);
         registry.subscribe(serviceUrl, listener);
+        // 没有命中stringAddress，但是命中了stringParam
         assertEquals(2, registry.getStringParam().size());
         assertEquals(3, resCount.get());
     }
@@ -163,14 +157,10 @@ public class CacheableFailbackRegistryTest {
         registry = new MockCacheableRegistryImpl(registryUrl);
         URL url = URLStrParser.parseEncodedStr(urlStr);
 
-        NotifyListener listener = new NotifyListener() {
-            @Override
-            public void notify(List<URL> urls) {
-                resCount.set(urls.size());
-            }
-        };
+        NotifyListener listener = urls -> resCount.set(urls.size());
 
         registry.addChildren(url);
+        // 内部会存到相应的缓存
         registry.subscribe(serviceUrl, listener);
         assertEquals(1, registry.getStringUrls().get(serviceUrl).size());
         assertEquals(1, registry.getStringAddress().size());
@@ -180,12 +170,15 @@ public class CacheableFailbackRegistryTest {
         registry.clearChildren();
         URL url1 = url.addParameter("k1", "v1");
         registry.addChildren(url1);
+        // 无法命中stringUrl，会走createUrl，命中stringAddress，未命中stringParam
+        // 内部 ServiceAddressURL cachedURL = oldURLs.remove(rawProvider); 无法删除前面一段的元素，因为会触发evict
         registry.subscribe(serviceUrl, listener);
         assertEquals(1, registry.getStringUrls().get(serviceUrl).size());
         assertEquals(1, resCount.get());
 
         // After RemovalTask
         assertEquals(1, registry.getStringParam().size());
+        // 注意如下（stringParam有两份，分别是上面两段，而stringAdress只有一份）
         // StringAddress will be deleted because the related stringUrls cache has been deleted.
         assertEquals(0, registry.getStringAddress().size());
 
