@@ -31,6 +31,11 @@ import static org.apache.dubbo.common.constants.RegistryConstants.CATEGORY_KEY;
 import static org.apache.dubbo.common.constants.RegistryConstants.PROVIDERS_CATEGORY;
 
 public abstract class ServiceAddressURL extends URL {
+    // 这个子类及其对应的其他子类中则新增了 overrideURL 和 consumerURL 属性。其中 consumerURL 是针对 consumer 端的配置信息，
+    // overrideURL 则是在 Dubbo Admin 上进行动态配置时写入的值，当我们调用 URL 的 getParameter() 方法时，
+    // 优先级为 overrideURL > consumerURL > urlParam。在 Dubbo 2.7 时，动态配置属性会替换 URL 中的属性，
+    // 及当你有大量 URL 时消耗也是不可忽视的，而此处的 overrideURL 则避免了这种消耗，因为所有 URL 都会共同使用同一个对象。
+
     protected final transient URL consumerURL;
 
     //cache

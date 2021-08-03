@@ -409,6 +409,7 @@ public final class URLStrParser {
 
     // 函数就是在str中的[from,toExclude)找到ch字符所在的下标
     private static int indexOf(String str, char ch, int from, int toExclude) {
+        // 先对from和toExclude合法校验
         from = Math.max(from, 0);
         toExclude = Math.min(toExclude, str.length());
         if (from > toExclude) {
@@ -424,6 +425,7 @@ public final class URLStrParser {
     }
 
     private static int lastIndexOf(String str, char ch, int from, int toExclude) {
+        // 先对from和toExclude合法校验
         from = Math.max(from, 0);
         toExclude = Math.min(toExclude, str.length() - 1);
         if (from > toExclude) {

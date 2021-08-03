@@ -222,7 +222,7 @@ class URL implements Serializable {
      * parse normal or encoded url string into strutted URL:
      * - dubbo://host:port/path?param=value
      * - URL.encode("dubbo://host:port/path?param=value")
-     *
+     * 意思就是url可以是正常的也可以是经过编码后的
      * @param url,     url string
      * @param encoded, encoded or decoded
      * @return

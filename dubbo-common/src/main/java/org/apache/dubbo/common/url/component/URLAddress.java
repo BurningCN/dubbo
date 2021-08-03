@@ -169,8 +169,10 @@ public class URLAddress implements Serializable {
                 decodeStr = URLDecoder.decode(rawAddress, "UTF-8");
             }
 
+            // 首位不是数字
             boolean isPathAddress = !Character.isDigit(decodeStr.charAt(0));
             if (isPathAddress) {
+                // 一般走这里
                 return createPathURLAddress(decodeStr, rawAddress, defaultProtocol);
             }
             return createURLAddress(decodeStr, rawAddress, defaultProtocol);

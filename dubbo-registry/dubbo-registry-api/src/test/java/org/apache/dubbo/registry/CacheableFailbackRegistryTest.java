@@ -64,31 +64,32 @@ public class CacheableFailbackRegistryTest {
         registry = new MockCacheableRegistryImpl(registryUrl);
         URL url = URLStrParser.parseEncodedStr(urlStr);
 
-        NotifyListener listener = new NotifyListener() {
-            @Override
-            public void notify(List<URL> urls) {
-                resCount.set(urls.size());
-            }
-        };
+        NotifyListener listener = urls -> resCount.set(urls.size());
 
+        // 添加一个url，这个相当于provider 方法的是mock类专有的方法
         registry.addChildren(url);
+        // 内部会走到 MockCacheableRegistryImpl#doSubscribe方法，进去看看，第一次（toUrlsWithoutEmpty方法）肯定没有命中缓存，新构建
         registry.subscribe(serviceUrl, listener);
         assertEquals(1, registry.getStringUrls().get(serviceUrl).size());
         assertEquals(1, resCount.get());
 
         registry.addChildren(url);
+        // 此时 MockCacheableRegistryImpl#doSubscribe方法 会命中缓存
         registry.subscribe(serviceUrl, listener);
         assertEquals(1, registry.getStringUrls().get(serviceUrl).size());
         assertEquals(1, resCount.get());
 
+        // 添加了一个新的provider
         URL url1 = url.addParameter("k1", "v1");
         registry.addChildren(url1);
+        // 内部会有一个命中，有一个没有命中
         registry.subscribe(serviceUrl, listener);
         assertEquals(2, registry.getStringUrls().get(serviceUrl).size());
         assertEquals(2, resCount.get());
 
         URL url2 = url1.setHost("192.168.1.1");
         registry.addChildren(url2);
+        // 内部会有2个命中，有一个没有命中
         registry.subscribe(serviceUrl, listener);
         assertEquals(3, registry.getStringUrls().get(serviceUrl).size());
         assertEquals(3, resCount.get());

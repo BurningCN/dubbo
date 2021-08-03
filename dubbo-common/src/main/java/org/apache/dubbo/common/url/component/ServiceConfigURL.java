@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceConfigURL extends URL {
+    // ServiceConfigURL：这个子类中新增了 attribute 这个属性，这个属性主要是针对 URLParam 的 params 做了冗余，仅仅只是将 value 的类型从
+    // String 改为了 Object，减少了代码中每次获取 parameters 的格式转换消耗。
     private final Map<String, Object> attributes;
 
     private volatile transient String full;

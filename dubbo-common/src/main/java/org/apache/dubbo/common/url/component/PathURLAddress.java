@@ -110,6 +110,7 @@ public class PathURLAddress extends URLAddress {
      * <p>
      * Pls. note that IP should be used instead of Host when to compare with socket's address or to search in a map
      * which use address as its key.
+     * *请注意，当与套接字地址进行比较或在使用地址作为其关键字的映射中进行搜索时，应使用 IP 而不是 Host。
      *
      * @return ip in string format
      */
