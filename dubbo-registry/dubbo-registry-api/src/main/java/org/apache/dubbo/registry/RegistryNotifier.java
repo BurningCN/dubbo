@@ -22,7 +22,7 @@ import org.apache.dubbo.common.threadpool.manager.ExecutorRepository;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-// 延迟执行 + 同一时间段的多次触发仅触发最后一次
+// 特点：延迟执行 + 同一时间段的多次触发仅触发最后一次
 public abstract class RegistryNotifier {
 
     private volatile long lastExecuteTime;

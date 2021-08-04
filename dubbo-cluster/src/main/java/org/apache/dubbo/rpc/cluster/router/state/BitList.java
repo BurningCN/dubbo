@@ -27,6 +27,7 @@ import org.roaringbitmap.RoaringBitmap;
 
 /**
  * BitList based on BitMap implementation.
+ *
  * @param <E>
  * @since 3.0
  */
@@ -38,6 +39,7 @@ public class BitList<E> implements List<E> {
         this.unmodifiableList = unmodifiableList;
         this.rootMap = new RoaringBitmap();
         if (!empty) {
+            // 主要是把下标映射到了rootMap，并没有对list元素的值进行映射，add方法的作用就是将[s,e]这段bit位都设置为1
             this.rootMap.add(0L, unmodifiableList.size());
         }
     }
@@ -56,12 +58,15 @@ public class BitList<E> implements List<E> {
     }
 
     public void addIndex(int index) {
+        // 参考前面构造方法，这里是将指定的index位所在的bit设置为1
         this.rootMap.add(index);
     }
 
+    // 传进来的b是BitList，下面就是让this和b进行and操作，会对他们的bit位两两做与运算
     public BitList<E> intersect(List<E> b, List<E> totalList) {
         RoaringBitmap resultMap = rootMap.clone();
-        resultMap.and(((BitList)b).rootMap);
+        resultMap.and(((BitList) b).rootMap);
+        // 与运算的结果也是下标而已。比如 ABC和BCD两个list进行，最后还是{0,1,2}
         return new BitList<>(totalList, resultMap);
     }
 
@@ -93,7 +98,7 @@ public class BitList<E> implements List<E> {
 
             @Override
             public E next() {
-                prev = (int)rootMap.nextValue(prev + 1);
+                prev = (int) rootMap.nextValue(prev + 1);
                 return unmodifiableList.get(prev);
             }
 
@@ -120,9 +125,13 @@ public class BitList<E> implements List<E> {
         Object[] arr = toArray();
         if (a.length < size)
         // Make a new array of a's runtime type, but my contents:
-        { return (T[])Arrays.copyOf(arr, size, a.getClass()); }
+        {
+            return (T[]) Arrays.copyOf(arr, size, a.getClass());
+        }
         System.arraycopy(arr, 0, a, 0, size);
-        if (a.length > size) { a[size] = null; }
+        if (a.length > size) {
+            a[size] = null;
+        }
         return null;
     }
 
