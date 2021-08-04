@@ -22,6 +22,7 @@ import org.apache.dubbo.common.threadpool.manager.ExecutorRepository;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+// 延迟执行 + 同一时间段的多次触发仅触发最后一次
 public abstract class RegistryNotifier {
 
     private volatile long lastExecuteTime;
@@ -50,7 +51,7 @@ public abstract class RegistryNotifier {
         this.rawAddresses = rawAddresses;
         long notifyTime = System.currentTimeMillis();
         this.lastEventTime = notifyTime;
-
+        //注意区分，上面是last{Event}Time,这里是last{Execute}Time
         long delta = (System.currentTimeMillis() - lastExecuteTime) - delayTime;
         if (delta >= 0) {
             scheduler.submit(new NotificationTask(this, notifyTime));
@@ -76,9 +77,13 @@ public abstract class RegistryNotifier {
 
         @Override
         public void run() {
+            // 这里判断的原因我猜是假设前面notify方法连续调用两次，第一次肯定 lastEventTime = time，走submit逻辑，刚要执行下面的if，
+            // 前面notify更早的触发，此时lastEventTime是最新的值了，下面的if判断两个值不相等，也就不会执行了
+            // 这也就是lastEventTime声明为volatile的原因。同时实现了多次通知只会确保最后一次得到调用
             if (this.time == listener.lastEventTime) {
                 listener.doNotify(listener.rawAddresses);
                 listener.lastExecuteTime = System.currentTimeMillis();
+                // 和前面sync是一个锁，需要下面判断+赋值变成原子操作，所以加了锁
                 synchronized (listener) {
                     if (this.time == listener.lastEventTime) {
                         listener.rawAddresses = null;
