@@ -252,6 +252,7 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
 
 
     protected synchronized void computeSubset() {
+        // 下两个（invokerList和vsDestinationGroup）都不是null才可以进行 computeSubsetMap
         if (invokerList == null || invokerList.size() == 0) {
             this.subsetMap = null;
             return;
@@ -272,6 +273,7 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
     }
 
 
+    // 主要就是将invoker的parameter和DestinationRule#subSet的lables 这两个map进行匹配，如果后者所有的entry在前者都存在则满足
     protected Map<String, List<Invoker<?>>> computeSubsetMap(List<Invoker<?>> invokers, List<DestinationRule> destinationRules) {
         Map<String, List<Invoker<?>>> subsetMap = new HashMap<>();
 

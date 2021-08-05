@@ -48,14 +48,17 @@ public final class MeshRuleManager {
         }
 
         try {
+            // 从远端（比如zk）或缺节点的内容值
             String rawConfig = configuration.getConfig(appRuleDataId, GROUP, 5000L);
             if (rawConfig != null) {
+                // 解析并通知
                 meshAppRuleListener.receiveConfigInfo(rawConfig);
             }
         } catch (Throwable throwable) {
             logger.error("get MeshRuleManager app rule failed.", throwable);
         }
 
+        // 添加监听（meshAppRuleListener 是 ConfigurationListener 的实现）
         configuration.addListener(appRuleDataId, GROUP, meshAppRuleListener);
         APP_RULE_LISTENERS.put(app, meshAppRuleListener);
     }

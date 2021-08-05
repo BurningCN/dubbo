@@ -38,6 +38,7 @@ public class MeshAppRuleListenerTest {
         MeshRuleRouter meshRuleRouter = mock(MeshRuleRouter.class);
         meshAppRuleListener.register(meshRuleRouter);
 
+        // 这里是手动调用 receiveConfigInfo
         meshAppRuleListener.receiveConfigInfo("apiVersion: service.dubbo.apache.org/v1alpha1\n" +
                 "kind: DestinationRule\n" +
                 "metadata: { name: demo-route }\n" +
@@ -100,7 +101,7 @@ public class MeshAppRuleListenerTest {
     }
 
     @Test
-    public void register() {
+    public void register() { // todo
     }
 
     @Test
@@ -155,6 +156,7 @@ public class MeshAppRuleListenerTest {
                 "  hosts: [demo]\n", ConfigChangeType.MODIFIED);
 
 
+        // 这里是调用process，默认zk的节点变更触发process，内部会调用receiveConfigInfo方法进行解析
         meshAppRuleListener.process(configChangedEvent);
 
         ArgumentCaptor<VsDestinationGroup> captor = ArgumentCaptor.forClass(VsDestinationGroup.class);

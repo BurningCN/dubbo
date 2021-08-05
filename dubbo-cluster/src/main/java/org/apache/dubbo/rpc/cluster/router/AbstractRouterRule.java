@@ -33,6 +33,7 @@ public abstract class AbstractRouterRule {
     private String scope;
     private String key;
 
+    // 3.0新增的方法
     protected void parseFromMap0(Map<String, Object> map) {
         setRawRule((String) map.get("rawRule"));
 

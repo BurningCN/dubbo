@@ -21,28 +21,28 @@ import java.util.Map;
 
 
 public class DubboAttachmentMatch {
-    private Map<String, StringMatch> eagleeyecontext;
-    private Map<String, StringMatch> dubbocontext;
+    private Map<String, StringMatch> eagleEyeContext;
+    private Map<String, StringMatch> dubboContext;
 
-    public Map<String, StringMatch> getEagleeyecontext() {
-        return eagleeyecontext;
+    public Map<String, StringMatch> getEagleEyeContext() {
+        return eagleEyeContext;
     }
 
-    public void setEagleeyecontext(Map<String, StringMatch> eagleeyecontext) {
-        this.eagleeyecontext = eagleeyecontext;
+    public void setEagleEyeContext(Map<String, StringMatch> eagleEyeContext) {
+        this.eagleEyeContext = eagleEyeContext;
     }
 
-    public Map<String, StringMatch> getDubbocontext() {
-        return dubbocontext;
+    public Map<String, StringMatch> getDubboContext() {
+        return dubboContext;
     }
 
-    public void setDubbocontext(Map<String, StringMatch> dubbocontext) {
-        this.dubbocontext = dubbocontext;
+    public void setDubboContext(Map<String, StringMatch> dubboContext) {
+        this.dubboContext = dubboContext;
     }
 
     public static boolean isMatch(DubboAttachmentMatch dubboAttachmentMatch, Map<String, String> eagleeyeContext, Map<String, String> dubboContext) {
-        if (dubboAttachmentMatch.getDubbocontext() != null) {
-            for (Map.Entry<String, StringMatch> stringStringMatchEntry : dubboAttachmentMatch.getDubbocontext().entrySet()) {
+        if (dubboAttachmentMatch.getDubboContext() != null) {
+            for (Map.Entry<String, StringMatch> stringStringMatchEntry : dubboAttachmentMatch.getDubboContext().entrySet()) {
                 String key = stringStringMatchEntry.getKey();
                 StringMatch stringMatch = stringStringMatchEntry.getValue();
 
@@ -56,8 +56,8 @@ public class DubboAttachmentMatch {
             }
         }
 
-        if (dubboAttachmentMatch.getEagleeyecontext() != null) {
-            for (Map.Entry<String, StringMatch> stringStringMatchEntry : dubboAttachmentMatch.getEagleeyecontext().entrySet()) {
+        if (dubboAttachmentMatch.getEagleEyeContext() != null) {
+            for (Map.Entry<String, StringMatch> stringStringMatchEntry : dubboAttachmentMatch.getEagleEyeContext().entrySet()) {
                 String key = stringStringMatchEntry.getKey();
                 StringMatch stringMatch = stringStringMatchEntry.getValue();
 

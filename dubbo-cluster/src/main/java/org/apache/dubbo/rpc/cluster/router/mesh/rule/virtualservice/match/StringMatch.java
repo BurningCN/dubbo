@@ -77,6 +77,7 @@ public class StringMatch {
                 return true;
             }
         } else if (stringMatch.getRegex() != null && input != null) {
+            // matches api 注意 参考regxMatch测试程序
             if (input.matches(stringMatch.getRegex())) {
                 return true;
             }

@@ -29,6 +29,7 @@ import java.util.Map;
 public class TagRuleParser {
 
     public static TagRouterRule parse(String rawRule) {
+        // 3.0版本删除了原有的解析方式，改成各种parseFromMap
         Yaml yaml = new Yaml(new SafeConstructor());
         Map<String, Object> map = yaml.load(rawRule);
         TagRouterRule rule = TagRouterRule.parseFromMap(map);

@@ -25,6 +25,7 @@ import org.apache.dubbo.rpc.Invoker;
 /***
  * Address cache,
  * used to cache the results of the StaterRouter's asynchronous address list calculations.
+ * 用于缓存 StaterRouter 的异步地址列表计算的结果。
  * @param <T>
  * @since 3.0
  */

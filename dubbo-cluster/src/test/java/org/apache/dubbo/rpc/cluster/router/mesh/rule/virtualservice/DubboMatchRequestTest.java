@@ -78,7 +78,7 @@ public class DubboMatchRequestTest {
                 StringMatch nameMatch = new StringMatch();
                 nameMatch.setExact("qinliujie");
                 eagleeyecontextMatchMap.put("name", nameMatch);
-                dubboAttachmentMatch.setEagleeyecontext(eagleeyecontextMatchMap);
+                dubboAttachmentMatch.setEagleEyeContext(eagleeyecontextMatchMap);
             }
 
             dubboMatchRequest.setAttachments(dubboAttachmentMatch);
@@ -110,7 +110,7 @@ public class DubboMatchRequestTest {
                 StringMatch nameMatch = new StringMatch();
                 nameMatch.setExact("qinliujie");
                 eagleeyecontextMatchMap.put("name", nameMatch);
-                dubboAttachmentMatch.setEagleeyecontext(eagleeyecontextMatchMap);
+                dubboAttachmentMatch.setEagleEyeContext(eagleeyecontextMatchMap);
             }
 
 
@@ -119,7 +119,7 @@ public class DubboMatchRequestTest {
                 StringMatch dpathMatch = new StringMatch();
                 dpathMatch.setExact("PRE");
                 dubboContextMatchMap.put("dpath", dpathMatch);
-                dubboAttachmentMatch.setDubbocontext(dubboContextMatchMap);
+                dubboAttachmentMatch.setDubboContext(dubboContextMatchMap);
             }
 
             dubboMatchRequest.setAttachments(dubboAttachmentMatch);

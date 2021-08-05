@@ -34,7 +34,8 @@ public class DestinationRuleTest {
     @Test
     public void parserTest() {
         Yaml yaml = new Yaml();
-        DestinationRule destinationRule = yaml.loadAs(this.getClass().getClassLoader().getResourceAsStream("DestinationRuleTest.yaml"), DestinationRule.class);
+        DestinationRule destinationRule = yaml.loadAs(
+            this.getClass().getClassLoader().getResourceAsStream("DestinationRuleTest.yaml"), DestinationRule.class);
 
         System.out.println(destinationRule);
 

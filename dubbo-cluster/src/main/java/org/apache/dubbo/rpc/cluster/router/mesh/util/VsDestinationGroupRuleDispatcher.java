@@ -23,6 +23,12 @@ import org.apache.dubbo.rpc.cluster.router.mesh.rule.VsDestinationGroup;
 import java.util.Set;
 
 
+// 理清楚几个关系
+// VsDestinationGroupRuleDispatcher
+// VsDestinationGroupRuleListener
+// VsDestinationGroup
+//  VirtualServiceRule
+//  DestinationRule
 public class VsDestinationGroupRuleDispatcher {
 
     private Set<VsDestinationGroupRuleListener> listenerSet = new ConcurrentHashSet<>();
@@ -37,6 +43,8 @@ public class VsDestinationGroupRuleDispatcher {
         }
     }
 
+    // 其实chs本身是线程安全的，在add和remove本来不需要枷锁，但是这里枷锁的目的是为了上面的post，如果不加锁，就会出现上面遍历chs的时候同时有
+    // 可能有其他线程在add或remove数据导致出现类似npe的问题
     public synchronized boolean register(VsDestinationGroupRuleListener listener) {
         if (listener == null) {
             return false;

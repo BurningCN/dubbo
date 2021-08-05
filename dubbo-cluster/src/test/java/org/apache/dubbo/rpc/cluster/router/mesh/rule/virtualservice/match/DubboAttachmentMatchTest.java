@@ -44,7 +44,7 @@ public class DubboAttachmentMatchTest {
         machineGroupMatch.setExact("test_host");
         dubbocontextMatchMap.put("machineGroup", machineGroupMatch);
 
-        dubboAttachmentMatch.setDubbocontext(dubbocontextMatchMap);
+        dubboAttachmentMatch.setDubboContext(dubbocontextMatchMap);
 
         Map<String, String> invokeDubboContextMap = new HashMap<>();
         invokeDubboContextMap.put("name", "qinliujie");
@@ -86,7 +86,7 @@ public class DubboAttachmentMatchTest {
         machineGroupMatch.setExact("test_host");
         eagleeyecontextMatchMap.put("machineGroup", machineGroupMatch);
 
-        dubboAttachmentMatch.setEagleeyecontext(eagleeyecontextMatchMap);
+        dubboAttachmentMatch.setEagleEyeContext(eagleeyecontextMatchMap);
 
         Map<String, String> invokeEagleEyeContextMap = new HashMap<>();
         invokeEagleEyeContextMap.put("name", "qinliujie");
@@ -122,7 +122,7 @@ public class DubboAttachmentMatchTest {
             StringMatch nameMatch = new StringMatch();
             nameMatch.setExact("qinliujie");
             eagleeyecontextMatchMap.put("name", nameMatch);
-            dubboAttachmentMatch.setEagleeyecontext(eagleeyecontextMatchMap);
+            dubboAttachmentMatch.setEagleEyeContext(eagleeyecontextMatchMap);
         }
 
 
@@ -138,7 +138,7 @@ public class DubboAttachmentMatchTest {
             StringMatch dpathMatch = new StringMatch();
             dpathMatch.setExact("PRE");
             dubboContextMatchMap.put("dpath", dpathMatch);
-            dubboAttachmentMatch.setDubbocontext(dubboContextMatchMap);
+            dubboAttachmentMatch.setDubboContext(dubboContextMatchMap);
         }
 
         Map<String, String> invokeDubboContextMap = new HashMap<>();

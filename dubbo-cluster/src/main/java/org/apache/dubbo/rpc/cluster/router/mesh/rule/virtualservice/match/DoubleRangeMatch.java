@@ -41,6 +41,7 @@ public class DoubleRangeMatch {
 
     public static boolean isMatch(DoubleRangeMatch doubleRangeMatch, Double input) {
         if (doubleRangeMatch.getStart() != null && doubleRangeMatch.getEnd() != null) {
+            // 范围的比较使用 compareTo
             return input.compareTo(doubleRangeMatch.getStart()) >= 0 && input.compareTo(doubleRangeMatch.getEnd()) < 0;
         } else if (doubleRangeMatch.getStart() != null) {
             return input.compareTo(doubleRangeMatch.getStart()) >= 0;

@@ -27,6 +27,7 @@ public class Tag {
     private String name;
     private List<String> addresses;
 
+    // 3.0新增的方法
     @SuppressWarnings("unchecked")
     public static Tag parseFromMap(Map<String, Object> map) {
         Tag tag = new Tag();

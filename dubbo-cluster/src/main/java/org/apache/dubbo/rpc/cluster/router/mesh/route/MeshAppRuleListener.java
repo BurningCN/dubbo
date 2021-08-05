@@ -58,11 +58,14 @@ public class MeshAppRuleListener implements ConfigurationListener {
 
             Yaml yaml = new Yaml();
             Yaml yaml2 = new Yaml();
+            // 注意和loadAs的区别，这里loadAll获取到了迭代器
             Iterable<Object> objectIterable = yaml.loadAll(configInfo);
             for (Object result : objectIterable) {
 
                 Map resultMap = (Map) result;
+                // kind就这两种值
                 if ("DestinationRule".equals(resultMap.get("kind"))) {
+                    // yaml2.dump(result)是转化为yaml格式的字符串
                     DestinationRule destinationRule = yaml2.loadAs(yaml2.dump(result), DestinationRule.class);
                     vsDestinationGroup.getDestinationRuleList().add(destinationRule);
 

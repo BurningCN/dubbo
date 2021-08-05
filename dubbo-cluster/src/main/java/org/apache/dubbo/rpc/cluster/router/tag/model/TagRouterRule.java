@@ -46,9 +46,11 @@ public class TagRouterRule extends AbstractRouterRule {
     private Map<String, List<String>> addressToTagnames = new HashMap<>();
     private Map<String, List<String>> tagnameToAddresses = new HashMap<>();
 
+    // 3.0新增的方法
     @SuppressWarnings("unchecked")
     public static TagRouterRule parseFromMap(Map<String, Object> map) {
         TagRouterRule tagRouterRule = new TagRouterRule();
+        // 父类的方法
         tagRouterRule.parseFromMap0(map);
 
         Object tags = map.get("tags");
@@ -77,6 +79,7 @@ public class TagRouterRule extends AbstractRouterRule {
     public List<String> getAddresses() {
         return tags.stream()
                 .filter(tag -> CollectionUtils.isNotEmpty(tag.getAddresses()))
+                // flatMap
                 .flatMap(tag -> tag.getAddresses().stream())
                 .collect(Collectors.toList());
     }
