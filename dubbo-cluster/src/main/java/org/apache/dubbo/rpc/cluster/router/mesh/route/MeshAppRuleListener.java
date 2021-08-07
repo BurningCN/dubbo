@@ -36,18 +36,23 @@ public class MeshAppRuleListener implements ConfigurationListener {
 
     public static final Logger logger = LoggerFactory.getLogger(MeshAppRuleListener.class);
 
+    // 派遣类一般内部都含有listener
     private final VsDestinationGroupRuleDispatcher vsDestinationGroupRuleDispatcher = new VsDestinationGroupRuleDispatcher();
 
     private final String appName;
 
     private VsDestinationGroup vsDestinationGroupHolder;
 
+    // gx
     public MeshAppRuleListener(String appName) {
         this.appName = appName;
     }
 
+    //主动调用或者被动调用，被动调用就是zk的节点变更
     public void receiveConfigInfo(String configInfo) {
         if(logger.isDebugEnabled()) {
+            // 注意这个api的使用，String.format也可以，不过都是%s 这里是 0 1
+            // 注意这个日志。也能知道这个类的一些含义 是给app级别的
             logger.debug(MessageFormat.format("[MeshAppRule] Received rule for app [{0}]: {1}.",
                     appName, configInfo));
         }
@@ -85,10 +90,13 @@ public class MeshAppRuleListener implements ConfigurationListener {
 
     }
 
+    // 该类本身是监听器 但是内部其实委托给了 vsDestinationGroupRuleDispatcher ，该类的注册订阅也是。
     public void register(MeshRuleRouter subscriber) {
+        // 注册的同时获取通知，当然之前consumer订阅zk的时候同时拿到提供者列表
         if (vsDestinationGroupHolder != null) {
             subscriber.onRuleChange(vsDestinationGroupHolder);
         }
+        // MeshRuleRouter VsDestinationGroupRuleListener 子父类关系
         vsDestinationGroupRuleDispatcher.register(subscriber);
     }
 

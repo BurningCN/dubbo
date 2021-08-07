@@ -61,6 +61,7 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
 
     private String remoteAppName;
 
+    // gx
     public MeshRuleRouter(URL url) {
         this.url = url;
         sourcesLabels.putAll(url.getParameters());
@@ -74,11 +75,13 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
     @Override
     public <T> List<Invoker<T>> route(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException {
 
+        // 进去 方法很重要
         List<DubboRouteDestination> routeDestination = getDubboRouteDestination(invocation);
 
         if (routeDestination == null) {
             return invokers;
         } else {
+            // 随机获取一个允许的目标路由
             DubboRouteDestination dubboRouteDestination = routeDestination.get(ThreadLocalRandom.current().nextInt(routeDestination.size()));
 
             DubboDestination dubboDestination = dubboRouteDestination.getDestination();
@@ -88,9 +91,10 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
 
             List<Invoker<?>> result;
 
+            // subSetMap的生成逻辑是基于两个回调方法产生的invokerList和vsDestinationGroup进行computeSet计算出来的
             Map<String, List<Invoker<?>>> subsetMapCopy = this.subsetMap;
 
-            //TODO make intersection with invokers
+            //TODO make intersection with invokers  这句话的意思就是整个方法其实没有考虑invokers
             if (subsetMapCopy != null) {
 
                 do {
@@ -100,7 +104,9 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
                         return (List) result;
                     }
 
+                    // 走回退逻辑
                     dubboRouteDestination = dubboDestination.getFallback();
+                    // 可能会不断的触发回退逻辑，所以do-while
                     if (dubboRouteDestination == null) {
                         break;
                     }
@@ -117,11 +123,15 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
         return invokers;
     }
 
+    // gx
+    // notify和onRuleChange对应
     @Override
     public <T> void notify(List<Invoker<T>> invokers) {
         List invokerList = invokers == null ? Collections.emptyList() : invokers;
+        // 这里是invokerList的赋值处，注意vsDestinationGroup的赋值处
         this.invokerList = invokerList;
         registerAppRule(invokerList);
+        // 在 onRuleChange 触发的时候也会调用下面这个方法
         computeSubset();
     }
 
@@ -134,6 +144,7 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
                         String applicationName = invoker.getUrl().getRemoteApplication();
                         if (StringUtils.isNotEmpty(applicationName) && !"unknown".equals(applicationName)) {
                             remoteAppName = applicationName;
+                            // 注册一个即返回了 因为这批的invoker的app都是一个，应用级别的服务发现
                             MeshRuleManager.register(remoteAppName, this);
                             break;
                         }
@@ -169,11 +180,14 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
 
         if (vsDestinationGroup != null) {
 
+            // 入站流量匹配
             List<VirtualServiceRule> virtualServiceRuleList = vsDestinationGroup.getVirtualServiceRuleList();
             if (virtualServiceRuleList.size() > 0) {
                 for (VirtualServiceRule virtualServiceRule : virtualServiceRuleList) {
+                    // 找到第一个匹配服务名称的DubboRoute
                     DubboRoute dubboRoute = getDubboRoute(virtualServiceRule, invocation);
                     if (dubboRoute != null) {
+                        //下面是更细粒度的匹配，即方法名称 参数类型等 进去
                         return getDubboRouteDestination(dubboRoute, invocation);
                     }
                 }
@@ -182,6 +196,7 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
         return null;
     }
 
+    // 服务名称匹配
     protected DubboRoute getDubboRoute(VirtualServiceRule virtualServiceRule, Invocation invocation) {
         String serviceName = invocation.getServiceName();
 
@@ -235,6 +250,7 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
             //FIXME to deal with headers
             for (DubboMatchRequest dubboMatchRequest : matchRequestList) {
                 if (!DubboMatchRequest.isMatch(dubboMatchRequest, methodName, parameterTypeList, parameters,
+                        // url的parameters
                         sourcesLabels,
                         new HashMap<>(), invocation.getAttachments(),
                         new HashMap<>())) {
@@ -251,6 +267,7 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
     }
 
 
+    // 加了锁 保证通知的多个事件挨个执行
     protected synchronized void computeSubset() {
         // 下两个（invokerList和vsDestinationGroup）都不是null才可以进行 computeSubsetMap
         if (invokerList == null || invokerList.size() == 0) {
@@ -263,6 +280,7 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
             return;
         }
 
+        // 有人说compute的计算比较复杂，是否可以用缓存，不太行，因为这两个关键的变量是不断变化的
         Map<String, List<Invoker<?>>> subsetMap = computeSubsetMap(invokerList, vsDestinationGroup.getDestinationRuleList());
 
         if (subsetMap.size() == 0) {
@@ -273,7 +291,7 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
     }
 
 
-    // 主要就是将invoker的parameter和DestinationRule#subSet的lables 这两个map进行匹配，如果后者所有的entry在前者都存在则满足
+    // 主要就是将invoker的parameter和 DestinationRule#subSet的 lables 这两个map进行匹配，如果后者所有的entry在前者都存在则满足
     protected Map<String, List<Invoker<?>>> computeSubsetMap(List<Invoker<?>> invokers, List<DestinationRule> destinationRules) {
         Map<String, List<Invoker<?>>> subsetMap = new HashMap<>();
 

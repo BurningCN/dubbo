@@ -35,6 +35,8 @@ public final class MeshRuleManager {
 
     private static final ConcurrentHashMap<String, MeshAppRuleListener> APP_RULE_LISTENERS = new ConcurrentHashMap<>();
 
+    // gx
+    // 发现好多地方在注册、订阅、通知都加了锁
     public synchronized static void subscribeAppRule(String app) {
 
         MeshAppRuleListener meshAppRuleListener = new MeshAppRuleListener(app);
@@ -51,19 +53,22 @@ public final class MeshRuleManager {
             // 从远端（比如zk）或缺节点的内容值
             String rawConfig = configuration.getConfig(appRuleDataId, GROUP, 5000L);
             if (rawConfig != null) {
-                // 解析并通知
+                // 解析并通知 手动调用
                 meshAppRuleListener.receiveConfigInfo(rawConfig);
             }
         } catch (Throwable throwable) {
             logger.error("get MeshRuleManager app rule failed.", throwable);
         }
 
-        // 添加监听（meshAppRuleListener 是 ConfigurationListener 的实现）
+        // 远端配置中心添加监听（meshAppRuleListener 是 ConfigurationListener 的实现）
         configuration.addListener(appRuleDataId, GROUP, meshAppRuleListener);
         APP_RULE_LISTENERS.put(app, meshAppRuleListener);
     }
 
     public static void register(String app, MeshRuleRouter subscriber) {
+        // 看参数名称能看出，这个是注册/添加订阅者（即给app对应的MeshAppRuleListener添加订阅者），所以这个方法是发生在上面的方法之后调用的，
+        // APP_RULE_LISTENERS.get(app).register(subscriber);
+        // 本身 MeshAppRuleListener 就像CacheListener，里面有一个容器放了订阅者
         MeshAppRuleListener meshAppRuleListener = APP_RULE_LISTENERS.get(app);
         if (meshAppRuleListener == null) {
             logger.warn("appRuleListener can't find when Router register");

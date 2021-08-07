@@ -20,6 +20,8 @@ package org.apache.dubbo.rpc.cluster.router.mesh.util;
 
 import org.apache.dubbo.rpc.cluster.router.mesh.rule.VsDestinationGroup;
 
+// 唯一实现 MeshRuleRouter
 public interface VsDestinationGroupRuleListener {
+    // 远端配置发生变更会调用如下方法
     void onRuleChange(VsDestinationGroup vsDestinationGroup);
 }

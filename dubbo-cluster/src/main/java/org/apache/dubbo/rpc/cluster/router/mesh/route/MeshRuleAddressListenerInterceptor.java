@@ -31,6 +31,7 @@ public class MeshRuleAddressListenerInterceptor implements AddressListener {
 
     private static final Set<String> APP_SET = new ConcurrentHashSet<>();
 
+    // gx
     @Override
     public List<URL> notify(List<URL> addresses, URL consumerUrl, Directory registryDirectory) {
 

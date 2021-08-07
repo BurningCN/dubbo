@@ -101,11 +101,65 @@ public class MeshAppRuleListenerTest {
     }
 
     @Test
-    public void register() { // todo
+    public void register() {
+        MeshAppRuleListener meshAppRuleListener = new MeshAppRuleListener("qinliujie");
+        MeshRuleRouter meshRuleRouter = mock(MeshRuleRouter.class);
+        meshAppRuleListener.register(meshRuleRouter);
+
+        ArgumentCaptor<VsDestinationGroup> captor = ArgumentCaptor.forClass(VsDestinationGroup.class);
+        verify(meshRuleRouter, times(0)).onRuleChange(captor.capture());
+
+        meshAppRuleListener.receiveConfigInfo("apiVersion: service.dubbo.apache.org/v1alpha1\n" +
+            "kind: DestinationRule\n" +
+            "metadata: { name: demo-route }\n" +
+            "spec:\n" +
+            "  host: demo\n" +
+            "  subsets:\n" +
+            "    - labels: { env-sign: xxx, tag1: hello }\n" +
+            "      name: isolation\n" +
+            "    - labels: { env-sign: yyy }\n" +
+            "      name: testing-trunk\n" +
+            "    - labels: { env-sign: zzz }\n" +
+            "      name: testing\n" +
+            "  trafficPolicy:\n" +
+            "    loadBalancer: { simple: ROUND_ROBIN }\n" +
+            "\n" +
+            "---\n" +
+            "\n" +
+            "apiVersion: service.dubbo.apache.org/v1alpha1\n" +
+            "kind: VirtualService\n" +
+            "metadata: {name: demo-route}\n" +
+            "spec:\n" +
+            "  dubbo:\n" +
+            "    - routedetail:\n" +
+            "        - match:\n" +
+            "            - sourceLabels: {trafficLabel: xxx}\n" +
+            "          name: xxx-project\n" +
+            "          route:\n" +
+            "            - destination: {host: demo, subset: isolation}\n" +
+            "        - match:\n" +
+            "            - sourceLabels: {trafficLabel: testing-trunk}\n" +
+            "          name: testing-trunk\n" +
+            "          route:\n" +
+            "            - destination: {host: demo, subset: testing-trunk}\n" +
+            "        - name: testing\n" +
+            "          route:\n" +
+            "            - destination: {host: demo, subset: testing}\n" +
+            "      services:\n" +
+            "        - {regex: ccc}\n" +
+            "  hosts: [demo]\n");
+        MeshRuleRouter meshRuleRouter2 = mock(MeshRuleRouter.class);
+        meshAppRuleListener.register(meshRuleRouter2);
+        verify(meshRuleRouter, times(1)).onRuleChange(captor.capture());
+
     }
 
     @Test
     public void unregister() {
+        MeshAppRuleListener meshAppRuleListener = new MeshAppRuleListener("qinliujie");
+        MeshRuleRouter meshRuleRouter = mock(MeshRuleRouter.class);
+        meshAppRuleListener.register(meshRuleRouter);
+        meshAppRuleListener.unregister(meshRuleRouter);
     }
 
     @Test
