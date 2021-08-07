@@ -41,6 +41,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.DOT_SEPARATOR;
 import static org.apache.dubbo.common.constants.CommonConstants.GROUP_CHAR_SEPARATOR;
 import static org.apache.dubbo.common.constants.CommonConstants.METHODS_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.MONITOR_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.PID_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.TIMESTAMP_KEY;
 import static org.apache.dubbo.common.constants.FilterConstants.VALIDATION_KEY;
 import static org.apache.dubbo.common.constants.QosConstants.ACCEPT_FOREIGN_IP;
 import static org.apache.dubbo.common.constants.QosConstants.QOS_ENABLE;
@@ -219,6 +221,9 @@ public class MetadataInfo implements Serializable {
 
         private transient URL url;
 
+        private final static String[] KEYS_TO_REMOVE = {MONITOR_KEY, BIND_IP_KEY, BIND_PORT_KEY, QOS_ENABLE,
+            QOS_HOST, QOS_PORT, ACCEPT_FOREIGN_IP, VALIDATION_KEY, INTERFACES, PID_KEY, TIMESTAMP_KEY};
+
         public ServiceInfo() {
         }
 
@@ -229,11 +234,10 @@ public class MetadataInfo implements Serializable {
             Map<String, String> params = new HashMap<>();
             List<MetadataParamsFilter> filters = loader.getActivateExtension(url, "params-filter");
             if (filters.size() == 0) {
-                params.putAll(
-                        url.removeParameters(
-                                MONITOR_KEY, BIND_IP_KEY, BIND_PORT_KEY, QOS_ENABLE,
-                                QOS_HOST, QOS_PORT, ACCEPT_FOREIGN_IP, VALIDATION_KEY, INTERFACES)
-                                .getParameters());
+                params.putAll(url.getParameters());
+                for (String key : KEYS_TO_REMOVE) {
+                    params.remove(key);
+                }
             }
             for (MetadataParamsFilter filter : filters) {
                 String[] paramsIncluded = filter.serviceParamsIncluded();
@@ -467,14 +471,19 @@ public class MetadataInfo implements Serializable {
 
             ServiceInfo serviceInfo = (ServiceInfo) obj;
 //            return this.getMatchKey().equals(serviceInfo.getMatchKey()) && this.getParams().equals(serviceInfo.getParams());
-            // Please check ServiceInstancesChangedListener.localServiceToRevisions before change this behaviour.
-            return this.getMatchKey().equals(serviceInfo.getMatchKey());
+            // Please check ServiceInstancesChangedListener.localServiceToRevisions before changing this behaviour.
+            // equals to Objects.equals(this.getMatchKey(), serviceInfo.getMatchKey()), but match key will not get initialized
+            // on json deserialization.
+            return Objects.equals(this.getVersion(), serviceInfo.getVersion())
+                && Objects.equals(this.getGroup(), serviceInfo.getGroup())
+                && Objects.equals(this.getName(), serviceInfo.getName())
+                && Objects.equals(this.getProtocol(), serviceInfo.getProtocol());
         }
 
         @Override
         public int hashCode() {
 //            return Objects.hash(getMatchKey(), getParams());
-            return Objects.hash(getMatchKey());
+            return Objects.hash(getVersion(), getGroup(), getName(), getProtocol());
 
         }
 

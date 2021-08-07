@@ -208,7 +208,6 @@ public class ConfigValidationUtils {
                     List<URL> urls = UrlUtils.parseURLs(address, map);
 
                     for (URL url : urls) {
-
                         url = URLBuilder.from(url)
                             .addParameter(REGISTRY_KEY, url.getProtocol())
                             .setProtocol(extractRegistryType(url))
@@ -703,12 +702,12 @@ public class ConfigValidationUtils {
             return;
         }
         if (value.length() > maxlength) {
-            throw new IllegalStateException("Invalid " + property + "=\"" + value + "\" is longer than " + maxlength);
+            logger.error("Invalid " + property + "=\"" + value + "\" is longer than " + maxlength);
         }
         if (pattern != null) {
             Matcher matcher = pattern.matcher(value);
             if (!matcher.matches()) {
-                throw new IllegalStateException("Invalid " + property + "=\"" + value + "\" contains illegal " +
+                logger.error("Invalid " + property + "=\"" + value + "\" contains illegal " +
                     "character, only digit, letter, '-', '_' or '.' is legal.");
             }
         }

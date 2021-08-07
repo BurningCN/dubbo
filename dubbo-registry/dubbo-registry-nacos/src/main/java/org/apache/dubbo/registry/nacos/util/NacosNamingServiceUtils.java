@@ -38,6 +38,7 @@ import static com.alibaba.nacos.api.PropertyKeyConst.NAMING_LOAD_CACHE_AT_START;
 import static com.alibaba.nacos.api.PropertyKeyConst.SERVER_ADDR;
 import static com.alibaba.nacos.api.common.Constants.DEFAULT_GROUP;
 import static com.alibaba.nacos.client.naming.utils.UtilAndComs.NACOS_NAMING_LOG_NAME;
+import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
 import static org.apache.dubbo.common.constants.RemotingConstants.BACKUP_KEY;
 import static org.apache.dubbo.common.utils.StringConstantFieldValuePredicate.of;
 
@@ -49,6 +50,7 @@ import static org.apache.dubbo.common.utils.StringConstantFieldValuePredicate.of
 public class NacosNamingServiceUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(NacosNamingServiceUtils.class);
+    private static String NACOS_GROUP_KEY = "nacos.group";
 
     /**
      * Convert the {@link ServiceInstance} to {@link Instance}
@@ -91,7 +93,9 @@ public class NacosNamingServiceUtils {
      * @since 2.7.5
      */
     public static String getGroup(URL connectionURL) {
-        return connectionURL.getParameter("nacos.group", DEFAULT_GROUP);
+        // Compatible with nacos grouping via group.
+        String group = connectionURL.getParameter(GROUP_KEY, DEFAULT_GROUP);
+        return connectionURL.getParameter(NACOS_GROUP_KEY, group);
     }
 
     /**
@@ -125,13 +129,13 @@ public class NacosNamingServiceUtils {
     private static void setServerAddr(URL url, Properties properties) {
         StringBuilder serverAddrBuilder =
                 new StringBuilder(url.getHost()) // Host
-                        .append(":")
+                        .append(':')
                         .append(url.getPort()); // Port
 
         // Append backup parameter as other servers
         String backup = url.getParameter(BACKUP_KEY);
         if (backup != null) {
-            serverAddrBuilder.append(",").append(backup);
+            serverAddrBuilder.append(',').append(backup);
         }
 
         String serverAddr = serverAddrBuilder.toString();

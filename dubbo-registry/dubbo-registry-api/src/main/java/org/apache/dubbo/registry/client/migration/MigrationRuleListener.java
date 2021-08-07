@@ -154,8 +154,11 @@ public class MigrationRuleListener implements RegistryProtocolListener, Configur
 
                             handlers.forEach((_key, handler) ->
                                 executorService.submit(() -> {
-                                    handler.doMigrate(this.rule);
-                                    countDownLatch.countDown();
+                                    try {
+                                        handler.doMigrate(this.rule);
+                                    }finally {
+                                        countDownLatch.countDown();
+                                    }
                                 }));
 
                             try {
@@ -180,7 +183,7 @@ public class MigrationRuleListener implements RegistryProtocolListener, Configur
     }
 
     private MigrationRule parseRule(String rawRule) {
-        MigrationRule tmpRule = rule;
+        MigrationRule tmpRule = rule == null ? MigrationRule.INIT : rule;
         if (INIT.equals(rawRule)) {
             tmpRule = MigrationRule.INIT;
         } else {
