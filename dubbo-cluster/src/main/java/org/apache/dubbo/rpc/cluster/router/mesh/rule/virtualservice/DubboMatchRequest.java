@@ -84,7 +84,9 @@ public class DubboMatchRequest {
 
     public static boolean isMatch(DubboMatchRequest dubboMatchRequest,
                                   String methodName, String[] parameterTypeList, Object[] parameters,
+                                  // 这个是url.getParameters
                                   Map<String, String> sourceLabels,
+                                  // dubboContext 是 invocation.getAttachments()
                                   Map<String, String> eagleeyeContext, Map<String, String> dubboContext,
                                   Map<String, String> headers
     ) {
@@ -104,7 +106,7 @@ public class DubboMatchRequest {
         }
 
         if (dubboMatchRequest.getAttachments() != null) {
-            if (!DubboAttachmentMatch.isMatch(dubboMatchRequest.getAttachments(),eagleeyeContext,dubboContext)){
+            if (!DubboAttachmentMatch.isMatch(dubboMatchRequest.getAttachments(), eagleeyeContext, dubboContext)) {
                 return false;
             }
         }
@@ -119,12 +121,12 @@ public class DubboMatchRequest {
     @Override
     public String toString() {
         return "DubboMatchRequest{" +
-                "name='" + name + '\'' +
-                ", method=" + method +
-                ", sourceLabels=" + sourceLabels +
-                ", attachments=" + attachments +
-                ", headers=" + headers +
-                ", threshold=" + threshold +
-                '}';
+            "name='" + name + '\'' +
+            ", method=" + method +
+            ", sourceLabels=" + sourceLabels +
+            ", attachments=" + attachments +
+            ", headers=" + headers +
+            ", threshold=" + threshold +
+            '}';
     }
 }

@@ -49,10 +49,13 @@ public class DoubleMatch {
 
 
     public static boolean isMatch(DoubleMatch doubleMatch, Double input) {
+        
         if (doubleMatch.getExact() != null && doubleMatch.getMod() == null) {
             return input.equals(doubleMatch.getExact());
+
         } else if (doubleMatch.getRange() != null) {
             return DoubleRangeMatch.isMatch(doubleMatch.getRange(), input);
+
         } else if (doubleMatch.getExact() != null && doubleMatch.getMod() != null) {
             // 对 input进行 mod 取模
             Double result = input % doubleMatch.getMod();

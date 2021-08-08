@@ -30,6 +30,7 @@ public class DubboRouteDestination {
         this.destination = destination;
     }
 
+    // 没调用处
     public int getWeight() {
         return weight;
     }

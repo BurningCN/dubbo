@@ -20,6 +20,7 @@ package org.apache.dubbo.rpc.cluster.router.mesh.rule.destination;
 import org.apache.dubbo.rpc.cluster.router.mesh.rule.BaseRule;
 
 
+// 和 VirtualServiceRule 的结构一样
 public class DestinationRule extends BaseRule {
     private DestinationRuleSpec spec;
 

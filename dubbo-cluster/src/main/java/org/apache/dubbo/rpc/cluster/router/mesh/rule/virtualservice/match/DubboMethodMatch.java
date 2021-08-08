@@ -74,11 +74,14 @@ public class DubboMethodMatch {
             return false;
         }
 
+        // argc就是参数个数 c = count
+
         Integer argc = dubboMethodMatch.getArgc();
         if (argc != null &&
                 ((argc != 0 && (parameters == null || parameters.length == 0)) || (argc != parameters.length))) {
             return false;
         }
+        // 匹配参数类型，参数类型用的字符串表示的
         List<StringMatch> argp = dubboMethodMatch.getArgp();
         if (argp != null) {
             if (((parameterTypeList == null || parameterTypeList.length == 0) && argp.size() > 0)
@@ -93,6 +96,7 @@ public class DubboMethodMatch {
             }
         }
 
+        // 参数值匹配
         List<DubboMethodArg> args = dubboMethodMatch.getArgs();
 
         if (args != null && args.size() > 0) {

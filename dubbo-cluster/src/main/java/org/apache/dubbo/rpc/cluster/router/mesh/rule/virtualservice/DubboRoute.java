@@ -22,6 +22,7 @@ import org.apache.dubbo.rpc.cluster.router.mesh.rule.virtualservice.match.String
 import java.util.List;
 
 
+// VirtualServiceSpec的属性
 public class DubboRoute {
     private String name;
     private List<StringMatch> services;

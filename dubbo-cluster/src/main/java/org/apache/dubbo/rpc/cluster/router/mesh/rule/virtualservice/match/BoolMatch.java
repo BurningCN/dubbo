@@ -31,6 +31,7 @@ public class BoolMatch {
 
     public static boolean isMatch(BoolMatch boolMatch,boolean input){
         if (boolMatch.getExact() != null){
+            // Boolean类型和 boolean类型比较，直接 ==
             return input == boolMatch.getExact();
         }
         return false;

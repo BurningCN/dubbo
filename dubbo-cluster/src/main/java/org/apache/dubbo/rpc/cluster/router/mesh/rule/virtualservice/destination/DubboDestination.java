@@ -19,8 +19,10 @@ package org.apache.dubbo.rpc.cluster.router.mesh.rule.virtualservice.destination
 
 
 public class DubboDestination {
+    // 有调用处 但是没使用
     private String host;
     private String subset;
+    // 没调用处
     private int port;
     private DubboRouteDestination fallback;
 
@@ -33,6 +35,7 @@ public class DubboDestination {
         this.host = host;
     }
 
+    // GX
     public String getSubset() {
         return subset;
     }
@@ -49,6 +52,7 @@ public class DubboDestination {
         this.port = port;
     }
 
+    // gx
     public DubboRouteDestination getFallback() {
         return fallback;
     }

@@ -20,6 +20,7 @@ package org.apache.dubbo.rpc.cluster.router.mesh.rule.virtualservice.match;
 import java.util.Map;
 
 
+// gx 属于DubboMatchRequest
 public class DubboAttachmentMatch {
     private Map<String, StringMatch> eagleEyeContext;
     private Map<String, StringMatch> dubboContext;
@@ -40,6 +41,7 @@ public class DubboAttachmentMatch {
         this.dubboContext = dubboContext;
     }
 
+    // 匹配两个map，要求在该类对象属性中存在的，要在参数的map也存在
     public static boolean isMatch(DubboAttachmentMatch dubboAttachmentMatch, Map<String, String> eagleeyeContext, Map<String, String> dubboContext) {
         if (dubboAttachmentMatch.getDubboContext() != null) {
             for (Map.Entry<String, StringMatch> stringStringMatchEntry : dubboAttachmentMatch.getDubboContext().entrySet()) {

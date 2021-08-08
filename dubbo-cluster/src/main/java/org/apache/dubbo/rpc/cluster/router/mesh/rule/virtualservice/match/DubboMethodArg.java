@@ -17,9 +17,11 @@
 
 package org.apache.dubbo.rpc.cluster.router.mesh.rule.virtualservice.match;
 
+// gx 属于DubboMatchRequest->DubboMethodMatch
 
 public class DubboMethodArg {
     private int index;
+    // type没卵用
     private String type;
     private ListStringMatch str_value;
     private ListDoubleMatch num_value;

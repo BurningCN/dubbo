@@ -903,6 +903,7 @@ public class MeshRuleRouterTest {
 
     }
 
+    // 测试路由方法
     @Test
     public void route() {
         URL url = mock(URL.class);
@@ -972,6 +973,8 @@ public class MeshRuleRouterTest {
         {
             DestinationRule destinationRule1 = new DestinationRule();
 
+            // DestinationRuleSpec =  host + List<SubSet>
+            //  SubSet = name+Map<String,String>
             DestinationRuleSpec destinationRuleSpec = new DestinationRuleSpec();
             destinationRuleSpec.setHost("test1");
 
@@ -1021,6 +1024,8 @@ public class MeshRuleRouterTest {
 
 
         {
+            // name+ List<StringMatch> services  + List<DubboRouteDetail> routedetail
+            //  DubboRouteDetail
             DubboRoute dubboRoute = new DubboRoute();
             List<DubboRouteDetail> dubboRouteDetailList = new ArrayList<>();
             DubboRouteDetail dubboRouteDetail = new DubboRouteDetail();
@@ -1069,6 +1074,7 @@ public class MeshRuleRouterTest {
             virtualServiceRuleList.add(virtualServiceRule);
             vsDestinationGroup.setVirtualServiceRuleList(virtualServiceRuleList);
             meshRuleRouter.computeSubset();
+            // 内部进行服务名称匹配的时候直接找不到，返回如下传入的参数本身全量invokers
             assertEquals(inputInvokers, meshRuleRouter.route((List) inputInvokers, inputURL, invocation));
         }
 
@@ -1107,6 +1113,7 @@ public class MeshRuleRouterTest {
             dubboRoute.setRoutedetail(dubboRouteDetailList);
             List<StringMatch> serviceMatchList = new ArrayList<>();
             StringMatch serviceNameMatch = new StringMatch();
+            // 正则匹配
             serviceNameMatch.setRegex(".*");
 
             serviceMatchList.add(serviceNameMatch);

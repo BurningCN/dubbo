@@ -35,6 +35,7 @@ public class DestinationRuleTest {
     public void parserTest() {
         Yaml yaml = new Yaml();
         DestinationRule destinationRule = yaml.loadAs(
+            // 注意加载资源文件要使用这种方式
             this.getClass().getClassLoader().getResourceAsStream("DestinationRuleTest.yaml"), DestinationRule.class);
 
         System.out.println(destinationRule);
@@ -84,6 +85,7 @@ public class DestinationRuleTest {
     public void parserMultiRuleTest() {
         Yaml yaml = new Yaml();
         Yaml yaml2 = new Yaml();
+        //loadAll 和 loadAs 、 dump这些api注意下
         Iterable objectIterable = yaml.loadAll(this.getClass().getClassLoader().getResourceAsStream("DestinationRuleTest2.yaml"));
         for (Object result : objectIterable) {
 
