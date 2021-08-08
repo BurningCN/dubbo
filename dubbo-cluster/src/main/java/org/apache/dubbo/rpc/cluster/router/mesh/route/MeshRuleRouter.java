@@ -53,6 +53,7 @@ public class MeshRuleRouter implements Router, VsDestinationGroupRuleListener {
 
     private volatile VsDestinationGroup vsDestinationGroup;
 
+    // 调用端打的相关 lables, 包含应用名、机器分组、机器环境变量信息等; 对于 HSF-JAVA 来说，可以从上报的 URL 拿到对应的 key/value
     private Map<String, String> sourcesLabels = new HashMap<>();
 
     private volatile List<Invoker<?>> invokerList = new ArrayList<>();

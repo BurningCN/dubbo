@@ -19,7 +19,9 @@ package org.apache.dubbo.rpc.cluster.router.mesh.rule.destination.loadbalance;
 
 
 public class LoadBalancerSettings {
+    // 负载均衡策略，其中包括：ROUND_ROBIN, LEAST_CONN, RANDOM, PASSTHROUGH
     private SimpleLB simple;
+    // 一致性Hash策略(未实现)
     private ConsistentHashLB consistentHash;
 
     public SimpleLB getSimple() {

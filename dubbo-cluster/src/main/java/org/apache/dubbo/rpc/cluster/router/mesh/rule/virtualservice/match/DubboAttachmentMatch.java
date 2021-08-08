@@ -22,7 +22,9 @@ import java.util.Map;
 
 // gx 属于DubboMatchRequest
 public class DubboAttachmentMatch {
+    // 鹰眼上下文
     private Map<String, StringMatch> eagleEyeContext;
+    // Dubbo 请求上下文
     private Map<String, StringMatch> dubboContext;
 
     public Map<String, StringMatch> getEagleEyeContext() {

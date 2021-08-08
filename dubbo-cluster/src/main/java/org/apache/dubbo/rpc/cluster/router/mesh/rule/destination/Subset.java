@@ -21,7 +21,9 @@ import java.util.Map;
 
 
 public class Subset {
+    // 服务版本名称
     private String name;
+    //打在服务身上的标签
     private Map<String, String> labels;
 
     public String getName() {

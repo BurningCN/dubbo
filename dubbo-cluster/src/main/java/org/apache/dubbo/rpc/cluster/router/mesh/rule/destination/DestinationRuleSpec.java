@@ -21,8 +21,11 @@ import java.util.List;
 
 
 public class DestinationRuleSpec {
+    // 注册中心里面对应的key值，现在是接口名
     private String host;
+    // 服务的单一版本或多版本的命名
     private List<Subset> subsets;
+    // 流量策略
     private TrafficPolicy trafficPolicy;
 
     public String getHost() {

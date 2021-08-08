@@ -28,9 +28,13 @@ import java.util.Map;
 public class DubboMatchRequest {
     private String name;
     private DubboMethodMatch method;
+    // 调用端打的相关 lables, 包含应用名、机器分组、机器环境变量信息等; 对于 HSF-JAVA 来说，可以从上报的 URL 拿到对应的 key/value
     private Map<String, String> sourceLabels;
+    // 请求附带的其他信息，比如 HSF 请求上下文、Eagleeye 上下文等
     private DubboAttachmentMatch attachments;
+    // 通用的请求协议字段等，如接口名、方法名、超时等
     private Map<String, StringMatch> headers;
+    // 调用的 subset 列表的机器，占整个 host 的阀值
     private DoubleMatch threshold;
 
     public String getName() {

@@ -21,10 +21,13 @@ package org.apache.dubbo.rpc.cluster.router.mesh.rule.virtualservice.match;
 
 public class DubboMethodArg {
     private int index;
-    // type没卵用
+    // type没卵用 匹配参数的类型，以java的 string 类型为例，该字段取值 java.lang.String，该字段默认为 java.lang.String
     private String type;
+    // 匹配参数的值，根据$type进行解析 ListStringMatcher：匹配 java.lang.String）
     private ListStringMatch str_value;
+    // 数值类型匹配
     private ListDoubleMatch num_value;
+    // bool 值类型匹配
     private BoolMatch bool_value;
 
     public int getIndex() {
