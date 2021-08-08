@@ -84,6 +84,8 @@ public abstract class AbstractStateRouter implements StateRouter {
         this.priority = priority;
     }
 
+
+    // 方法没啥用，两个子类都重写了
     @Override
     public <T> BitList<Invoker<T>> route(BitList<Invoker<T>> invokers, RouterCache<T> cache, URL url,
         Invocation invocation) throws RpcException {

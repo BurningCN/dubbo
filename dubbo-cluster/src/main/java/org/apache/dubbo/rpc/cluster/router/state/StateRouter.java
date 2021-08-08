@@ -47,6 +47,8 @@ public interface StateRouter extends Comparable<StateRouter> {
     /***
      * Filter invokers with current routing rule and only return the invokers that comply with the rule.
      * Caching address lists in BitMap mode improves routing performance.
+     * 根据当前路由规则过滤调用者，只返回符合规则的调用者。
+     * 在位图模式下缓存地址列表提高了路由性能。
      * @param invokers  invoker bit list
      * @param cache      router address cache
      * @param url        refer url
@@ -67,7 +69,7 @@ public interface StateRouter extends Comparable<StateRouter> {
     /**
      * To decide whether this router need to execute every time an RPC comes or should only execute when addresses or
      * rule change.
-     *
+     * 决定这个路由器是需要在每次 RPC 到来时执行还是只在地址或规则改变时才执行。
      * @return true if the router need to execute every time.
      */
     boolean isRuntime();
