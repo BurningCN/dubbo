@@ -49,6 +49,7 @@ import static org.apache.dubbo.rpc.Constants.FORCE_USE_TAG;
 /**
  * TagDynamicStateRouter, "application.tag-router"
  */
+// 和 static的区别就是实现了 ConfigurationListener
 public class TagDynamicStateRouter extends AbstractStateRouter implements ConfigurationListener {
     public static final String NAME = "TAG_ROUTER";
     private static final int TAG_ROUTER_DEFAULT_PRIORITY = 100;
@@ -83,6 +84,7 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         }
     }
 
+    // todo 没必要 和父类都一样
     @Override
     public URL getUrl() {
         return url;
@@ -93,6 +95,7 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         Invocation invocation) throws RpcException {
 
 
+        // 地址的元数据信息，注意set处，其实拿到之后就是调用了一些取属性的方法，如下的 isForce
         final TagRouterRule tagRouterRuleCopy = (TagRouterRule)cache.getAddrMetadata();
 
         String tag = StringUtils.isEmpty(invocation.getAttachment(TAG_KEY)) ? url.getParameter(TAG_KEY) :
@@ -144,6 +147,7 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         return false;
     }
 
+    // 被routeChain调用有效果，被内部方法调用没有用
     @Override
     public <T> RouterCache<T> pool(List<Invoker<T>> invokers) {
 
@@ -153,6 +157,7 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         final TagRouterRule tagRouterRuleCopy = tagRouterRule;
 
 
+        // tagRouterRuleCopy 为 null或者无效、不允许，则参数的invokers都是可用的，整体作为 noTag 一种分类，映射到BitList
         if (tagRouterRuleCopy == null || !tagRouterRuleCopy.isValid() || !tagRouterRuleCopy.isEnabled()) {
             BitList<Invoker<T>> noTagList = new BitList<>(invokers, true);
 
@@ -167,15 +172,18 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         List<String> tagNames = tagRouterRuleCopy.getTagNames();
         Map<String, List<String>> tagnameToAddresses = tagRouterRuleCopy.getTagnameToAddresses();
 
+        // 根据 tag 分类
         for (String tag : tagNames) {
             List<String> addresses = tagnameToAddresses.get(tag);
             BitList<Invoker<T>> list = new BitList<>(invokers, true);
 
+            // 该tag的地址为空，则invokers都是允许的
             if (CollectionUtils.isEmpty(addresses)) {
                 list.addAll(invokers);
             } else {
                 for (int index = 0; index < invokers.size(); index++) {
                     Invoker<T> invoker = invokers.get(index);
+                    // 地址匹配的话，则该invoker允许，映射到BitList
                     if (addressMatches(invoker.getUrl(), addresses)) {
                         list.addIndex(index);
                     }
@@ -248,6 +256,7 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         }
 
         synchronized (this) {
+            // 如果最新过来的invokers这一批的app和当前的application不一致，那么需要重新监听新的path
             if (!providerApplication.equals(application)) {
                 if (!StringUtils.isEmpty(application)) {
                     ruleRepository.removeListener(application + RULE_SUFFIX, this);
@@ -261,6 +270,7 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
                 }
             }
         }
+        // todo 可以删掉
         pool(invokers);
     }
 

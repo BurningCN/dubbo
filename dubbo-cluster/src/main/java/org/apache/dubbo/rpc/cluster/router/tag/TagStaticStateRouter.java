@@ -67,11 +67,13 @@ public class TagStaticStateRouter extends AbstractStateRouter {
             tag = NO_TAG;
         }
 
+        // 根据 tag key 取出缓存的地址池
         ConcurrentMap<String, BitList<Invoker<T>>> pool = routerCache.getAddrPool();
         BitList<Invoker<T>> res = pool.get(tag);
         if (res == null) {
             return invokers;
         }
+        // 进行交集
         return invokers.intersect(res, invokers.getUnmodifiableList());
     }
 
@@ -119,10 +121,12 @@ public class TagStaticStateRouter extends AbstractStateRouter {
         RouterCache<T> routerCache = new RouterCache<>();
         ConcurrentHashMap<String, BitList<Invoker<T>>> addrPool = new ConcurrentHashMap<>();
 
+        // 根据tag值分类
         for (int index = 0; index < invokers.size(); index++) {
             Invoker<T> invoker = invokers.get(index);
             String tag = invoker.getUrl().getParameter(TAG_KEY);
             if (StringUtils.isEmpty(tag)) {
+                // BitList里面存放了全量的invokers，不过并不是所有的bit位置都是1，是通过addIndex进行设置为1的
                 BitList<Invoker<T>> noTagList = addrPool.putIfAbsent(NO_TAG, new BitList<>(invokers, true));
                 if (noTagList == null) {
                     noTagList = addrPool.get(NO_TAG);
@@ -148,7 +152,8 @@ public class TagStaticStateRouter extends AbstractStateRouter {
         if (CollectionUtils.isEmpty(invokers)) {
             return;
         }
-
+        // 拿到最新的invokers列表，进行pool、池化、缓存
+        // todo 没意义下面的调用 又没有接返回值
         pool(invokers);
     }
 

@@ -85,6 +85,7 @@ public interface StateRouter extends Comparable<StateRouter> {
         if (o == null) {
             throw new IllegalArgumentException();
         }
+        // 如果是int类型的比较，就是用下面的方法，如果是Integer类型，就使用.compareTo
         return Integer.compare(this.getPriority(), o.getPriority());
     }
 

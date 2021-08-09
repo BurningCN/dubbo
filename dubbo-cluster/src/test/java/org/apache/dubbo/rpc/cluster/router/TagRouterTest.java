@@ -53,6 +53,7 @@ public class TagRouterTest {
 //        String serviceStr = "";
         try {
             String servicePath = "/dubbo/config/demo-provider/tag-router";
+            // 两个api注意下
             if (client.checkExists().forPath(servicePath) == null) {
                 client.create().creatingParentsIfNeeded().forPath(servicePath);
             }
