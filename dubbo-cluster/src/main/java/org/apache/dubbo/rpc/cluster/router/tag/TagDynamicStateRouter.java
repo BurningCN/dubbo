@@ -160,7 +160,7 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         // tagRouterRuleCopy 为 null或者无效、不允许，则参数的invokers都是可用的，整体作为 noTag 一种分类，映射到BitList
         if (tagRouterRuleCopy == null || !tagRouterRuleCopy.isValid() || !tagRouterRuleCopy.isEnabled()) {
             BitList<Invoker<T>> noTagList = new BitList<>(invokers, true);
-
+            // todo 这里可以直接将上面的true改成false
             for (int index = 0; index < invokers.size(); index++) {
                 noTagList.addIndex(index);
             }
@@ -172,7 +172,7 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         List<String> tagNames = tagRouterRuleCopy.getTagNames();
         Map<String, List<String>> tagnameToAddresses = tagRouterRuleCopy.getTagnameToAddresses();
 
-        // 根据 tag 分类
+        // 根据 tag 分类 ,和 TagStaticStateRouter 的区别就是下面是按照 远端的rule进行tag分类，而静态是直接根据invoker
         for (String tag : tagNames) {
             List<String> addresses = tagnameToAddresses.get(tag);
             BitList<Invoker<T>> list = new BitList<>(invokers, true);
@@ -192,12 +192,12 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
 
             addrPool.put(tag, list);
         }
-
+        // 获取所有的远端配置规则的地址，将参数invokers和规则地址不匹配的单独按照noTag分类进行存储
         List<String> addresses = tagRouterRuleCopy.getAddresses();
         BitList<Invoker<T>> noTagList = new BitList<>(invokers, true);
 
         for (int index = 0; index < invokers.size(); index++) {
-            Invoker<T> invoker = invokers.get(index);
+            Invoker<T> invoker = invokers.get(index); // 不匹配的
             if (addressNotMatches(invoker.getUrl(), addresses)) {
                 noTagList.addIndex(index);
             }

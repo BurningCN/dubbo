@@ -49,6 +49,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.STATE_ROUTER_KEY;
 /**
  * Router chain
  */
+// todo 需要测试类
 public class RouterChain<T> {
     private static final Logger logger = LoggerFactory.getLogger(RouterChain.class);
 
@@ -82,17 +83,27 @@ public class RouterChain<T> {
         return new RouterChain<>(url);
     }
 
+    // for test
+    public boolean getFirstBuildCache(){
+        return firstBuildCache;
+    }
+
     private RouterChain(URL url) {
+
+        // 1
         loopPool = executorRepository.nextExecutorExecutor();
+
+        // 2
         List<RouterFactory> extensionFactories = ExtensionLoader.getExtensionLoader(RouterFactory.class)
             .getActivateExtension(url, ROUTER_KEY);
 
         List<Router> routers = extensionFactories.stream()
             .map(factory -> factory.getRouter(url))
             .collect(Collectors.toList());
-
+        // todo 内部排序放在上面
         initWithRouters(routers);
 
+        // 3 (3.0的变化)
         List<StateRouterFactory> extensionStateRouterFactories = ExtensionLoader.getExtensionLoader(
             StateRouterFactory.class)
             .getActivateExtension(url, STATE_ROUTER_KEY);
@@ -164,8 +175,12 @@ public class RouterChain<T> {
      */
     public List<Invoker<T>> route(URL url, Invocation invocation) {
 
+        // 3.0的较大变化
+
+        // cache的赋值处注意下
         AddrCache<T> cache = this.cache.get();
         if (cache == null) {
+            // 日志
             throw new RpcException(RpcException.ROUTER_CACHE_NOT_BUILD, "Failed to invoke the method "
                 + invocation.getMethodName() + " in the service " + url.getServiceInterface()
                 + ". address cache not build "
@@ -173,9 +188,11 @@ public class RouterChain<T> {
                 + " using the dubbo version " + Version.getVersion()
                 + ".");
         }
+        // invokers的赋值处注意下
         BitList<Invoker<T>> finalBitListInvokers = new BitList<>(invokers, false);
         for (StateRouter stateRouter : stateRouters) {
             if (stateRouter.isEnable()) {
+                // getName两个值 TagStatic 和 TagDynamic
                 RouterCache<T> routerCache = cache.getCache().get(stateRouter.getName());
                 finalBitListInvokers = stateRouter.route(finalBitListInvokers, routerCache, url, invocation);
             }
@@ -187,6 +204,7 @@ public class RouterChain<T> {
             finalInvokers.add(invoker);
         }
 
+        // 第二次过滤就是原版本的
         for (Router router : routers) {
             finalInvokers = router.route(finalInvokers, url, invocation);
         }
@@ -199,8 +217,8 @@ public class RouterChain<T> {
      */
     public void setInvokers(List<Invoker<T>> invokers) {
         this.invokers = (invokers == null ? Collections.emptyList() : invokers);
-        stateRouters.forEach(router -> router.notify(this.invokers));
-        routers.forEach(router -> router.notify(this.invokers));
+        stateRouters.forEach(router -> router.notify(this.invokers)); // TagStaticStateRouter和TagDynamicStateRouter
+        routers.forEach(router -> router.notify(this.invokers));// MeshRuleRouter和TagRouter
         loop(true);
     }
 
@@ -213,6 +231,7 @@ public class RouterChain<T> {
             return;
         }
         AddrCache<T> origin = cache.get();
+        // 深拷贝
         List<Invoker<T>> copyInvokers = new ArrayList<>(this.invokers);
         AddrCache<T> newCache = new AddrCache<T>();
         Map<String, RouterCache<T>> routerCacheMap = new HashMap<>((int) (stateRouters.size() / 0.75f) + 1);
@@ -229,13 +248,14 @@ public class RouterChain<T> {
         }
 
         newCache.setCache(routerCacheMap);
+        // set内部的变量是volatile修饰的，在route方法能立马读取到最新的值
         this.cache.set(newCache);
     }
 
     /**
      * Cache the address list for each StateRouter.
      * @param router router
-     * @param orign The original address cache
+     * @param orign The original address cache todo 拼写
      * @param invokers The full address list
      * @param notify Whether the addresses in registry has changed.
      * @return
@@ -292,6 +312,7 @@ public class RouterChain<T> {
 
         @Override
         public void run() {
+            // todo 放在下一行的后面
             loopPermit.release();
             buildCache(notify);
         }
