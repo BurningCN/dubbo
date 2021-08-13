@@ -277,6 +277,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
     private volatile InvokersChangedListener invokersChangedListener;
     private volatile boolean invokersChanged;
 
+    // 两个方法、两个变量 以及 volatile + sync + boolean 防止丢失信号
     public synchronized void setInvokersChangedListener(InvokersChangedListener listener) {
         this.invokersChangedListener = listener;
         if (invokersChangedListener != null && invokersChanged) {

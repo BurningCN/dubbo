@@ -101,10 +101,10 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
 
     @Override
     public void subscribe(URL url) {
-        setSubscribeUrl(url);
+        setSubscribeUrl(url);// todo 可删除
         CONSUMER_CONFIGURATION_LISTENER.addNotifyListener(this);
         referenceConfigurationListener = new ReferenceConfigurationListener(this, url);
-        registry.subscribe(url, this);
+        registry.subscribe(url, this); // todo 可删除  下面的方法也是
     }
 
     @Override

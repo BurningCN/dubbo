@@ -45,7 +45,6 @@ import static org.apache.dubbo.rpc.cluster.Constants.REFER_KEY;
  */
 public abstract class AbstractDirectory<T> implements Directory<T> {
 
-    // logger
     private static final Logger logger = LoggerFactory.getLogger(AbstractDirectory.class);
 
     private final URL url;
