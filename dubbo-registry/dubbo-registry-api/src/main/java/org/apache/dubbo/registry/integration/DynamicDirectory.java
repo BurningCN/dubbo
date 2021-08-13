@@ -166,6 +166,7 @@ public abstract class DynamicDirectory<T> extends AbstractDirectory<T> implement
         return invokers == null ? Collections.emptyList() : invokers;
     }
 
+    // todo 下面几个为重复方法可删除
     @Override
     public Class<T> getInterface() {
         return serviceType;

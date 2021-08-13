@@ -508,6 +508,7 @@ public class RegistryProtocol implements Protocol {
                 parameters.remove(REGISTER_IP_KEY), 0, getPath(parameters, type), parameters);
         if (directory.isShouldRegister()) {
             directory.setRegisteredConsumerUrl(urlToRegistry);
+            // todo 没必要在取一下
             registry.register(directory.getRegisteredConsumerUrl());
         }
         directory.buildRouterChain(urlToRegistry);

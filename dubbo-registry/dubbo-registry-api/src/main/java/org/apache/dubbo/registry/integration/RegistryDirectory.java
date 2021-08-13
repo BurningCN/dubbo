@@ -194,7 +194,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
             routerChain.setInvokers(this.invokers);
             destroyAllInvokers(); // Close all invokers
         } else {
-            this.forbidden = false; // Allow to access
+            this.forbidden = false; // Allow accessing
             Map<URL, Invoker<T>> oldUrlInvokerMap = this.urlInvokerMap; // local reference
             if (invokerUrls == Collections.<URL>emptyList()) {
                 invokerUrls = new ArrayList<>();
@@ -298,7 +298,7 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
     }
 
     /**
-     * Turn urls into invokers, and if url has been refer, will not re-reference.
+     * Turn urls into invokers, and if url has been referred, will not re-reference.
      *
      * @param urls
      * @return invokers
@@ -493,36 +493,6 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> {
         }
 
         logger.info("New url total size, " + newUrlInvokerMap.size() + ", destroyed total size " + oldUrlInvokerMap.size());
-    }
-
-    @Override
-    public List<Invoker<T>> doList(Invocation invocation) {
-        if (forbidden) {
-            // 1. No service provider 2. Service providers are disabled
-            throw new RpcException(RpcException.FORBIDDEN_EXCEPTION, "No provider available from registry " +
-                    getUrl().getAddress() + " for service " + getConsumerUrl().getServiceKey() + " on consumer " +
-                    NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion() +
-                    ", please check status of providers(disabled, not registered or in blacklist).");
-        }
-
-        if (multiGroup) {
-            return this.invokers == null ? Collections.emptyList() : this.invokers;
-        }
-
-        List<Invoker<T>> invokers = null;
-        try {
-            // Get invokers from cache, only runtime routers will be executed.
-            invokers = routerChain.route(getConsumerUrl(), invocation);
-        } catch (Throwable t) {
-            logger.error("Failed to execute router: " + getUrl() + ", cause: " + t.getMessage(), t);
-        }
-
-        return invokers == null ? Collections.emptyList() : invokers;
-    }
-
-    @Override
-    public Class<T> getInterface() {
-        return serviceType;
     }
 
     @Override
