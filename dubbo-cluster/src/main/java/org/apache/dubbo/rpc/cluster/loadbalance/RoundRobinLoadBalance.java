@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RoundRobinLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "roundrobin";
 
+    // 回收周期
     private static final int RECYCLE_PERIOD = 60000;
 
     protected static class WeightedRoundRobin {
@@ -115,6 +116,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
                 return wrr;
             });
 
+            // 每次getWeight可能是新的值，因为可以在dubbo-admin配置权重
             if (weight != weightedRoundRobin.getWeight()) {
                 //weight changed
                 weightedRoundRobin.setWeight(weight);
@@ -129,6 +131,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
             totalWeight += weight;
         }
         if (invokers.size() != map.size()) {
+            // 因为map是缓存，可能缓存了很多数据，可能invokers只有2个，map有10了，这里要将超过60s没有被访问的invoker（说明这个invoker长期不在线）给踢出
             map.entrySet().removeIf(item -> now - item.getValue().getLastUpdate() > RECYCLE_PERIOD);
         }
         if (selectedInvoker != null) {
