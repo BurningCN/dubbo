@@ -255,7 +255,7 @@ public class RouterChain<T> {
     /**
      * Cache the address list for each StateRouter.
      * @param router router
-     * @param orign The original address cache todo 拼写
+     * @param orign The original address cache todo 拼写 -pr
      * @param invokers The full address list
      * @param notify Whether the addresses in registry has changed.
      * @return
@@ -312,9 +312,8 @@ public class RouterChain<T> {
 
         @Override
         public void run() {
-            // todo 放在下一行的后面
-            loopPermit.release();
             buildCache(notify);
+            loopPermit.release();
         }
     }
 

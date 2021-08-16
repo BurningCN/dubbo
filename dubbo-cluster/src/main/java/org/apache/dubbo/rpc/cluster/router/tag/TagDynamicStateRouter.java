@@ -84,11 +84,6 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         }
     }
 
-    // todo 没必要 和父类都一样
-    @Override
-    public URL getUrl() {
-        return url;
-    }
 
     @Override
     public <T> BitList<Invoker<T>> route(BitList<Invoker<T>> invokers, RouterCache<T> cache, URL url,
@@ -159,11 +154,8 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
 
         // tagRouterRuleCopy 为 null或者无效、不允许，则参数的invokers都是可用的，整体作为 noTag 一种分类，映射到BitList
         if (tagRouterRuleCopy == null || !tagRouterRuleCopy.isValid() || !tagRouterRuleCopy.isEnabled()) {
-            BitList<Invoker<T>> noTagList = new BitList<>(invokers, true);
-            // todo 这里可以直接将上面的true改成false
-            for (int index = 0; index < invokers.size(); index++) {
-                noTagList.addIndex(index);
-            }
+            BitList<Invoker<T>> noTagList = new BitList<>(invokers, false);
+
             addrPool.put(NO_TAG, noTagList);
             routerCache.setAddrPool(addrPool);
             return routerCache;
