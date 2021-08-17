@@ -94,7 +94,7 @@ public class BroadcastClusterInvoker<T> extends AbstractClusterInvoker<T> {
                     String.format("The number of BroadcastCluster call failures has reached the threshold %s", failThresholdIndex));
             } else {
                 logger.debug(String.format("The number of BroadcastCluster call failures has not reached the threshold %s, fail size is %s",
-                    failThresholdIndex, failIndex));
+                    failIndex));
             }
             throw exception;
         }
