@@ -16,8 +16,16 @@
  */
 package org.apache.dubbo.rpc.protocol.tri;
 
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
+import io.netty.handler.codec.http2.Http2GoAwayFrame;
+import io.netty.handler.codec.http2.Http2SettingsFrame;
+import io.netty.util.ReferenceCountUtil;
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.constants.CommonConstants;
 import org.apache.dubbo.common.stream.StreamObserver;
+import org.apache.dubbo.common.utils.StringUtils;
 import org.apache.dubbo.remoting.Constants;
 import org.apache.dubbo.remoting.api.Connection;
 import org.apache.dubbo.remoting.api.ConnectionHandler;
@@ -30,15 +38,6 @@ import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.apache.dubbo.rpc.model.ConsumerModel;
 import org.apache.dubbo.rpc.model.MethodDescriptor;
 import org.apache.dubbo.rpc.model.ServiceRepository;
-
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
-import io.netty.handler.codec.http2.Http2GoAwayFrame;
-import io.netty.handler.codec.http2.Http2SettingsFrame;
-import io.netty.util.ReferenceCountUtil;
-
-import java.util.concurrent.Executor;
 
 public class TripleClientHandler extends ChannelDuplexHandler {
 
@@ -71,19 +70,22 @@ public class TripleClientHandler extends ChannelDuplexHandler {
         MethodDescriptor methodDescriptor = repo.lookupMethod(inv.getServiceName(), inv.getMethodName());
         String serviceKey = url.getServiceKey();
         // If it is InstanceAddressURL, the serviceKey may not be obtained.
-        if(null == serviceKey) {
+        if (null == serviceKey) {
             serviceKey = inv.getTargetServiceUniqueName();
         }
         final ConsumerModel service = repo.lookupReferredService(serviceKey);
         if (service != null) {
             ClassLoadUtil.switchContextLoader(service.getServiceInterfaceClass().getClassLoader());
         }
-        final Executor executor = (Executor) inv.getAttributes().remove("callback.executor");
         AbstractClientStream stream;
         if (methodDescriptor.isUnary()) {
-            stream = AbstractClientStream.unary(url, executor);
+            stream = AbstractClientStream.unary(url);
         } else {
             stream = AbstractClientStream.stream(url);
+        }
+        String ssl = url.getParameter(CommonConstants.SSL_ENABLED_KEY);
+        if (StringUtils.isNotEmpty(ssl)) {
+            ctx.channel().attr(TripleConstant.SSL_ATTRIBUTE_KEY).set(Boolean.parseBoolean(ssl));
         }
         stream.service(service)
                 .connection(Connection.getConnectionFromChannel(ctx.channel()))
