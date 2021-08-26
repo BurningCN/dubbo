@@ -283,6 +283,8 @@ public class RouterChain<T> {
     /***
      * Build the asynchronous address cache for stateRouter.
      * @param notify Whether the addresses in registry has changed.
+     *   为 stateRouter 构建异步地址缓存。
+     *   @param notify 注册表中的地址是否已更改。
      */
     public void loop(boolean notify) {
         if (firstBuildCache) {

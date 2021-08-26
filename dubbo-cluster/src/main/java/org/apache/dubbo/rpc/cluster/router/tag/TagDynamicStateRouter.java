@@ -65,6 +65,7 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         this.priority = TAG_ROUTER_DEFAULT_PRIORITY;
     }
 
+    // 和TagRouter的逻辑一模一样
     @Override
     public synchronized void process(ConfigChangedEvent event) {
         if (logger.isDebugEnabled()) {
@@ -164,7 +165,8 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         List<String> tagNames = tagRouterRuleCopy.getTagNames();
         Map<String, List<String>> tagnameToAddresses = tagRouterRuleCopy.getTagnameToAddresses();
 
-        // 根据 tag 分类 ,和 TagStaticStateRouter 的区别就是下面是按照 远端的rule进行tag分类，而静态是直接根据invoker
+        // 根据 tag 分类 ,和 TagStaticStateRouter 的区别就是下面是按照 远端的rule进行tag分类（且分类的时候需要将远端规则和invoker的地址进行match），
+        // 而静态是直接根据invoker
         for (String tag : tagNames) {
             List<String> addresses = tagnameToAddresses.get(tag);
             BitList<Invoker<T>> list = new BitList<>(invokers, true);
@@ -227,10 +229,12 @@ public class TagDynamicStateRouter extends AbstractStateRouter implements Config
         return false;
     }
 
+    // 没调用处
     public void setApplication(String app) {
         this.application = app;
     }
 
+    // 如下和TagRouter逻辑基本完全一样
     @Override
     public <T> void notify(List<Invoker<T>> invokers) {
         if (CollectionUtils.isEmpty(invokers)) {
