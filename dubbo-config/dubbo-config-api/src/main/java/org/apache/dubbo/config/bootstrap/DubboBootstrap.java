@@ -193,9 +193,9 @@ public class DubboBootstrap {
 
     private final List<CompletableFuture<?>> asyncReferringFutures = new ArrayList<>();
 
-    private boolean asyncExportFinish = true;
+    private volatile boolean asyncExportFinish = true;
 
-    private boolean asyncReferFinish = true;
+    private volatile boolean asyncReferFinish = true;
 
     private static boolean ignoreConfigState;
 
@@ -1099,7 +1099,7 @@ public class DubboBootstrap {
      */
     public synchronized DubboBootstrap start() {
         // avoid re-entry start method multiple times in same thread
-        if (isCurrentlyInStart){
+        if (isCurrentlyInStart) {
             return this;
         }
 
@@ -1330,10 +1330,23 @@ public class DubboBootstrap {
 
     private DynamicConfiguration prepareEnvironment(ConfigCenterConfig configCenter) {
         if (configCenter.isValid()) {
-            if (!configCenter.checkOrUpdateInited()) {
+            if (!configCenter.checkOrUpdateInitialized(true)) {
                 return null;
             }
-            DynamicConfiguration dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl());
+
+            DynamicConfiguration dynamicConfiguration = null;
+            try {
+                dynamicConfiguration = getDynamicConfiguration(configCenter.toUrl());
+            } catch (Exception e) {
+                if (!configCenter.isCheck()) {
+                    logger.warn("The configuration center failed to initialize", e);
+                    configCenter.checkOrUpdateInitialized(false);
+                    return null;
+                } else {
+                    throw new IllegalStateException(e);
+                }
+            }
+
             String configContent = dynamicConfiguration.getProperties(configCenter.getConfigFile(), configCenter.getGroup());
 
             String appGroup = getApplication().getName();
@@ -1444,28 +1457,33 @@ public class DubboBootstrap {
         }
 
         configManager.getReferences().forEach(rc -> {
-            // TODO, compatible with  ReferenceConfig.refer()
-            ReferenceConfig<?> referenceConfig = (ReferenceConfig<?>) rc;
-            referenceConfig.setBootstrap(this);
-            if (!referenceConfig.isRefreshed()) {
-                referenceConfig.refresh();
-            }
-
-            if (rc.shouldInit()) {
-                if (rc.shouldReferAsync()) {
-                    ExecutorService executor = executorRepository.getServiceReferExecutor();
-                    CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                        try {
-                            cache.get(rc);
-                        } catch (Throwable t) {
-                            logger.error("refer async catch error : " + t.getMessage(), t);
-                        }
-                    }, executor);
-
-                    asyncReferringFutures.add(future);
-                } else {
-                    cache.get(rc);
+            try {
+                // TODO, compatible with  ReferenceConfig.refer()
+                ReferenceConfig<?> referenceConfig = (ReferenceConfig<?>) rc;
+                referenceConfig.setBootstrap(this);
+                if (!referenceConfig.isRefreshed()) {
+                    referenceConfig.refresh();
                 }
+
+                if (rc.shouldInit()) {
+                    if (rc.shouldReferAsync()) {
+                        ExecutorService executor = executorRepository.getServiceReferExecutor();
+                        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                            try {
+                                cache.get(rc);
+                            } catch (Throwable t) {
+                                logger.error("refer async catch error : " + t.getMessage(), t);
+                            }
+                        }, executor);
+
+                        asyncReferringFutures.add(future);
+                    } else {
+                        cache.get(rc);
+                    }
+                }
+            } catch (Throwable t) {
+                logger.error("refer catch error", t);
+                cache.destroy(rc);
             }
         });
     }
@@ -1521,7 +1539,9 @@ public class DubboBootstrap {
     private void doRegisterServiceInstance(ServiceInstance serviceInstance) {
         // register instance only when at least one service is exported.
         if (serviceInstance.getPort() > 0) {
-            publishMetadataToRemote(serviceInstance);
+            if (REMOTE_METADATA_STORAGE_TYPE.equals(ServiceInstanceMetadataUtils.getMetadataStorageType(serviceInstance))) {
+                publishMetadataToRemote(serviceInstance);
+            }
             logger.info("Start registering instance address to registry.");
             getServiceDiscoveries().forEach(serviceDiscovery ->
             {
