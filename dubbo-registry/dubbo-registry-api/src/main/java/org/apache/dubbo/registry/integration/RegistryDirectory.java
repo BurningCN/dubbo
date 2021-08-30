@@ -268,6 +268,8 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
             List<Invoker<T>> newInvokers = Collections.unmodifiableList(new ArrayList<>(newUrlInvokerMap.values()));
             // pre-route and build cache, notice that route cache should build on original Invoker list.
             // toMergeMethodInvokerMap() will wrap some invokers having different groups, those wrapped invokers not should be routed.
+            // 预先路由和构建缓存，注意路由缓存应该建立在原始 Invoker 列表上。
+            // toMergeMethodInvokerMap() 将包裹一些具有不同组的调用者，那些包裹的调用者不应该被路由。
             routerChain.setInvokers(newInvokers);
             // 合并多个组的 Invoker
             this.invokers = multiGroup ? toMergeInvokerList(newInvokers) : newInvokers;
