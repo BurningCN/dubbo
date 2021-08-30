@@ -727,6 +727,8 @@ public class RegistryDirectory<T> extends DynamicDirectory<T> implements NotifyL
         @Override
         protected void notifyOverrides() {
             // to notify configurator/router changes
+            // 因为这是configurators，不是invokers，所以传递的为空集合
+            // refreshOverrideAndInvoker方法内部会获取 AbstractConfiguratorListener#getConfigurators，进行覆盖配置
             directory.refreshOverrideAndInvoker(Collections.emptyList());
         }
     }
