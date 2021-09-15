@@ -414,8 +414,10 @@ public abstract class AbstractMetadataReport implements MetadataReport {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         // 做差，calendar.getTimeInMillis()此时是今天00:00:00的时间戳。
+        // 比如现在是23:00，那么下面的subtract就是1h，也就是说距离明天凌晨0:00还有1h
         long subtract = calendar.getTimeInMillis() + ONE_DAY_IN_MILLISECONDS - nowMill;
-        // 感觉计算的有问题，并不是 2:00 am to 6:00 am todo need pr testCalculateStartTime
+        // 1 +[2,6]的随机值（记作A），表示距离当前时间还有这么长时间（A）才能触发schedule，注意该类构造方法最后的schedule.scheduleAtFixRate(,initDelay,)的initDelay参数是
+        // 从当前时间，延迟A后执行publishAll。
         return subtract + (FOUR_HOURS_IN_MILLISECONDS / 2) + ThreadLocalRandom.current().nextInt(FOUR_HOURS_IN_MILLISECONDS);
     }
 

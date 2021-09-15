@@ -73,27 +73,28 @@ import static org.apache.dubbo.registry.client.ServiceDiscoveryFactory.getExtens
 import static org.apache.dubbo.rpc.Constants.ID_KEY;
 
 /**
- * Being different to the traditional registry, {@link ServiceDiscoveryRegistry} that is a new service-oriented
- * {@link Registry} based on {@link ServiceDiscovery}, it will not interact in the external registry directly,
- * but store the {@link URL urls} that Dubbo services exported and referenced into {@link WritableMetadataService}
- * when {@link #register(URL)} and {@link #subscribe(URL, NotifyListener)} methods are executed. After that the exported
- * {@link URL urls} can be get from {@link WritableMetadataService#getExportedURLs()} and its variant methods. In contrast,
- * {@link WritableMetadataService#getSubscribedURLs()} method offers the subscribed {@link URL URLs}.
- * <p>
- * Every {@link ServiceDiscoveryRegistry} object has its own {@link ServiceDiscovery} instance that was initialized
- * under {@link #ServiceDiscoveryRegistry(URL) the construction}. As the primary argument of constructor , the
- * {@link URL} of connection the registry decides what the kind of ServiceDiscovery is. Generally, each
- * protocol associates with a kind of {@link ServiceDiscovery}'s implementation if present, or the
- * {@link FileSystemServiceDiscovery} will be the default one. Obviously, it's also allowed to extend
- * {@link ServiceDiscovery} using {@link SPI the Dubbo SPI}.
- * In contrast, current {@link ServiceInstance service instance} will not be registered to the registry whether any
- * Dubbo service is exported or not.
- * <p>
+ * ServiceDiscoveryRegistry is a very special Registry implementation, which is used to bridge the old interface-level service discovery model
+ * with the new service discovery model introduced in 3.0 in a compatible manner.
  *
- * @see ServiceDiscovery
- * @see FailbackRegistry
- * @see WritableMetadataService
- * @since 2.7.5
+ * It fully complies with the extension specification of the Registry SPI, but is different from the specific implementation of zookeeper and Nacos,
+ * because it does not interact with any real third-party registry, but only with the relevant components of ServiceDiscovery in the process.
+ * In short, it bridges the old interface model and the new service discovery model:
+ *
+ * - register() aggregates interface level data into MetadataInfo by mainly interacting with MetadataService.
+ * - subscribe() triggers the whole subscribe process of the application level service discovery model.
+ *   - Maps interface to applications depending on ServiceNameMapping.
+ *   - Starts the new service discovery listener (InstanceListener) and makes NotifierListeners part of the InstanceListener.
+ *   * ServiceDiscoveryRegistry是一个非常特殊的Registry实现，用于桥接旧的接口级服务发现模型
+ *  * 与 3.0 中以兼容方式引入的新服务发现模型。
+ *  *
+ *  * 完全符合Registry SPI的扩展规范，但不同于zookeeper和Nacos的具体实现，
+ *  * 因为它不与任何真正的第三方注册中心进行交互，而仅与过程中ServiceDiscovery 的相关组件进行交互。
+ *  * 简而言之，它架起了旧的接口模型和新的服务发现模型：
+ *  *
+ *  * - register()主要通过与MetadataService交互，将接口级数据聚合到MetadataInfo中。
+ *  * - subscribe() 触发应用级服务发现模型的整个订阅过程。
+ *  * - 根据 ServiceNameMapping 将接口映射到应用程序。
+ *  * - 启动新的服务发现侦听器 (InstanceListener) 并使 NotifierListeners 成为 InstanceListener 的一部分。
  */
 public class ServiceDiscoveryRegistry implements Registry {
 
