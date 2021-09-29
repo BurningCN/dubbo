@@ -77,10 +77,10 @@ public class ServiceDiscoveryRegistry implements Registry {
 
     private final WritableMetadataService writableMetadataService;
 
-    private final Set<String> registeredListeners = new LinkedHashSet<>();
-
     /* apps - listener */
     private final Map<String, ServiceInstancesChangedListener> serviceListeners = new ConcurrentHashMap<>();
+
+    private final Map<URL, MappingListener> subscribeToMappingListener = new ConcurrentHashMap<>();
 
     private URL registryURL;
 
@@ -212,7 +212,9 @@ public class ServiceDiscoveryRegistry implements Registry {
         Set<String> subscribedServices = Collections.emptySet();
         try {
             ServiceNameMapping serviceNameMapping = ServiceNameMapping.getDefaultExtension(registryURL.getScopeModel());
-            subscribedServices = serviceNameMapping.getAndListenServices(registryURL, url, new DefaultMappingListener(url, subscribedServices, listener));
+            DefaultMappingListener mappingListener = new DefaultMappingListener(url, subscribedServices, listener);
+            subscribeToMappingListener.put(url, mappingListener);
+            subscribedServices = serviceNameMapping.getAndListenServices(registryURL, url, mappingListener);
         } catch (Exception e) {
             logger.warn("Cannot find app mapping for service " + url.getServiceInterface() + ", will not migrate.", e);
         }
@@ -245,7 +247,13 @@ public class ServiceDiscoveryRegistry implements Registry {
     }
 
     public void doUnsubscribe(URL url, NotifyListener listener) {
-        // TODO: remove service name mapping listener
+        // remove service name mapping listener
+        MappingListener mappingListener = subscribeToMappingListener.remove(url);
+        if (mappingListener != null) {
+            ServiceNameMapping serviceNameMapping = ServiceNameMapping.getDefaultExtension(registryURL.getScopeModel());
+            serviceNameMapping.removeListener(url, mappingListener);
+        }
+
         writableMetadataService.unsubscribeURL(url);
         String protocolServiceKey = url.getServiceKey() + GROUP_CHAR_SEPARATOR + url.getParameter(PROTOCOL_KEY, DUBBO);
         Set<String> serviceNames = writableMetadataService.getCachedMapping(url);
@@ -297,7 +305,6 @@ public class ServiceDiscoveryRegistry implements Registry {
             serviceInstancesChangedListener = serviceListeners.get(serviceNamesKey);
             if (serviceInstancesChangedListener == null) {
                 serviceInstancesChangedListener = serviceDiscovery.createListener(serviceNames);
-                serviceInstancesChangedListener.setUrl(url);
                 for (String serviceName : serviceNames) {
                     List<ServiceInstance> serviceInstances = serviceDiscovery.getInstances(serviceName);
                     if (CollectionUtils.isNotEmpty(serviceInstances)) {

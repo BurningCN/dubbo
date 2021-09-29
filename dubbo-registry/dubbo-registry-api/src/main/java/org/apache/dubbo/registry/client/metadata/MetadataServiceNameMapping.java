@@ -108,6 +108,14 @@ public class MetadataServiceNameMapping extends AbstractServiceNameMapping {
         return metadataReport.getServiceAppMapping(serviceInterface, mappingListener, url);
     }
 
+    @Override
+    public void removeListener(URL url, MappingListener mappingListener) {
+        String serviceInterface = url.getServiceInterface();
+        String registryCluster = getRegistryCluster(url);
+        MetadataReport metadataReport = metadataReportInstance.getMetadataReport(registryCluster);
+        metadataReport.removeServiceAppMapping(serviceInterface, mappingListener);
+    }
+
     protected String getRegistryCluster(URL url) {
         String registryCluster = RegistryClusterIdentifier.getExtension(url).providerKey(url);
         if (registryCluster == null) {

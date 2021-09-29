@@ -162,6 +162,19 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
     }
 
     @Override
+    public void removeServiceAppMapping(String serviceKey, MappingListener listener) {
+        String path = buildPathKey(DEFAULT_MAPPING_GROUP, serviceKey);
+        MappingDataListener mappingDataListener = casListenerMap.get(path);
+        if (mappingDataListener != null) {
+            mappingDataListener.removeListener(listener);
+            if (!mappingDataListener.hasListeners()) {
+                casListenerMap.remove(path);
+                zkClient.removeDataListener(path, mappingDataListener);
+            }
+        }
+    }
+
+    @Override
     public Set<String> getServiceAppMapping(String serviceKey, URL url) {
         String path = buildPathKey(DEFAULT_MAPPING_GROUP, serviceKey);
         return getAppNames(zkClient.getContent(path));
@@ -210,8 +223,16 @@ public class ZookeeperMetadataReport extends AbstractMetadataReport {
             this.listeners = new HashSet<>();
         }
 
-        public void addListener(MappingListener listener) {
+        public synchronized void addListener(MappingListener listener) {
             this.listeners.add(listener);
+        }
+
+        public synchronized void removeListener(MappingListener listener) {
+            this.listeners.remove(listener);
+        }
+
+        public synchronized boolean hasListeners() {
+            return !listeners.isEmpty();
         }
 
         @Override

@@ -179,9 +179,9 @@ public class ServiceInstancesChangedListener {
         this.notifyAddressChanged();
     }
 
-    public synchronized void addListenerAndNotify(String serviceKey, NotifyListener listener) {
-        this.listeners.put(serviceKey, listener);
-        List<URL> urls = getAddresses(serviceKey, listener.getConsumerUrl());
+    public synchronized void addListenerAndNotify(String protocolServiceKey, NotifyListener listener) {
+        this.listeners.put(protocolServiceKey, listener);
+        List<URL> urls = getAddresses(protocolServiceKey, listener.getConsumerUrl());
         if (CollectionUtils.isNotEmpty(urls)) {
             listener.notify(urls);
         }

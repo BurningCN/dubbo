@@ -61,7 +61,6 @@ import static org.mockito.Mockito.when;
 public class ServiceDiscoveryRegistryTest {
     public static final String APP_NAME1 = "app1";
     public static final String APP_NAME2 = "app2";
-    public static final String APP_NAME3 = "app3";
 
     private static ServiceNameMapping mapping = mock(ServiceNameMapping.class);
     private static URL registryURL = URL.valueOf("zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService");
@@ -240,7 +239,6 @@ public class ServiceDiscoveryRegistryTest {
         // do unsubscribe
         when(spiedMetadataService.getCachedMapping(url2)).thenReturn(multiApps);
         serviceDiscoveryRegistry.doUnsubscribe(url2, testServiceListener2);
-        assertEquals(1, serviceDiscoveryRegistry.getServiceListeners().size());
         assertEquals(1, serviceDiscoveryRegistry.getServiceListeners().size());
         ServiceInstancesChangedListener instancesChangedListener = serviceDiscoveryRegistry.getServiceListeners().entrySet().iterator().next().getValue();
         assertTrue(instancesChangedListener.hasListeners());

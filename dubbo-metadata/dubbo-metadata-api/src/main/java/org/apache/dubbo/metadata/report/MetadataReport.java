@@ -85,6 +85,9 @@ public interface MetadataReport {
         return Collections.emptySet();
     }
 
+    default void removeServiceAppMapping(String serviceKey, MappingListener listener) {
+    }
+
     default Set<String> getServiceAppMapping(String serviceKey, URL url) {
         return Collections.emptySet();
     }

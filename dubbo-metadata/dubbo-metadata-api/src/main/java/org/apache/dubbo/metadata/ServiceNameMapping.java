@@ -87,4 +87,6 @@ public interface ServiceNameMapping {
      * 3.use the services specified in registry url.
      */
     Set<String> getAndListenServices(URL registryURL, URL subscribedURL, MappingListener listener);
+
+    void removeListener(URL subscribedURL, MappingListener mappingListener);
 }
