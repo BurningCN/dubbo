@@ -516,4 +516,6 @@ public interface CommonConstants {
 
     String PROVIDER_ASYNC_KEY = "PROVIDER_ASYNC";
 
+    String REGISTER_IP_KEY = "register.ip";
+
 }
